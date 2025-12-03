@@ -1,13 +1,15 @@
-package com.example.foodapp
+package com.example.foodapp.presentation.view.MainScreen
 
-import android.os.Bundle
-import android.widget.*
 import android.content.Intent
+import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.GridLayoutManager
-import com.google.android.material.card.MaterialCardView
-import android.widget.LinearLayout
+import androidx.recyclerview.widget.RecyclerView
+import com.example.foodapp.presentation.view.Component.Product.FoodCategory
+import com.example.foodapp.presentation.view.Component.Product.Product
+import com.example.foodapp.presentation.view.Component.Product.ProductAdapter
+import com.example.foodapp.presentation.view.ProductDetailScreen.ProductDetailActivity
+import com.example.foodapp.R
 
 class MainActivity : AppCompatActivity() {
 
@@ -44,7 +46,7 @@ class MainActivity : AppCompatActivity() {
 
 
         recyclerView.apply {
-            layoutManager = GridLayoutManager(this@MainActivity,2)
+            layoutManager = GridLayoutManager(this@MainActivity, 2)
             adapter = productAdapter
         }
     }

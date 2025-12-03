@@ -1,10 +1,11 @@
-package com.example.foodapp
+package com.example.foodapp.presentation.view.Component.Product
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.recyclerview.widget.RecyclerView
+import com.example.foodapp.R
 
 class ProductAdapter(
     private var productList: List<Product>, private val onItemClick: (Product) -> Unit

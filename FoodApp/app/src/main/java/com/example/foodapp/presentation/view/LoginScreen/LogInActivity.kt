@@ -1,12 +1,13 @@
-package com.example.foodapp
+package com.example.foodapp.presentation.view.LoginScreen
 
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import com.example.foodapp.presentation.view.MainScreen.MainActivity
+import com.example.foodapp.R
+import com.example.foodapp.presentation.view.SignupScreen.SignUpActivity
 
 class LogInActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,11 +20,11 @@ class LogInActivity : AppCompatActivity() {
         val btnGoToSignUp = findViewById<Button>(R.id.btnGoToSignUp)
 
         btnLogin.setOnClickListener {
-            startActivity(Intent(this@LogInActivity, MainActivity::class.java ))
+            startActivity(Intent(this@LogInActivity, MainActivity::class.java))
         }
 
         btnGoToSignUp.setOnClickListener {
-            startActivity(Intent(this@LogInActivity, SignUpActivity::class.java ))
+            startActivity(Intent(this@LogInActivity, SignUpActivity::class.java))
         }
     }
 }

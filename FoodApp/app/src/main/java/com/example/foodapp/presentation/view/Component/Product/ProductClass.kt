@@ -1,4 +1,4 @@
-package com.example.foodapp
+package com.example.foodapp.presentation.view.Component.Product
 import java.util.UUID
 
 

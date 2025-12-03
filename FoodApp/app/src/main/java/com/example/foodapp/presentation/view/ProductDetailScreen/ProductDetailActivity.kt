@@ -1,9 +1,11 @@
-package com.example.foodapp
+package com.example.foodapp.presentation.view.ProductDetailScreen
 
 import android.os.Bundle
-import android.widget.*
-import android.content.Intent
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.example.foodapp.R
 import com.google.android.material.button.MaterialButton
 
 class ProductDetailActivity : AppCompatActivity() {

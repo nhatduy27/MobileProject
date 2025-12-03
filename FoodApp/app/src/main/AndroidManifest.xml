@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FoodApp">
         <activity
-            android:name=".ProductDetailActivity"
+            android:name=".presentation.view.ProductDetailScreen.ProductDetailActivity"
             android:exported="true">
             <intent-filter>
 
@@ -20,21 +20,21 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".LogInActivity"
+            android:name=".presentation.view.LoginScreen.LogInActivity"
             android:exported="true">
             <intent-filter>
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name=".SignUpActivity"
+            android:name=".presentation.view.SignupScreen.SignUpActivity"
             android:exported="true">
             <intent-filter>
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity
-            android:name=".IntroActivity"
+            android:name=".presentation.view.IntroScreen.IntroActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -43,7 +43,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".MainActivity"
+            android:name=".presentation.view.MainScreen.MainActivity"
             android:exported="true" />
     </application>
 
