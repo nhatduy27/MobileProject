@@ -200,3 +200,37 @@ Hãy:
 - Dùng `CHEATSHEET.md` làm phao cứu sinh
 
 Chào mừng bạn đến team Backend 🚀🔥
+
+# 🗂️ 7. ISSUES_LIST.md — Danh sách đầu việc (Roadmap cho Backend)
+
+Tài liệu này tổng hợp toàn bộ các đầu việc quan trọng mà team backend cần thực hiện, được chia theo mức độ ưu tiên và nhóm tính năng.
+
+Bạn sẽ tìm thấy:
+
+🔴 P0 — Việc bắt buộc phải làm sớm
+(Hash password, JWT Auth, Repository error rules, Firestore integration cơ bản)
+
+🟠 P1 — Việc quan trọng
+(AuthGuard, Order state machine, update kiến trúc, update API contract)
+
+🟡 P2 — Future Work
+(Redis CachePort adapter, Message Queue adapter, Firebase Auth integration)
+
+Trong mỗi issue đều có:
+
+Mã issue: #ISSUE-XXX
+
+Priority (P0/P1/P2)
+
+Mô tả
+
+Kết quả mong đợi
+
+Người phụ trách (gợi ý)
+
+Trạng thái: TODO / DOING / DONE
+
+👉 File này cực kỳ quan trọng khi bắt đầu sprint hoặc chia việc cho team, giúp mọi người biết cần làm gì và mức độ ưu tiên của từng hạng mục.
+
+📄 Xem chi tiết tại:
+docs/ISSUES_LIST.md
