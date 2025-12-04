@@ -1,12 +1,12 @@
 # FoodApp Backend
 
-NestJS backend for the FoodApp mobile application, built with TypeScript following **Monolithic + Layered Architecture** with **Clean Architecture (Ports & Adapters)** principles.
+Backend NestJS cho ứng dụng di động FoodApp, được xây dựng với TypeScript theo các nguyên tắc **Kiến trúc Nguyên khối + Phân tầng (Monolithic + Layered Architecture)** kết hợp với **Kiến trúc Sạch (Clean Architecture)** theo mô hình **Cổng & Bộ chuyển đổi (Ports & Adapters)**.
 
-## 🏗️ Architecture Overview
+## 🏗️ Tổng quan Kiến trúc
 
-This backend follows a **Monolithic Layered Architecture** with **Dependency Inversion** through the **Ports & Adapters pattern**:
+Backend này tuân theo **Kiến trúc Phân tầng Nguyên khối (Monolithic Layered Architecture)** với **Đảo ngược Phụ thuộc (Dependency Inversion)** thông qua mô hình **Cổng & Bộ chuyển đổi (Ports & Adapters pattern)**:
 
-### Architecture Layers
+### Các Tầng Kiến trúc
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -30,7 +30,7 @@ This backend follows a **Monolithic Layered Architecture** with **Dependency Inv
          └──────────────────────────────────────┘
 ```
 
-### Folder Structure
+### Cấu trúc Thư mục
 
 ```
 backend/
@@ -91,53 +91,53 @@ backend/
 └── README.md
 ```
 
-## 🎯 Key Design Principles
+## 🎯 Các Nguyên tắc Thiết kế Chính
 
-### 1. **Dependency Inversion (Ports & Adapters)**
-- **Ports** (abstract classes) define contracts
-- **Adapters** (concrete classes) implement those contracts
-- Business logic depends on abstractions, not concrete implementations
-- Easy to swap implementations (e.g., in-memory cache → Redis)
+### 1. **Đảo ngược Phụ thuộc (Dependency Inversion) - Mô hình Cổng & Bộ chuyển đổi (Ports & Adapters)**
+- **Cổng (Ports)** (abstract classes) định nghĩa các hợp đồng giao tiếp
+- **Bộ chuyển đổi (Adapters)** (concrete classes) triển khai các hợp đồng đó
+- Logic nghiệp vụ phụ thuộc vào các abstraction, không phụ thuộc vào implementation cụ thể
+- Dễ dàng thay đổi implementation (ví dụ: in-memory cache → Redis)
 
-### 2. **Layered Architecture**
-- **Controllers**: Handle HTTP requests/responses only
-- **Services**: Contain business logic
-- **Domain**: Define entities and repository interfaces
-- **Infrastructure**: Implement repository adapters (Firebase, etc.)
+### 2. **Kiến trúc Phân tầng (Layered Architecture)**
+- **Controllers**: Chỉ xử lý HTTP requests/responses
+- **Services**: Chứa logic nghiệp vụ
+- **Domain**: Định nghĩa entities và repository interfaces
+- **Infrastructure**: Triển khai repository adapters (Firebase, v.v.)
 
-### 3. **Clean Architecture Benefits**
-- ✅ Testability: Easy to mock dependencies
-- ✅ Maintainability: Clear separation of concerns
-- ✅ Flexibility: Swap implementations without changing business logic
-- ✅ Scalability: Add new features by extending modules
+### 3. **Lợi ích của Kiến trúc Sạch (Clean Architecture)**
+- ✅ Khả năng kiểm thử (Testability): Dễ dàng mock dependencies
+- ✅ Khả năng bảo trì (Maintainability): Tách biệt rõ ràng các mối quan tâm
+- ✅ Tính linh hoạt (Flexibility): Thay đổi implementation mà không ảnh hưởng logic nghiệp vụ
+- ✅ Khả năng mở rộng (Scalability): Thêm tính năng mới bằng cách mở rộng modules
 
-## 📦 Tech Stack
+## 📦 Công nghệ Sử dụng
 
 - **Framework**: NestJS
 - **Language**: TypeScript
-- **Database**: Firebase Firestore (stub implementation)
-- **Authentication**: Firebase Auth (stub implementation)
+- **Database**: Firebase Firestore (triển khai tạm - stub implementation)
+- **Authentication**: Firebase Auth (triển khai tạm - stub implementation)
 - **Validation**: class-validator, class-transformer
-- **Cache**: In-memory (stub for Redis)
-- **Notifications**: Firebase Cloud Messaging (stub)
-- **Events**: In-memory event bus (stub for RabbitMQ/Kafka)
+- **Cache**: In-memory (triển khai tạm cho Redis)
+- **Notifications**: Firebase Cloud Messaging (triển khai tạm)
+- **Events**: In-memory event bus (triển khai tạm cho RabbitMQ/Kafka)
 
-## 🚀 Getting Started
+## 🚀 Bắt đầu
 
-### Prerequisites
+### Yêu cầu
 - Node.js >= 18.x
-- npm or yarn
+- npm hoặc yarn
 
-### Installation
+### Cài đặt
 
 ```bash
 # Install dependencies
 npm install
 ```
 
-### Environment Variables
+### Biến Môi trường
 
-Create a `.env` file in the backend folder (optional for now):
+Tạo file `.env` trong thư mục backend (tùy chọn hiện tại):
 
 ```env
 PORT=3000
@@ -153,7 +153,7 @@ JWT_SECRET=your-secret-key
 JWT_EXPIRES_IN=1d
 ```
 
-### Running the Application
+### Chạy Ứng dụng
 
 ```bash
 # Development mode with hot-reload
@@ -166,9 +166,9 @@ npm run start:prod
 npm run start:debug
 ```
 
-The API will be available at: `http://localhost:3000/api`
+API sẽ chạy tại: `http://localhost:3000/api`
 
-### Testing
+### Kiểm thử
 
 ```bash
 # Unit tests
@@ -181,9 +181,9 @@ npm run test:e2e
 npm run test:cov
 ```
 
-## 📚 API Endpoints
+## 📚 Các API Endpoint
 
-### Authentication
+### Xác thực (Authentication)
 
 ```
 POST   /api/auth/register        # Register new user
@@ -191,7 +191,7 @@ POST   /api/auth/login           # User login
 GET    /api/auth/users/:id       # Get user by ID
 ```
 
-### Orders
+### Đơn hàng (Orders)
 
 ```
 POST   /api/orders                      # Create new order
@@ -202,67 +202,67 @@ PATCH  /api/orders/:id/status           # Update order status
 DELETE /api/orders/:id                  # Cancel order
 ```
 
-## 🔧 Stub Implementations
+## 🔧 Các Triển khai Tạm (Stub Implementations)
 
-The following features are currently **stubbed** and need Firebase integration:
+Các tính năng sau hiện đang được **triển khai tạm (stubbed)** và cần tích hợp Firebase:
 
-### 1. **Authentication** (`FirebaseAuthRepository`)
-- Currently uses in-memory storage
-- TODO: Integrate Firebase Admin SDK for user management
+### 1. **Xác thực (Authentication)** (`FirebaseAuthRepository`)
+- Hiện tại sử dụng bộ nhớ in-memory
+- TODO: Tích hợp Firebase Admin SDK để quản lý người dùng
 
-### 2. **Orders** (`FirebaseOrderRepository`)
-- Currently uses in-memory storage
-- TODO: Integrate Firebase Firestore for data persistence
+### 2. **Đơn hàng (Orders)** (`FirebaseOrderRepository`)
+- Hiện tại sử dụng bộ nhớ in-memory
+- TODO: Tích hợp Firebase Firestore để lưu trữ dữ liệu
 
-### 3. **Cache** (`InMemoryCacheAdapter`)
-- Currently uses JavaScript Map
-- TODO: Integrate Redis for distributed caching
+### 3. **Bộ nhớ đệm (Cache)** (`InMemoryCacheAdapter`)
+- Hiện tại sử dụng JavaScript Map
+- TODO: Tích hợp Redis cho distributed caching
 
-### 4. **Notifications** (`FcmNotificationAdapter`)
-- Currently logs to console
-- TODO: Integrate Firebase Cloud Messaging for push notifications
+### 4. **Thông báo (Notifications)** (`FcmNotificationAdapter`)
+- Hiện tại chỉ log ra console
+- TODO: Tích hợp Firebase Cloud Messaging cho push notifications
 
-### 5. **Events** (`InMemoryEventBusAdapter`)
-- Currently logs to console
-- TODO: Integrate RabbitMQ, Kafka, or AWS SQS for event-driven architecture
+### 5. **Sự kiện (Events)** (`InMemoryEventBusAdapter`)
+- Hiện tại chỉ log ra console
+- TODO: Tích hợp RabbitMQ, Kafka, hoặc AWS SQS cho kiến trúc hướng sự kiện
 
-## 🛠️ Next Steps
+## 🛠️ Các Bước Tiếp theo
 
-1. **Integrate Firebase Admin SDK**
-   - Add Firebase credentials
-   - Replace stub repositories with real Firestore operations
-   - Implement Firebase Auth
+1. **Tích hợp Firebase Admin SDK**
+   - Thêm thông tin xác thực Firebase
+   - Thay thế các stub repository bằng các thao tác Firestore thực
+   - Triển khai Firebase Auth
 
-2. **Add JWT Authentication**
-   - Install `@nestjs/jwt` and `@nestjs/passport`
-   - Implement JWT token generation and validation
-   - Protect routes with AuthGuard
+2. **Thêm Xác thực JWT**
+   - Cài đặt `@nestjs/jwt` và `@nestjs/passport`
+   - Triển khai tạo và xác thực JWT token
+   - Bảo vệ các route với AuthGuard
 
-3. **Add More Feature Modules**
-   - Products module
-   - Users/Sellers module
-   - Reviews module
-   - Payments module
+3. **Thêm Các Module Tính năng Khác**
+   - Module sản phẩm (Products)
+   - Module người dùng/người bán (Users/Sellers)
+   - Module đánh giá (Reviews)
+   - Module thanh toán (Payments)
 
-4. **Add Redis Cache**
-   - Install `@nestjs/cache-manager` and `cache-manager-redis-store`
-   - Replace `InMemoryCacheAdapter` with `RedisCacheAdapter`
+4. **Thêm Redis Cache**
+   - Cài đặt `@nestjs/cache-manager` và `cache-manager-redis-store`
+   - Thay thế `InMemoryCacheAdapter` bằng `RedisCacheAdapter`
 
-5. **Add Message Queue**
-   - Install `@nestjs/microservices` with RabbitMQ or Kafka
-   - Replace `InMemoryEventBusAdapter` with real event bus
+5. **Thêm Message Queue**
+   - Cài đặt `@nestjs/microservices` với RabbitMQ hoặc Kafka
+   - Thay thế `InMemoryEventBusAdapter` bằng event bus thực
 
-6. **Add API Documentation**
-   - Install `@nestjs/swagger`
-   - Add Swagger decorators to controllers
+6. **Thêm Tài liệu API**
+   - Cài đặt `@nestjs/swagger`
+   - Thêm Swagger decorators vào controllers
 
-## 📖 Resources
+## 📖 Tài liệu Tham khảo
 
-- [NestJS Documentation](https://docs.nestjs.com)
+- [Tài liệu NestJS](https://docs.nestjs.com)
 - [Firebase Admin SDK](https://firebase.google.com/docs/admin/setup)
 - [Clean Architecture](https://blog.cleancoder.com/uncle-bob/2012/08/13/the-clean-architecture.html)
 - [Hexagonal Architecture (Ports & Adapters)](https://alistair.cockburn.us/hexagonal-architecture/)
 
-## 📝 License
+## 📝 Giấy phép
 
-This project is part of the FoodApp mobile application.
+Dự án này là một phần của ứng dụng di động FoodApp.
