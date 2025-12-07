@@ -34,8 +34,10 @@ object UserMapper {
             role = user.role.name,
             avatarUrl = user.avatarUrl,
             createdAt = user.createdAt,
+            updatedAt = System.currentTimeMillis(),
             isActive = user.isActive,
-            isVerified = user.isVerified
+            isVerified = user.isVerified,
+            addresses = null // Will be managed separately if needed
         )
     }
     

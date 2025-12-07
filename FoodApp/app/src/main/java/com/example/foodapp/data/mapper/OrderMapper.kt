@@ -32,6 +32,8 @@ object OrderMapper {
             totalAmount = orderRemote.totalAmount ?: 0L,
             createdAt = orderRemote.createdAt,
             updatedAt = orderRemote.updatedAt
+            // Note: shipperId, discountAmount, promotionCode, deliveryAddress, notes, paymentMethod, 
+            // paymentStatus, estimatedDeliveryTime, actualDeliveryTime, rating, review are in Firestore but not domain
         )
     }
     
@@ -40,19 +42,32 @@ object OrderMapper {
             id = order.id,
             userId = order.userId,
             restaurantId = order.restaurantId,
+            shipperId = null, // Will be assigned when shipper accepts
             items = order.items.map { item ->
                 OrderItemRemote(
                     menuItemId = item.menuItemId,
                     name = item.name,
                     quantity = item.quantity,
                     unitPrice = item.unitPrice,
-                    totalPrice = item.totalPrice
+                    totalPrice = item.totalPrice,
+                    imageUrl = null,
+                    notes = null
                 )
             },
             status = order.status.name,
             subtotal = order.subtotal,
             deliveryFee = order.deliveryFee,
+            discountAmount = 0L,
             totalAmount = order.totalAmount,
+            promotionCode = null,
+            deliveryAddress = null, // Should be set from user's address
+            notes = null,
+            paymentMethod = "CASH", // Default payment method
+            paymentStatus = "PENDING",
+            estimatedDeliveryTime = null,
+            actualDeliveryTime = null,
+            rating = null,
+            review = null,
             createdAt = order.createdAt,
             updatedAt = order.updatedAt
         )

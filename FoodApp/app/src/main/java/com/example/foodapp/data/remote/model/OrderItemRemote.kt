@@ -5,5 +5,7 @@ data class OrderItemRemote(
     val name: String? = null,
     val quantity: Int? = null,
     val unitPrice: Long? = null,
-    val totalPrice: Long? = null
+    val totalPrice: Long? = null,
+    val imageUrl: String? = null,
+    val notes: String? = null
 )

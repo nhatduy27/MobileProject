@@ -8,6 +8,8 @@ data class UserRemote(
     val role: String? = null,
     val avatarUrl: String? = null,
     val createdAt: Long? = null,
+    val updatedAt: Long? = null,
     val isActive: Boolean? = null,
-    val isVerified: Boolean? = null
+    val isVerified: Boolean? = null,
+    val addresses: List<Map<String, Any>>? = null
 )

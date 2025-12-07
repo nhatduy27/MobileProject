@@ -6,6 +6,11 @@ import com.example.foodapp.data.remote.model.RestaurantRemote
 object RestaurantMapper {
     
     fun fromRemote(restaurantRemote: RestaurantRemote): Restaurant {
+        // Convert address Map to String (use street or full address)
+        val addressString = restaurantRemote.address?.let { addressMap ->
+            addressMap["street"] as? String ?: ""
+        } ?: ""
+        
         return Restaurant(
             id = restaurantRemote.id ?: "",
             ownerId = restaurantRemote.ownerId ?: "",
@@ -14,7 +19,7 @@ object RestaurantMapper {
             category = restaurantRemote.category ?: "",
             phoneNumber = restaurantRemote.phoneNumber,
             email = restaurantRemote.email,
-            address = restaurantRemote.address ?: "",
+            address = addressString,
             averageRating = restaurantRemote.averageRating ?: 0.0,
             totalReviews = restaurantRemote.totalReviews ?: 0,
             isOpen = restaurantRemote.isOpen ?: false,
@@ -24,6 +29,14 @@ object RestaurantMapper {
     }
     
     fun toRemote(restaurant: Restaurant): RestaurantRemote {
+        // Convert address String to Map structure
+        val addressMap = mapOf(
+            "street" to restaurant.address,
+            "city" to "",
+            "ward" to "",
+            "district" to ""
+        )
+        
         return RestaurantRemote(
             id = restaurant.id,
             ownerId = restaurant.ownerId,
@@ -32,12 +45,18 @@ object RestaurantMapper {
             category = restaurant.category,
             phoneNumber = restaurant.phoneNumber,
             email = restaurant.email,
-            address = restaurant.address,
+            address = addressMap,
             averageRating = restaurant.averageRating,
             totalReviews = restaurant.totalReviews,
+            logoUrl = null,
+            bannerUrl = null,
             isOpen = restaurant.isOpen,
+            operatingHours = null,
             deliveryFee = restaurant.deliveryFee,
-            minOrderAmount = restaurant.minOrderAmount
+            minOrderAmount = restaurant.minOrderAmount,
+            orderCount = 0,
+            createdAt = System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis()
         )
     }
 }

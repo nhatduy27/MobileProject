@@ -6,6 +6,11 @@ data class MenuItemRemote(
     val name: String? = null,
     val description: String? = null,
     val price: Long? = null,
+    val category: String? = null,
+    val imageUrl: String? = null,
     val isAvailable: Boolean? = null,
-    val imageUrl: String? = null
+    val preparationTime: Int? = null,
+    val rating: Double? = null,
+    val totalOrders: Int? = null,
+    val createdAt: Long? = null
 )

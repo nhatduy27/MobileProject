@@ -14,6 +14,7 @@ object MenuItemMapper {
             price = menuItemRemote.price ?: 0L,
             isAvailable = menuItemRemote.isAvailable ?: true,
             imageUrl = menuItemRemote.imageUrl
+            // Note: category, preparationTime, rating, totalOrders, createdAt are stored in Firestore but not in domain
         )
     }
     
@@ -24,8 +25,13 @@ object MenuItemMapper {
             name = menuItem.name,
             description = menuItem.description,
             price = menuItem.price,
+            category = "", // Default category, can be set when creating
+            imageUrl = menuItem.imageUrl,
             isAvailable = menuItem.isAvailable,
-            imageUrl = menuItem.imageUrl
+            preparationTime = 15, // Default 15 minutes
+            rating = 0.0,
+            totalOrders = 0,
+            createdAt = System.currentTimeMillis()
         )
     }
 }
