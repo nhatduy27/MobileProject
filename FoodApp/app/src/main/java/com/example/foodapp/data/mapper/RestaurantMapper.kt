@@ -1,42 +1,43 @@
 package com.example.foodapp.data.mapper
 
 import com.example.foodapp.domain.entities.Restaurant
+import com.example.foodapp.data.remote.model.RestaurantRemote
 
 object RestaurantMapper {
     
-    fun toMap(restaurant: Restaurant): Map<String, Any?> {
-        return mapOf(
-            "id" to restaurant.id,
-            "ownerId" to restaurant.ownerId,
-            "name" to restaurant.name,
-            "description" to restaurant.description,
-            "category" to restaurant.category,
-            "phoneNumber" to restaurant.phoneNumber,
-            "email" to restaurant.email,
-            "address" to restaurant.address,
-            "averageRating" to restaurant.averageRating,
-            "totalReviews" to restaurant.totalReviews,
-            "isOpen" to restaurant.isOpen,
-            "deliveryFee" to restaurant.deliveryFee,
-            "minOrderAmount" to restaurant.minOrderAmount
+    fun fromRemote(restaurantRemote: RestaurantRemote): Restaurant {
+        return Restaurant(
+            id = restaurantRemote.id ?: "",
+            ownerId = restaurantRemote.ownerId ?: "",
+            name = restaurantRemote.name ?: "",
+            description = restaurantRemote.description,
+            category = restaurantRemote.category ?: "",
+            phoneNumber = restaurantRemote.phoneNumber,
+            email = restaurantRemote.email,
+            address = restaurantRemote.address ?: "",
+            averageRating = restaurantRemote.averageRating ?: 0.0,
+            totalReviews = restaurantRemote.totalReviews ?: 0,
+            isOpen = restaurantRemote.isOpen ?: false,
+            deliveryFee = restaurantRemote.deliveryFee ?: 0L,
+            minOrderAmount = restaurantRemote.minOrderAmount ?: 0L
         )
     }
     
-    fun fromMap(map: Map<String, Any?>): Restaurant {
-        return Restaurant(
-            id = map["id"] as? String ?: "",
-            ownerId = map["ownerId"] as? String ?: "",
-            name = map["name"] as? String ?: "",
-            description = map["description"] as? String,
-            category = map["category"] as? String ?: "",
-            phoneNumber = map["phoneNumber"] as? String,
-            email = map["email"] as? String,
-            address = map["address"] as? String ?: "",
-            averageRating = (map["averageRating"] as? Number)?.toDouble() ?: 0.0,
-            totalReviews = (map["totalReviews"] as? Number)?.toInt() ?: 0,
-            isOpen = map["isOpen"] as? Boolean ?: false,
-            deliveryFee = (map["deliveryFee"] as? Number)?.toLong() ?: 0L,
-            minOrderAmount = (map["minOrderAmount"] as? Number)?.toLong() ?: 0L
+    fun toRemote(restaurant: Restaurant): RestaurantRemote {
+        return RestaurantRemote(
+            id = restaurant.id,
+            ownerId = restaurant.ownerId,
+            name = restaurant.name,
+            description = restaurant.description,
+            category = restaurant.category,
+            phoneNumber = restaurant.phoneNumber,
+            email = restaurant.email,
+            address = restaurant.address,
+            averageRating = restaurant.averageRating,
+            totalReviews = restaurant.totalReviews,
+            isOpen = restaurant.isOpen,
+            deliveryFee = restaurant.deliveryFee,
+            minOrderAmount = restaurant.minOrderAmount
         )
     }
 }

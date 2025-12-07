@@ -3,59 +3,58 @@ package com.example.foodapp.data.mapper
 import com.example.foodapp.domain.entities.Order
 import com.example.foodapp.domain.entities.OrderItem
 import com.example.foodapp.domain.entities.OrderStatus
+import com.example.foodapp.data.remote.model.OrderRemote
+import com.example.foodapp.data.remote.model.OrderItemRemote
 
 object OrderMapper {
     
-    fun toMap(order: Order): Map<String, Any?> {
-        return mapOf(
-            "id" to order.id,
-            "userId" to order.userId,
-            "restaurantId" to order.restaurantId,
-            "items" to order.items.map { item ->
-                mapOf(
-                    "menuItemId" to item.menuItemId,
-                    "name" to item.name,
-                    "quantity" to item.quantity,
-                    "unitPrice" to item.unitPrice,
-                    "totalPrice" to item.totalPrice
-                )
-            },
-            "status" to order.status.name,
-            "subtotal" to order.subtotal,
-            "deliveryFee" to order.deliveryFee,
-            "totalAmount" to order.totalAmount,
-            "createdAt" to order.createdAt,
-            "updatedAt" to order.updatedAt
-        )
-    }
-    
-    fun fromMap(map: Map<String, Any?>): Order {
-        @Suppress("UNCHECKED_CAST")
-        val itemsList = map["items"] as? List<Map<String, Any?>> ?: emptyList()
-        
+    fun fromRemote(orderRemote: OrderRemote): Order {
         return Order(
-            id = map["id"] as? String ?: "",
-            userId = map["userId"] as? String ?: "",
-            restaurantId = map["restaurantId"] as? String ?: "",
-            items = itemsList.map { itemMap ->
+            id = orderRemote.id ?: "",
+            userId = orderRemote.userId ?: "",
+            restaurantId = orderRemote.restaurantId ?: "",
+            items = orderRemote.items?.map { itemRemote ->
                 OrderItem(
-                    menuItemId = itemMap["menuItemId"] as? String ?: "",
-                    name = itemMap["name"] as? String ?: "",
-                    quantity = (itemMap["quantity"] as? Number)?.toInt() ?: 0,
-                    unitPrice = (itemMap["unitPrice"] as? Number)?.toLong() ?: 0L,
-                    totalPrice = (itemMap["totalPrice"] as? Number)?.toLong() ?: 0L
+                    menuItemId = itemRemote.menuItemId ?: "",
+                    name = itemRemote.name ?: "",
+                    quantity = itemRemote.quantity ?: 0,
+                    unitPrice = itemRemote.unitPrice ?: 0L,
+                    totalPrice = itemRemote.totalPrice ?: 0L
                 )
-            },
+            } ?: emptyList(),
             status = try {
-                OrderStatus.valueOf((map["status"] as? String) ?: "PENDING")
+                OrderStatus.valueOf(orderRemote.status ?: "PENDING")
             } catch (e: Exception) {
                 OrderStatus.PENDING
             },
-            subtotal = (map["subtotal"] as? Number)?.toLong() ?: 0L,
-            deliveryFee = (map["deliveryFee"] as? Number)?.toLong() ?: 0L,
-            totalAmount = (map["totalAmount"] as? Number)?.toLong() ?: 0L,
-            createdAt = (map["createdAt"] as? Number)?.toLong(),
-            updatedAt = (map["updatedAt"] as? Number)?.toLong()
+            subtotal = orderRemote.subtotal ?: 0L,
+            deliveryFee = orderRemote.deliveryFee ?: 0L,
+            totalAmount = orderRemote.totalAmount ?: 0L,
+            createdAt = orderRemote.createdAt,
+            updatedAt = orderRemote.updatedAt
+        )
+    }
+    
+    fun toRemote(order: Order): OrderRemote {
+        return OrderRemote(
+            id = order.id,
+            userId = order.userId,
+            restaurantId = order.restaurantId,
+            items = order.items.map { item ->
+                OrderItemRemote(
+                    menuItemId = item.menuItemId,
+                    name = item.name,
+                    quantity = item.quantity,
+                    unitPrice = item.unitPrice,
+                    totalPrice = item.totalPrice
+                )
+            },
+            status = order.status.name,
+            subtotal = order.subtotal,
+            deliveryFee = order.deliveryFee,
+            totalAmount = order.totalAmount,
+            createdAt = order.createdAt,
+            updatedAt = order.updatedAt
         )
     }
 }

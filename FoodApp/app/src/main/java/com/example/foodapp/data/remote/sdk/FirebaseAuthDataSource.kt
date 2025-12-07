@@ -1,4 +1,4 @@
-package com.example.foodapp.data.remote
+package com.example.foodapp.data.remote.sdk
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser

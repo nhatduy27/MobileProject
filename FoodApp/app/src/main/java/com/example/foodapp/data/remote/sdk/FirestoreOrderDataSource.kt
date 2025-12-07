@@ -1,18 +1,19 @@
-package com.example.foodapp.data.remote
+package com.example.foodapp.data.remote.sdk
 
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
-import com.example.foodapp.domain.entities.Order
+import com.example.foodapp.data.remote.model.OrderRemote
+import com.example.foodapp.data.remote.model.OrderItemRemote
 import com.example.foodapp.di.InjectionConstants
 
 class FirestoreOrderDataSource(private val firestore: FirebaseFirestore) {
     
-    suspend fun createOrder(order: Order): Order {
+    suspend fun createOrder(orderRemote: OrderRemote): OrderRemote {
         val orderMap = mapOf(
-            "id" to order.id,
-            "userId" to order.userId,
-            "restaurantId" to order.restaurantId,
-            "items" to order.items.map { item ->
+            "id" to orderRemote.id,
+            "userId" to orderRemote.userId,
+            "restaurantId" to orderRemote.restaurantId,
+            "items" to orderRemote.items?.map { item ->
                 mapOf(
                     "menuItemId" to item.menuItemId,
                     "name" to item.name,
@@ -21,18 +22,20 @@ class FirestoreOrderDataSource(private val firestore: FirebaseFirestore) {
                     "totalPrice" to item.totalPrice
                 )
             },
-            "status" to order.status.name,
-            "subtotal" to order.subtotal,
-            "deliveryFee" to order.deliveryFee,
-            "totalAmount" to order.totalAmount,
-            "createdAt" to order.createdAt,
-            "updatedAt" to order.updatedAt
+            "status" to orderRemote.status,
+            "subtotal" to orderRemote.subtotal,
+            "deliveryFee" to orderRemote.deliveryFee,
+            "totalAmount" to orderRemote.totalAmount,
+            "createdAt" to orderRemote.createdAt,
+            "updatedAt" to orderRemote.updatedAt
         )
-        firestore.collection(InjectionConstants.ORDERS_COLLECTION).document(order.id).set(orderMap).await()
-        return order
+        orderRemote.id?.let {
+            firestore.collection(InjectionConstants.ORDERS_COLLECTION).document(it).set(orderMap).await()
+        }
+        return orderRemote
     }
     
-    suspend fun getOrdersForUser(userId: String): List<Order> {
+    suspend fun getOrdersForUser(userId: String): List<OrderRemote> {
         return try {
             val snapshot = firestore
                 .collection(InjectionConstants.ORDERS_COLLECTION)
@@ -40,17 +43,17 @@ class FirestoreOrderDataSource(private val firestore: FirebaseFirestore) {
                 .get()
                 .await()
             snapshot.documents.mapNotNull { doc ->
-                doc.toObject(Order::class.java)
+                doc.toObject(OrderRemote::class.java)
             }
         } catch (e: Exception) {
             emptyList()
         }
     }
     
-    suspend fun getOrderDetail(orderId: String): Order {
+    suspend fun getOrderDetail(orderId: String): OrderRemote {
         return try {
             val doc = firestore.collection(InjectionConstants.ORDERS_COLLECTION).document(orderId).get().await()
-            doc.toObject(Order::class.java) ?: throw Exception("Order not found")
+            doc.toObject(OrderRemote::class.java) ?: throw Exception("Order not found")
         } catch (e: Exception) {
             throw Exception("Failed to fetch order: ${e.message}")
         }

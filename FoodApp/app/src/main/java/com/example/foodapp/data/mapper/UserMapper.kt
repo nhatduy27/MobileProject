@@ -2,9 +2,42 @@ package com.example.foodapp.data.mapper
 
 import com.example.foodapp.domain.entities.User
 import com.example.foodapp.domain.entities.UserRole
+import com.example.foodapp.data.remote.model.UserRemote
 import com.google.firebase.auth.FirebaseUser
 
 object UserMapper {
+    
+    fun fromRemote(userRemote: UserRemote): User {
+        return User(
+            id = userRemote.id ?: "",
+            email = userRemote.email ?: "",
+            displayName = userRemote.displayName,
+            phoneNumber = userRemote.phoneNumber,
+            role = try {
+                UserRole.valueOf(userRemote.role ?: "BUYER")
+            } catch (e: Exception) {
+                UserRole.BUYER
+            },
+            avatarUrl = userRemote.avatarUrl,
+            createdAt = userRemote.createdAt,
+            isActive = userRemote.isActive ?: true,
+            isVerified = userRemote.isVerified ?: false
+        )
+    }
+    
+    fun toRemote(user: User): UserRemote {
+        return UserRemote(
+            id = user.id,
+            email = user.email,
+            displayName = user.displayName,
+            phoneNumber = user.phoneNumber,
+            role = user.role.name,
+            avatarUrl = user.avatarUrl,
+            createdAt = user.createdAt,
+            isActive = user.isActive,
+            isVerified = user.isVerified
+        )
+    }
     
     fun fromFirebaseUser(firebaseUser: FirebaseUser, role: UserRole = UserRole.BUYER): User {
         return User(
@@ -17,38 +50,6 @@ object UserMapper {
             createdAt = firebaseUser.metadata?.creationTimestamp,
             isActive = true,
             isVerified = firebaseUser.isEmailVerified
-        )
-    }
-    
-    fun toMap(user: User): Map<String, Any?> {
-        return mapOf(
-            "id" to user.id,
-            "email" to user.email,
-            "displayName" to user.displayName,
-            "phoneNumber" to user.phoneNumber,
-            "role" to user.role.name,
-            "avatarUrl" to user.avatarUrl,
-            "createdAt" to user.createdAt,
-            "isActive" to user.isActive,
-            "isVerified" to user.isVerified
-        )
-    }
-    
-    fun fromMap(map: Map<String, Any?>): User {
-        return User(
-            id = map["id"] as? String ?: "",
-            email = map["email"] as? String ?: "",
-            displayName = map["displayName"] as? String,
-            phoneNumber = map["phoneNumber"] as? String,
-            role = try {
-                UserRole.valueOf((map["role"] as? String) ?: "BUYER")
-            } catch (e: Exception) {
-                UserRole.BUYER
-            },
-            avatarUrl = map["avatarUrl"] as? String,
-            createdAt = (map["createdAt"] as? Number)?.toLong(),
-            isActive = map["isActive"] as? Boolean ?: true,
-            isVerified = map["isVerified"] as? Boolean ?: false
         )
     }
 }

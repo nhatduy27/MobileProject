@@ -11,10 +11,10 @@ import com.example.foodapp.domain.repositories.OrderRepository
 import com.example.foodapp.data.repositories.AuthRepositoryImpl
 import com.example.foodapp.data.repositories.RestaurantRepositoryImpl
 import com.example.foodapp.data.repositories.OrderRepositoryImpl
-import com.example.foodapp.data.remote.FirebaseAuthDataSource
-import com.example.foodapp.data.remote.FirestoreUserDataSource
-import com.example.foodapp.data.remote.FirestoreRestaurantDataSource
-import com.example.foodapp.data.remote.FirestoreOrderDataSource
+import com.example.foodapp.data.remote.sdk.FirebaseAuthDataSource
+import com.example.foodapp.data.remote.sdk.FirestoreUserDataSource
+import com.example.foodapp.data.remote.sdk.FirestoreRestaurantDataSource
+import com.example.foodapp.data.remote.sdk.FirestoreOrderDataSource
 
 @Module
 @InstallIn(SingletonComponent::class)

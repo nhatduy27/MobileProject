@@ -1,19 +1,17 @@
 package com.example.foodapp.di.module
 
-import android.content.Context
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.functions.FirebaseFunctions
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
-import com.example.foodapp.data.remote.FirebaseAuthDataSource
-import com.example.foodapp.data.remote.FirestoreUserDataSource
-import com.example.foodapp.data.remote.FirestoreRestaurantDataSource
-import com.example.foodapp.data.remote.FirestoreOrderDataSource
+import com.example.foodapp.data.remote.sdk.FirebaseAuthDataSource
+import com.example.foodapp.data.remote.sdk.FirestoreUserDataSource
+import com.example.foodapp.data.remote.sdk.FirestoreRestaurantDataSource
+import com.example.foodapp.data.remote.sdk.FirestoreOrderDataSource
 
 @Module
 @InstallIn(SingletonComponent::class)

@@ -3,9 +3,10 @@ package com.example.foodapp.data.repositories
 import com.example.foodapp.domain.entities.User
 import com.example.foodapp.domain.entities.UserRole
 import com.example.foodapp.domain.repositories.AuthRepository
-import com.example.foodapp.data.remote.FirebaseAuthDataSource
-import com.example.foodapp.data.remote.FirestoreUserDataSource
+import com.example.foodapp.data.remote.sdk.FirebaseAuthDataSource
+import com.example.foodapp.data.remote.sdk.FirestoreUserDataSource
 import com.example.foodapp.data.mapper.UserMapper
+import com.example.foodapp.data.remote.model.UserRemote
 
 class AuthRepositoryImpl(
     private val firebaseAuthDataSource: FirebaseAuthDataSource,
@@ -14,24 +15,41 @@ class AuthRepositoryImpl(
     
     override suspend fun register(email: String, password: String, displayName: String?): User {
         val firebaseUser = firebaseAuthDataSource.register(email, password)
-        val user = UserMapper.fromFirebaseUser(firebaseUser, UserRole.BUYER).copy(
-            displayName = displayName
+        val userRemote = UserRemote(
+            id = firebaseUser.uid,
+            email = firebaseUser.email,
+            displayName = displayName,
+            phoneNumber = firebaseUser.phoneNumber,
+            role = UserRole.BUYER.name,
+            avatarUrl = firebaseUser.photoUrl?.toString(),
+            createdAt = System.currentTimeMillis(),
+            isActive = true,
+            isVerified = false
         )
-        return firestoreUserDataSource.createUserProfile(user)
+        val createdUserRemote = firestoreUserDataSource.createUserProfile(userRemote)
+        return UserMapper.fromRemote(createdUserRemote)
     }
     
     override suspend fun login(email: String, password: String): User {
         val firebaseUser = firebaseAuthDataSource.login(email, password)
-        val user = UserMapper.fromFirebaseUser(firebaseUser)
-        
-        // Fetch profile from Firestore to get custom role and other fields
-        val firestoreUser = firestoreUserDataSource.getUserProfile(firebaseUser.uid)
-        return firestoreUser ?: user
+        val userRemote = firestoreUserDataSource.getUserProfile(firebaseUser.uid)
+            ?: UserRemote(
+                id = firebaseUser.uid,
+                email = firebaseUser.email,
+                displayName = firebaseUser.displayName,
+                phoneNumber = firebaseUser.phoneNumber,
+                role = UserRole.BUYER.name,
+                avatarUrl = firebaseUser.photoUrl?.toString(),
+                isActive = true,
+                isVerified = firebaseUser.isEmailVerified
+            )
+        return UserMapper.fromRemote(userRemote)
     }
     
     override suspend fun getCurrentUser(): User? {
         val firebaseUser = firebaseAuthDataSource.getCurrentUser() ?: return null
-        return firestoreUserDataSource.getUserProfile(firebaseUser.uid)
+        val userRemote = firestoreUserDataSource.getUserProfile(firebaseUser.uid) ?: return null
+        return UserMapper.fromRemote(userRemote)
     }
     
     override suspend fun logout() {
