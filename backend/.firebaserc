@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "mobile-food-delivery-2025"
-  }
+    "default": "foodappproject-7c136"
+  },
+  "targets": {},
+  "etags": {}
 }
