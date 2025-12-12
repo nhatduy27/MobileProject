@@ -1,8 +1,6 @@
-package com.example.foodapp.pages
+package com.example.foodapp.pages.dashboard
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -17,15 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 // LƯU Ý: Xóa dòng import R cũ nếu package của bạn khác
 // import com.example.foodapp.R
-import com.example.foodapp.R // Hãy đảm bảo dòng này đúng với package name trong AndroidManifest của bạn
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
