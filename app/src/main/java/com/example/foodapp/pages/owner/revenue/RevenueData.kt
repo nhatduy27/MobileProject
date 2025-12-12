@@ -1,0 +1,24 @@
+package com.example.foodapp.pages.owner.revenue
+
+data class RevenueStat(
+    val title: String,
+    val value: String,
+    val subtitle: String,
+    val color: androidx.compose.ui.graphics.Color
+)
+
+data class TimeSlotRevenue(
+    val emoji: String,
+    val title: String,
+    val ordersCount: Int,
+    val percentage: Int,
+    val amount: String
+)
+
+data class TopProduct(
+    val rank: String,
+    val name: String,
+    val quantity: Int,
+    val unitPrice: Int,
+    val totalRevenue: String
+)

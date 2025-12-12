@@ -1,0 +1,59 @@
+package com.example.foodapp.pages.owner.revenue
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+@Composable
+fun PeriodFilter(
+    selectedPeriod: String,
+    onPeriodSelected: (String) -> Unit
+) {
+    val periods = listOf("Hôm nay", "Tuần này", "Tháng này", "Năm nay")
+    
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .horizontalScroll(rememberScrollState())
+            .padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        periods.forEach { period ->
+            PeriodChip(
+                text = period,
+                isSelected = selectedPeriod == period,
+                onClick = { onPeriodSelected(period) }
+            )
+        }
+    }
+}
+
+@Composable
+fun PeriodChip(
+    text: String,
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
+    Surface(
+        onClick = onClick,
+        color = if (isSelected) Color(0xFFFF6B35) else Color(0xFFF0F0F0),
+        shape = RoundedCornerShape(4.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 14.sp,
+            color = if (isSelected) Color.White else Color(0xFF757575),
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+        )
+    }
+}
