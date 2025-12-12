@@ -13,17 +13,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 
-data class Food(
-    val id: Int,
-    val name: String,
-    val category: String,
-    val type: String,
-    val rating: Double,
-    val reviewCount: Int,
-    val price: Int,
-    val isAvailable: Boolean
-)
+@Preview(showBackground = true, backgroundColor = 0xFF00FF00)
+
 @Composable
 fun FoodsScreen() {
     var selectedCategory by remember { mutableStateOf("Tất cả") }

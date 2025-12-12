@@ -23,6 +23,8 @@ import com.example.foodapp.pages.customer.CustomerScreen
 import com.example.foodapp.pages.dashboard.DashboardScreen
 // Import FoodsScreen
 import com.example.foodapp.pages.foods.FoodsScreen
+// Import OrdersScreen
+import com.example.foodapp.pages.orders.OrdersScreen
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,7 +34,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.foodapp.R
 import kotlinx.coroutines.launch
+import androidx.compose.ui.tooling.preview.Preview
 
+@Preview(showBackground = true, backgroundColor = 0xFF00FF00)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashBoardRootScreen() {
@@ -228,26 +232,6 @@ fun DrawerItem(text: String, iconRes: Int, onClick: () -> Unit) {
 
 // Placeholder screens
 // SỬA LỖI: Xóa hàm DashboardScreen() placeholder ở đây đi vì đã import màn hình thật
-
-@Composable
-fun OrdersScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Quản lý đơn hàng", style = MaterialTheme.typography.headlineMedium)
-    }
-}
-
-@Composable
-fun FoodsScreen() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        Text("Quản lý món ăn", style = MaterialTheme.typography.headlineMedium)
-    }
-}
 
 @Composable
 fun ShippersScreen() {
