@@ -21,6 +21,8 @@ import androidx.compose.runtime.setValue
 import com.example.foodapp.pages.customer.CustomerScreen
 // SỬA LỖI: Import DashboardScreen thật sự, không phải placeholder
 import com.example.foodapp.pages.dashboard.DashboardScreen
+// Import FoodsScreen
+import com.example.foodapp.pages.foods.FoodsScreen
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
