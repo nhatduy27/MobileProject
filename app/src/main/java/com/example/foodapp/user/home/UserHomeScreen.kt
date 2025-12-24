@@ -1,5 +1,6 @@
 package com.example.foodapp.presentation.view.user.home
 
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.material3.*
@@ -7,22 +8,27 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.user.components.*
-import com.example.foodapp.user.home.MainViewModel
+import com.example.foodapp.user.home.HomeViewModel
 import com.example.foodapp.user.home.UserNameState
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.data.model.Product
+import com.example.foodapp.data.model.FoodCategory
 
 @Composable
 fun UserHomeScreen(
-    viewModel: MainViewModel,
-    productList: List<Product>,
     onProductClick: (Product) -> Unit,
     onProfileClick: () -> Unit
 ) {
+
+    val context = LocalContext.current
+    //khởi tạo viewModel
+    val viewModel: HomeViewModel = viewModel(
+        factory = HomeViewModel.factory(context)
+    )
     // Quan sát trạng thái từ ViewModel
     val nameState by viewModel.userNameState.observeAsState(UserNameState.Idle)
 
@@ -31,6 +37,65 @@ fun UserHomeScreen(
         viewModel.fetchUserName()
     }
 
+
+    val productList = listOf(
+        Product(
+            name = "Matcha Latte",
+            description = "Ngon tuyệt",
+            price = "20.000đ",
+            priceValue = 20.0,
+            imageRes = com.example.foodapp.R.drawable.matchalatte,
+            category = FoodCategory.DRINK
+        ),
+        Product(
+            name = "Classic Pizza",
+            description = "Nhiều phô mai",
+            price = "150.000đ",
+            priceValue = 150.0,
+            imageRes = com.example.foodapp.R.drawable.data_3,
+            category = FoodCategory.FOOD
+        ),
+        Product(
+            name = "Chocolate Cake",
+            description = "Bánh ngọt hảo hạng",
+            price = "45.000đ",
+            priceValue = 45.0,
+            imageRes = com.example.foodapp.R.drawable.data_3,
+            category = FoodCategory.FOOD
+        ),
+        Product(
+            name = "Caesar Salad",
+            description = "Rau tươi ngon",
+            price = "60.000đ",
+            priceValue = 60.0,
+            imageRes = com.example.foodapp.R.drawable.data_3,
+            category = FoodCategory.FOOD // SỬA: Đúng category
+        ),
+        Product(
+            name = "Espresso",
+            description = "Cà phê đậm đà",
+            price = "25.000đ",
+            priceValue = 25.0,
+            imageRes = com.example.foodapp.R.drawable.data_3,
+            category = FoodCategory.DRINK
+        ),
+        Product(
+            name = "Hamburger",
+            description = "Thịt bò tươi",
+            price = "80.000đ",
+            priceValue = 80.0,
+            imageRes = com.example.foodapp.R.drawable.data_3,
+            category = FoodCategory.FOOD
+        ),
+        Product(
+            name = "Ice Cream Sundae",
+            description = "Kem mát lạnh",
+            price = "35.000đ",
+            priceValue = 35.0,
+            imageRes = com.example.foodapp.R.drawable.data_3,
+            category = FoodCategory.FOOD
+        )
+    )
     // Gọi hàm Content để hiển thị giao diện
     UserHomeContent(
         nameState = nameState,

@@ -1,66 +1,174 @@
 package com.example.foodapp.user.profile
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Logout
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.foodapp.user.components.UserBottomNav
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.window.Dialog
 
 @Composable
 fun UserProfileScreen(
-    userName: String = "Nguyễn Văn A",
-    userPhone: String = "0987654321",
-    userAddress: String = "123 Đường ABC, Quận 1, TP.HCM",
     onLogoutClick: () -> Unit = {},
     onBackClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    val viewModel: ProfileViewModel = viewModel(
+        factory = ProfileViewModel.factory(context)
+    )
+
+    val userDataState by viewModel.userDataState.observeAsState(UserDataState.Idle)
+
+    var isEditMode by remember { mutableStateOf(false) }
+    var userPhone by remember { mutableStateOf("") }
+    var userFullName by remember { mutableStateOf("") }
+
+    // State cho dialog xác nhận đăng xuất
+    var showLogoutDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.fetchUserData()
+    }
+
+    LaunchedEffect(userDataState) {
+        if (userDataState is UserDataState.Success) {
+            val state = userDataState as UserDataState.Success
+            userPhone = state.user.phone
+            userFullName = state.user.fullName
+        }
+    }
+
+    // Lấy tên từ userDataState
+    val userName = when (val state = userDataState) {
+        is UserDataState.Success -> state.user.fullName
+        is UserDataState.Loading -> "Đang tải..."
+        else -> "Khách hàng"
+    }
+
+    // Kiểm tra xem userPhone có giá trị không
+    val displayPhone = if (userPhone.isNotBlank()) userPhone else "Chưa có"
+
     Scaffold(
         containerColor = Color.White,
-        bottomBar = { UserBottomNav(onProfileClick = onProfileClick) }
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = {
+                    if (isEditMode) {
+                        // Gọi update profile với cả fullName và phone
+                        viewModel.updateProfile(
+                            fullName = userFullName,
+                            phone = userPhone
+                        )
+                    }
+                    isEditMode = !isEditMode
+                },
+                icon = {
+                    Icon(
+                        imageVector = if (isEditMode) Icons.Filled.Save else Icons.Filled.Edit,
+                        contentDescription = if (isEditMode) "Lưu" else "Chỉnh sửa"
+                    )
+                },
+                text = { Text(if (isEditMode) "Lưu thay đổi" else "Chỉnh sửa") }
+            )
+        }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
         ) {
-            // Header với nút back
-            ProfileHeader(onBackClick = onBackClick)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                ProfileHeader(onBackClick = onBackClick, isEditMode = isEditMode)
 
-            // Avatar và tên
-            UserInfoHeader(userName = userName)
+                UserInfoHeader(userName = userName)
 
-            // Thông tin chi tiết
-            ProfileInfoSection(
-                userName = userName,
-                userPhone = userPhone,
-                userAddress = userAddress
+                ProfileInfoSection(
+                    userFullName = if (isEditMode) userFullName else userName,
+                    userPhone = if (isEditMode) userPhone else displayPhone,
+                    isEditMode = isEditMode,
+                    onFullNameChanged = { userFullName = it },
+                    onPhoneChanged = { userPhone = it }
+                )
+
+                // Sửa nút logout để mở dialog
+                LogoutButton(
+                    onLogoutClick = { showLogoutDialog = true }
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+
+        // Dialog xác nhận đăng xuất
+        if (showLogoutDialog) {
+            LogoutConfirmationDialog(
+                onDismiss = { showLogoutDialog = false },
+                onConfirm = {
+                    showLogoutDialog = false
+                    onLogoutClick()
+                }
             )
-
-            // Nút đăng xuất
-            LogoutButton(onLogoutClick = onLogoutClick)
-
-            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
+// Dialog xác nhận đăng xuất
 @Composable
-fun ProfileHeader(onBackClick: () -> Unit) {
+fun LogoutConfirmationDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = "Xác nhận đăng xuất",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+        },
+        text = {
+            Text("Bạn muốn đăng xuất?")
+        },
+        confirmButton = {
+            TextButton(
+                onClick = onConfirm,
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = Color.Red
+                )
+            ) {
+                Text("Đăng xuất", fontWeight = FontWeight.Medium)
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss
+            ) {
+                Text("Hủy")
+            }
+        }
+    )
+}
+
+@Composable
+fun ProfileHeader(onBackClick: () -> Unit, isEditMode: Boolean = false) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -79,7 +187,7 @@ fun ProfileHeader(onBackClick: () -> Unit) {
         }
 
         Text(
-            text = "Thông tin tài khoản",
+            text = if (isEditMode) "Chỉnh sửa thông tin" else "Thông tin tài khoản",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
@@ -96,7 +204,6 @@ fun UserInfoHeader(userName: String) {
             .padding(vertical = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Avatar
         Card(
             modifier = Modifier.size(100.dp),
             shape = CircleShape,
@@ -136,9 +243,11 @@ fun UserInfoHeader(userName: String) {
 
 @Composable
 fun ProfileInfoSection(
-    userName: String,
+    userFullName: String,
     userPhone: String,
-    userAddress: String
+    isEditMode: Boolean = false,
+    onFullNameChanged: (String) -> Unit = {},
+    onPhoneChanged: (String) -> Unit = {}
 ) {
     Card(
         modifier = Modifier
@@ -152,39 +261,37 @@ fun ProfileInfoSection(
         Column(
             modifier = Modifier.padding(vertical = 8.dp)
         ) {
-            // Thông tin cá nhân
             Text(
                 text = "Thông tin cá nhân",
-                fontSize = 16.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.Black,
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                textAlign = TextAlign.Center
             )
 
             Divider(modifier = Modifier.fillMaxWidth())
 
-            // Tên
+            // Thông tin tên đầy đủ
             ProfileInfoItem(
                 icon = Icons.Filled.Person,
-                title = "Họ và tên",
-                value = userName,
-                showDivider = true
+                title = "Tên đầy đủ",
+                value = userFullName,
+                showDivider = true,
+                isEditMode = isEditMode,
+                onValueChanged = onFullNameChanged
             )
 
-            // Số điện thoại
+            // Thông tin số điện thoại
             ProfileInfoItem(
                 icon = Icons.Filled.Phone,
                 title = "Số điện thoại",
                 value = userPhone,
-                showDivider = true
-            )
-
-            // Địa chỉ
-            ProfileInfoItem(
-                icon = Icons.Filled.LocationOn,
-                title = "Địa chỉ",
-                value = userAddress,
-                showDivider = false
+                showDivider = false,
+                isEditMode = isEditMode,
+                onValueChanged = onPhoneChanged
             )
         }
     }
@@ -195,7 +302,9 @@ fun ProfileInfoItem(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
     value: String,
-    showDivider: Boolean
+    showDivider: Boolean,
+    isEditMode: Boolean = false,
+    onValueChanged: (String) -> Unit = {}
 ) {
     Column {
         Row(
@@ -203,7 +312,6 @@ fun ProfileInfoItem(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically
-
         ) {
             Icon(
                 imageVector = icon,
@@ -223,13 +331,30 @@ fun ProfileInfoItem(
                     color = Color.Gray
                 )
 
-                Text(
-                    text = value,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
+                if (isEditMode) {
+                    TextField(
+                        value = value,
+                        onValueChange = onValueChanged,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        singleLine = true,
+                        label = { Text("Nhập $title") },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
+                        )
+                    )
+                } else {
+                    Text(
+                        text = value,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Color.Black,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
             }
         }
 
@@ -259,7 +384,7 @@ fun LogoutButton(onLogoutClick: () -> Unit) {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp),
-            contentAlignment = Alignment.Center  // <-- Căn giữa nội dung trong Box
+            contentAlignment = Alignment.Center
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically
@@ -288,6 +413,9 @@ fun LogoutButton(onLogoutClick: () -> Unit) {
 @Composable
 fun UserProfileScreenPreview() {
     MaterialTheme {
-        UserProfileScreen()
+        UserProfileScreen(
+            onLogoutClick = {},
+            onBackClick = {}
+        )
     }
 }

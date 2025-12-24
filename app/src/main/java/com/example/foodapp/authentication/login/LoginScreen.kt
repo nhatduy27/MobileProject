@@ -23,17 +23,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.data.repository.FirebaseRepository
 import com.example.foodapp.ui.theme.PrimaryOrange
+import com.example.foodapp.user.home.HomeViewModel
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onBackClicked: () -> Unit,
     onSignUpClicked: () -> Unit,
-    onForgotPasswordClicked: () -> Unit = {},
-    viewModel: LoginViewModel = viewModel(
-        factory = LoginViewModelFactory(FirebaseRepository(LocalContext.current))
-    )
+    onForgotPasswordClicked: () -> Unit = {}
 ) {
+
+    val context = LocalContext.current
+    //khởi tạo viewModel
+    val viewModel: LoginViewModel = viewModel(
+        factory = LoginViewModel.factory(context)
+    )
 
     val logInState by viewModel.logInState.collectAsStateWithLifecycle()
     val googleLogInState by viewModel.googleLogInState.collectAsStateWithLifecycle()

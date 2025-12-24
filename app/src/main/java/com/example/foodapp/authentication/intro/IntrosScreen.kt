@@ -41,7 +41,7 @@ fun IntroScreen(
             contentDescription = "Food App Banner",
             modifier = Modifier
                 .fillMaxWidth()
-                .height(508.dp),
+                .height(515.dp),
             contentScale = ContentScale.Crop
         )
 

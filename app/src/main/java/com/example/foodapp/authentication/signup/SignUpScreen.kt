@@ -22,6 +22,7 @@ import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.authentication.login.LoginViewModel
 import com.example.foodapp.data.repository.FirebaseRepository
 import com.example.foodapp.ui.theme.PrimaryOrange
 
@@ -29,11 +30,16 @@ import com.example.foodapp.ui.theme.PrimaryOrange
 fun SignUpScreen(
     onSignUpSuccess: () -> Unit,
     onBackClicked: () -> Unit,
-    onLoginClicked: () -> Unit,
-    viewModel: SignUpViewModel = viewModel(
-        factory = SignUpViewModelFactory(FirebaseRepository(LocalContext.current))
-    )
+    onLoginClicked: () -> Unit
 ) {
+
+
+    val context = LocalContext.current
+    //khởi tạo viewModel
+    val viewModel: SignUpViewModel = viewModel(
+        factory = SignUpViewModel.factory(context)
+    )
+
     val signUpState by viewModel.signUpState.observeAsState(SignUpState.Idle)
     val googleSignInState by viewModel.googleSignInState.observeAsState(GoogleSignInState.Idle)
     val saveUserState by viewModel.saveUserState.observeAsState(null)

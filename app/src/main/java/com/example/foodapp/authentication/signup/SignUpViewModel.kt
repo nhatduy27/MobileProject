@@ -3,6 +3,8 @@ package com.example.foodapp.authentication.signup
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import com.example.foodapp.authentication.login.LoginViewModel
 import com.example.foodapp.data.repository.FirebaseRepository
 
 sealed class SignUpState {
@@ -87,5 +89,16 @@ class SignUpViewModel(private val repository: FirebaseRepository) : ViewModel() 
         _signUpState.value = SignUpState.Idle
         _googleSignInState.value = GoogleSignInState.Idle
         _saveUserState.value = null
+    }
+
+    companion object {
+        fun factory(context: android.content.Context): ViewModelProvider.Factory {
+            return object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return SignUpViewModel(FirebaseRepository(context)) as T
+                }
+            }
+        }
     }
 }

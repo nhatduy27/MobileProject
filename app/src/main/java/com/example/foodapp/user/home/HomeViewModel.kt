@@ -16,7 +16,7 @@ sealed class UserNameState {
     object Empty : UserNameState()
 }
 
-class MainViewModel(
+class HomeViewModel(
     private val repository: FirebaseRepository
 ) : ViewModel() {
 
@@ -53,7 +53,7 @@ class MainViewModel(
         fun factory(context: Context) = viewModelFactory {
             initializer {
                 val repository = FirebaseRepository(context)
-                MainViewModel(repository)
+                HomeViewModel(repository)
             }
         }
     }
