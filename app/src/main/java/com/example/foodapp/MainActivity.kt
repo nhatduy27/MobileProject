@@ -4,10 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.example.foodapp.pages.owner.dashboard.DashBoardRootScreen
-
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+import androidx.navigation.compose.rememberNavController
+import com.example.foodapp.navigation.FoodAppNavHost
 import com.example.foodapp.ui.theme.FoodAppTheme
-import com.example.foodapp.shipper.dashboard.ShipperDashboardRootScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,11 +19,14 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             FoodAppTheme {
-//              ShipperDashboardRootScreen()
-                DashBoardRootScreen()
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    val navController = rememberNavController()
+                    FoodAppNavHost(navController = navController)
+                }
             }
         }
-
     }
-
 }

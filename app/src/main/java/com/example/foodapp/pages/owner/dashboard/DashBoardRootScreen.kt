@@ -75,7 +75,7 @@ fun DashBoardRootScreen() {
                         tint = Color.White,
                         modifier = Modifier
                             .align(Alignment.End)
-                            .offset(y = (-16).dp) // Đẩy icon lên một chút cho đẹp
+                            .offset(y = (-16).dp)
                             .size(32.dp)
                             .clickable { scope.launch { drawerState.close() } }
                     )
