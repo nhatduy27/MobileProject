@@ -2,8 +2,7 @@ package com.example.foodapp.shipper.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.*import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
@@ -86,14 +85,14 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "N",
+                                text = "N", // Replace with user initial if available
                                 fontSize = 32.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFF6B35)
                             )
                         }
                         Text(
-                            text = "Nguyễn Văn A",
+                            text = "Nguyễn Văn A", // Replace with user name
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
@@ -110,7 +109,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Menu Items
+                // Menu Items for Shipper
                 DrawerMenuItem(
                     icon = "🏠",
                     title = "Trang chủ",
