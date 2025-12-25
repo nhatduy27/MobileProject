@@ -16,23 +16,37 @@ import androidx.compose.ui.unit.sp
 fun EarningsScreen() {
     var selectedPeriod by remember { mutableStateOf(EarningsPeriod.MONTH) }
 
-    val summary = EarningsSummary(
-        todayEarnings = 85000,
-        weekEarnings = 420000,
-        monthEarnings = 1850000,
-        totalOrders = 152,
-        completedOrders = 148,
-        averagePerOrder = 12500
+    // Dữ liệu mock nhiều ngày, nhiều tháng, nhiều tuần
+    val allEarningsHistory = listOf(
+        EarningsData("Hôm nay, 25/12/2025", 10, 90000, 5000),
+        EarningsData("24/12/2025", 12, 85000, 10000),
+        EarningsData("23/12/2025", 15, 102000, 0),
+        EarningsData("22/12/2025", 18, 125000, 15000),
+        EarningsData("21/12/2025", 14, 95000, 0),
+        EarningsData("20/12/2025", 16, 110000, 10000),
+        EarningsData("19/12/2025", 13, 88000, 0),
+        EarningsData("18/12/2025", 17, 118000, 12000),
+        EarningsData("10/12/2025", 11, 80000, 0),
+        EarningsData("01/12/2025", 9, 70000, 0),
+        EarningsData("25/11/2025", 8, 60000, 0),
+        EarningsData("10/11/2025", 7, 50000, 0)
     )
 
-    val earningsHistory = listOf(
-        EarningsData("Hôm nay, 12/12", 12, 85000, 10000),
-        EarningsData("11/12/2024", 15, 102000, 0),
-        EarningsData("10/12/2024", 18, 125000, 15000),
-        EarningsData("09/12/2024", 14, 95000, 0),
-        EarningsData("08/12/2024", 16, 110000, 10000),
-        EarningsData("07/12/2024", 13, 88000, 0),
-        EarningsData("06/12/2024", 17, 118000, 12000)
+    // Lọc dữ liệu theo chế độ
+    val filteredEarningsHistory = when (selectedPeriod) {
+        EarningsPeriod.TODAY -> allEarningsHistory.filter { it.date.contains("Hôm nay") || it.date.startsWith("25/12/2025") }
+        EarningsPeriod.WEEK -> allEarningsHistory.take(7) // 7 ngày gần nhất
+        EarningsPeriod.MONTH -> allEarningsHistory.filter { it.date.endsWith("12/2025") || it.date.contains("Hôm nay") }
+        EarningsPeriod.ALL -> allEarningsHistory
+    }
+
+    val summary = EarningsSummary(
+        todayEarnings = filteredEarningsHistory.firstOrNull()?.totalEarnings ?: 0,
+        weekEarnings = allEarningsHistory.take(7).sumOf { it.totalEarnings },
+        monthEarnings = allEarningsHistory.filter { it.date.endsWith("12/2025") || it.date.contains("Hôm nay") }.sumOf { it.totalEarnings },
+        totalOrders = allEarningsHistory.sumOf { it.totalOrders },
+        completedOrders = allEarningsHistory.sumOf { it.totalOrders },
+        averagePerOrder = if (allEarningsHistory.sumOf { it.totalOrders } > 0) allEarningsHistory.sumOf { it.totalEarnings } / allEarningsHistory.sumOf { it.totalOrders } else 0
     )
 
     Column(
@@ -63,7 +77,7 @@ fun EarningsScreen() {
                 .padding(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            earningsHistory.forEach { earnings ->
+            filteredEarningsHistory.forEach { earnings ->
                 EarningsHistoryCard(earnings)
             }
         }
