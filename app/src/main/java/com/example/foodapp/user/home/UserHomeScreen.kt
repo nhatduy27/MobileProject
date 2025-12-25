@@ -20,6 +20,7 @@ import com.example.foodapp.data.model.FoodCategory
 
 @Composable
 fun UserHomeScreen(
+    navController: androidx.navigation.NavHostController,
     onProductClick: (Product) -> Unit,
     onProfileClick: () -> Unit
 ) {
@@ -98,6 +99,7 @@ fun UserHomeScreen(
     )
     // Gọi hàm Content để hiển thị giao diện
     UserHomeContent(
+        navController = navController,
         nameState = nameState,
         productList = productList,
         onProductClick = onProductClick,
@@ -107,6 +109,7 @@ fun UserHomeScreen(
 
 @Composable
 fun UserHomeContent(
+    navController: androidx.navigation.NavHostController,
     nameState: UserNameState,
     productList: List<Product>,
     onProductClick: (Product) -> Unit,
@@ -114,7 +117,7 @@ fun UserHomeContent(
 ) {
     Scaffold(
         containerColor = Color.White,
-        bottomBar = { UserBottomNav(onProfileClick = onProfileClick) }
+        bottomBar = { UserBottomNav(navController = navController, onProfileClick = onProfileClick) }
     ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),

@@ -16,6 +16,9 @@ import com.example.foodapp.user.profile.UserProfileScreen
 import com.example.foodapp.authentication.roleselection.RoleSelectionScreen
 import com.example.foodapp.authentication.signup.SignUpScreen
 import com.example.foodapp.presentation.view.user.home.UserHomeScreen
+import com.example.foodapp.user.cart.CartScreen
+import com.example.foodapp.user.favorites.FavoritesScreen
+import com.example.foodapp.user.notifications.UserNotificationsScreen
 import com.google.firebase.auth.FirebaseAuth
 
 sealed class Screen(val route: String) {
@@ -25,6 +28,9 @@ sealed class Screen(val route: String) {
     object RoleSelection : Screen("role_selection")
     object UserHome : Screen("user_home")
     object UserProfile : Screen("user_profile")
+    object UserCart : Screen("user_cart")
+    object UserFavorites : Screen("user_favorites")
+    object UserNotifications : Screen("user_notifications")
     object ShipperHome : Screen("shipper_home")
     object OwnerHome : Screen("owner_home")
 }
@@ -92,6 +98,7 @@ fun FoodAppNavHost(
 
         composable(Screen.UserHome.route) {
             UserHomeScreen(
+                navController = navController,
                 onProductClick = { /* TODO */ },
                 onProfileClick = {
                     navController.navigate(Screen.UserProfile.route)
@@ -108,6 +115,27 @@ fun FoodAppNavHost(
                         popUpTo(0)  // xóa toàn bộ stack
                     }
                 }
+            )
+        }
+
+        composable(Screen.UserCart.route) {
+            CartScreen(
+                navController = navController,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.UserFavorites.route) {
+            FavoritesScreen(
+                navController = navController,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.UserNotifications.route) {
+            UserNotificationsScreen(
+                navController = navController,
+                onBackClick = { navController.popBackStack() }
             )
         }
 

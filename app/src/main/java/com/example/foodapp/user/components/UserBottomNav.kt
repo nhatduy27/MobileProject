@@ -12,10 +12,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.foodapp.R
+import com.example.foodapp.navigation.Screen
 
 @Composable
-fun UserBottomNav(onProfileClick: () -> Unit) {
+fun UserBottomNav(
+    navController: NavHostController,
+    onProfileClick: () -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -24,10 +29,10 @@ fun UserBottomNav(onProfileClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         val items = listOf(
-            Triple("Trang chủ", R.drawable.btn_1, {}),
-            Triple("Giỏ hàng", R.drawable.btn_2, {}),
-            Triple("Yêu thích", R.drawable.btn_3, {}),
-            Triple("Thông báo", R.drawable.btn_4, {}),
+            Triple("Trang chủ", R.drawable.btn_1, { navController.navigate(Screen.UserHome.route) }),
+            Triple("Giỏ hàng", R.drawable.btn_2, { navController.navigate(Screen.UserCart.route) }),
+            Triple("Yêu thích", R.drawable.btn_3, { navController.navigate(Screen.UserFavorites.route) }),
+            Triple("Thông báo", R.drawable.btn_4, { navController.navigate(Screen.UserNotifications.route) }),
             Triple("Tôi", R.drawable.btn_5, onProfileClick)
         )
 
