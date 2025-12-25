@@ -10,7 +10,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(
+    onEditProfile: () -> Unit = {},
+    onChangePassword: () -> Unit = {},
+    onVehicleInfo: () -> Unit = {},
+    onPaymentMethod: () -> Unit = {},
+    onNotificationSettings: () -> Unit = {},
+    onLanguage: () -> Unit = {},
+    onPrivacy: () -> Unit = {},
+    onTerms: () -> Unit = {},
+    onHelp: () -> Unit = {}
+) {
     val profile = ShipperProfile(
         name = "Nguyễn Văn A",
         phone = "0901234567",
@@ -57,17 +67,37 @@ fun ProfileScreen() {
         ) {
             ProfileMenuCard(
                 title = "TÀI KHOẢN",
-                items = accountItems
+                items = accountItems,
+                onItemClick = {
+                    when (it) {
+                        ProfileAction.EDIT_PROFILE -> onEditProfile()
+                        ProfileAction.CHANGE_PASSWORD -> onChangePassword()
+                        ProfileAction.VEHICLE_INFO -> onVehicleInfo()
+                        ProfileAction.PAYMENT_METHOD -> onPaymentMethod()
+                        ProfileAction.NOTIFICATIONS -> onNotificationSettings()
+                        else -> {}
+                    }
+                }
             )
-
             ProfileMenuCard(
                 title = "CÀI ĐẶT",
-                items = settingsItems
+                items = settingsItems,
+                onItemClick = {
+                    when (it) {
+                        ProfileAction.NOTIFICATIONS -> onNotificationSettings()
+                        ProfileAction.LANGUAGE -> onLanguage()
+                        ProfileAction.PRIVACY -> onPrivacy()
+                        ProfileAction.TERMS -> onTerms()
+                        else -> {}
+                    }
+                }
             )
-
             ProfileMenuCard(
                 title = "KHÁC",
-                items = otherItems
+                items = otherItems,
+                onItemClick = {
+                    if (it == ProfileAction.HELP) onHelp()
+                }
             )
         }
     }

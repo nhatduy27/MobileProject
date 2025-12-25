@@ -25,7 +25,7 @@ import com.example.foodapp.shipper.notifications.NotificationsScreen
 import com.example.foodapp.shipper.profile.ProfileScreen
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
-
+import androidx.compose.material.icons.filled.Notifications
 @Composable
 fun DrawerMenuItem(
     icon: String,
@@ -219,6 +219,16 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                                 )
                             }
                         },
+                        actions = {
+                            IconButton(onClick = {
+                                currentScreen = "notifications"
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Notifications,
+                                    contentDescription = "Thông báo"
+                                )
+                            }
+                        },
                         colors = TopAppBarDefaults.topAppBarColors(
                             containerColor = Color(0xFFFF6B35),
                             titleContentColor = Color.White,
@@ -232,7 +242,26 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                         "home" -> ShipperHomeScreen()
                         "earnings" -> EarningsScreen()
                         "history" -> HistoryScreen()
-                        "profile" -> ProfileScreen()
+                        "profile" -> ProfileScreen(
+                            onEditProfile = { currentScreen = "edit_profile" },
+                            onChangePassword = { currentScreen = "change_password" },
+                            onVehicleInfo = { currentScreen = "vehicle_info" },
+                            onPaymentMethod = { currentScreen = "payment_method" },
+                            onNotificationSettings = { currentScreen = "notification_settings" },
+                            onLanguage = { currentScreen = "language" },
+                            onPrivacy = { currentScreen = "privacy" },
+                            onTerms = { currentScreen = "terms" },
+                            onHelp = { currentScreen = "help_screen" }
+                        )
+                                                                                                                                                                        "help_screen" -> com.example.foodapp.shipper.profile.HelpScreen(onBack = { currentScreen = "profile" })
+                                                                                                                                                "privacy" -> com.example.foodapp.shipper.profile.PrivacyScreen(onBack = { currentScreen = "profile" })
+                                                                                                                                                "terms" -> com.example.foodapp.shipper.profile.TermsScreen(onBack = { currentScreen = "profile" })
+                                                                                                                        "language" -> com.example.foodapp.shipper.profile.LanguageScreen(onCancel = { currentScreen = "profile" })
+                                                                                                "notification_settings" -> com.example.foodapp.shipper.profile.NotificationSettingsScreen(onCancel = { currentScreen = "profile" })
+                                                                        "payment_method" -> com.example.foodapp.shipper.profile.PaymentMethodScreen(onCancel = { currentScreen = "profile" })
+                                                "vehicle_info" -> com.example.foodapp.shipper.profile.VehicleInfoScreen(onCancel = { currentScreen = "profile" })
+                        "edit_profile" -> com.example.foodapp.shipper.profile.EditProfileScreen(onCancel = { currentScreen = "profile" })
+                        "change_password" -> com.example.foodapp.shipper.profile.ChangePasswordScreen(onCancel = { currentScreen = "profile" })
                         "notifications" -> NotificationsScreen()
                         "help" -> HelpScreen()
                     }
