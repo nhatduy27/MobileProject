@@ -1,7 +1,12 @@
 package com.example.foodapp.navigation
 
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -11,7 +16,6 @@ import com.example.foodapp.user.profile.UserProfileScreen
 import com.example.foodapp.authentication.roleselection.RoleSelectionScreen
 import com.example.foodapp.authentication.signup.SignUpScreen
 import com.example.foodapp.presentation.view.user.home.UserHomeScreen
-import com.example.foodapp.data.model.Product
 import com.google.firebase.auth.FirebaseAuth
 
 sealed class Screen(val route: String) {
@@ -21,6 +25,8 @@ sealed class Screen(val route: String) {
     object RoleSelection : Screen("role_selection")
     object UserHome : Screen("user_home")
     object UserProfile : Screen("user_profile")
+    object ShipperHome : Screen("shipper_home")
+    object OwnerHome : Screen("owner_home")
 }
 
 @Composable
@@ -34,12 +40,13 @@ fun FoodAppNavHost(
 
     NavHost(
         navController = navController,
-        startDestination = if (currentUser != null) Screen.UserHome.route else Screen.Intro.route
+        startDestination = Screen.Intro.route
     ) {
         composable(Screen.Intro.route) {
             IntroScreen(
-                onStartClicked = { navController.navigate(Screen.SignUp.route) },
-                onLoginClicked = { navController.navigate(Screen.Login.route) }
+                onCustomerClicked = { navController.navigate(Screen.UserHome.route) },
+                onShipperClicked = { navController.navigate(Screen.ShipperHome.route) },
+                onOwnerClicked = { navController.navigate(Screen.OwnerHome.route) }
             )
         }
 
@@ -58,7 +65,7 @@ fun FoodAppNavHost(
         composable(Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = {
-                    navController.navigate(Screen.UserHome.route) {
+                    navController.navigate(Screen.ShipperHome.route) {
                         popUpTo(Screen.Intro.route) { inclusive = true }
                     }
                 },
@@ -99,6 +106,16 @@ fun FoodAppNavHost(
                     }
                 }
             )
+        }
+
+        composable(Screen.ShipperHome.route) {
+            // Màn hình shipper có sidebar
+            com.example.foodapp.shipper.dashboard.ShipperDashboardRootScreen()
+        }
+
+        composable(Screen.OwnerHome.route) {
+            // Màn hình owner có sidebar
+            com.example.foodapp.pages.owner.dashboard.DashBoardRootScreen()
         }
     }
 }
