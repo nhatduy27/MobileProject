@@ -36,45 +36,71 @@ fun DashboardRevenueChart() {
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            Row(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color(0xFFF5F5F5))
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalAlignment = Alignment.Bottom
+                    .padding(16.dp)
             ) {
-                revenueData.forEach { revenue ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        verticalArrangement = Arrangement.Bottom
-                    ) {
-                        // Label
-                        Text(
-                            revenue.day,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1A1A1A)
-                        )
+                // Chart area with bars
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(150.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    revenueData.forEach { revenue ->
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            verticalArrangement = Arrangement.spacedBy(0.dp)
+                        ) {
+                            // Amount at top
+                            Text(
+                                "${revenue.amount}K",
+                                fontSize = 9.sp,
+                                color = Color(0xFF757575)
+                            )
 
-                        Text(
-                            "${revenue.amount}K",
-                            fontSize = 10.sp,
-                            color = Color(0xFF757575)
-                        )
+                            // Spacer to push bar down
+                            Spacer(modifier = Modifier.weight(1f))
 
-                        Spacer(modifier = Modifier.height(12.dp))
+                            // Bar
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height((revenue.amount.toFloat() / maxRevenue * 120).dp)
+                                    .background(Color(0xFFFF6B35), shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
+                            )
+                        }
+                    }
+                }
 
-                        // Bar
+                // Labels row at bottom (aligned)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    revenueData.forEach { revenue ->
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
-                                .height((revenue.amount.toFloat() / maxRevenue * 200).dp)
-                                .background(Color(0xFFFF6B35), shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
-                        )
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            contentAlignment = Alignment.TopCenter
+                        ) {
+                            Text(
+                                revenue.day,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF1A1A1A)
+                            )
+                        }
                     }
                 }
             }
