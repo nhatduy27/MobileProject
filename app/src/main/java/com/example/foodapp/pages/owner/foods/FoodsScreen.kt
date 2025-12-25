@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,10 +22,8 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun FoodsScreen() {
     var selectedCategory by remember { mutableStateOf("Tất cả") }
-
-    val categories = listOf("Tất cả", "Cơm", "Phở/Bún", "Đồ uống", "Ăn vặt")
-
-    val foods = listOf(
+    var showAddDialog by remember { mutableStateOf(false) }
+    var foodList by remember { mutableStateOf(listOf(
         Food(1, "Cơm gà xối mỡ", "Cơm", "Món chính", 4.8, 156, 45000, true),
         Food(2, "Phở bò", "Phở/Bún", "Món chính", 4.7, 203, 50000, true),
         Food(3, "Bún chả Hà Nội", "Phở/Bún", "Món chính", 4.9, 178, 55000, true),
@@ -33,18 +32,20 @@ fun FoodsScreen() {
         Food(6, "Cafe sữa đá", "Đồ uống", "Thức uống", 4.4, 95, 20000, true),
         Food(7, "Bánh mì thịt nướng", "Ăn vặt", "Ăn vặt", 4.3, 67, 30000, true),
         Food(8, "Gỏi cuốn tôm thịt", "Ăn vặt", "Ăn vặt", 4.6, 120, 35000, true),
-    )
+    )) }
+
+    val categories = listOf("Tất cả", "Cơm", "Phở/Bún", "Đồ uống", "Ăn vặt")
 
     // Lọc thực đơn theo category được chọn
     val filteredFoods = if (selectedCategory == "Tất cả") {
-        foods
+        foodList
     } else {
-        foods.filter { it.category == selectedCategory }
+        foodList.filter { it.category == selectedCategory }
     }
 
-    val totalFoods = foods.size
-    val availableFoods = foods.count { it.isAvailable }
-    val outOfStockFoods = foods.count { !it.isAvailable }
+    val totalFoods = foodList.size
+    val availableFoods = foodList.count { it.isAvailable }
+    val outOfStockFoods = foodList.count { !it.isAvailable }
 
     Column(
         modifier = Modifier
@@ -52,7 +53,20 @@ fun FoodsScreen() {
             .background(Color(0xFFF5F5F5))
     ) {
         // Header
-        FoodsHeader()
+        FoodsHeader(
+            onAddClick = { showAddDialog = true }
+        )
+
+        // Show Add Food Dialog
+        if (showAddDialog) {
+            AddFoodDialog(
+                onDismiss = { showAddDialog = false },
+                onAddFood = { newFood ->
+                    foodList = foodList + newFood
+                    showAddDialog = false
+                }
+            )
+        }
 
         // Filter Tabs
         Row(
@@ -101,7 +115,7 @@ fun FoodsScreen() {
 }
 
 @Composable
-fun FoodsHeader() {
+fun FoodsHeader(onAddClick: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -131,7 +145,7 @@ fun FoodsHeader() {
 
             // Add Food Button
             Button(
-                onClick = { /* TODO: Navigate to add food screen */ },
+                onClick = onAddClick,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color.White,
                     contentColor = Color(0xFFFF6B35)
