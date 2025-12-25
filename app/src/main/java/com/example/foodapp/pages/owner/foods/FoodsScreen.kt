@@ -3,8 +3,9 @@ package com.example.foodapp.pages.owner.foods
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,9 +14,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
-
-@Preview(showBackground = true, backgroundColor = 0xFF00FF00)
 
 @Composable
 fun FoodsScreen() {
@@ -29,8 +27,17 @@ fun FoodsScreen() {
         Food(3, "Bún chả Hà Nội", "Phở/Bún", "Món chính", 4.9, 178, 55000, true),
         Food(4, "Trà sữa trân châu", "Đồ uống", "Thức uống", 4.6, 142, 25000, true),
         Food(5, "Cơm tấm sườn bì", "Cơm", "Món chính", 4.5, 89, 40000, false),
-        Food(6, "Cafe sữa đá", "Đồ uống", "Thức uống", 4.4, 95, 20000, true)
+        Food(6, "Cafe sữa đá", "Đồ uống", "Thức uống", 4.4, 95, 20000, true),
+        Food(7, "Bánh mì thịt nướng", "Ăn vặt", "Ăn vặt", 4.3, 67, 30000, true),
+        Food(8, "Gỏi cuốn tôm thịt", "Ăn vặt", "Ăn vặt", 4.6, 120, 35000, true),
     )
+
+    // Lọc thực đơn theo category được chọn
+    val filteredFoods = if (selectedCategory == "Tất cả") {
+        foods
+    } else {
+        foods.filter { it.category == selectedCategory }
+    }
 
     val totalFoods = foods.size
     val availableFoods = foods.count { it.isAvailable }
@@ -76,15 +83,14 @@ fun FoodsScreen() {
         }
 
         // Foods List
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
                 .padding(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            foods.forEach { food ->
+            items(filteredFoods) { food ->
                 FoodItem(food = food)
             }
         }
