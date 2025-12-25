@@ -47,18 +47,11 @@ fun DashboardRevenueChart() {
                 revenueData.forEach { revenue ->
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight(),
+                        verticalArrangement = Arrangement.Bottom
                     ) {
-                        // Bar
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height((revenue.amount.toFloat() / maxRevenue * 200).dp)
-                                .background(Color(0xFFFF6B35), shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
                         // Label
                         Text(
                             revenue.day,
@@ -71,6 +64,16 @@ fun DashboardRevenueChart() {
                             "${revenue.amount}K",
                             fontSize = 10.sp,
                             color = Color(0xFF757575)
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        // Bar
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height((revenue.amount.toFloat() / maxRevenue * 200).dp)
+                                .background(Color(0xFFFF6B35), shape = androidx.compose.foundation.shape.RoundedCornerShape(4.dp))
                         )
                     }
                 }
