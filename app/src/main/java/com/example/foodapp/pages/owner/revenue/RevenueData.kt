@@ -22,3 +22,9 @@ data class TopProduct(
     val unitPrice: Int,
     val totalRevenue: String
 )
+
+data class PeriodRevenueData(
+    val stats: List<RevenueStat>,
+    val timeSlots: List<TimeSlotRevenue>,
+    val topProducts: List<TopProduct>
+)

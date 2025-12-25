@@ -1,6 +1,8 @@
 package com.example.foodapp.pages.owner.revenue
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -46,8 +48,15 @@ fun PeriodChip(
 ) {
     Surface(
         onClick = onClick,
-        color = if (isSelected) Color(0xFFFF6B35) else Color(0xFFF0F0F0),
-        shape = RoundedCornerShape(4.dp)
+        color = if (isSelected) Color(0xFFFF6B35) else Color.White,
+        shape = RoundedCornerShape(6.dp),
+        modifier = Modifier
+            .border(
+                width = if (isSelected) 0.dp else 1.dp,
+                color = if (isSelected) Color(0xFFFF6B35) else Color(0xFFDDDDDD),
+                shape = RoundedCornerShape(6.dp)
+            )
+            .clickable(enabled = true, onClick = onClick)
     ) {
         Text(
             text = text,

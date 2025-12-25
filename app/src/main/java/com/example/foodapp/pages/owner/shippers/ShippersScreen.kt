@@ -2,8 +2,10 @@ package com.example.foodapp.pages.owner.shippers
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -13,6 +15,8 @@ import androidx.compose.ui.unit.dp
 fun ShippersScreen() {
     var selectedStatus by remember { mutableStateOf("Tất cả") }
 
+    val statusFilters = listOf("Tất cả", "Đang rảnh", "Đang giao", "Nghỉ")
+
     val shippers = listOf(
         Shipper("SH001", "Nguyễn Văn A", "0912345678", 4.8, 245, 8, ShipperStatus.DELIVERING),
         Shipper("SH002", "Trần Thị B", "0987654321", 4.9, 312, 12, ShipperStatus.AVAILABLE),
@@ -21,6 +25,13 @@ fun ShippersScreen() {
         Shipper("SH005", "Hoàng Văn E", "0934567890", 4.9, 289, 10, ShipperStatus.AVAILABLE),
         Shipper("SH006", "Võ Thị F", "0945678901", 4.5, 134, 5, ShipperStatus.DELIVERING)
     )
+
+    // Lọc shipper theo status được chọn
+    val filteredShippers = if (selectedStatus == "Tất cả") {
+        shippers
+    } else {
+        shippers.filter { it.status.displayName == selectedStatus }
+    }
 
     val totalShippers = shippers.size
     val activeShippers = shippers.count { it.status != ShipperStatus.OFFLINE }
@@ -35,10 +46,22 @@ fun ShippersScreen() {
         ShippersHeader()
 
         // Status Filter
-        ShipperStatusFilter(
-            selectedStatus = selectedStatus,
-            onStatusSelected = { selectedStatus = it }
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.White)
+                .horizontalScroll(rememberScrollState())
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            statusFilters.forEach { status ->
+                ShipperFilterChip(
+                    status = status,
+                    isSelected = selectedStatus == status,
+                    onClick = { selectedStatus = it }
+                )
+            }
+        }
 
         // Statistics
         Row(
@@ -68,15 +91,14 @@ fun ShippersScreen() {
         }
 
         // Shippers List
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
                 .padding(bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            shippers.forEach { shipper ->
+            items(filteredShippers) { shipper ->
                 ShipperCard(shipper = shipper)
             }
         }
