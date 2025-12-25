@@ -202,7 +202,7 @@ private fun FavoriteItemCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "${String.format("%.0f", item.price)}đ",
+                        "${String.format("%,d", (item.price * 1000).toLong())}đ",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         color = Color(0xFFFF9800)

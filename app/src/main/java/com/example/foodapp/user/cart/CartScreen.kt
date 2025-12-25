@@ -186,7 +186,7 @@ private fun CartItemCard(
                         color = Color.Black
                     )
                     Text(
-                        "${String.format("%.0f", item.price)}đ",
+                        "${String.format("%,d", (item.price * 1000).toLong())}đ",
                         fontSize = 12.sp,
                         color = Color(0xFFFF9800),
                         fontWeight = FontWeight.SemiBold
@@ -262,7 +262,7 @@ private fun CartBottomBar(totalPrice: Double) {
                     fontSize = 16.sp
                 )
                 Text(
-                    "${String.format("%.0f", totalPrice)}đ",
+                    "${String.format("%,d", (totalPrice * 1000).toLong())}đ",
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = Color(0xFFFF9800)
