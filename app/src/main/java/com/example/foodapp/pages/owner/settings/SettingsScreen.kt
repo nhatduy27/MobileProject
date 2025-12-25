@@ -5,15 +5,19 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontWeight
+import androidx.navigation.NavHostController
 
 @Composable
-fun SettingsScreen() {
+fun SettingsScreen(navController: NavHostController) {
     val sections = listOf(
         SettingSection(
             title = "TÀI KHOẢN",
@@ -143,6 +147,21 @@ fun SettingsScreen() {
                         println("$title switched to $enabled")
                     }
                 )
+            }
+
+            // Nút đăng xuất
+            Button(
+                onClick = {
+                    com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                    navController.navigate("login") {
+                        popUpTo(0)
+                    }
+                },
+                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35)),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
+            ) {
+                Text("Đăng xuất", color = Color.White, fontWeight = FontWeight.Bold)
             }
 
             // Version Info

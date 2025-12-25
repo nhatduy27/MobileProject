@@ -31,6 +31,7 @@ import com.example.foodapp.pages.owner.revenue.RevenueScreen
 import com.example.foodapp.pages.owner.shippers.ShippersScreen
 // Import SettingsScreen
 import com.example.foodapp.pages.owner.settings.SettingsScreen
+import androidx.navigation.NavHostController
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,9 +44,10 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.tooling.preview.Preview
 
 @Preview(showBackground = true, backgroundColor = 0xFF00FF00)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DashBoardRootScreen() {
+fun DashBoardRootScreen(navController: NavHostController) {
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -216,7 +218,7 @@ fun DashBoardRootScreen() {
                     "shippers" -> ShippersScreen()
                     "customers" -> CustomerScreen()
                     "revenue" -> RevenueScreen()
-                    "settings" -> SettingsScreen()
+                    "settings" -> SettingsScreen(navController)
                     else -> DashboardScreen()
                 }
             }

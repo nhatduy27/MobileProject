@@ -40,7 +40,7 @@ fun FoodAppNavHost(
 
     NavHost(
         navController = navController,
-        startDestination = Screen.Intro.route
+        startDestination = Screen.Login.route
     ) {
         composable(Screen.Intro.route) {
             IntroScreen(
@@ -70,7 +70,10 @@ fun FoodAppNavHost(
                     }
                 },
                 onBackClicked = { navController.navigateUp() },
-                onSignUpClicked = { navController.navigate(Screen.SignUp.route) }
+                onSignUpClicked = { navController.navigate(Screen.SignUp.route) },
+                onCustomerDemo = { navController.navigate(Screen.UserHome.route) },
+                onShipperDemo = { navController.navigate(Screen.ShipperHome.route) },
+                onOwnerDemo = { navController.navigate(Screen.OwnerHome.route) }
             )
         }
 
@@ -110,12 +113,12 @@ fun FoodAppNavHost(
 
         composable(Screen.ShipperHome.route) {
             // Màn hình shipper có sidebar
-            com.example.foodapp.shipper.dashboard.ShipperDashboardRootScreen()
+            com.example.foodapp.shipper.dashboard.ShipperDashboardRootScreen(navController)
         }
 
         composable(Screen.OwnerHome.route) {
             // Màn hình owner có sidebar
-            com.example.foodapp.pages.owner.dashboard.DashBoardRootScreen()
+            com.example.foodapp.pages.owner.dashboard.DashBoardRootScreen(navController)
         }
     }
 }

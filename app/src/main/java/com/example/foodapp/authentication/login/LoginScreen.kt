@@ -30,11 +30,12 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit,
     onBackClicked: () -> Unit,
     onSignUpClicked: () -> Unit,
+    onCustomerDemo: () -> Unit,
+    onShipperDemo: () -> Unit,
+    onOwnerDemo: () -> Unit,
     onForgotPasswordClicked: () -> Unit = {}
 ) {
-
     val context = LocalContext.current
-    //khởi tạo viewModel
     val viewModel: LoginViewModel = viewModel(
         factory = LoginViewModel.factory(context)
     )
@@ -56,6 +57,9 @@ fun LoginScreen(
         onGoogleClick = { /* Logic Google Sign In Client */ },
         onBackClicked = onBackClicked,
         onSignUpClicked = onSignUpClicked,
+        onCustomerDemo = onCustomerDemo,
+        onShipperDemo = onShipperDemo,
+        onOwnerDemo = onOwnerDemo,
         onForgotPasswordClicked = onForgotPasswordClicked
     )
 }
@@ -69,6 +73,9 @@ fun LoginContent(
     onGoogleClick: () -> Unit,
     onBackClicked: () -> Unit,
     onSignUpClicked: () -> Unit,
+    onCustomerDemo: () -> Unit,
+    onShipperDemo: () -> Unit,
+    onOwnerDemo: () -> Unit,
     onForgotPasswordClicked: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
@@ -179,6 +186,39 @@ fun LoginContent(
                 },
                 fontSize = 16.sp, fontWeight = FontWeight.Bold
             )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // 3 nút demo chuyển vai trò
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Button(
+                onClick = onCustomerDemo,
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.weight(1f).height(36.dp).padding(horizontal = 4.dp)
+            ) {
+                Text("Customer", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            }
+            Button(
+                onClick = onShipperDemo,
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.weight(1f).height(36.dp).padding(horizontal = 4.dp)
+            ) {
+                Text("Shipper", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            }
+            Button(
+                onClick = onOwnerDemo,
+                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.weight(1f).height(36.dp).padding(horizontal = 4.dp)
+            ) {
+                Text("Owner", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
