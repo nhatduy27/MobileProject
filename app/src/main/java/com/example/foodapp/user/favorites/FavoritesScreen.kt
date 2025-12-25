@@ -160,11 +160,22 @@ private fun FavoriteItemCard(
                 }
 
                 // Image/Emoji
-                Text(
-                    item.emoji,
-                    fontSize = 48.sp,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
+                if (item.imageRes != 0) {
+                    Image(
+                        painter = painterResource(id = item.imageRes),
+                        contentDescription = item.name,
+                        modifier = Modifier
+                            .size(80.dp)
+                            .background(Color(0xFFE0E0E0), RoundedCornerShape(8.dp)),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Text(
+                        "🍜",
+                        fontSize = 48.sp,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                }
 
                 // Item name
                 Text(
