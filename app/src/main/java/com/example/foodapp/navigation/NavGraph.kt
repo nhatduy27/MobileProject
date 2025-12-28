@@ -1,24 +1,19 @@
 package com.example.foodapp.navigation
 
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.foodapp.authentication.intro.IntroScreen
 import com.example.foodapp.authentication.login.LoginScreen
-import com.example.foodapp.user.profile.UserProfileScreen
+import com.example.foodapp.pages.user.profile.UserProfileScreen
 import com.example.foodapp.authentication.roleselection.RoleSelectionScreen
 import com.example.foodapp.authentication.signup.SignUpScreen
 import com.example.foodapp.presentation.view.user.home.UserHomeScreen
-import com.example.foodapp.user.cart.CartScreen
-import com.example.foodapp.user.favorites.FavoritesScreen
-import com.example.foodapp.user.notifications.UserNotificationsScreen
+import com.example.foodapp.pages.user.cart.CartScreen
+import com.example.foodapp.pages.user.favorites.FavoritesScreen
+import com.example.foodapp.pages.user.notifications.UserNotificationsScreen
 import com.google.firebase.auth.FirebaseAuth
 
 sealed class Screen(val route: String) {
@@ -141,7 +136,7 @@ fun FoodAppNavHost(
 
         composable(Screen.ShipperHome.route) {
             // Màn hình shipper có sidebar
-            com.example.foodapp.shipper.dashboard.ShipperDashboardRootScreen(navController)
+            com.example.foodapp.pages.shipper.dashboard.ShipperDashboardRootScreen(navController)
         }
 
         composable(Screen.OwnerHome.route) {

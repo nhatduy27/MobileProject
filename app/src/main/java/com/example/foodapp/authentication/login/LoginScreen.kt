@@ -21,9 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.foodapp.data.repository.FirebaseRepository
 import com.example.foodapp.ui.theme.PrimaryOrange
-import com.example.foodapp.user.home.HomeViewModel
 
 @Composable
 fun LoginScreen(
