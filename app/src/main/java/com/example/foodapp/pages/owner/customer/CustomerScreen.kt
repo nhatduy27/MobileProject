@@ -1,73 +1,231 @@
 package com.example.foodapp.pages.owner.customer
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.activity.compose.BackHandler
 
-// --- THÊM DÒNG NÀY VÀO ĐÂY ---
-import com.example.foodapp.pages.owner.customer.CustomerStats
-// ------------------------------
-
+// --- 1. COMPONENT ĐIỀU HƯỚNG CHÍNH ---
 @Composable
-fun CustomerScreen(
-    // Nhận ViewModel, sử dụng hàm viewModel() để tự động tạo và quản lý vòng đời.
-    customerViewModel: CustomerViewModel = viewModel()
-) {
-    // Lắng nghe và lấy trạng thái mới nhất từ ViewModel.
-    // Giao diện sẽ tự động cập nhật mỗi khi uiState thay đổi.
-    val uiState by customerViewModel.uiState.collectAsState()
+fun CustomerScreenMain() {
+    // State để quản lý màn hình hiện tại: "LIST" (danh sách) hoặc "ADD" (thêm mới)
+    var currentScreen by remember { mutableStateOf("LIST") }
 
-    // Lọc khách hàng dựa trên trạng thái từ ViewModel
-    val filteredCustomers = if (uiState.selectedFilter == "Tất cả") {
-        uiState.customers
-    } else {
-        uiState.customers.filter { it.type == uiState.selectedFilter }
+    BackHandler(enabled = currentScreen == "ADD") {
+        currentScreen = "LIST"
     }
 
-    // Tính toán các số liệu thống kê
-    val totalCustomers = uiState.customers.size
-    val vipCustomers = uiState.customers.count { it.type == "VIP" }
-    val regularCustomers = uiState.customers.count { it.type == "Thường xuyên" }
-    val newCustomers = uiState.customers.count { it.type == "Mới" }
+    // AnimatedContent tạo hiệu ứng chuyển đổi mượt mà giữa các màn hình
+    AnimatedContent(
+        targetState = currentScreen,
+        label = "ScreenTransition",
+        transitionSpec = {
+            // Định nghĩa hiệu ứng trượt ngang
+            (fadeIn(tween(300)) + slideInHorizontally { fullWidth -> fullWidth })
+                .togetherWith(fadeOut(tween(300)) + slideOutHorizontally { fullWidth -> -fullWidth })
+        }
+    ) { screen ->
+        // Dựa vào state để quyết định hiển thị màn hình nào
+        when (screen) {
+            "LIST" -> CustomerScreen(
+                // Truyền một hàm để khi bấm nút, state sẽ đổi thành "ADD"
+                onNavigateToAdd = { currentScreen = "ADD" }
+            )
+            "ADD" -> AddCustomerScreen(
+                // Truyền một hàm để khi bấm nút Back, state sẽ đổi lại thành "LIST"
+                onBack = { currentScreen = "LIST" }
+            )
+        }
+    }
+}
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(color = MaterialTheme.colorScheme.background)
-    ) {
-        CustomerHeader()
 
-        // Truyền trạng thái và sự kiện vào các Composable con
-        CustomerFilterTabs(
-            selectedFilter = uiState.selectedFilter,
-            onFilterSelected = { newFilter ->
-                // Khi người dùng chọn filter, gọi hàm trong ViewModel
-                customerViewModel.onFilterChanged(newFilter)
+// --- 2. MÀN HÌNH DANH SÁCH KHÁCH HÀNG ---
+@Composable
+fun CustomerScreen(
+    customerViewModel: CustomerViewModel = viewModel(),
+    onNavigateToAdd: () -> Unit // Nhận hàm điều hướng từ CustomerScreenMain
+) {
+    val uiState by customerViewModel.uiState.collectAsState()
+
+    // Logic lọc danh sách
+    val filteredCustomers = uiState.customers.filter { customer ->
+        val typeMatches = uiState.selectedFilter == "Tất cả" || customer.type == uiState.selectedFilter
+        val queryMatches = customer.name.contains(uiState.searchQuery, ignoreCase = true) ||
+                customer.contact.contains(uiState.searchQuery, ignoreCase = true)
+        typeMatches && queryMatches
+    }
+
+    Scaffold(
+        topBar = {
+            ExpandableSearchHeader(
+                query = uiState.searchQuery,
+                onQueryChange = customerViewModel::onSearchQueryChanged
+            )
+        },
+        floatingActionButton = {
+            // Nút FAB gọi hàm onNavigateToAdd khi được bấm
+            FloatingActionButton(
+                onClick = onNavigateToAdd,
+                containerColor = Color(0xFFFF6B35),
+                contentColor = Color.White,
+                shape = CircleShape,
+                elevation = FloatingActionButtonDefaults.elevation(4.dp)
+            ) {
+                Icon(Icons.Filled.Add, contentDescription = "Thêm mới")
             }
-        )
-
-        // Dòng này sẽ hết báo lỗi sau khi bạn thêm import
-        CustomerStats(totalCustomers, vipCustomers, regularCustomers, newCustomers)
-
-        LazyColumn(
+        },
+        containerColor = Color(0xFFF9F9F9)
+    ) { paddingValues ->
+        Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(paddingValues)
         ) {
-            items(filteredCustomers) { customer ->
-                CustomerCard(customer)
+            CustomerFilterTabs(
+                selectedFilter = uiState.selectedFilter,
+                onFilterSelected = customerViewModel::onFilterChanged
+            )
+
+            CustomerStats(
+                uiState.customers.size,
+                uiState.customers.count { it.type == "VIP" },
+                uiState.customers.count { it.type == "Thường xuyên" },
+                uiState.customers.count { it.type == "Mới" }
+            )
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(bottom = 80.dp) // Chừa chỗ cho FAB
+            ) {
+                item { Spacer(modifier = Modifier.height(8.dp)) }
+                items(items = filteredCustomers, key = { it.id }) { customer ->
+                    CustomerCard(customer)
+                }
+            }
+        }
+    }
+}
+
+// --- 3. HEADER TÌM KIẾM ---
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExpandableSearchHeader(
+    query: String,
+    onQueryChange: (String) -> Unit
+) {
+    var isSearchActive by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(isSearchActive) {
+        if (isSearchActive) focusRequester.requestFocus()
+        else focusManager.clearFocus()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp)
+            .background(Color.White)
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        // STATE 1: Header bình thường
+        AnimatedVisibility(
+            visible = !isSearchActive,
+            enter = fadeIn(tween(300)) + slideInHorizontally(),
+            exit = fadeOut(tween(300)) + slideOutHorizontally { -it / 2 }
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Khách hàng", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
+                    Text("Quản lý danh sách", fontSize = 14.sp, color = Color.Gray)
+                }
+                IconButton(
+                    onClick = { isSearchActive = true },
+                    modifier = Modifier
+                        .background(Color(0xFFF5F5F5), CircleShape)
+                        .size(40.dp)
+                ) {
+                    Icon(Icons.Default.Search, contentDescription = "Search", tint = Color(0xFF1A1A1A))
+                }
+            }
+        }
+
+        // STATE 2: Thanh Search mở rộng
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+            AnimatedVisibility(
+                visible = isSearchActive,
+                enter = fadeIn() + expandHorizontally(expandFrom = Alignment.End, animationSpec = tween(300)),
+                exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.End, animationSpec = tween(300))
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { isSearchActive = false }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF1A1A1A))
+                    }
+                    TextField(
+                        value = query,
+                        onValueChange = onQueryChange,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                            .focusRequester(focusRequester),
+                        placeholder = { Text("Tìm tên, SĐT...", color = Color.Gray, fontSize = 14.sp) },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFFF5F5F5),
+                            unfocusedContainerColor = Color(0xFFF5F5F5),
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            cursorColor = Color(0xFFFF6B35)
+                        ),
+                        shape = CircleShape,
+                        keyboardOptions = KeyboardOptions(autoCorrect = false, imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+                        trailingIcon = {
+                            if (query.isNotEmpty()) {
+                                IconButton(onClick = { onQueryChange("") }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear", tint = Color.Gray)
+                                }
+                            }
+                        }
+                    )
+                }
             }
         }
     }

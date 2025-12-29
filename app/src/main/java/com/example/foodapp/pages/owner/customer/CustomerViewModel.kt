@@ -60,4 +60,15 @@ class CustomerViewModel : ViewModel() {
             currentState.copy(selectedFilter = newFilter)
         }
     }
+
+    // --- HÀM BỊ THIẾU ĐƯỢC THÊM VÀO ĐÂY ---
+    /**
+     * Cập nhật trạng thái query tìm kiếm khi người dùng nhập liệu vào SearchBar.
+     * @param newQuery Nội dung mới từ thanh tìm kiếm.
+     */
+    fun onSearchQueryChanged(newQuery: String) {
+        _uiState.update { currentState ->
+            currentState.copy(searchQuery = newQuery)
+        }
+    }
 }

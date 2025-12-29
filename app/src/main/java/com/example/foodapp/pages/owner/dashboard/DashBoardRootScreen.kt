@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import com.example.foodapp.R
 import kotlinx.coroutines.launch
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.foodapp.pages.owner.customer.CustomerScreenMain
 
 @Preview(showBackground = true, backgroundColor = 0xFF00FF00)
 
@@ -216,7 +217,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     "orders" -> OrdersScreen()
                     "foods" -> FoodsScreen()
                     "shippers" -> ShippersScreen()
-                    "customers" -> CustomerScreen()
+                    "customers" -> CustomerScreenMain()
                     "revenue" -> RevenueScreen()
                     "settings" -> SettingsScreen(navController)
                     else -> DashboardScreen()

@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -21,65 +22,63 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun CustomerHeader(
-    onAddClick: () -> Unit = {}, // Callback khi bấm nút thêm
-    onSearchClick: () -> Unit = {}
+    onAddClick: () -> Unit,
+    onSearchClick: () -> Unit
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White) // Nền trắng hiện đại
-            .padding(horizontal = 24.dp, vertical = 20.dp), // Padding rộng rãi
-        verticalAlignment = Alignment.CenterVertically, // Căn giữa theo chiều dọc
-        horizontalArrangement = Arrangement.SpaceBetween // Đẩy nội dung sang 2 bên
+            .background(Color.White)
+            .padding(horizontal = 24.dp, vertical = 20.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        // Phần Text bên trái
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = "Quản lý khách hàng",
-                fontSize = 26.sp, // Giảm nhẹ size để tinh tế hơn
+                fontSize = 26.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A1A), // Màu đen xám (Soft Black) thay vì đen tuyền
+                color = Color(0xFF1A1A1A),
                 letterSpacing = (-0.5).sp
             )
             Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "Danh sách và lịch sử mua hàng",
                 fontSize = 14.sp,
-                color = Color(0xFF9E9E9E), // Màu xám nhạt cho subtext
+                color = Color(0xFF9E9E9E),
                 fontWeight = FontWeight.Medium
             )
         }
 
-        // Phần Action Buttons bên phải (Thường app quản lý sẽ có nút này)
         Row(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Nút Search nhỏ (Icon Only)
+            // Nút Search - Khi bấm sẽ báo cho CustomerScreen biết để kích hoạt trạng thái tìm kiếm
             IconButton(
                 onClick = onSearchClick,
                 modifier = Modifier.size(40.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Search",
+                    contentDescription = "Mở thanh tìm kiếm",
                     tint = Color(0xFF757575),
                     modifier = Modifier.size(24.dp)
                 )
             }
 
-            // Nút "Thêm mới" nổi bật (Filled Tonal hoặc Primary)
+            // Nút "Thêm mới"
             Surface(
                 onClick = onAddClick,
                 shape = CircleShape,
-                color = Color(0xFFFF6B35).copy(alpha = 0.1f), // Nền cam nhạt
-                contentColor = Color(0xFFFF6B35), // Icon màu cam đậm
+                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                contentColor = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(44.dp)
             ) {
-                Box(contentAlignment = Alignment.Center) {
+                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Add Customer",
+                        contentDescription = "Thêm khách hàng",
                         modifier = Modifier.size(24.dp)
                     )
                 }
@@ -88,18 +87,9 @@ fun CustomerHeader(
     }
 }
 
-// --- PREVIEW ---
+
 @Preview(showBackground = true)
 @Composable
 fun PreviewCustomerHeader() {
-    Column {
-        CustomerHeader()
-        // Giả lập đường kẻ mờ ngăn cách header và content
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(Color(0xFFF0F0F0))
-        )
-    }
+    CustomerHeader(onAddClick = {}, onSearchClick = {})
 }

@@ -16,6 +16,8 @@ data class CustomerUiState(
     // Bộ lọc đang được chọn ("Tất cả", "VIP", ...)
     val selectedFilter: String = "Tất cả",
 
+    val searchQuery: String = "",
+
 
     // Cờ báo hiệu màn hình đang trong quá trình tải dữ liệu
     val isLoading: Boolean = false,
