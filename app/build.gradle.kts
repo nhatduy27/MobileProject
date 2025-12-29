@@ -78,6 +78,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+
 
     implementation(libs.androidx.compose.material3)
     testImplementation(libs.junit)
