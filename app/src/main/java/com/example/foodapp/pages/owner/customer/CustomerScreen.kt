@@ -15,6 +15,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+// --- THÊM DÒNG NÀY VÀO ĐÂY ---
+import com.example.foodapp.pages.owner.customer.CustomerStats
+// ------------------------------
+
 @Composable
 fun CustomerScreen(
     // Nhận ViewModel, sử dụng hàm viewModel() để tự động tạo và quản lý vòng đời.
@@ -35,6 +39,7 @@ fun CustomerScreen(
     val totalCustomers = uiState.customers.size
     val vipCustomers = uiState.customers.count { it.type == "VIP" }
     val regularCustomers = uiState.customers.count { it.type == "Thường xuyên" }
+    val newCustomers = uiState.customers.count { it.type == "Mới" }
 
     Column(
         modifier = Modifier
@@ -52,7 +57,8 @@ fun CustomerScreen(
             }
         )
 
-        CustomerStats(totalCustomers, vipCustomers, regularCustomers)
+        // Dòng này sẽ hết báo lỗi sau khi bạn thêm import
+        CustomerStats(totalCustomers, vipCustomers, regularCustomers, newCustomers)
 
         LazyColumn(
             modifier = Modifier
