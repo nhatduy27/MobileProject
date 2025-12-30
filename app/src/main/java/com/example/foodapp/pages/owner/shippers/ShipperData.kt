@@ -1,19 +1,4 @@
 package com.example.foodapp.pages.owner.shippers
 
-import androidx.compose.ui.graphics.Color
-
-enum class ShipperStatus(val displayName: String, val color: Color) {
-    AVAILABLE("Đang rảnh", Color(0xFF4CAF50)),
-    DELIVERING("Đang giao", Color(0xFF2196F3)),
-    OFFLINE("Nghỉ", Color(0xFF999999))
-}
-
-data class Shipper(
-    val id: String,
-    val name: String,
-    val phone: String,
-    val rating: Double,
-    val totalDeliveries: Int,
-    val todayDeliveries: Int,
-    val status: ShipperStatus
-)
+// Đã di chuyển model Shipper sang layer data: com.example.foodapp.data.model.owner.Shipper
+// File này giữ lại để tránh lỗi import cũ, nhưng không còn chứa model nữa.

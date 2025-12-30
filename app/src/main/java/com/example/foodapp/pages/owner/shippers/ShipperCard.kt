@@ -10,18 +10,26 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import com.example.foodapp.data.model.owner.Shipper
 
 @Composable
-fun ShipperCard(shipper: Shipper) {
+fun ShipperCard(
+    shipper: Shipper,
+    onClick: () -> Unit = {}
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier
@@ -29,23 +37,16 @@ fun ShipperCard(shipper: Shipper) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Avatar placeholder
-            Box(
+            // Avatar từ URL
+            AsyncImage(
+                model = shipper.avatarUrl,
+                contentDescription = shipper.name,
                 modifier = Modifier
                     .size(60.dp)
-                    .background(
-                        color = Color(0xFFFFE5D9),
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = shipper.name.first().toString(),
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFF6B35)
-                )
-            }
+                    .clip(CircleShape)
+                    .background(Color(0xFFF5F5F5)),
+                contentScale = ContentScale.Crop
+            )
 
             Column(
                 modifier = Modifier
@@ -67,7 +68,7 @@ fun ShipperCard(shipper: Shipper) {
 
                     Surface(
                         color = shipper.status.color,
-                        shape = RoundedCornerShape(4.dp)
+                        shape = RoundedCornerShape(50)
                     ) {
                         Text(
                             text = shipper.status.displayName,
