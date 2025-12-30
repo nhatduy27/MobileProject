@@ -21,7 +21,7 @@ fun OrdersFilterRow(filters: List<String>, selected: String, onSelect: (String) 
             .fillMaxWidth()
             .background(Color.White)
             .horizontalScroll(rememberScrollState())
-            .padding(12.dp),
+            .padding(16.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         filters.forEach { filter ->
@@ -36,7 +36,7 @@ fun OrdersStatsRow(total: Int, pending: Int, delivering: Int) {
         modifier = Modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .padding(16.dp),
+            .padding(vertical = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         OrderStatCard("Tổng đơn", total.toString(), Color(0xFFFF6B35))
