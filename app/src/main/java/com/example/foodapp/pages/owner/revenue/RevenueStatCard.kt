@@ -18,7 +18,7 @@ fun RevenueStatCard(stat: RevenueStat) {
     Card(
         modifier = Modifier
             .width(160.dp)
-            .height(110.dp),
+            .height(120.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         shape = RoundedCornerShape(12.dp)

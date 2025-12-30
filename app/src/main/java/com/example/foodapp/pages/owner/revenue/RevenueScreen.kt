@@ -23,6 +23,7 @@ fun RevenueScreen(
 ) {
     val uiState by revenueViewModel.uiState.collectAsState()
 
+    // Bắt đầu sửa đổi từ đây
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -53,12 +54,14 @@ fun RevenueScreen(
         // Biểu đồ (component riêng)
         ChartSection()
 
+        // ---- SỬA LỖI QUAN TRỌNG NHẤT TẠI ĐÂY ----
         // Danh sách chi tiết (dùng TimeSlotCard, TopProductCard component)
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-                .padding(bottom = 80.dp),
+                .fillMaxWidth() // Chiếm toàn bộ chiều rộng
+                .weight(1f) // <-- THÊM DÒNG NÀY: Để LazyColumn lấp đầy không gian còn lại
+                .padding(horizontal = 16.dp), // Chỉ cần padding ngang ở đây
+            contentPadding = PaddingValues(bottom = 80.dp), // Padding dưới để không bị thanh điều hướng che
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             // Time Slots Section

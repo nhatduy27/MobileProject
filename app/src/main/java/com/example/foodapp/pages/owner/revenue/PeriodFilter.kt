@@ -47,16 +47,17 @@ fun PeriodChip(
     onClick: () -> Unit
 ) {
     Surface(
+        // Chỉ sử dụng onClick của Surface, đây là cách làm đúng
         onClick = onClick,
         color = if (isSelected) Color(0xFFFF6B35) else Color.White,
         shape = RoundedCornerShape(6.dp),
+        // Modifier giờ đây chỉ còn nhiệm vụ vẽ border
         modifier = Modifier
             .border(
                 width = if (isSelected) 0.dp else 1.dp,
-                color = if (isSelected) Color(0xFFFF6B35) else Color(0xFFDDDDDD),
+                color = if (isSelected) Color.Transparent else Color(0xFFDDDDDD), // Dùng Transparent khi được chọn
                 shape = RoundedCornerShape(6.dp)
             )
-            .clickable(enabled = true, onClick = onClick)
     ) {
         Text(
             text = text,
