@@ -6,11 +6,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.font.FontWeight
+
 @Composable
 fun StatCard(
     title: String,
@@ -18,30 +20,40 @@ fun StatCard(
     color: Color
 ) {
     Card(
-        modifier = Modifier
-            .width(140.dp)
-            .height(100.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        shape = RoundedCornerShape(12.dp)
+        // Kích thước chuẩn theo style mới (rộng hơn chút, cao hơn chút)
+        modifier = Modifier.size(width = 145.dp, height = 110.dp),
+        // Bo góc lớn mềm mại
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            // Nền pastel (lấy màu chính giảm độ đậm còn 15%)
+            containerColor = color.copy(alpha = 0.15f)
+        ),
+        // Bỏ bóng đổ (Flat design)
+        elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            // Đẩy Title lên trên, Value xuống dưới
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.Start
         ) {
+            // Title: Màu chủ đạo nhưng nhạt hơn chút
             Text(
                 text = title,
-                fontSize = 13.sp,
-                color = Color(0xFF757575)
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = color.copy(alpha = 0.8f)
             )
+
+            // Value: Đậm, rõ ràng
             Text(
                 text = value,
-                fontSize = 32.sp,
+                fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
                 color = color,
-                modifier = Modifier.padding(top = 4.dp)
+                letterSpacing = (-0.5).sp // Kéo chữ lại gần xíu cho chặt chẽ
             )
         }
     }

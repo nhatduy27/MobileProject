@@ -8,5 +8,6 @@ data class Food(
     val rating: Double,
     val reviewCount: Int,
     val price: Int,
-    val isAvailable: Boolean
+    val isAvailable: Boolean,
+    val imageUrl: String? = null
 )

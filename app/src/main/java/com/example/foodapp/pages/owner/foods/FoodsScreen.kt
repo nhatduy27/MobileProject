@@ -96,12 +96,18 @@ fun FoodsScreen(
             StatCard(title = "Hết hàng", value = outOfStockFoods.toString(), color = Color(0xFFF44336))
         }
 
-        // Foods List
         LazyColumn(
+
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp)
-                .padding(bottom = 80.dp),
+                .padding(horizontal = 16.dp),
+
+
+            contentPadding = PaddingValues(
+                top = 16.dp, // Giữ khoảng cách với phần thống kê
+                bottom = 80.dp // Giữ khoảng cách với cuối màn hình (tránh bị FAB che)
+            ),
+
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(filteredFoods) { food ->
