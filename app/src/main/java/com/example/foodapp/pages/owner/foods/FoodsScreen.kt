@@ -118,30 +118,30 @@ fun FoodsScreen(
                         )
                     }
                 }
-
-                // Statistics Cards
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    StatCard(title = "Tổng món", value = totalFoods.toString(), color = Color(0xFFFF6B35))
-                    StatCard(title = "Còn hàng", value = availableFoods.toString(), color = Color(0xFF4CAF50))
-                    StatCard(title = "Hết hàng", value = outOfStockFoods.toString(), color = Color(0xFFF44336))
-                }
-
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(horizontal = 16.dp),
                     contentPadding = PaddingValues(
-                        top = 16.dp, // Giữ khoảng cách với phần thống kê
                         bottom = 80.dp // Giữ khoảng cách với cuối màn hình (tránh bị FAB che)
                     ),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    // Statistics Cards ở đầu list để cuộn theo
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState())
+                                .padding(vertical = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            StatCard(title = "Tổng món", value = totalFoods.toString(), color = Color(0xFFFF6B35))
+                            StatCard(title = "Còn hàng", value = availableFoods.toString(), color = Color(0xFF4CAF50))
+                            StatCard(title = "Hết hàng", value = outOfStockFoods.toString(), color = Color(0xFFF44336))
+                        }
+                    }
+
                     items(filteredFoods) { food ->
                         FoodItem(
                             food = food,

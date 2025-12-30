@@ -139,14 +139,6 @@ fun CustomerScreen(
                 selectedFilter = uiState.selectedFilter,
                 onFilterSelected = customerViewModel::onFilterChanged
             )
-
-            CustomerStats(
-                uiState.customers.size,
-                uiState.customers.count { it.type == "VIP" },
-                uiState.customers.count { it.type == "Thường xuyên" },
-                uiState.customers.count { it.type == "Mới" }
-            )
-
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -154,7 +146,16 @@ fun CustomerScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(bottom = 80.dp) // Chừa chỗ cho FAB
             ) {
-                item { Spacer(modifier = Modifier.height(8.dp)) }
+                // Stats ở đầu list để cuộn cùng danh sách
+                item {
+                    CustomerStats(
+                        uiState.customers.size,
+                        uiState.customers.count { it.type == "VIP" },
+                        uiState.customers.count { it.type == "Thường xuyên" },
+                        uiState.customers.count { it.type == "Mới" }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
                 items(items = filteredCustomers, key = { it.id }) { customer ->
                     CustomerCard(
                         customer = customer,

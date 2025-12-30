@@ -38,24 +38,7 @@ fun RevenueScreen(
             onPeriodSelected = { revenueViewModel.onPeriodSelected(it) }
         )
 
-        // Thống kê doanh thu (dùng RevenueStatCard component)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            uiState.stats.forEach { stat ->
-                RevenueStatCard(stat = stat)
-            }
-        }
-
-        // Biểu đồ (component riêng)
-        ChartSection()
-
-        // ---- SỬA LỖI QUAN TRỌNG NHẤT TẠI ĐÂY ----
-        // Danh sách chi tiết (dùng TimeSlotCard, TopProductCard component)
+        // Danh sách cuộn chung cho stats + chart + chi tiết
         LazyColumn(
             modifier = Modifier
                 .fillMaxWidth() // Chiếm toàn bộ chiều rộng
@@ -64,6 +47,30 @@ fun RevenueScreen(
             contentPadding = PaddingValues(bottom = 80.dp), // Padding dưới để không bị thanh điều hướng che
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Stats + Chart ở đầu list, cuộn cùng các item khác
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                ) {
+                    // Thống kê doanh thu (dùng RevenueStatCard component)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState())
+                            .padding(vertical = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        uiState.stats.forEach { stat ->
+                            RevenueStatCard(stat = stat)
+                        }
+                    }
+
+                    // Biểu đồ (component riêng)
+                    ChartSection()
+                }
+            }
+
             // Time Slots Section
             item {
                 Text(

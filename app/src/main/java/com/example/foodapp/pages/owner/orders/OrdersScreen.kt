@@ -94,9 +94,6 @@ fun OrdersScreen(
                 OrdersFilterRow(filters, uiState.selectedFilter) { selected ->
                     ordersViewModel.onFilterSelected(selected)
                 }
-
-                OrdersStatsRow(totalOrders, pendingOrders, deliveringOrders)
-
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -104,6 +101,11 @@ fun OrdersScreen(
                     contentPadding = PaddingValues(bottom = 80.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    // Stats ở đầu list để cuộn theo
+                    item {
+                        OrdersStatsRow(totalOrders, pendingOrders, deliveringOrders)
+                    }
+
                     items(filteredOrders) { order ->
                         OrderCard(
                             order = order,

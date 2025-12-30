@@ -100,32 +100,6 @@ fun ShippersScreen(
                         )
                     }
                 }
-
-                // Statistics
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    ShipperStatCard(
-                        title = "Tổng shipper",
-                        value = totalShippers.toString(),
-                        color = Color(0xFFFF6B35),
-                    )
-                    ShipperStatCard(
-                        title = "Đang hoạt động",
-                        value = activeShippers.toString(),
-                        color = Color(0xFF4CAF50),
-                    )
-                    ShipperStatCard(
-                        title = "Đơn hôm nay",
-                        value = todayDeliveries.toString(),
-                        color = Color(0xFF2196F3),
-                    )
-                }
-
                 // Shippers List
                 LazyColumn(
                     modifier = Modifier
@@ -134,6 +108,33 @@ fun ShippersScreen(
                     contentPadding = PaddingValues(bottom = 80.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
+                    // Statistics ở đầu list để cuộn theo
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState())
+                                .padding(vertical = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            ShipperStatCard(
+                                title = "Tổng shipper",
+                                value = totalShippers.toString(),
+                                color = Color(0xFFFF6B35),
+                            )
+                            ShipperStatCard(
+                                title = "Đang hoạt động",
+                                value = activeShippers.toString(),
+                                color = Color(0xFF4CAF50),
+                            )
+                            ShipperStatCard(
+                                title = "Đơn hôm nay",
+                                value = todayDeliveries.toString(),
+                                color = Color(0xFF2196F3),
+                            )
+                        }
+                    }
+
                     items(filteredShippers) { shipper ->
                         ShipperCard(
                             shipper = shipper,
