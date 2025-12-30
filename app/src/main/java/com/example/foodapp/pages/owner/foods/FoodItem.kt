@@ -21,7 +21,10 @@ import coil.compose.AsyncImage
 import com.example.foodapp.data.model.owner.Food
 
 @Composable
-fun FoodItem(food: Food) {
+fun FoodItem(
+    food: Food,
+    onClick: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -30,6 +33,7 @@ fun FoodItem(food: Food) {
         // Style hiện đại: Bóng đổ rất nhẹ hoặc bằng 0, dùng border nhạt để tách biệt
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(16.dp), // Bo góc mềm mại hơn (16dp)
+        onClick = onClick
         // Thêm viền mỏng tinh tế nếu muốn style phẳng hoàn toàn (Optional)
         // border = BorderStroke(1.dp, Color(0xFFF0F0F0))
     ) {

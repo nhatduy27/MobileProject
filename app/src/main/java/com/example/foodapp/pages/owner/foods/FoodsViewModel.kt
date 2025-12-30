@@ -61,10 +61,20 @@ class FoodsViewModel : ViewModel() {
      */
     fun getFilteredFoods(): List<Food> {
         val currentState = _uiState.value
-        return if (currentState.selectedCategory == "Tất cả") {
+
+        // Lọc theo category trước
+        val categoryFiltered = if (currentState.selectedCategory == "Tất cả") {
             currentState.foods
         } else {
             currentState.foods.filter { it.category == currentState.selectedCategory }
+        }
+
+        // Sau đó lọc tiếp theo query tìm kiếm (tên món)
+        val query = currentState.searchQuery.trim()
+        return if (query.isBlank()) {
+            categoryFiltered
+        } else {
+            categoryFiltered.filter { it.name.contains(query, ignoreCase = true) }
         }
     }
 
@@ -88,6 +98,13 @@ class FoodsViewModel : ViewModel() {
      */
     fun onCategorySelected(category: String) {
         _uiState.update { it.copy(selectedCategory = category) }
+    }
+
+    /**
+     * Cập nhật nội dung query tìm kiếm món ăn.
+     */
+    fun onSearchQueryChanged(newQuery: String) {
+        _uiState.update { it.copy(searchQuery = newQuery) }
     }
 
     /**

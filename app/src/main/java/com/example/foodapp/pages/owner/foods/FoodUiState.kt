@@ -23,5 +23,8 @@ data class FoodUiState(
     val errorMessage: String? = null,
 
     // Hiển thị dialog thêm món ăn
-    val showAddDialog: Boolean = false
+    val showAddDialog: Boolean = false,
+
+    // Query tìm kiếm món ăn theo tên
+    val searchQuery: String = ""
 )
