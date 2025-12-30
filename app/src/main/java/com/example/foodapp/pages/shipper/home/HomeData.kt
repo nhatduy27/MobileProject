@@ -1,27 +1,9 @@
 package com.example.foodapp.pages.shipper.home
 
-import androidx.compose.ui.graphics.Color
+import com.example.foodapp.data.model.shipper.DeliveryTask
+import com.example.foodapp.data.model.shipper.ShipperStats
+import com.example.foodapp.data.model.shipper.TaskStatus
 
-data class DeliveryTask(
-    val orderId: String,
-    val customerName: String,
-    val pickupAddress: String,
-    val deliveryAddress: String,
-    val distance: String,
-    val fee: Int,
-    val status: TaskStatus
-)
+// Giữ file này như một adapter mỏng nếu cần thêm helper cho UI.
+// Các model chính đã được di chuyển sang data.model.shipper để đồng nhất với owner.
 
-enum class TaskStatus(val displayName: String, val color: Color) {
-    PENDING("Chờ nhận", Color(0xFFFFA500)),
-    PICKING_UP("Đang lấy hàng", Color(0xFF2196F3)),
-    DELIVERING("Đang giao", Color(0xFF4CAF50)),
-    COMPLETED("Hoàn thành", Color(0xFF999999))
-}
-
-data class ShipperStats(
-    val todayOrders: Int,
-    val todayEarnings: Int,
-    val completionRate: Int,
-    val rating: Double
-)

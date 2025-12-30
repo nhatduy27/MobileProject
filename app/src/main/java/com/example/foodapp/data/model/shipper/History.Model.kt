@@ -1,6 +1,8 @@
-package com.example.foodapp.pages.shipper.history
+package com.example.foodapp.data.model.shipper
 
 import androidx.compose.ui.graphics.Color
+
+// Model cho lịch sử giao hàng của Shipper
 
 data class DeliveryHistory(
     val orderId: String,

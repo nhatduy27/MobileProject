@@ -1,4 +1,6 @@
-package com.example.foodapp.pages.shipper.profile
+package com.example.foodapp.data.model.shipper
+
+// Model cho hồ sơ và menu cấu hình của Shipper
 
 data class ShipperProfile(
     val name: String,

@@ -1,4 +1,4 @@
-package com.example.foodapp.pages.shipper.profile
+package com.example.foodapp.pages.shipper.profile.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.data.model.shipper.ProfileMenuItem
+import com.example.foodapp.data.model.shipper.ProfileAction
 
 @Composable
 fun ProfileMenuCard(
