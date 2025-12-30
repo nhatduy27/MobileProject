@@ -12,9 +12,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
+import com.example.foodapp.data.model.owner.Order
 
-@Preview(showBackground = true, backgroundColor = 0xFF00FF00)
 @Composable
 fun OrderFilterChip(text: String, isSelected: Boolean, onClick: () -> Unit) {
     Button(
@@ -35,36 +34,67 @@ fun OrderFilterChip(text: String, isSelected: Boolean, onClick: () -> Unit) {
 @Composable
 fun OrderStatCard(title: String, value: String, color: Color, modifier: Modifier = Modifier) {
     Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        shape = RoundedCornerShape(12.dp)
+        // Style đồng nhất với StatCard (Food/Customer)
+        modifier = modifier.size(width = 145.dp, height = 110.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = color.copy(alpha = 0.15f)
+        ),
+        elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.Start
         ) {
-            Text(text = value, fontSize = 24.sp, color = color)
-            Text(text = title, fontSize = 12.sp, color = Color(0xFF757575), modifier = Modifier.padding(top = 4.dp))
+            Text(
+                text = title,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = color.copy(alpha = 0.8f)
+            )
+
+            Text(
+                text = value,
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold,
+                color = color,
+                letterSpacing = (-0.5).sp
+            )
         }
     }
 }
 
 @Composable
-fun OrderCard(order: Order) {
+fun OrderCard(
+    order: Order,
+    onClick: () -> Unit = {}
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
+        onClick = onClick
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(order.id, fontSize = 16.sp)
-                Surface(color = order.status.color, shape = RoundedCornerShape(4.dp)) {
-                    Text(order.status.displayName, fontSize = 12.sp, color = Color.White, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp))
+                // Badge trạng thái pastel giống Food/Customer
+                val statusColor = order.status.color
+                Surface(
+                    color = statusColor.copy(alpha = 0.1f),
+                    shape = RoundedCornerShape(50)
+                ) {
+                    Text(
+                        text = order.status.displayName,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = statusColor,
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                    )
                 }
             }
 

@@ -105,26 +105,24 @@ fun ShippersScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
                         .padding(16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     ShipperStatCard(
                         title = "Tổng shipper",
                         value = totalShippers.toString(),
                         color = Color(0xFFFF6B35),
-                        modifier = Modifier.weight(1f)
                     )
                     ShipperStatCard(
                         title = "Đang hoạt động",
                         value = activeShippers.toString(),
                         color = Color(0xFF4CAF50),
-                        modifier = Modifier.weight(1f)
                     )
                     ShipperStatCard(
                         title = "Đơn hôm nay",
                         value = todayDeliveries.toString(),
                         color = Color(0xFF2196F3),
-                        modifier = Modifier.weight(1f)
                     )
                 }
 

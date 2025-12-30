@@ -66,14 +66,17 @@ fun ShipperCard(
                         color = Color(0xFF1A1A1A)
                     )
 
+                    // Trạng thái kiểu chip pastel giống Food/Customer
+                    val statusColor = shipper.status.color
                     Surface(
-                        color = shipper.status.color,
+                        color = statusColor.copy(alpha = 0.1f),
                         shape = RoundedCornerShape(50)
                     ) {
                         Text(
                             text = shipper.status.displayName,
                             fontSize = 11.sp,
-                            color = Color.White,
+                            fontWeight = FontWeight.Medium,
+                            color = statusColor,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp)
                         )
                     }
