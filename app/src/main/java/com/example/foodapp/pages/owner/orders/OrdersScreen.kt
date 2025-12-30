@@ -1,78 +1,222 @@
 package com.example.foodapp.pages.owner.orders
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.data.model.owner.Order
 
 @Composable
-fun OrdersScreen() {
-    var selectedFilter by remember { mutableStateOf("Tất cả") }
+fun OrdersScreen(
+    ordersViewModel: OrdersViewModel = viewModel()
+) {
+    val uiState by ordersViewModel.uiState.collectAsState()
 
-    val filters = listOf(
-        "Tất cả",
-        "Chờ xác nhận",
-        "Đang chuẩn bị",
-        "Đang giao",
-        "Hoàn thành",
-        "Đã hủy"
-    )
-
-    val orders = listOf(
-        Order("#ORD10245", "Nguyễn Văn A", "KTX Khu A, Phòng 201",
-            "• Cơm gà xối mỡ x2\n• Trà sữa trân châu x1", "10:25 AM", 125000, OrderStatus.DELIVERING),
-        Order("#ORD10244", "Trần Thị B", "KTX Khu B, Phòng 305",
-            "• Phở bò x1\n• Chả giò x3", "10:18 AM", 95000, OrderStatus.PENDING),
-        Order("#ORD10243", "Lê Văn C", "KTX Khu A, Phòng 108",
-            "• Bún chả Hà Nội x2\n• Nước chanh x2", "10:05 AM", 150000, OrderStatus.PROCESSING),
-        Order("#ORD10242", "Phạm Thị D", "KTX Khu C, Phòng 401",
-            "• Cà ri gà x1\n• Bánh mì x2", "09:50 AM", 85000, OrderStatus.COMPLETED),
-        Order("#ORD10241", "Hoàng Văn E", "KTX Khu D, Phòng 105",
-            "• Pizza Pepperoni x1\n• Nước ngọt x2", "09:30 AM", 200000, OrderStatus.CANCELLED),
-    )
-
-    // Lọc đơn hàng dựa trên filter được chọn
-    val filteredOrders = if (selectedFilter == "Tất cả") {
-        orders
-    } else {
-        orders.filter { it.status.displayName == selectedFilter }
+    val filteredOrders = remember(uiState.orders, uiState.selectedFilter, uiState.searchQuery) {
+        ordersViewModel.getFilteredOrders()
     }
 
-    val totalOrders = orders.size
-    val pendingOrders = orders.count { it.status == OrderStatus.PENDING }
-    val processingOrders = orders.count { it.status == OrderStatus.PROCESSING }
-    val deliveringOrders = orders.count { it.status == OrderStatus.DELIVERING }
+    var isEditing by remember { mutableStateOf(false) }
+    var editingOrder by remember { mutableStateOf<Order?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color(0xFFF5F5F5))
-        ) {
-            OrdersHeader()
-            OrdersFilterRow(filters, selectedFilter) { selectedFilter = it }
-            OrdersStatsRow(totalOrders, pendingOrders, deliveringOrders)
-            LazyColumn(
+    if (!isEditing) {
+        val totalOrders = remember(uiState.orders) { ordersViewModel.getTotalOrders() }
+        val pendingOrders = remember(uiState.orders) { ordersViewModel.getPendingOrders() }
+        val deliveringOrders = remember(uiState.orders) { ordersViewModel.getDeliveringOrders() }
+
+        Scaffold(
+            topBar = {
+                OrdersSearchHeader(
+                    query = uiState.searchQuery,
+                    onQueryChange = ordersViewModel::onSearchQueryChanged
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = {
+                        editingOrder = null
+                        isEditing = true
+                    },
+                    containerColor = Color(0xFFFF6B35),
+                    contentColor = Color.White,
+                    shape = CircleShape,
+                    elevation = FloatingActionButtonDefaults.elevation(4.dp)
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "Thêm đơn hàng")
+                }
+            },
+            containerColor = Color(0xFFF5F5F5)
+        ) { paddingValues ->
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(16.dp)
-                    .padding(bottom = 80.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(paddingValues)
             ) {
-                items(filteredOrders) { order ->
-                    OrderCard(order)
+                val filters = listOf(
+                    "Tất cả",
+                    "Chờ xác nhận",
+                    "Đang chuẩn bị",
+                    "Đang giao",
+                    "Hoàn thành",
+                    "Đã hủy"
+                )
+
+                OrdersFilterRow(filters, uiState.selectedFilter) { selected ->
+                    ordersViewModel.onFilterSelected(selected)
+                }
+
+                OrdersStatsRow(totalOrders, pendingOrders, deliveringOrders)
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    contentPadding = PaddingValues(bottom = 80.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(filteredOrders) { order ->
+                        OrderCard(
+                            order = order,
+                            onClick = {
+                                editingOrder = order
+                                isEditing = true
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    } else {
+        AddEditOrderScreen(
+            initialOrder = editingOrder,
+            onBack = {
+                isEditing = false
+                editingOrder = null
+            },
+            onSave = { order ->
+                ordersViewModel.addOrUpdateOrder(order)
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun OrdersSearchHeader(
+    query: String,
+    onQueryChange: (String) -> Unit
+) {
+    var isSearchActive by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+
+    LaunchedEffect(isSearchActive) {
+        if (isSearchActive) focusRequester.requestFocus()
+        else focusManager.clearFocus()
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp)
+            .background(Color.White)
+            .padding(horizontal = 16.dp),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        AnimatedVisibility(
+            visible = !isSearchActive,
+            enter = fadeIn(tween(300)) + slideInHorizontally(),
+            exit = fadeOut(tween(300)) + slideOutHorizontally { -it / 2 }
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text("Đơn hàng", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
+                    Text("Quản lý đơn hàng", fontSize = 14.sp, color = Color.Gray)
+                }
+                IconButton(
+                    onClick = { isSearchActive = true },
+                    modifier = Modifier
+                        .background(Color(0xFFF5F5F5), CircleShape)
+                        .size(40.dp)
+                ) {
+                    Icon(Icons.Default.Search, contentDescription = "Search", tint = Color(0xFF1A1A1A))
                 }
             }
         }
 
-        OrdersFloatingButton()
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+            AnimatedVisibility(
+                visible = isSearchActive,
+                enter = fadeIn() + expandHorizontally(expandFrom = Alignment.End, animationSpec = tween(300)),
+                exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.End, animationSpec = tween(300))
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { isSearchActive = false }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF1A1A1A))
+                    }
+                    TextField(
+                        value = query,
+                        onValueChange = onQueryChange,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(50.dp)
+                            .focusRequester(focusRequester),
+                        placeholder = { Text("Tìm mã đơn, tên khách...", color = Color.Gray, fontSize = 14.sp) },
+                        singleLine = true,
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color(0xFFF5F5F5),
+                            unfocusedContainerColor = Color(0xFFF5F5F5),
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            cursorColor = Color(0xFFFF6B35)
+                        ),
+                        shape = CircleShape,
+                        keyboardOptions = KeyboardOptions(autoCorrect = false, imeAction = ImeAction.Search),
+                        keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+                        trailingIcon = {
+                            if (query.isNotEmpty()) {
+                                IconButton(onClick = { onQueryChange("") }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear", tint = Color.Gray)
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+        }
     }
 }
