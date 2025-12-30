@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.data.model.owner.Order
-
+import androidx.compose.ui.text.font.FontWeight
 @Composable
 fun OrdersScreen(
     ordersViewModel: OrdersViewModel = viewModel()

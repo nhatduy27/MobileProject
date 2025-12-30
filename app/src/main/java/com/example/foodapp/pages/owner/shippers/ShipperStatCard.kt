@@ -21,29 +21,36 @@ fun ShipperStatCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        shape = RoundedCornerShape(12.dp)
+        // Áp dụng style thống nhất với StatCard của Food/Customer
+        modifier = modifier.size(width = 145.dp, height = 110.dp),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = color.copy(alpha = 0.15f)
+        ),
+        elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxSize()
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.Start
         ) {
-            Text(
-                text = value,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = color
-            )
-            
+            // Title: màu chủ đạo nhưng nhạt hơn
             Text(
                 text = title,
-                fontSize = 12.sp,
-                color = Color(0xFF757575),
-                modifier = Modifier.padding(top = 4.dp)
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                color = color.copy(alpha = 0.8f)
+            )
+
+            // Value: to, đậm, rõ ràng
+            Text(
+                text = value,
+                fontSize = 30.sp,
+                fontWeight = FontWeight.Bold,
+                color = color,
+                letterSpacing = (-0.5).sp
             )
         }
     }

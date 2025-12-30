@@ -57,12 +57,13 @@ fun OrdersStatsRow(total: Int, pending: Int, delivering: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
             .padding(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        OrderStatCard("Tổng đơn", total.toString(), Color(0xFFFF6B35), Modifier.weight(1f))
-        OrderStatCard("Chờ xác nhận", pending.toString(), Color(0xFFFFA500), Modifier.weight(1f))
-        OrderStatCard("Đang giao", delivering.toString(), Color(0xFF4CAF50), Modifier.weight(1f))
+        OrderStatCard("Tổng đơn", total.toString(), Color(0xFFFF6B35))
+        OrderStatCard("Chờ xác nhận", pending.toString(), Color(0xFFFFA500))
+        OrderStatCard("Đang giao", delivering.toString(), Color(0xFF4CAF50))
     }
 }
 
