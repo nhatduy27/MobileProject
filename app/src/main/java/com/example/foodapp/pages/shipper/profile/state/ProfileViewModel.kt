@@ -1,4 +1,4 @@
-package com.example.foodapp.pages.shipper.profile
+package com.example.foodapp.pages.shipper.profile.state
 
 import androidx.lifecycle.ViewModel
 import com.example.foodapp.data.repository.shipper.profile.MockShipperProfileRepository

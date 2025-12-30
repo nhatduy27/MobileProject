@@ -1,4 +1,4 @@
-package com.example.foodapp.pages.shipper.profile
+package com.example.foodapp.pages.shipper.profile.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*

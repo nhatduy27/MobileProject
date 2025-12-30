@@ -1,4 +1,4 @@
-package com.example.foodapp.pages.shipper.profile
+package com.example.foodapp.pages.shipper.profile.state
 
 import com.example.foodapp.data.model.shipper.ProfileMenuItem
 import com.example.foodapp.data.model.shipper.ShipperProfile
