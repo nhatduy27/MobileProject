@@ -5,9 +5,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.data.model.shipper.ProfileAction
 
 @Composable
 fun ProfileScreen(
@@ -19,38 +23,10 @@ fun ProfileScreen(
     onLanguage: () -> Unit = {},
     onPrivacy: () -> Unit = {},
     onTerms: () -> Unit = {},
-    onHelp: () -> Unit = {}
+    onHelp: () -> Unit = {},
+    profileViewModel: ProfileViewModel = viewModel()
 ) {
-    val profile = ShipperProfile(
-        name = "Nguyễn Văn A",
-        phone = "0901234567",
-        email = "nguyenvana@email.com",
-        vehicleType = "Xe máy",
-        licensePlate = "59-H1 12345",
-        rating = 4.8,
-        totalDeliveries = 1248,
-        joinDate = "01/2024",
-        isVerified = true
-    )
-
-    val accountItems = listOf(
-        ProfileMenuItem("👤", "Chỉnh sửa thông tin", "Tên, số điện thoại, email", ProfileAction.EDIT_PROFILE),
-        ProfileMenuItem("🔒", "Đổi mật khẩu", "Cập nhật mật khẩu của bạn", ProfileAction.CHANGE_PASSWORD),
-        ProfileMenuItem("🏍️", "Phương tiện", profile.licensePlate, ProfileAction.VEHICLE_INFO),
-        ProfileMenuItem("💳", "Phương thức thanh toán", "Tài khoản ngân hàng", ProfileAction.PAYMENT_METHOD)
-    )
-
-    val settingsItems = listOf(
-        ProfileMenuItem("🔔", "Thông báo", "Cài đặt thông báo đơn hàng", ProfileAction.NOTIFICATIONS),
-        ProfileMenuItem("🌐", "Ngôn ngữ", "Tiếng Việt", ProfileAction.LANGUAGE),
-        ProfileMenuItem("🔐", "Bảo mật & Quyền riêng tư", null, ProfileAction.PRIVACY),
-        ProfileMenuItem("📄", "Điều khoản & Chính sách", null, ProfileAction.TERMS)
-    )
-
-    val otherItems = listOf(
-        ProfileMenuItem("❓", "Trợ giúp & Hỗ trợ", null, ProfileAction.HELP),
-        ProfileMenuItem("🚪", "Đăng xuất", null, ProfileAction.LOGOUT)
-    )
+    val uiState by profileViewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier
@@ -67,7 +43,7 @@ fun ProfileScreen(
         ) {
             ProfileMenuCard(
                 title = "TÀI KHOẢN",
-                items = accountItems,
+                items = uiState.accountItems,
                 onItemClick = {
                     when (it) {
                         ProfileAction.EDIT_PROFILE -> onEditProfile()
@@ -81,7 +57,7 @@ fun ProfileScreen(
             )
             ProfileMenuCard(
                 title = "CÀI ĐẶT",
-                items = settingsItems,
+                items = uiState.settingsItems,
                 onItemClick = {
                     when (it) {
                         ProfileAction.NOTIFICATIONS -> onNotificationSettings()
@@ -94,7 +70,7 @@ fun ProfileScreen(
             )
             ProfileMenuCard(
                 title = "KHÁC",
-                items = otherItems,
+                items = uiState.otherItems,
                 onItemClick = {
                     if (it == ProfileAction.HELP) onHelp()
                 }
@@ -102,3 +78,4 @@ fun ProfileScreen(
         }
     }
 }
+

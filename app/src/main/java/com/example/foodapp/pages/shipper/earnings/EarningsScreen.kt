@@ -5,37 +5,29 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.data.model.shipper.EarningsPeriod
+import com.example.foodapp.data.model.shipper.EarningsSummary
 
 @Composable
-fun EarningsScreen() {
-    var selectedPeriod by remember { mutableStateOf(EarningsPeriod.MONTH) }
+fun EarningsScreen(
+    earningsViewModel: EarningsViewModel = viewModel()
+) {
+    val uiState by earningsViewModel.uiState.collectAsState()
 
-    // Dữ liệu mock nhiều ngày, nhiều tháng, nhiều tuần
-    val allEarningsHistory = listOf(
-        EarningsData("Hôm nay, 25/12/2025", 10, 90000, 5000),
-        EarningsData("24/12/2025", 12, 85000, 10000),
-        EarningsData("23/12/2025", 15, 102000, 0),
-        EarningsData("22/12/2025", 18, 125000, 15000),
-        EarningsData("21/12/2025", 14, 95000, 0),
-        EarningsData("20/12/2025", 16, 110000, 10000),
-        EarningsData("19/12/2025", 13, 88000, 0),
-        EarningsData("18/12/2025", 17, 118000, 12000),
-        EarningsData("10/12/2025", 11, 80000, 0),
-        EarningsData("01/12/2025", 9, 70000, 0),
-        EarningsData("25/11/2025", 8, 60000, 0),
-        EarningsData("10/11/2025", 7, 50000, 0)
-    )
+    val allEarningsHistory = uiState.allHistory
 
-    // Lọc dữ liệu theo chế độ
-    val filteredEarningsHistory = when (selectedPeriod) {
+    val filteredEarningsHistory = when (uiState.selectedPeriod) {
         EarningsPeriod.TODAY -> allEarningsHistory.filter { it.date.contains("Hôm nay") || it.date.startsWith("25/12/2025") }
-        EarningsPeriod.WEEK -> allEarningsHistory.take(7) // 7 ngày gần nhất
+        EarningsPeriod.WEEK -> allEarningsHistory.take(7)
         EarningsPeriod.MONTH -> allEarningsHistory.filter { it.date.endsWith("12/2025") || it.date.contains("Hôm nay") }
         EarningsPeriod.ALL -> allEarningsHistory
     }
@@ -57,8 +49,8 @@ fun EarningsScreen() {
         EarningsSummaryCard(summary)
 
         PeriodFilterChips(
-            selectedPeriod = selectedPeriod,
-            onPeriodSelected = { selectedPeriod = it }
+            selectedPeriod = uiState.selectedPeriod,
+            onPeriodSelected = { earningsViewModel.onPeriodSelected(it) }
         )
 
         Text(
@@ -83,3 +75,4 @@ fun EarningsScreen() {
         }
     }
 }
+

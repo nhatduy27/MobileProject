@@ -1,33 +1,8 @@
 package com.example.foodapp.pages.shipper.profile
 
-data class ShipperProfile(
-    val name: String,
-    val phone: String,
-    val email: String,
-    val vehicleType: String,
-    val licensePlate: String,
-    val rating: Double,
-    val totalDeliveries: Int,
-    val joinDate: String,
-    val isVerified: Boolean
-)
+import com.example.foodapp.data.model.shipper.ProfileAction
+import com.example.foodapp.data.model.shipper.ProfileMenuItem
+import com.example.foodapp.data.model.shipper.ShipperProfile
 
-data class ProfileMenuItem(
-    val icon: String,
-    val title: String,
-    val subtitle: String? = null,
-    val action: ProfileAction
-)
+// File adapter mỏng: các model đã được đưa xuống data.model.shipper
 
-enum class ProfileAction {
-    EDIT_PROFILE,
-    CHANGE_PASSWORD,
-    VEHICLE_INFO,
-    PAYMENT_METHOD,
-    NOTIFICATIONS,
-    LANGUAGE,
-    PRIVACY,
-    TERMS,
-    HELP,
-    LOGOUT
-}
