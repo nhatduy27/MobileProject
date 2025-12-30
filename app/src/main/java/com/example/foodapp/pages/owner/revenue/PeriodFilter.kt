@@ -21,7 +21,7 @@ fun PeriodFilter(
     onPeriodSelected: (String) -> Unit
 ) {
     val periods = listOf("Hôm nay", "Tuần này", "Tháng này", "Năm nay")
-    
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
