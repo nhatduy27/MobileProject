@@ -26,37 +26,44 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage // Nếu bạn chưa cài Coil thì có thể dùng Image vector tạm
+import com.example.foodapp.data.model.owner.Customer
 
 /**
- * Màn hình thêm khách hàng mới với đầy đủ các trường thông tin.
+ * Màn hình thêm / xem chi tiết khách hàng với đầy đủ các trường thông tin.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddCustomerScreen(
     onBack: () -> Unit,
+    customer: Customer? = null,
+    isReadOnly: Boolean = false,
     // Bạn có thể thêm callback onSave để truyền dữ liệu về ViewModel
     onSave: (name: String, phone: String, type: String, avatar: String, orders: String, revenue: String) -> Unit = { _,_,_,_,_,_ -> }
 ) {
     // --- STATE QUẢN LÝ DỮ LIỆU ---
     // ID thường được tự động sinh ra (UUID) nên không cần nhập
-    var name by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var avatarUrl by remember { mutableStateOf("") } // Link ảnh
+    var name by remember(customer) { mutableStateOf(customer?.name ?: "") }
+    var phone by remember(customer) { mutableStateOf(customer?.contact ?: "") }
+    var avatarUrl by remember(customer) { mutableStateOf(customer?.avatar ?: "") } // Link ảnh
 
     // Dropdown Type
     val customerTypes = listOf("Mới", "Thường xuyên", "VIP")
-    var selectedType by remember { mutableStateOf(customerTypes[0]) }
+    var selectedType by remember(customer) { mutableStateOf(customer?.type ?: customerTypes[0]) }
     var expandedType by remember { mutableStateOf(false) }
 
     // Thông tin phụ (Thường là tính toán, nhưng cho phép nhập ban đầu nếu cần import dữ liệu cũ)
-    var ordersInfo by remember { mutableStateOf("0 đơn") }
-    var revenueInfo by remember { mutableStateOf("0đ") }
+    var ordersInfo by remember(customer) { mutableStateOf(customer?.ordersInfo ?: "0 đơn") }
+    var revenueInfo by remember(customer) { mutableStateOf(customer?.revenueInfo ?: "0đ") }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
-                    Text("Thêm khách hàng", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        if (isReadOnly) "Thông tin khách hàng" else "Thêm khách hàng",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -68,17 +75,19 @@ fun AddCustomerScreen(
         },
         containerColor = Color(0xFFF9F9F9),
         bottomBar = {
-            // Nút Lưu dính ở đáy màn hình
-            Button(
-                onClick = { onSave(name, phone, selectedType, avatarUrl, ordersInfo, revenueInfo); onBack() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .height(50.dp),
-                shape = RoundedCornerShape(25.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35))
-            ) {
-                Text("Lưu khách hàng", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            if (!isReadOnly) {
+                // Nút Lưu dính ở đáy màn hình, chỉ hiển thị khi được phép chỉnh sửa
+                Button(
+                    onClick = { onSave(name, phone, selectedType, avatarUrl, ordersInfo, revenueInfo); onBack() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .height(50.dp),
+                    shape = RoundedCornerShape(25.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35))
+                ) {
+                    Text("Lưu khách hàng", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
             }
         }
     ) { padding ->
@@ -98,7 +107,9 @@ fun AddCustomerScreen(
                     .size(100.dp)
                     .clip(CircleShape)
                     .background(Color(0xFFE0E0E0))
-                    .clickable { /* TODO: Mở thư viện ảnh */ }
+                    .then(
+                        if (!isReadOnly) Modifier.clickable { /* TODO: Mở thư viện ảnh */ } else Modifier
+                    )
             ) {
                 if (avatarUrl.isNotEmpty()) {
                     AsyncImage(
@@ -125,7 +136,8 @@ fun AddCustomerScreen(
                 label = "Tên khách hàng",
                 value = name,
                 onValueChange = { name = it },
-                placeholder = "Nhập tên đầy đủ"
+                placeholder = "Nhập tên đầy đủ",
+                enabled = !isReadOnly
             )
 
             // Số điện thoại (Contact)
@@ -134,7 +146,8 @@ fun AddCustomerScreen(
                 value = phone,
                 onValueChange = { phone = it },
                 placeholder = "09xx xxx xxx",
-                keyboardType = KeyboardType.Phone
+                keyboardType = KeyboardType.Phone,
+                enabled = !isReadOnly
             )
 
             // Loại khách hàng (Dropdown)
@@ -145,7 +158,11 @@ fun AddCustomerScreen(
                     label = { Text("Loại khách hàng") },
                     readOnly = true, // Không cho gõ tay, chỉ chọn
                     trailingIcon = {
-                        Icon(Icons.Default.KeyboardArrowDown, "Select type", Modifier.clickable { expandedType = true })
+                        Icon(
+                            Icons.Default.KeyboardArrowDown,
+                            "Select type",
+                            Modifier.clickable(enabled = !isReadOnly) { if (!isReadOnly) expandedType = true }
+                        )
                     },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -157,19 +174,21 @@ fun AddCustomerScreen(
                     )
                 )
                 // Menu Dropdown
-                DropdownMenu(
-                    expanded = expandedType,
-                    onDismissRequest = { expandedType = false },
-                    modifier = Modifier.background(Color.White)
-                ) {
-                    customerTypes.forEach { type ->
-                        DropdownMenuItem(
-                            text = { Text(type) },
-                            onClick = {
-                                selectedType = type
-                                expandedType = false
-                            }
-                        )
+                if (!isReadOnly) {
+                    DropdownMenu(
+                        expanded = expandedType,
+                        onDismissRequest = { expandedType = false },
+                        modifier = Modifier.background(Color.White)
+                    ) {
+                        customerTypes.forEach { type ->
+                            DropdownMenuItem(
+                                text = { Text(type) },
+                                onClick = {
+                                    selectedType = type
+                                    expandedType = false
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -179,7 +198,8 @@ fun AddCustomerScreen(
                 label = "Link Avatar (Tùy chọn)",
                 value = avatarUrl,
                 onValueChange = { avatarUrl = it },
-                placeholder = "https://..."
+                placeholder = "https://...",
+                enabled = !isReadOnly
             )
 
             Divider(color = Color(0xFFEEEEEE))
@@ -197,7 +217,8 @@ fun AddCustomerScreen(
                 label = "Tổng đơn hàng",
                 value = ordersInfo,
                 onValueChange = { ordersInfo = it },
-                placeholder = "Ví dụ: 5 đơn"
+                placeholder = "Ví dụ: 5 đơn",
+                enabled = !isReadOnly
             )
 
             // Revenue Info
@@ -206,7 +227,8 @@ fun AddCustomerScreen(
                 value = revenueInfo,
                 onValueChange = { revenueInfo = it },
                 placeholder = "Ví dụ: 1.200.000đ",
-                keyboardType = KeyboardType.Number
+                keyboardType = KeyboardType.Number,
+                enabled = !isReadOnly
             )
 
             // Khoảng trống dưới cùng để không bị nút Lưu che
@@ -222,7 +244,8 @@ fun CustomTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String = "",
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    enabled: Boolean = true
 ) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -243,6 +266,7 @@ fun CustomTextField(
                 keyboardType = keyboardType,
                 imeAction = ImeAction.Next
             ),
+            enabled = enabled,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = Color(0xFFFF6B35), // Màu cam khi focus
                 unfocusedBorderColor = Color(0xFFE0E0E0), // Màu xám nhạt khi thường
