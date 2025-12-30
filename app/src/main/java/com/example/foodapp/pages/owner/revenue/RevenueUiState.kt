@@ -1,8 +1,8 @@
 package com.example.foodapp.pages.owner.revenue
 
-import com.example.foodapp.data.model.owner.revenue.RevenueStat
-import com.example.foodapp.data.model.owner.revenue.TimeSlotRevenue
-import com.example.foodapp.data.model.owner.revenue.TopProduct
+import com.example.foodapp.data.model.owner.RevenueStat
+import com.example.foodapp.data.model.owner.TimeSlotRevenue
+import com.example.foodapp.data.model.owner.TopProduct
 
 /**
  * UI state cho màn hình doanh thu.

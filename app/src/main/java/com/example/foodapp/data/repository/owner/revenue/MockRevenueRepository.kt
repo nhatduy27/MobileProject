@@ -1,9 +1,9 @@
 package com.example.foodapp.data.repository.owner.revenue
 
-import com.example.foodapp.data.model.owner.revenue.PeriodRevenueData
-import com.example.foodapp.data.model.owner.revenue.RevenueStat
-import com.example.foodapp.data.model.owner.revenue.TimeSlotRevenue
-import com.example.foodapp.data.model.owner.revenue.TopProduct
+import com.example.foodapp.data.model.owner.PeriodRevenueData
+import com.example.foodapp.data.model.owner.RevenueStat
+import com.example.foodapp.data.model.owner.TimeSlotRevenue
+import com.example.foodapp.data.model.owner.TopProduct
 import androidx.compose.ui.graphics.Color
 
 class MockRevenueRepository {

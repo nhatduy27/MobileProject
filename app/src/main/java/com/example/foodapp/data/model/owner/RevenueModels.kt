@@ -1,4 +1,4 @@
-package com.example.foodapp.data.model.owner.revenue
+package com.example.foodapp.data.model.owner
 
 import androidx.compose.ui.graphics.Color
 

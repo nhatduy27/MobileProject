@@ -13,8 +13,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.foodapp.data.model.owner.dashboard.DashboardRecentOrder
-import com.example.foodapp.data.model.owner.dashboard.DashboardTopProduct
+import com.example.foodapp.data.model.owner.DashboardRecentOrder
+import com.example.foodapp.data.model.owner.DashboardTopProduct
 
 @Composable
 fun DashboardSummaryLists(
@@ -179,4 +179,4 @@ fun TopProductCard(product: DashboardTopProduct) {
         }
     }
 }
-                )
+

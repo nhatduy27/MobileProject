@@ -4,7 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.foodapp.data.model.owner.dashboard.DashboardStat
+import com.example.foodapp.data.model.owner.DashboardStat
 
 @Composable
 fun DashboardStatsSection(

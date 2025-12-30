@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.foodapp.data.model.owner.dashboard.DashboardDayRevenue
+import com.example.foodapp.data.model.owner.DashboardDayRevenue
 
 @Composable
 fun DashboardRevenueChart(
@@ -100,4 +100,4 @@ fun DashboardRevenueChart(
         }
     }
 }
-                        }
+

@@ -1,9 +1,9 @@
 package com.example.foodapp.pages.owner.dashboard
 
-import com.example.foodapp.data.model.owner.dashboard.DashboardDayRevenue
-import com.example.foodapp.data.model.owner.dashboard.DashboardRecentOrder
-import com.example.foodapp.data.model.owner.dashboard.DashboardStat
-import com.example.foodapp.data.model.owner.dashboard.DashboardTopProduct
+import com.example.foodapp.data.model.owner.DashboardDayRevenue
+import com.example.foodapp.data.model.owner.DashboardRecentOrder
+import com.example.foodapp.data.model.owner.DashboardStat
+import com.example.foodapp.data.model.owner.DashboardTopProduct
 
 /**
  * UI state cho màn hình Dashboard.

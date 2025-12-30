@@ -1,10 +1,11 @@
 package com.example.foodapp.data.repository.owner.dashboard
 
+import android.R
 import androidx.compose.ui.graphics.Color
-import com.example.foodapp.data.model.owner.dashboard.DashboardDayRevenue
-import com.example.foodapp.data.model.owner.dashboard.DashboardRecentOrder
-import com.example.foodapp.data.model.owner.dashboard.DashboardStat
-import com.example.foodapp.data.model.owner.dashboard.DashboardTopProduct
+import com.example.foodapp.data.model.owner.DashboardDayRevenue
+import com.example.foodapp.data.model.owner.DashboardRecentOrder
+import com.example.foodapp.data.model.owner.DashboardStat
+import com.example.foodapp.data.model.owner.DashboardTopProduct
 
 /**
  * Repository mock cho màn hình Dashboard.
@@ -15,25 +16,25 @@ class MockDashboardRepository {
 
     fun getStats(): List<DashboardStat> = listOf(
         DashboardStat(
-            iconRes = android.R.drawable.ic_menu_sort_by_size,
+            iconRes = R.drawable.ic_menu_sort_by_size,
             value = "124",
             label = "Tổng đơn hôm nay",
             color = Color(0xFF2196F3)
         ),
         DashboardStat(
-            iconRes = android.R.drawable.ic_dialog_email,
+            iconRes = R.drawable.ic_dialog_email,
             value = "1.250.000đ",
             label = "Doanh thu hôm nay",
             color = Color(0xFF4CAF50)
         ),
         DashboardStat(
-            iconRes = android.R.drawable.ic_menu_directions,
+            iconRes = R.drawable.ic_menu_directions,
             value = "8",
             label = "Đơn đang giao",
             color = Color(0xFFFF9800)
         ),
         DashboardStat(
-            iconRes = android.R.drawable.btn_star_big_on,
+            iconRes = R.drawable.btn_star_big_on,
             value = "Cơm gà xối mỡ",
             label = "Món bán chạy nhất",
             color = Color(0xFFFFC107)
