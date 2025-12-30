@@ -23,6 +23,7 @@ fun EarningsScreen(
 ) {
     val uiState by earningsViewModel.uiState.collectAsState()
 
+    // --- Phần logic tính toán không thay đổi ---
     val allEarningsHistory = uiState.allHistory
 
     val filteredEarningsHistory = when (uiState.selectedPeriod) {
@@ -41,32 +42,42 @@ fun EarningsScreen(
         averagePerOrder = if (allEarningsHistory.sumOf { it.totalOrders } > 0) allEarningsHistory.sumOf { it.totalEarnings } / allEarningsHistory.sumOf { it.totalOrders } else 0
     )
 
+    // --- Bắt đầu phần thay đổi giao diện ---
+
+    // 1. Tạo một Column lớn duy nhất, có thể cuộn cho toàn bộ màn hình
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
+            .verticalScroll(rememberScrollState()) // Áp dụng cuộn ở đây
+            .padding(bottom = 80.dp) // Thêm padding dưới để không bị BottomNavBar che
     ) {
-        EarningsSummaryCard(summary)
+        // 2. Đặt EarningsSummaryCard vào bên trong Column cuộn
+        //    Thêm padding ngang cho nó
+        Column(modifier = Modifier.padding(horizontal = 16.dp)) {
+            EarningsSummaryCard(summary)
+        }
 
+        // 3. Đặt PeriodFilterChips vào bên trong
         PeriodFilterChips(
             selectedPeriod = uiState.selectedPeriod,
             onPeriodSelected = { earningsViewModel.onPeriodSelected(it) }
         )
 
+        // 4. Đặt Text vào bên trong
         Text(
             text = "Lịch sử thu nhập",
             fontSize = 16.sp,
             fontWeight = FontWeight.Bold,
             color = Color(0xFF1A1A1A),
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp) // Điều chỉnh padding
         )
 
+        // 5. Đặt danh sách lịch sử vào bên trong, không cần cuộn riêng nữa
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp)
-                .padding(bottom = 80.dp),
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp), // Chỉ cần padding ngang
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             filteredEarningsHistory.forEach { earnings ->
@@ -75,4 +86,3 @@ fun EarningsScreen(
         }
     }
 }
-
