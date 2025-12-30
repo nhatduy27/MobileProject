@@ -25,14 +25,18 @@ import coil.request.ImageRequest
 import com.example.foodapp.data.model.owner.Customer
 
 @Composable
-fun CustomerCard(customer: Customer) {
+fun CustomerCard(
+    customer: Customer,
+    onClick: () -> Unit = {}
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 6.dp, horizontal = 4.dp), // Tạo khoảng cách giữa các card
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(16.dp), // Bo góc card lớn hơn (16dp) cho mềm mại
-        colors = CardDefaults.cardColors(containerColor = Color.White) // Nền trắng sạch sẽ
+        colors = CardDefaults.cardColors(containerColor = Color.White), // Nền trắng sạch sẽ
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier

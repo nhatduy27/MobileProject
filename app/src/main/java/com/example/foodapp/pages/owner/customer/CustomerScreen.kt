@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.activity.compose.BackHandler
+import com.example.foodapp.data.model.owner.Customer
 
 // --- 1. COMPONENT ĐIỀU HƯỚNG CHÍNH ---
 @Composable
@@ -38,8 +39,16 @@ fun CustomerScreenMain() {
     // State để quản lý màn hình hiện tại: "LIST" (danh sách) hoặc "ADD" (thêm mới)
     var currentScreen by remember { mutableStateOf("LIST") }
 
+    // Lưu khách hàng đang được chọn (khi bấm vào từ danh sách)
+    var selectedCustomer by remember { mutableStateOf<Customer?>(null) }
+
+    // Cờ xác định đang ở chế độ chỉ xem (true) hay thêm/sửa (false)
+    var isReadOnly by remember { mutableStateOf(false) }
+
     BackHandler(enabled = currentScreen == "ADD") {
         currentScreen = "LIST"
+        selectedCustomer = null
+        isReadOnly = false
     }
 
     // AnimatedContent tạo hiệu ứng chuyển đổi mượt mà giữa các màn hình
@@ -55,12 +64,28 @@ fun CustomerScreenMain() {
         // Dựa vào state để quyết định hiển thị màn hình nào
         when (screen) {
             "LIST" -> CustomerScreen(
-                // Truyền một hàm để khi bấm nút, state sẽ đổi thành "ADD"
-                onNavigateToAdd = { currentScreen = "ADD" }
+                // Truyền một hàm để khi bấm nút, state sẽ đổi thành "ADD" (thêm mới)
+                onNavigateToAdd = {
+                    selectedCustomer = null
+                    isReadOnly = false
+                    currentScreen = "ADD"
+                },
+                // Khi bấm vào một khách hàng cụ thể -> mở màn hình xem chi tiết (readonly)
+                onCustomerClick = { customer ->
+                    selectedCustomer = customer
+                    isReadOnly = true
+                    currentScreen = "ADD"
+                }
             )
             "ADD" -> AddCustomerScreen(
                 // Truyền một hàm để khi bấm nút Back, state sẽ đổi lại thành "LIST"
-                onBack = { currentScreen = "LIST" }
+                onBack = {
+                    currentScreen = "LIST"
+                    selectedCustomer = null
+                    isReadOnly = false
+                },
+                customer = selectedCustomer,
+                isReadOnly = isReadOnly
             )
         }
     }
@@ -71,7 +96,8 @@ fun CustomerScreenMain() {
 @Composable
 fun CustomerScreen(
     customerViewModel: CustomerViewModel = viewModel(),
-    onNavigateToAdd: () -> Unit // Nhận hàm điều hướng từ CustomerScreenMain
+    onNavigateToAdd: () -> Unit, // Nhận hàm điều hướng từ CustomerScreenMain
+    onCustomerClick: (Customer) -> Unit // Khi bấm vào 1 khách hàng trong danh sách
 ) {
     val uiState by customerViewModel.uiState.collectAsState()
 
@@ -130,7 +156,10 @@ fun CustomerScreen(
             ) {
                 item { Spacer(modifier = Modifier.height(8.dp)) }
                 items(items = filteredCustomers, key = { it.id }) { customer ->
-                    CustomerCard(customer)
+                    CustomerCard(
+                        customer = customer,
+                        onClick = { onCustomerClick(customer) }
+                    )
                 }
             }
         }

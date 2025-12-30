@@ -1,4 +1,4 @@
-package com.example.foodapp.pages.owner.foods
+package com.example.foodapp.data.model.owner
 
 data class Food(
     val id: Int,
@@ -8,5 +8,6 @@ data class Food(
     val rating: Double,
     val reviewCount: Int,
     val price: Int,
-    val isAvailable: Boolean
+    val isAvailable: Boolean,
+    val imageUrl: String? = null
 )
