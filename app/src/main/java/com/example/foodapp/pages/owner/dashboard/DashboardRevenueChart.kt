@@ -10,20 +10,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.data.model.owner.dashboard.DashboardDayRevenue
 
 @Composable
-fun DashboardRevenueChart() {
-    val revenueData = listOf(
-        DayRevenue("T2", 1250),
-        DayRevenue("T3", 1870),
-        DayRevenue("T4", 1560),
-        DayRevenue("T5", 2150),
-        DayRevenue("T6", 1890),
-        DayRevenue("T7", 2380),
-        DayRevenue("CN", 2050)
-    )
-    
-    val maxRevenue = revenueData.maxOf { it.amount }
+fun DashboardRevenueChart(
+    weeklyRevenue: List<DashboardDayRevenue>
+) {
+    val maxRevenue = weeklyRevenue.maxOfOrNull { it.amount } ?: 0
 
     Card(
         modifier = Modifier
@@ -50,7 +43,7 @@ fun DashboardRevenueChart() {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    revenueData.forEach { revenue ->
+                    weeklyRevenue.forEach { revenue ->
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier
@@ -87,7 +80,7 @@ fun DashboardRevenueChart() {
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.Top
                 ) {
-                    revenueData.forEach { revenue ->
+                    weeklyRevenue.forEach { revenue ->
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -107,5 +100,4 @@ fun DashboardRevenueChart() {
         }
     }
 }
-
-data class DayRevenue(val day: String, val amount: Int)
+                        }

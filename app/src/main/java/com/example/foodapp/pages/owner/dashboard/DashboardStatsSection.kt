@@ -3,52 +3,36 @@ package com.example.foodapp.pages.owner.dashboard
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.example.foodapp.data.model.owner.dashboard.DashboardStat
 
 @Composable
-fun DashboardStatsSection() {
+fun DashboardStatsSection(
+    stats: List<DashboardStat>
+) {
     Column {
+        // Hiển thị theo dạng 2x2 giống layout cũ nếu đủ 4 stat
+        val rows = stats.chunked(2)
 
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.weight(1f)) {
-                DashboardStatCard(
-                    icon = android.R.drawable.ic_menu_sort_by_size,
-                    value = "124",
-                    label = "Tổng đơn hôm nay",
-                    color = Color(0xFF2196F3)
-                )
+        rows.forEachIndexed { index, rowStats ->
+            if (index > 0) {
+                Spacer(modifier = Modifier.height(16.dp))
             }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                DashboardStatCard(
-                    icon = android.R.drawable.ic_dialog_email,
-                    value = "1.250.000đ",
-                    label = "Doanh thu hôm nay",
-                    color = Color(0xFF4CAF50)
-                )
-            }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Row(modifier = Modifier.fillMaxWidth()) {
+                rowStats.forEachIndexed { colIndex, stat ->
+                    if (colIndex > 0) {
+                        Spacer(modifier = Modifier.width(16.dp))
+                    }
 
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.weight(1f)) {
-                DashboardStatCard(
-                    icon = android.R.drawable.ic_menu_directions,
-                    value = "8",
-                    label = "Đơn đang giao",
-                    color = Color(0xFFFF9800)
-                )
-            }
-            Spacer(modifier = Modifier.width(16.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                DashboardStatCard(
-                    icon = android.R.drawable.btn_star_big_on,
-                    value = "Cơm gà xối mỡ",
-                    label = "Món bán chạy nhất",
-                    color = Color(0xFFFFC107)
-                )
+                    DashboardStatCard(
+                        iconRes = stat.iconRes,
+                        value = stat.value,
+                        label = stat.label,
+                        color = stat.color,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
             }
         }
     }

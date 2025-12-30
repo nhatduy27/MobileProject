@@ -13,25 +13,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.data.model.owner.dashboard.DashboardRecentOrder
+import com.example.foodapp.data.model.owner.dashboard.DashboardTopProduct
 
 @Composable
-fun DashboardSummaryLists() {
-    val recentOrders = listOf(
-        RecentOrder("#ORD001", "Khách Hàng A", "Đang xử lý", 245000),
-        RecentOrder("#ORD002", "Khách Hàng B", "Đang giao", 189000),
-        RecentOrder("#ORD003", "Khách Hàng C", "Hoàn thành", 312000),
-        RecentOrder("#ORD004", "Khách Hàng D", "Đang xử lý", 156000),
-        RecentOrder("#ORD005", "Khách Hàng E", "Hoàn thành", 428000)
-    )
-
-    val topProducts = listOf(
-        TopProductItem("🍚 Cơm gà", 156, "1.44M"),
-        TopProductItem("🍜 Phở bò", 128, "1.28M"),
-        TopProductItem("🥤 Trà sữa", 195, "975K"),
-        TopProductItem("🍝 Mì", 87, "522K"),
-        TopProductItem("🍗 Gà rán", 92, "644K")
-    )
-
+fun DashboardSummaryLists(
+    recentOrders: List<DashboardRecentOrder>,
+    topProducts: List<DashboardTopProduct>
+) {
     Row(modifier = Modifier.fillMaxWidth()) {
 
         // Đơn hàng gần đây
@@ -39,7 +28,9 @@ fun DashboardSummaryLists() {
             modifier = Modifier
                 .weight(1f)
                 .height(400.dp),
-            elevation = CardDefaults.cardElevation(4.dp)
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(3.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Đơn hàng gần đây", style = MaterialTheme.typography.titleMedium)
@@ -63,7 +54,9 @@ fun DashboardSummaryLists() {
             modifier = Modifier
                 .weight(1f)
                 .height(400.dp),
-            elevation = CardDefaults.cardElevation(4.dp)
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            shape = RoundedCornerShape(12.dp),
+            elevation = CardDefaults.cardElevation(3.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("Món bán chạy", style = MaterialTheme.typography.titleMedium)
@@ -83,11 +76,12 @@ fun DashboardSummaryLists() {
 }
 
 @Composable
-fun RecentOrderCard(order: RecentOrder) {
+fun RecentOrderCard(order: DashboardRecentOrder) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAF9F7))
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
@@ -135,24 +129,25 @@ fun StatusBadge(status: String) {
 
     Box(
         modifier = Modifier
-            .background(bgColor, shape = RoundedCornerShape(4.dp))
-            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .background(bgColor.copy(alpha = 0.1f), shape = RoundedCornerShape(100))
+            .padding(horizontal = 10.dp, vertical = 4.dp)
     ) {
         Text(
             status,
-            fontSize = 10.sp,
+            fontSize = 11.sp,
             color = textColor,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.Medium
         )
     }
 }
 
 @Composable
-fun TopProductCard(product: TopProductItem) {
+fun TopProductCard(product: DashboardTopProduct) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(2.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAF9F7))
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Row(
@@ -184,16 +179,4 @@ fun TopProductCard(product: TopProductItem) {
         }
     }
 }
-
-data class RecentOrder(
-    val orderId: String,
-    val customer: String,
-    val status: String,
-    val amount: Int
-)
-
-data class TopProductItem(
-    val name: String,
-    val quantity: Int,
-    val revenue: String
-)
+                )

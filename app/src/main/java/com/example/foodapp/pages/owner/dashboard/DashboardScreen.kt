@@ -4,11 +4,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(
+    dashboardViewModel: DashboardViewModel = viewModel()
+) {
+    val uiState by dashboardViewModel.uiState.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -20,14 +27,17 @@ fun DashboardScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        DashboardStatsSection()
+        DashboardStatsSection(stats = uiState.stats)
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DashboardRevenueChart()
+        DashboardRevenueChart(weeklyRevenue = uiState.weeklyRevenue)
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        DashboardSummaryLists()
+        DashboardSummaryLists(
+            recentOrders = uiState.recentOrders,
+            topProducts = uiState.topProducts
+        )
     }
 }
