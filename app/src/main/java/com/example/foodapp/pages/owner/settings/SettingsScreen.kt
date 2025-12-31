@@ -26,13 +26,13 @@ fun SettingsScreen(navController: NavHostController) {
                     title = "Thông tin cá nhân",
                     subtitle = "Chỉnh sửa thông tin tài khoản",
                     icon = "👤",
-                    onClick = { /* TODO */ }
+                    onClick = { navController.navigate("personal_info") }
                 ),
                 SettingItem(
                     title = "Đổi mật khẩu",
                     subtitle = "Thay đổi mật khẩu đăng nhập",
                     icon = "🔐",
-                    onClick = { /* TODO */ }
+                    onClick = { navController.navigate("change_password") }
                 )
             )
         ),
@@ -43,13 +43,13 @@ fun SettingsScreen(navController: NavHostController) {
                     title = "Thông tin cửa hàng",
                     subtitle = "Tên, địa chỉ, giờ mở cửa",
                     icon = "🏪",
-                    onClick = { /* TODO */ }
+                    onClick = { navController.navigate("store_info") }
                 ),
                 SettingItem(
                     title = "Phương thức thanh toán",
                     subtitle = "Quản lý tài khoản ngân hàng",
                     icon = "💳",
-                    onClick = { /* TODO */ }
+                    onClick = { navController.navigate("payment_method") }
                 )
             )
         ),
@@ -93,7 +93,7 @@ fun SettingsScreen(navController: NavHostController) {
                     title = "Lịch sử đăng nhập",
                     subtitle = "Xem các phiên đăng nhập gần đây",
                     icon = "📱",
-                    onClick = { /* TODO */ }
+                    onClick = { navController.navigate("login_history") }
                 )
             )
         ),
@@ -104,19 +104,19 @@ fun SettingsScreen(navController: NavHostController) {
                     title = "Điều khoản sử dụng",
                     subtitle = "Quy định và chính sách",
                     icon = "📋",
-                    onClick = { /* TODO */ }
+                    onClick = { navController.navigate("terms") }
                 ),
                 SettingItem(
                     title = "Chính sách bảo mật",
                     subtitle = "Cách chúng tôi bảo vệ dữ liệu",
                     icon = "🛡️",
-                    onClick = { /* TODO */ }
+                    onClick = { navController.navigate("privacy") }
                 ),
                 SettingItem(
                     title = "Trợ giúp & Hỗ trợ",
                     subtitle = "Liên hệ với chúng tôi",
                     icon = "💬",
-                    onClick = { /* TODO */ }
+                    onClick = { navController.navigate("support") }
                 )
             )
         )
