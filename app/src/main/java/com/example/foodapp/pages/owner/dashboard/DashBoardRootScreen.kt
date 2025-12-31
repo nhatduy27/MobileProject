@@ -30,8 +30,9 @@ import com.example.foodapp.pages.owner.revenue.RevenueScreen
 // Import ShippersScreen
 import com.example.foodapp.pages.owner.shippers.ShippersScreen
 // Import SettingsScreen
-import com.example.foodapp.pages.owner.settings.SettingsScreen
+import com.example.foodapp.pages.owner.settings.SettingsNavHost
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,6 +55,9 @@ fun DashBoardRootScreen(navController: NavHostController) {
     val scope = rememberCoroutineScope()
     // Thống nhất dùng chữ thường cho tên màn hình để tránh lỗi
     var currentScreen by remember { mutableStateOf("dashboard") }
+    
+    // NavController riêng cho settings navigation
+    val settingsNavController = rememberNavController()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -219,7 +223,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     "shippers" -> ShippersScreen()
                     "customers" -> CustomerScreenMain()
                     "revenue" -> RevenueScreen()
-                    "settings" -> SettingsScreen(navController)
+                    "settings" -> SettingsNavHost(navController = settingsNavController)
                     else -> DashboardScreen()
                 }
             }

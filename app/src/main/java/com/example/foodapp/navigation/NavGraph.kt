@@ -14,14 +14,6 @@ import com.example.foodapp.presentation.view.user.home.UserHomeScreen
 import com.example.foodapp.pages.user.cart.CartScreen
 import com.example.foodapp.pages.user.favorites.FavoritesScreen
 import com.example.foodapp.pages.user.notifications.UserNotificationsScreen
-import com.example.foodapp.pages.owner.settings.PersonalInfoScreen
-import com.example.foodapp.pages.owner.settings.ChangePasswordScreen
-import com.example.foodapp.pages.owner.settings.StoreInfoScreen
-import com.example.foodapp.pages.owner.settings.PaymentMethodScreen
-import com.example.foodapp.pages.owner.settings.LoginHistoryScreen
-import com.example.foodapp.pages.owner.settings.TermsScreen
-import com.example.foodapp.pages.owner.settings.PrivacyScreen
-import com.example.foodapp.pages.owner.settings.SupportScreen
 import com.google.firebase.auth.FirebaseAuth
 
 sealed class Screen(val route: String) {
@@ -148,41 +140,8 @@ fun FoodAppNavHost(
         }
 
         composable(Screen.OwnerHome.route) {
-            // Màn hình owner có sidebar
+            // Màn hình owner có sidebar (bao gồm cả settings navigation)
             com.example.foodapp.pages.owner.dashboard.DashBoardRootScreen(navController)
-        }
-
-        // Settings Screens
-        composable("personal_info") {
-            PersonalInfoScreen(navController = navController)
-        }
-
-        composable("change_password") {
-            ChangePasswordScreen(navController = navController)
-        }
-
-        composable("store_info") {
-            StoreInfoScreen(navController = navController)
-        }
-
-        composable("payment_method") {
-            PaymentMethodScreen(navController = navController)
-        }
-
-        composable("login_history") {
-            LoginHistoryScreen(navController = navController)
-        }
-
-        composable("terms") {
-            TermsScreen(navController = navController)
-        }
-
-        composable("privacy") {
-            PrivacyScreen(navController = navController)
-        }
-
-        composable("support") {
-            SupportScreen(navController = navController)
         }
     }
 }

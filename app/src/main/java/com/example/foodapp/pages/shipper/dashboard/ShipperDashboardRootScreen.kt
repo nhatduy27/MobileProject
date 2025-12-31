@@ -24,9 +24,10 @@ import com.example.foodapp.pages.shipper.help.HelpScreen
 import com.example.foodapp.pages.shipper.history.HistoryScreen
 import com.example.foodapp.pages.shipper.home.ShipperHomeScreen
 import com.example.foodapp.pages.shipper.notifications.NotificationsScreen
-import com.example.foodapp.pages.shipper.profile.ProfileScreen
+import com.example.foodapp.pages.shipper.settings.ShipperSettingsNavHost
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun DrawerMenuItem(
@@ -65,6 +66,9 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var currentScreen by remember { mutableStateOf("home") }
+    
+    // NavController riêng cho settings navigation
+    val settingsNavController = rememberNavController()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -244,26 +248,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                         "home" -> ShipperHomeScreen()
                         "earnings" -> EarningsScreen()
                         "history" -> HistoryScreen()
-                        "profile" -> ProfileScreen(
-                            onEditProfile = { currentScreen = "edit_profile" },
-                            onChangePassword = { currentScreen = "change_password" },
-                            onVehicleInfo = { currentScreen = "vehicle_info" },
-                            onPaymentMethod = { currentScreen = "payment_method" },
-                            onNotificationSettings = { currentScreen = "notification_settings" },
-                            onLanguage = { currentScreen = "language" },
-                            onPrivacy = { currentScreen = "privacy" },
-                            onTerms = { currentScreen = "terms" },
-                            onHelp = { currentScreen = "help_screen" }
-                        )
-                        "help_screen" -> com.example.foodapp.pages.shipper.profile.HelpScreen(onBack = { currentScreen = "profile" })
-                        "privacy" -> com.example.foodapp.pages.shipper.profile.PrivacyScreen(onBack = { currentScreen = "profile" })
-                        "terms" -> com.example.foodapp.pages.shipper.profile.TermsScreen(onBack = { currentScreen = "profile" })
-                        "language" -> com.example.foodapp.pages.shipper.profile.LanguageScreen(onCancel = { currentScreen = "profile" })
-                        "notification_settings" -> com.example.foodapp.pages.shipper.profile.NotificationSettingsScreen(onCancel = { currentScreen = "profile" })
-                        "payment_method" -> com.example.foodapp.pages.shipper.profile.PaymentMethodScreen(onCancel = { currentScreen = "profile" })
-                        "vehicle_info" -> com.example.foodapp.pages.shipper.profile.VehicleInfoScreen(onCancel = { currentScreen = "profile" })
-                        "edit_profile" -> com.example.foodapp.pages.shipper.profile.EditProfileScreen(onCancel = { currentScreen = "profile" })
-                        "change_password" -> com.example.foodapp.pages.shipper.profile.ChangePasswordScreen(onCancel = { currentScreen = "profile" })
+                        "profile" -> ShipperSettingsNavHost(navController = settingsNavController)
                         "notifications" -> NotificationsScreen()
                         "help" -> HelpScreen()
                     }
