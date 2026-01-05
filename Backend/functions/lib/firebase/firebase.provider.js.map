@@ -1,1 +1,0 @@
-{"version":3,"file":"firebase.provider.js","sourceRoot":"","sources":["../../src/firebase/firebase.provider.ts"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AAAA,sDAAwC;AAE3B,QAAA,kBAAkB,GAAG,WAAW,CAAC;AAEjC,QAAA,iBAAiB,GAAG;IAC/B,OAAO,EAAE,0BAAkB;IAC3B,UAAU,EAAE,GAA8B,EAAE;QAC1C,OAAO,KAAK,CAAC,SAAS,EAAE,CAAC;IAC3B,CAAC;CACF,CAAC"}

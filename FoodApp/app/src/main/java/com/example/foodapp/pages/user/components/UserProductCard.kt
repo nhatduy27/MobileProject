@@ -13,7 +13,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
-import com.example.foodapp.data.model.Product
+import com.example.foodapp.data.model.product.Product
 
 @Composable
 fun UserProductCard(product: Product, onClick: () -> Unit) {

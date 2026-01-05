@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.model.User
-import com.example.foodapp.data.repository.FirebaseRepository
+import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
 import kotlinx.coroutines.launch
 
 sealed class UserDataState {
@@ -19,7 +19,7 @@ sealed class UserDataState {
 
 
 
-class ProfileViewModel(private val repository: FirebaseRepository) : ViewModel() {
+class ProfileViewModel(private val repository: UserFirebaseRepository) : ViewModel() {
 
     private val _userDataState = MutableLiveData<UserDataState>(UserDataState.Idle)
     val userDataState: LiveData<UserDataState> = _userDataState
@@ -59,7 +59,7 @@ class ProfileViewModel(private val repository: FirebaseRepository) : ViewModel()
             return object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return ProfileViewModel(FirebaseRepository(context)) as T
+                    return ProfileViewModel(UserFirebaseRepository(context)) as T
                 }
             }
         }

@@ -1,5 +1,7 @@
 package com.example.foodapp.authentication.signup
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,14 +19,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.foodapp.authentication.login.LoginViewModel
-import com.example.foodapp.data.repository.FirebaseRepository
 import com.example.foodapp.ui.theme.PrimaryOrange
+import com.google.android.gms.auth.api.signin.GoogleSignIn
 
 @Composable
 fun SignUpScreen(
@@ -32,33 +36,70 @@ fun SignUpScreen(
     onBackClicked: () -> Unit,
     onLoginClicked: () -> Unit
 ) {
-
-
     val context = LocalContext.current
-    //khởi tạo viewModel
     val viewModel: SignUpViewModel = viewModel(
         factory = SignUpViewModel.factory(context)
     )
 
+    // Observe ViewModel states
     val signUpState by viewModel.signUpState.observeAsState(SignUpState.Idle)
     val googleSignInState by viewModel.googleSignInState.observeAsState(GoogleSignInState.Idle)
     val saveUserState by viewModel.saveUserState.observeAsState(null)
 
+    // Google Sign-In Launcher - chỉ trigger intent
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        viewModel.handleGoogleSignInResult(task)
+    }
+
+    // Handle lifecycle
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.handlePendingGoogleSignIn(context)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    // Navigate on success
     LaunchedEffect(saveUserState) {
         if (saveUserState == true) {
             onSignUpSuccess()
         }
     }
 
+    // UI Content
     SignUpContent(
         signUpState = signUpState,
         googleSignInState = googleSignInState,
         onRegisterClick = { fullName, email, password ->
-            viewModel.registerWithEmail(fullName, email, password)
+            val validation = viewModel.validateInput(fullName, email, password, password)
+            if (validation is SignUpViewModel.ValidationResult.Success) {
+                viewModel.registerWithEmail(fullName, email, password)
+            } else if (validation is SignUpViewModel.ValidationResult.Error) {
+                // Hiển thị lỗi validation trong UI
+                // (có thể dùng state hoặc callback)
+            }
         },
-        onGoogleClick = { /* Gọi Google Auth SDK */ },
+        onGoogleClick = {
+            val signInIntent = viewModel.getGoogleSignInClient().signInIntent
+            googleSignInLauncher.launch(signInIntent)
+        },
         onLoginClicked = onLoginClicked,
-        onBackClicked = onBackClicked
+        onBackClicked = {
+            viewModel.resetStates()
+            onBackClicked()
+        },
+        onValidateInput = { fullName, email, password, confirmPassword ->
+            viewModel.validateInput(fullName, email, password, confirmPassword)
+        }
     )
 }
 
@@ -70,20 +111,26 @@ fun SignUpContent(
     onRegisterClick: (String, String, String) -> Unit,
     onGoogleClick: () -> Unit,
     onLoginClicked: () -> Unit,
-    onBackClicked: () -> Unit
+    onBackClicked: () -> Unit,
+    onValidateInput: (String, String, String, String) -> SignUpViewModel.ValidationResult
 ) {
+    // Local UI State - KHÔNG chứa business logic
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
-    var localError by remember { mutableStateOf<String?>(null) }
+    var validationError by remember { mutableStateOf<String?>(null) }
 
+    // Derived state từ ViewModel
     val isLoading = signUpState is SignUpState.Loading || googleSignInState is GoogleSignInState.Loading
     val isSuccess = signUpState is SignUpState.Success || googleSignInState is GoogleSignInState.Success
     val serverErrorMessage = (signUpState as? SignUpState.Error)?.message
         ?: (googleSignInState as? GoogleSignInState.Error)?.message
+
+    // Display error
+    val displayError = validationError ?: serverErrorMessage
 
     Column(
         modifier = Modifier
@@ -93,32 +140,67 @@ fun SignUpContent(
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Back Button
         Row(modifier = Modifier.fillMaxWidth()) {
             IconButton(onClick = onBackClicked, enabled = !isLoading) {
                 Text("←", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
         }
 
-        Text("Tạo tài khoản", fontSize = 28.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 20.dp))
+        // Title
+        Text(
+            "Tạo tài khoản",
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(top = 20.dp)
+        )
 
-        val displayError = localError ?: serverErrorMessage
+        // Error Message
         if (displayError != null) {
-            Text(text = displayError, color = Color.Red, modifier = Modifier.padding(vertical = 16.dp))
+            Text(
+                text = displayError,
+                color = Color.Red,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .background(Color(0x1AFF0000), RoundedCornerShape(8.dp))
+                    .padding(12.dp),
+                fontSize = 14.sp
+            )
         }
 
+        // TextField Colors
         val textFieldColors = TextFieldDefaults.colors(
             focusedContainerColor = Color(0xFFFAFAFA),
             unfocusedContainerColor = Color(0xFFFAFAFA),
-            disabledContainerColor = Color(0xFFF0F0F0)
+            disabledContainerColor = Color(0xFFF0F0F0),
+            focusedIndicatorColor = Color.Transparent,
+            unfocusedIndicatorColor = Color.Transparent,
+            disabledIndicatorColor = Color.Transparent
         )
 
-        SignUpTextField(fullName, { fullName = it }, "Họ và tên", !isLoading && !isSuccess, colors = textFieldColors)
-        SignUpTextField(email, { email = it }, "Email", !isLoading && !isSuccess, colors = textFieldColors, keyboardType = KeyboardType.Email)
+        // Input Fields
+        SignUpTextField(
+            value = fullName,
+            onValueChange = { fullName = it },
+            placeholder = "Họ và tên",
+            enabled = !isLoading && !isSuccess,
+            colors = textFieldColors
+        )
+
+        SignUpTextField(
+            value = email,
+            onValueChange = { email = it },
+            placeholder = "Email",
+            enabled = !isLoading && !isSuccess,
+            colors = textFieldColors,
+            keyboardType = KeyboardType.Email
+        )
 
         SignUpTextField(
             value = password,
             onValueChange = { password = it },
-            placeholder = "Mật khẩu",
+            placeholder = "Mật khẩu (ít nhất 6 ký tự)",
             enabled = !isLoading && !isSuccess,
             isPassword = true,
             isVisible = passwordVisible,
@@ -139,57 +221,100 @@ fun SignUpContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Register Button
         Button(
             onClick = {
-                if (fullName.isBlank() || email.isBlank() || password.isBlank()) {
-                    localError = "Vui lòng nhập đầy đủ thông tin"
-                } else if (password != confirmPassword) {
-                    localError = "Mật khẩu xác nhận không khớp"
-                } else {
-                    localError = null
+                val validation = onValidateInput(fullName, email, password, confirmPassword)
+                if (validation is SignUpViewModel.ValidationResult.Success) {
+                    validationError = null
                     onRegisterClick(fullName, email, password)
+                } else if (validation is SignUpViewModel.ValidationResult.Error) {
+                    validationError = validation.message
                 }
             },
-            modifier = Modifier.fillMaxWidth().height(56.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (isSuccess) Color(0xFF4CAF50) else PrimaryOrange
+                containerColor = if (isSuccess) Color(0xFF4CAF50) else PrimaryOrange,
+                disabledContainerColor = PrimaryOrange.copy(alpha = 0.5f)
             ),
             shape = RoundedCornerShape(28.dp),
             enabled = !isLoading && !isSuccess
         ) {
+            when {
+                isLoading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Đang xử lý...", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+                isSuccess -> Text("Thành công!", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                else -> Text("Đăng ký", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Divider với "Hoặc"
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            HorizontalDivider(
+                modifier = Modifier.weight(1f),
+                thickness = 1.dp,
+                color = Color.LightGray
+            )
             Text(
-                text = when {
-                    isLoading -> "Đang xử lý..."
-                    isSuccess -> "Thành công!"
-                    else -> "Đăng ký"
-                },
-                fontSize = 16.sp, fontWeight = FontWeight.Bold
+                text = " Hoặc đăng ký với ",
+                color = Color.Gray,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+            HorizontalDivider(
+                modifier = Modifier.weight(1f),
+                thickness = 1.dp,
+                color = Color.LightGray
             )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            HorizontalDivider(modifier = Modifier.weight(1f), thickness = 1.dp, color = Color.LightGray)
-            Text(text = " Hoặc đăng ký với ", color = Color.Gray, fontSize = 14.sp, modifier = Modifier.padding(horizontal = 8.dp))
-            HorizontalDivider(modifier = Modifier.weight(1f), thickness = 1.dp, color = Color.LightGray)
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
+        // Google Sign-In Button
         OutlinedButton(
             onClick = onGoogleClick,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
             shape = RoundedCornerShape(28.dp),
             enabled = !isLoading && !isSuccess,
-            border = androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray)
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = Color.Black,
+                disabledContentColor = Color.Gray
+            ),
+            border = if (isLoading || isSuccess) {
+                null
+            } else {
+                androidx.compose.foundation.BorderStroke(1.dp, Color.LightGray)
+            }
         ) {
-            Text("Đăng nhập với Google", color = Color.Black)
+            if (googleSignInState is GoogleSignInState.Loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Đang đăng nhập...")
+            } else {
+
+                Text("Đăng nhập với Google", color = Color.Black)
+            }
         }
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        // Footer: Tách biệt Text và Clickable Text
+        // Login Link
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
@@ -206,6 +331,7 @@ fun SignUpContent(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clickable(enabled = !isLoading) { onLoginClicked() }
+                    .padding(vertical = 4.dp, horizontal = 2.dp)
             )
         }
     }
@@ -228,19 +354,37 @@ fun SignUpTextField(
         value = value,
         onValueChange = onValueChange,
         enabled = enabled,
-        placeholder = { Text(placeholder) },
-        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        placeholder = { Text(placeholder, color = Color.Gray) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 12.dp),
         shape = RoundedCornerShape(12.dp),
         colors = colors,
-        visualTransformation = if (isPassword && !isVisible) PasswordVisualTransformation() else VisualTransformation.None,
+        visualTransformation = if (isPassword && !isVisible)
+            PasswordVisualTransformation()
+        else
+            VisualTransformation.None,
         trailingIcon = if (isPassword) {
             {
-                IconButton(onClick = onToggleVisibility, enabled = enabled) {
-                    Icon(imageVector = if (isVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility, contentDescription = null)
+                IconButton(
+                    onClick = onToggleVisibility,
+                    enabled = enabled
+                ) {
+                    Icon(
+                        imageVector = if (isVisible)
+                            Icons.Default.VisibilityOff
+                        else
+                            Icons.Default.Visibility,
+                        contentDescription = if (isVisible) "Ẩn mật khẩu" else "Hiện mật khẩu",
+                        tint = if (enabled) Color.Gray else Color.LightGray
+                    )
                 }
             }
         } else null,
         singleLine = true,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
+        keyboardOptions = KeyboardOptions(
+            keyboardType = keyboardType,
+            imeAction = ImeAction.Next
+        )
     )
 }

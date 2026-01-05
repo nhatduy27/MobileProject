@@ -17,15 +17,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.foodapp.data.repository.FirebaseRepository
+import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
 import com.example.foodapp.ui.theme.PrimaryOrange
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.delay
 
 @Composable
 fun RoleSelectionScreen(
-    onRoleSaved: () -> Unit,
-    onBackClicked: () -> Unit
+    onRoleSaved: (String) -> Unit,
 ) {
     var selectedRole by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
@@ -33,7 +32,7 @@ fun RoleSelectionScreen(
 
     val context = LocalContext.current
     val auth = FirebaseAuth.getInstance()
-    val repository = FirebaseRepository(context)
+    val repository = UserFirebaseRepository(context)
 
     // Tự động xóa lỗi sau 3 giây
     LaunchedEffect(errorMessage) {
@@ -100,9 +99,10 @@ fun RoleSelectionScreen(
                 val userId = auth.currentUser?.uid
                 if (userId != null && selectedRole != null) {
                     isLoading = true
+                    val role = selectedRole!!
                     repository.saveUserRole(userId, selectedRole!!) { success, msg ->
                         isLoading = false
-                        if (success) onRoleSaved() else errorMessage = msg
+                        if (success) onRoleSaved(role) else errorMessage = msg
                     }
                 }
             },

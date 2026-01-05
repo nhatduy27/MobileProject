@@ -16,8 +16,8 @@ import com.example.foodapp.pages.user.home.UserNameState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.foodapp.R
-import com.example.foodapp.data.model.Product
-import com.example.foodapp.data.model.FoodCategory
+import com.example.foodapp.data.model.product.Product
+import com.example.foodapp.data.model.product.FoodCategory
 import com.example.foodapp.pages.user.components.UserBottomNav
 import com.example.foodapp.pages.user.components.UserCategoryList
 import com.example.foodapp.pages.user.components.UserHeader

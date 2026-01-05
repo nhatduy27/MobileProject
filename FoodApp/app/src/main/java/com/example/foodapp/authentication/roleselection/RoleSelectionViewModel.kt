@@ -5,12 +5,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.foodapp.data.repository.FirebaseRepository
+import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class RoleSelectionViewModel(
-    private val repository: FirebaseRepository
+    private val repository: UserFirebaseRepository
 ) : ViewModel() {
 
     var selectedRole by mutableStateOf<String?>(null)

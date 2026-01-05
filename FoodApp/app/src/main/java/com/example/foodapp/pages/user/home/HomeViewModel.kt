@@ -6,7 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.foodapp.data.repository.FirebaseRepository
+import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
 
 sealed class UserNameState {
     object Idle : UserNameState()
@@ -17,7 +17,7 @@ sealed class UserNameState {
 }
 
 class HomeViewModel(
-    private val repository: FirebaseRepository
+    private val repository: UserFirebaseRepository
 ) : ViewModel() {
 
     // State dùng cho Compose Observe
@@ -52,7 +52,7 @@ class HomeViewModel(
         // Tạo Factory cho ViewModel
         fun factory(context: Context) = viewModelFactory {
             initializer {
-                val repository = FirebaseRepository(context)
+                val repository = UserFirebaseRepository(context)
                 HomeViewModel(repository)
             }
         }
