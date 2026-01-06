@@ -2,12 +2,13 @@ package com.example.foodapp.data.repository.owner.orders
 
 import com.example.foodapp.data.model.owner.Order
 import com.example.foodapp.data.model.owner.OrderStatus
+import com.example.foodapp.data.repository.owner.base.OwnerOrdersRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class MockOrderRepository {
+class MockOrderRepository : OwnerOrdersRepository {
 
     private val _internalOrdersFlow = MutableStateFlow<List<Order>>(emptyList())
 
@@ -73,19 +74,25 @@ class MockOrderRepository {
         )
     }
 
-    fun getOrders(): Flow<List<Order>> = _internalOrdersFlow.asStateFlow()
+    override fun getOrders(): Flow<List<Order>> = _internalOrdersFlow.asStateFlow()
 
-    fun addOrder(order: Order) {
+    override fun addOrder(order: Order) {
         _internalOrdersFlow.update { current -> current + order }
     }
 
-    fun updateOrder(updated: Order) {
+    override fun updateOrder(updated: Order) {
         _internalOrdersFlow.update { current ->
             current.map { if (it.id == updated.id) updated else it }
         }
     }
 
-    fun deleteOrder(id: String) {
-        _internalOrdersFlow.update { current -> current.filterNot { it.id == id } }
+    override fun updateOrderStatus(orderId: String, newStatus: OrderStatus) {
+        _internalOrdersFlow.update { current ->
+            current.map { if (it.id == orderId) it.copy(status = newStatus) else it }
+        }
+    }
+
+    override fun deleteOrder(orderId: String) {
+        _internalOrdersFlow.update { current -> current.filterNot { it.id == orderId } }
     }
 }

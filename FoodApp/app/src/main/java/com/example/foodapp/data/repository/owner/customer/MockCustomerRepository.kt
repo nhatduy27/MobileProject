@@ -1,6 +1,7 @@
 package com.example.foodapp.data.repository.owner.customer
 
 import com.example.foodapp.data.model.owner.Customer
+import com.example.foodapp.data.repository.owner.base.OwnerCustomerRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,7 +10,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.update
 
 
-class MockCustomerRepository {
+class MockCustomerRepository : OwnerCustomerRepository {
 
     // Đổi tên biến này để tránh xung đột, thêm dấu gạch dưới là một quy ước phổ biến
     private val _internalCustomersFlow = MutableStateFlow<List<Customer>>(emptyList())
@@ -81,7 +82,7 @@ class MockCustomerRepository {
      * (ví dụ: sau khi thêm hoặc xóa).
      * @return Một StateFlow chứa danh sách khách hàng.
      */
-    fun getCustomers(): Flow<List<Customer>> {
+    override fun getCustomers(): Flow<List<Customer>> {
         // Chỉ cần trả về StateFlow đã có.
         // Bất cứ khi nào _internalCustomersFlow thay đổi, Flow này cũng sẽ phát ra giá trị mới.
         return _internalCustomersFlow.asStateFlow()
@@ -106,7 +107,7 @@ class MockCustomerRepository {
      * CREATE: Thêm một khách hàng mới vào danh sách.
      * @param customer Khách hàng mới cần thêm.
      */
-    fun addCustomer(customer: Customer) {
+    override fun addCustomer(customer: Customer) {
         _internalCustomersFlow.update { currentList ->
             // Đảm bảo không trùng ID, tạo ID mới nếu cần
             val newId = (currentList.maxOfOrNull { it.id.toInt() } ?: 0) + 1
@@ -127,7 +128,7 @@ class MockCustomerRepository {
      * UPDATE: Cập nhật thông tin của một khách hàng đã tồn tại.
      * @param updatedCustomer Khách hàng với thông tin đã được cập nhật.
      */
-    fun updateCustomer(updatedCustomer: Customer) {
+    override fun updateCustomer(updatedCustomer: Customer) {
         _internalCustomersFlow.update { currentList ->
             currentList.map { customer ->
                 if (customer.id == updatedCustomer.id) {
@@ -143,7 +144,7 @@ class MockCustomerRepository {
      * DELETE: Xóa một khách hàng khỏi danh sách.
      * @param customerId ID của khách hàng cần xóa.
      */
-    fun deleteCustomer(customerId: String) {
+    override fun deleteCustomer(customerId: String) {
         _internalCustomersFlow.update { currentList ->
             currentList.filterNot { it.id == customerId }
         }

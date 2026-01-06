@@ -1,5 +1,12 @@
 package com.example.foodapp.data.di
 
+import com.example.foodapp.data.repository.owner.base.*
+import com.example.foodapp.data.repository.owner.customer.MockCustomerRepository
+import com.example.foodapp.data.repository.owner.dashboard.MockDashboardRepository
+import com.example.foodapp.data.repository.owner.foods.MockFoodRepository
+import com.example.foodapp.data.repository.owner.orders.MockOrderRepository
+import com.example.foodapp.data.repository.owner.revenue.MockRevenueRepository
+import com.example.foodapp.data.repository.owner.shipper.MockShipperRepository
 import com.example.foodapp.data.repository.shipper.base.ShipperEarningsRepository
 import com.example.foodapp.data.repository.shipper.base.ShipperHistoryRepository
 import com.example.foodapp.data.repository.shipper.base.ShipperHomeRepository
@@ -100,6 +107,78 @@ object RepositoryProvider {
             // TODO: Khi backend ready, uncomment dòng dưới
             // RealShipperProfileRepository(getApiService())
             MockShipperProfileRepository()  // Tạm thời vẫn dùng Mock
+        }
+    }
+    
+    // ==================== OWNER DASHBOARD REPOSITORY ====================
+    
+    fun getDashboardRepository(): OwnerDashboardRepository {
+        return if (USE_MOCK) {
+            MockDashboardRepository()
+        } else {
+            // TODO: Khi backend ready, uncomment dòng dưới
+            // RealDashboardRepository(getOwnerApiService())
+            MockDashboardRepository()
+        }
+    }
+    
+    // ==================== OWNER ORDERS REPOSITORY ====================
+    
+    fun getOrdersRepository(): OwnerOrdersRepository {
+        return if (USE_MOCK) {
+            MockOrderRepository()
+        } else {
+            // TODO: Khi backend ready, uncomment dòng dưới
+            // RealOrderRepository(getOwnerApiService())
+            MockOrderRepository()
+        }
+    }
+    
+    // ==================== OWNER FOODS REPOSITORY ====================
+    
+    fun getFoodsRepository(): OwnerFoodsRepository {
+        return if (USE_MOCK) {
+            MockFoodRepository()
+        } else {
+            // TODO: Khi backend ready, uncomment dòng dưới
+            // RealFoodRepository(getOwnerApiService())
+            MockFoodRepository()
+        }
+    }
+    
+    // ==================== OWNER REVENUE REPOSITORY ====================
+    
+    fun getRevenueRepository(): OwnerRevenueRepository {
+        return if (USE_MOCK) {
+            MockRevenueRepository()
+        } else {
+            // TODO: Khi backend ready, uncomment dòng dưới
+            // RealRevenueRepository(getOwnerApiService())
+            MockRevenueRepository()
+        }
+    }
+    
+    // ==================== OWNER CUSTOMER REPOSITORY ====================
+    
+    fun getCustomerRepository(): OwnerCustomerRepository {
+        return if (USE_MOCK) {
+            MockCustomerRepository()
+        } else {
+            // TODO: Khi backend ready, uncomment dòng dưới
+            // RealCustomerRepository(getOwnerApiService())
+            MockCustomerRepository()
+        }
+    }
+    
+    // ==================== OWNER SHIPPER REPOSITORY ====================
+    
+    fun getOwnerShipperRepository(): OwnerShipperRepository {
+        return if (USE_MOCK) {
+            MockShipperRepository()
+        } else {
+            // TODO: Khi backend ready, uncomment dòng dưới
+            // RealOwnerShipperRepository(getOwnerApiService())
+            MockShipperRepository()
         }
     }
     

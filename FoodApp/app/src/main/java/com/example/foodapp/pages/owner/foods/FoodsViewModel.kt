@@ -2,8 +2,8 @@ package com.example.foodapp.pages.owner.foods
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodapp.data.di.RepositoryProvider
 import com.example.foodapp.data.model.owner.Food
-import com.example.foodapp.data.repository.owner.foods.MockFoodRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,8 +22,8 @@ import kotlinx.coroutines.launch
  */
 class FoodsViewModel : ViewModel() {
 
-    // Khởi tạo Repository. Sau này có thể inject bằng Hilt/Dagger.
-    private val foodRepository = MockFoodRepository()
+    // ✅ SỬ DỤNG DI - Lấy repository từ RepositoryProvider
+    private val foodRepository = RepositoryProvider.getFoodsRepository()
 
     // StateFlow nội bộ, chỉ ViewModel mới có quyền chỉnh sửa.
     private val _uiState = MutableStateFlow(FoodUiState())

@@ -1,6 +1,7 @@
 package com.example.foodapp.data.repository.owner.foods
 
 import com.example.foodapp.data.model.owner.Food
+import com.example.foodapp.data.repository.owner.base.OwnerFoodsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +16,7 @@ import kotlinx.coroutines.flow.update
  * 3. Phát ra Flow để ViewModel lắng nghe khi dữ liệu thay đổi
  * 4. Sau này có thể thay thế bằng API hoặc Database mà không ảnh hưởng tới ViewModel
  */
-class MockFoodRepository {
+class MockFoodRepository : OwnerFoodsRepository {
 
     // StateFlow nội bộ chứa danh sách món ăn
     private val _internalFoodsFlow = MutableStateFlow<List<Food>>(emptyList())
@@ -87,12 +88,12 @@ class MockFoodRepository {
     /**
      * Trả về Flow để ViewModel lắng nghe sự thay đổi của danh sách món ăn
      */
-    fun getFoods(): Flow<List<Food>> = _internalFoodsFlow.asStateFlow()
+    override fun getFoods(): Flow<List<Food>> = _internalFoodsFlow.asStateFlow()
 
     /**
      * Thêm món ăn mới vào danh sách
      */
-    fun addFood(food: Food) {
+    override fun addFood(food: Food) {
         _internalFoodsFlow.update { currentList ->
             currentList + food
         }
@@ -101,7 +102,7 @@ class MockFoodRepository {
     /**
      * Cập nhật thông tin món ăn
      */
-    fun updateFood(food: Food) {
+    override fun updateFood(food: Food) {
         _internalFoodsFlow.update { currentList ->
             currentList.map { if (it.id == food.id) food else it }
         }
@@ -110,7 +111,7 @@ class MockFoodRepository {
     /**
      * Xóa món ăn khỏi danh sách
      */
-    fun deleteFood(foodId: Int) {
+    override fun deleteFood(foodId: Int) {
         _internalFoodsFlow.update { currentList ->
             currentList.filter { it.id != foodId }
         }
@@ -119,7 +120,7 @@ class MockFoodRepository {
     /**
      * Cập nhật trạng thái còn hàng/hết hàng của món ăn
      */
-    fun toggleFoodAvailability(foodId: Int) {
+    override fun toggleFoodAvailability(foodId: Int) {
         _internalFoodsFlow.update { currentList ->
             currentList.map {
                 if (it.id == foodId) it.copy(isAvailable = !it.isAvailable)

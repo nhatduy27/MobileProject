@@ -2,8 +2,8 @@ package com.example.foodapp.pages.owner.shippers
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodapp.data.di.RepositoryProvider
 import com.example.foodapp.data.model.owner.Shipper
-import com.example.foodapp.data.repository.owner.shipper.MockShipperRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,7 +12,8 @@ import kotlinx.coroutines.launch
 
 class ShippersViewModel : ViewModel() {
 
-    private val repository = MockShipperRepository()
+    // ✅ SỬ DỤNG DI - Lấy repository từ RepositoryProvider
+    private val repository = RepositoryProvider.getOwnerShipperRepository()
 
     private val _uiState = MutableStateFlow(ShipperUiState())
     val uiState: StateFlow<ShipperUiState> = _uiState.asStateFlow()

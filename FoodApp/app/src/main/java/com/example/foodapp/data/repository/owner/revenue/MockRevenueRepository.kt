@@ -4,9 +4,10 @@ import com.example.foodapp.data.model.owner.PeriodRevenueData
 import com.example.foodapp.data.model.owner.RevenueStat
 import com.example.foodapp.data.model.owner.TimeSlotRevenue
 import com.example.foodapp.data.model.owner.TopProduct
+import com.example.foodapp.data.repository.owner.base.OwnerRevenueRepository
 import androidx.compose.ui.graphics.Color
 
-class MockRevenueRepository {
+class MockRevenueRepository : OwnerRevenueRepository {
 
     private val periodData: Map<String, PeriodRevenueData> = mapOf(
         "Hôm nay" to PeriodRevenueData(
@@ -83,9 +84,9 @@ class MockRevenueRepository {
         )
     )
 
-    fun getAvailablePeriods(): List<String> = periodData.keys.toList()
+    override fun getAvailablePeriods(): List<String> = periodData.keys.toList()
 
-    fun getRevenueForPeriod(period: String): PeriodRevenueData {
+    override fun getRevenueData(period: String): PeriodRevenueData {
         return periodData[period] ?: periodData["Hôm nay"]!!
     }
 }

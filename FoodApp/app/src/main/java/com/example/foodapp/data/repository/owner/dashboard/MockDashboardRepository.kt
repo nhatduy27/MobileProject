@@ -6,15 +6,16 @@ import com.example.foodapp.data.model.owner.DashboardDayRevenue
 import com.example.foodapp.data.model.owner.DashboardRecentOrder
 import com.example.foodapp.data.model.owner.DashboardStat
 import com.example.foodapp.data.model.owner.DashboardTopProduct
+import com.example.foodapp.data.repository.owner.base.OwnerDashboardRepository
 
 /**
  * Repository mock cho màn hình Dashboard.
  * Toàn bộ dữ liệu hiển thị chỉ nằm trong lớp này,
  * không hard-code trực tiếp trong màn hình Compose.
  */
-class MockDashboardRepository {
+class MockDashboardRepository : OwnerDashboardRepository {
 
-    fun getStats(): List<DashboardStat> = listOf(
+    override fun getStats(): List<DashboardStat> = listOf(
         DashboardStat(
             iconRes = R.drawable.ic_menu_sort_by_size,
             value = "124",
@@ -41,7 +42,7 @@ class MockDashboardRepository {
         )
     )
 
-    fun getWeeklyRevenue(): List<DashboardDayRevenue> = listOf(
+    override fun getWeeklyRevenue(): List<DashboardDayRevenue> = listOf(
         DashboardDayRevenue("T2", 1250),
         DashboardDayRevenue("T3", 1870),
         DashboardDayRevenue("T4", 1560),
@@ -51,7 +52,7 @@ class MockDashboardRepository {
         DashboardDayRevenue("CN", 2050)
     )
 
-    fun getRecentOrders(): List<DashboardRecentOrder> = listOf(
+    override fun getRecentOrders(): List<DashboardRecentOrder> = listOf(
         DashboardRecentOrder("#ORD001", "Khách Hàng A", "Đang xử lý", 245000),
         DashboardRecentOrder("#ORD002", "Khách Hàng B", "Đang giao", 189000),
         DashboardRecentOrder("#ORD003", "Khách Hàng C", "Hoàn thành", 312000),
@@ -59,7 +60,7 @@ class MockDashboardRepository {
         DashboardRecentOrder("#ORD005", "Khách Hàng E", "Hoàn thành", 428000)
     )
 
-    fun getTopProducts(): List<DashboardTopProduct> = listOf(
+    override fun getTopProducts(): List<DashboardTopProduct> = listOf(
         DashboardTopProduct("🍚 Cơm gà", 156, "1.44M"),
         DashboardTopProduct("🍜 Phở bò", 128, "1.28M"),
         DashboardTopProduct("🥤 Trà sữa", 195, "975K"),

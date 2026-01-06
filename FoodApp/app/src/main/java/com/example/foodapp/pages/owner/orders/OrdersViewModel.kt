@@ -2,9 +2,9 @@ package com.example.foodapp.pages.owner.orders
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.foodapp.data.di.RepositoryProvider
 import com.example.foodapp.data.model.owner.Order
 import com.example.foodapp.data.model.owner.OrderStatus
-import com.example.foodapp.data.repository.owner.orders.MockOrderRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,7 +13,8 @@ import kotlinx.coroutines.launch
 
 class OrdersViewModel : ViewModel() {
 
-    private val repository = MockOrderRepository()
+    // ✅ SỬ DỤNG DI - Lấy repository từ RepositoryProvider
+    private val repository = RepositoryProvider.getOrdersRepository()
 
     private val _uiState = MutableStateFlow(OrderUiState())
     val uiState: StateFlow<OrderUiState> = _uiState.asStateFlow()

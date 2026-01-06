@@ -2,12 +2,13 @@ package com.example.foodapp.data.repository.owner.shipper
 
 import com.example.foodapp.data.model.owner.Shipper
 import com.example.foodapp.data.model.owner.ShipperStatus
+import com.example.foodapp.data.repository.owner.base.OwnerShipperRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-class MockShipperRepository {
+class MockShipperRepository : OwnerShipperRepository {
 
     private val _internalShippersFlow = MutableStateFlow<List<Shipper>>(emptyList())
 
@@ -36,21 +37,21 @@ class MockShipperRepository {
         )
     }
 
-    fun getShippers(): Flow<List<Shipper>> = _internalShippersFlow.asStateFlow()
+    override fun getShippers(): Flow<List<Shipper>> = _internalShippersFlow.asStateFlow()
 
-    fun addShipper(shipper: Shipper) {
+    override fun addShipper(shipper: Shipper) {
         _internalShippersFlow.update { current -> current + shipper }
     }
 
-    fun updateShipper(updated: Shipper) {
+    override fun updateShipper(updated: Shipper) {
         _internalShippersFlow.update { current ->
             current.map { if (it.id == updated.id) updated else it }
         }
     }
 
-    fun deleteShipper(id: String) {
+    override fun deleteShipper(shipperId: String) {
         _internalShippersFlow.update { current ->
-            current.filterNot { it.id == id }
+            current.filterNot { it.id == shipperId }
         }
     }
 }
