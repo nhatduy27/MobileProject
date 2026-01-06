@@ -1,15 +1,17 @@
 package com.example.foodapp.pages.shipper.history
 
 import androidx.lifecycle.ViewModel
+import com.example.foodapp.data.di.RepositoryProvider
 import com.example.foodapp.data.model.shipper.HistoryStatus
-import com.example.foodapp.data.repository.shipper.history.MockShipperHistoryRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class HistoryViewModel : ViewModel() {
 
-    private val repository = MockShipperHistoryRepository()
+    // ✅ SỬ DỤNG DI - Lấy repository từ RepositoryProvider
+    // Repository có thể là Mock hoặc Real, ViewModel không cần quan tâm
+    private val repository = RepositoryProvider.getHistoryRepository()
 
     private val _uiState = MutableStateFlow(HistoryUiState())
     val uiState: StateFlow<HistoryUiState> = _uiState.asStateFlow()

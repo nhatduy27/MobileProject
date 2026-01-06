@@ -2,13 +2,14 @@ package com.example.foodapp.data.repository.shipper.history
 
 import com.example.foodapp.data.model.shipper.DeliveryHistory
 import com.example.foodapp.data.model.shipper.HistoryStatus
+import com.example.foodapp.data.repository.shipper.base.ShipperHistoryRepository
 
 /**
  * Repository mock cho màn Lịch sử giao hàng của Shipper.
  */
-class MockShipperHistoryRepository {
+class MockShipperHistoryRepository : ShipperHistoryRepository {
 
-    fun getHistoryList(): List<DeliveryHistory> = listOf(
+    override fun getHistoryList(): List<DeliveryHistory> = listOf(
         DeliveryHistory(
             "#ORD10247",
             "Phạm Thị D",

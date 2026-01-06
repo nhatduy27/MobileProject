@@ -1,13 +1,14 @@
 package com.example.foodapp.data.repository.shipper.earnings
 
 import com.example.foodapp.data.model.shipper.EarningsData
+import com.example.foodapp.data.repository.shipper.base.ShipperEarningsRepository
 
 /**
  * Repository mock cho màn Thu nhập của Shipper.
  */
-class MockShipperEarningsRepository {
+class MockShipperEarningsRepository : ShipperEarningsRepository {
 
-    fun getAllEarningsHistory(): List<EarningsData> = listOf(
+    override fun getAllEarningsHistory(): List<EarningsData> = listOf(
         EarningsData("Hôm nay, 25/12/2025", 10, 90_000, 5_000),
         EarningsData("24/12/2025", 12, 85_000, 10_000),
         EarningsData("23/12/2025", 15, 102_000, 0),

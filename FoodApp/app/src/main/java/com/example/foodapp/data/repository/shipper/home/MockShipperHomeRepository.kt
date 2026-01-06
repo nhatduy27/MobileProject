@@ -3,21 +3,22 @@ package com.example.foodapp.data.repository.shipper.home
 import com.example.foodapp.data.model.shipper.DeliveryTask
 import com.example.foodapp.data.model.shipper.ShipperStats
 import com.example.foodapp.data.model.shipper.TaskStatus
+import com.example.foodapp.data.repository.shipper.base.ShipperHomeRepository
 
 /**
  * Repository mock cho màn Home của Shipper.
  * Toàn bộ dữ liệu hiển thị được tách khỏi Composable.
  */
-class MockShipperHomeRepository {
+class MockShipperHomeRepository : ShipperHomeRepository {
 
-    fun getStats(): ShipperStats = ShipperStats(
+    override fun getStats(): ShipperStats = ShipperStats(
         todayOrders = 12,
         todayEarnings = 240_000,
         completionRate = 98,
         rating = 4.8
     )
 
-    fun getTasks(): List<DeliveryTask> = listOf(
+    override fun getTasks(): List<DeliveryTask> = listOf(
         DeliveryTask(
             "#ORD10245",
             "Trần Thị B",

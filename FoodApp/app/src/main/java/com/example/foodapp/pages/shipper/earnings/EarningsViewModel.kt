@@ -1,15 +1,17 @@
 package com.example.foodapp.pages.shipper.earnings
 
 import androidx.lifecycle.ViewModel
+import com.example.foodapp.data.di.RepositoryProvider
 import com.example.foodapp.data.model.shipper.EarningsPeriod
-import com.example.foodapp.data.repository.shipper.earnings.MockShipperEarningsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class EarningsViewModel : ViewModel() {
 
-    private val repository = MockShipperEarningsRepository()
+    // ✅ SỬ DỤNG DI - Lấy repository từ RepositoryProvider
+    // Repository có thể là Mock hoặc Real, ViewModel không cần quan tâm
+    private val repository = RepositoryProvider.getEarningsRepository()
 
     private val _uiState = MutableStateFlow(EarningsUiState())
     val uiState: StateFlow<EarningsUiState> = _uiState.asStateFlow()
