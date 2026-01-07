@@ -1,6 +1,6 @@
 package com.example.foodapp.data.repository.owner.foods
 
-import com.example.foodapp.data.model.owner.Food
+import com.example.foodapp.data.model.shared.food.Food
 import com.example.foodapp.data.repository.owner.base.OwnerFoodsRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

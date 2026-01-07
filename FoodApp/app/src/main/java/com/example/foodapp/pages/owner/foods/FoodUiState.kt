@@ -1,6 +1,6 @@
 package com.example.foodapp.pages.owner.foods
 
-import com.example.foodapp.data.model.owner.Food
+import com.example.foodapp.data.model.shared.food.Food
 
 /**
  * File này định nghĩa trạng thái giao diện (UI State) cho màn hình FoodsScreen.

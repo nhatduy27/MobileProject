@@ -3,7 +3,7 @@ package com.example.foodapp.pages.owner.foods
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.di.RepositoryProvider
-import com.example.foodapp.data.model.owner.Food
+import com.example.foodapp.data.model.shared.food.Food
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.font.FontWeight
+import com.example.foodapp.data.model.shared.food.Food
 
 /**
  * Màn hình quản lý món ăn - FoodsScreen
@@ -64,7 +65,7 @@ fun FoodsScreen(
     }
 
     var isEditing by remember { mutableStateOf(false) }
-    var editingFood by remember { mutableStateOf<com.example.foodapp.data.model.owner.Food?>(null) }
+    var editingFood by remember { mutableStateOf<Food?>(null) }
 
     if (!isEditing) {
         // Màn hình danh sách món ăn

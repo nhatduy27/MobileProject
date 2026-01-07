@@ -22,7 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Image
 import coil.compose.AsyncImage
-import com.example.foodapp.data.model.owner.Food
+import com.example.foodapp.data.model.shared.food.Food
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

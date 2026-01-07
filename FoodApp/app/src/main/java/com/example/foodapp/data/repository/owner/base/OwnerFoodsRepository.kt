@@ -1,6 +1,6 @@
 package com.example.foodapp.data.repository.owner.base
 
-import com.example.foodapp.data.model.owner.Food
+import com.example.foodapp.data.model.shared.food.Food
 import kotlinx.coroutines.flow.Flow
 
 /**
