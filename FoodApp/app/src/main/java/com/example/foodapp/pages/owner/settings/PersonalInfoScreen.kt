@@ -40,20 +40,6 @@ fun PersonalInfoScreen(navController: NavHostController) {
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Thông tin cá nhân", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
-                )
-            )
-        }
     ) { padding ->
         Column(
             modifier = Modifier
