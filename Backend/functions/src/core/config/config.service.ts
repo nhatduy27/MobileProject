@@ -1,0 +1,151 @@
+import { Injectable, Logger } from '@nestjs/common';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+import * as fs from 'fs';
+
+/**
+ * Config Service
+ *
+ * Đọc environment variables từ .env file hoặc process.env.
+ *
+ * Thứ tự ưu tiên:
+ * 1. process.env (Firebase Functions tự inject khi deploy)
+ * 2. .env file ở Backend/ root (local development)
+ */
+@Injectable()
+export class ConfigService {
+  private readonly logger = new Logger(ConfigService.name);
+  private readonly envConfig: Record<string, string>;
+
+  constructor() {
+    // Chỉ load .env khi chạy local (không phải Firebase Functions environment)
+    if (!process.env.FIREBASE_CONFIG) {
+      this.loadEnvFile();
+    } else {
+      this.logger.log('Running in Firebase Functions environment');
+    }
+
+    this.envConfig = process.env as Record<string, string>;
+  }
+
+  /**
+   * Load .env file từ Backend/ root
+   * Tìm từ cwd() thay vì dùng relative path cứng
+   */
+  private loadEnvFile(): void {
+    // Các vị trí có thể có .env (ưu tiên theo thứ tự)
+    const possiblePaths = [
+      path.join(process.cwd(), '.env'),           // Backend/.env (khi chạy từ Backend/)
+      path.join(process.cwd(), '../.env'),        // functions/../.env = Backend/.env
+      path.join(process.cwd(), '../../.env'),     // Fallback
+    ];
+
+    for (const envPath of possiblePaths) {
+      if (fs.existsSync(envPath)) {
+        const result = dotenv.config({ path: envPath });
+        if (!result.error) {
+          this.logger.log(`Loaded .env from: ${envPath}`);
+          return;
+        }
+      }
+    }
+
+    this.logger.warn('.env file not found. Using process.env only.');
+  }
+
+  /**
+   * Get environment variable
+   */
+  get(key: string, defaultValue?: string): string {
+    return this.envConfig[key] || defaultValue || '';
+  }
+
+  /**
+   * Get required environment variable (throws if not found)
+   */
+  getOrThrow(key: string): string {
+    const value = this.envConfig[key];
+    if (!value) {
+      throw new Error(`Missing required environment variable: ${key}`);
+    }
+    return value;
+  }
+
+  /**
+   * Check if running in production
+   */
+  get isProduction(): boolean {
+    return this.get('NODE_ENV') === 'production';
+  }
+
+  /**
+   * Check if running in development
+   */
+  get isDevelopment(): boolean {
+    return this.get('NODE_ENV') !== 'production';
+  }
+
+  // ============================================
+  // Firebase Config
+  // ============================================
+
+  get firebaseProjectId(): string {
+    return this.get('FIREBASE_PROJECT_ID', '');
+  }
+
+  get firebaseRegion(): string {
+    return this.get('FIREBASE_REGION', 'asia-southeast1');
+  }
+
+  // ============================================
+  // ZaloPay Config
+  // ============================================
+
+  get zaloPayAppId(): string {
+    return this.get('ZALOPAY_APP_ID', '');
+  }
+
+  get zaloPayKey1(): string {
+    return this.get('ZALOPAY_KEY1', '');
+  }
+
+  get zaloPayKey2(): string {
+    return this.get('ZALOPAY_KEY2', '');
+  }
+
+  get zaloPayEndpoint(): string {
+    return this.get('ZALOPAY_ENDPOINT', 'https://sb-openapi.zalopay.vn/v2');
+  }
+
+  // ============================================
+  // MoMo Config
+  // ============================================
+
+  get momoPartnerCode(): string {
+    return this.get('MOMO_PARTNER_CODE', '');
+  }
+
+  get momoAccessKey(): string {
+    return this.get('MOMO_ACCESS_KEY', '');
+  }
+
+  get momoSecretKey(): string {
+    return this.get('MOMO_SECRET_KEY', '');
+  }
+
+  get momoEndpoint(): string {
+    return this.get('MOMO_ENDPOINT', 'https://test-payment.momo.vn');
+  }
+
+  // ============================================
+  // SePay Config
+  // ============================================
+
+  get sePayApiKey(): string {
+    return this.get('SEPAY_API_KEY', '');
+  }
+
+  get sePayWebhookSecret(): string {
+    return this.get('SEPAY_WEBHOOK_SECRET', '');
+  }
+}
