@@ -12,7 +12,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun DashboardScreen(
-    dashboardViewModel: DashboardViewModel = viewModel()
+    dashboardViewModel: DashboardViewModel = viewModel(),
+    onMenuClick: () -> Unit
 ) {
     val uiState by dashboardViewModel.uiState.collectAsState()
 
@@ -23,7 +24,7 @@ fun DashboardScreen(
             .padding(16.dp)
     ) {
 
-        DashboardHeader()
+        DashboardHeader(onMenuClick = onMenuClick)
 
         Spacer(modifier = Modifier.height(16.dp))
 
