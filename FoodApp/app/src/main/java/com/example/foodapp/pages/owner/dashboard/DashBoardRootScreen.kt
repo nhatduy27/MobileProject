@@ -202,7 +202,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                 // HIDE TopBar if we are on Dashboard
 
                 // HIDE TopBar if we are on Dashboard
-                if (currentScreen != "dashboard" && currentScreen != "orders") {
+                if (currentScreen != "dashboard" && currentScreen != "orders" && currentScreen != "foods" && currentScreen != "shippers" && currentScreen != "customers") {
 
                     Row(
                         modifier = Modifier
@@ -243,9 +243,9 @@ fun DashBoardRootScreen(navController: NavHostController) {
                 when (currentScreen) {
                     "dashboard" -> DashboardScreen(onMenuClick = { scope.launch { drawerState.open() } }) // Pass Open Drawer
                     "orders" -> OrdersScreen(onMenuClick = { scope.launch { drawerState.open() } })
-                    "foods" -> FoodsScreen()
-                    "shippers" -> ShippersScreen()
-                    "customers" -> CustomerScreenMain() 
+                    "foods" -> FoodsScreen(onMenuClick = { scope.launch { drawerState.open() } })
+                    "shippers" -> ShippersScreen(onMenuClick = { scope.launch { drawerState.open() } })
+                    "customers" -> CustomerScreenMain(onMenuClick = { scope.launch { drawerState.open() } }) 
                     "revenue" -> RevenueScreen()
                     "settings" -> SettingsNavHost(navController = settingsNavController)
                     else -> DashboardScreen(onMenuClick = { scope.launch { drawerState.open() } })
