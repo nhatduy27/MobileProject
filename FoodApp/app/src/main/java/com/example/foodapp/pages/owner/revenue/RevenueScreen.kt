@@ -23,50 +23,43 @@ fun RevenueScreen(
 ) {
     val uiState by revenueViewModel.uiState.collectAsState()
 
-    // Bắt đầu sửa đổi từ đây
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF5F5F5))
     ) {
-        // Header
-        RevenueHeader()
-
-        // Bộ lọc thời gian (component riêng)
+        // Period Filter
         PeriodFilter(
             selectedPeriod = uiState.selectedPeriod,
             onPeriodSelected = { revenueViewModel.onPeriodSelected(it) }
         )
 
-        // Danh sách cuộn chung cho stats + chart + chi tiết
+        // Scrollable content
         LazyColumn(
             modifier = Modifier
-                .fillMaxWidth() // Chiếm toàn bộ chiều rộng
-                .weight(1f) // <-- THÊM DÒNG NÀY: Để LazyColumn lấp đầy không gian còn lại
-                .padding(horizontal = 16.dp), // Chỉ cần padding ngang ở đây
-            contentPadding = PaddingValues(bottom = 80.dp), // Padding dưới để không bị thanh điều hướng che
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .fillMaxWidth()
+                .weight(1f),
+            contentPadding = PaddingValues(bottom = 80.dp, top = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Stats + Chart ở đầu list, cuộn cùng các item khác
+            // Stats cards
             item {
-                Column(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Thống kê doanh thu (dùng RevenueStatCard component)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState())
-                            .padding(vertical = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        uiState.stats.forEach { stat ->
-                            RevenueStatCard(stat = stat)
-                        }
+                    uiState.stats.forEach { stat ->
+                        RevenueStatCard(stat = stat)
                     }
+                }
+            }
 
-                    // Biểu đồ (component riêng)
+            // Chart
+            item {
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
                     ChartSection()
                 }
             }
@@ -77,12 +70,15 @@ fun RevenueScreen(
                     text = "Chi tiết doanh thu theo khung giờ",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A)
+                    color = Color(0xFF1A1A1A),
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 )
             }
 
             items(uiState.timeSlots) { timeSlot ->
-                TimeSlotCard(timeSlot = timeSlot)
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    TimeSlotCard(timeSlot = timeSlot)
+                }
             }
 
             // Top Products Section
@@ -100,12 +96,16 @@ fun RevenueScreen(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1A1A1A),
-                    modifier = Modifier.padding(top = 8.dp)
+                    modifier = Modifier
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 8.dp)
                 )
             }
 
             items(uiState.topProducts) { product ->
-                TopProductCard(product = product)
+                Box(modifier = Modifier.padding(horizontal = 16.dp)) {
+                    TopProductCard(product = product)
+                }
             }
         }
     }

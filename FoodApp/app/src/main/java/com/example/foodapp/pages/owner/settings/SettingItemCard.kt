@@ -3,6 +3,8 @@ package com.example.foodapp.pages.owner.settings
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,30 +21,33 @@ fun SettingItemCard(
 ) {
     var switchState by remember { mutableStateOf(item.isEnabled) }
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .then(
-                if (!item.hasSwitch && item.onClick != null) {
-                    Modifier.clickable { item.onClick.invoke() }
-                } else Modifier
-            ),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp)
+    Surface(
+        onClick = { if (!item.hasSwitch && item.onClick != null) item.onClick.invoke() },
+        enabled = (!item.hasSwitch && item.onClick != null),
+        color = MaterialTheme.colorScheme.surface,
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(vertical = 12.dp, horizontal = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon
-            Text(
-                text = item.icon,
-                fontSize = 24.sp,
+            // Icon Background
+            Surface(
+                shape = androidx.compose.foundation.shape.CircleShape,
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                 modifier = Modifier.size(40.dp)
-            )
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = item.icon,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
 
             // Title and Subtitle
             Column(
@@ -52,17 +57,15 @@ fun SettingItemCard(
             ) {
                 Text(
                     text = item.title,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF1A1A1A)
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 item.subtitle?.let {
                     Text(
                         text = it,
-                        fontSize = 13.sp,
-                        color = Color(0xFF757575),
-                        modifier = Modifier.padding(top = 2.dp)
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -77,16 +80,16 @@ fun SettingItemCard(
                     },
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
-                        checkedTrackColor = Color(0xFFFF6B35),
-                        uncheckedThumbColor = Color.White,
-                        uncheckedTrackColor = Color(0xFFE0E0E0)
+                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
                     )
                 )
             } else {
-                Text(
-                    text = "›",
-                    fontSize = 24.sp,
-                    color = Color(0xFF999999)
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha=0.5f)
                 )
             }
         }

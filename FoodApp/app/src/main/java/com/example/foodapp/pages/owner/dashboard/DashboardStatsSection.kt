@@ -10,21 +10,18 @@ import com.example.foodapp.data.model.owner.DashboardStat
 fun DashboardStatsSection(
     stats: List<DashboardStat>
 ) {
-    Column {
-        // Hiển thị theo dạng 2x2 giống layout cũ nếu đủ 4 stat
+    Column(
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Display stats in 2x2 grid
         val rows = stats.chunked(2)
-
-        rows.forEachIndexed { index, rowStats ->
-            if (index > 0) {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            Row(modifier = Modifier.fillMaxWidth()) {
-                rowStats.forEachIndexed { colIndex, stat ->
-                    if (colIndex > 0) {
-                        Spacer(modifier = Modifier.width(16.dp))
-                    }
-
+        
+        rows.forEach { rowStats ->
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                rowStats.forEach { stat ->
                     DashboardStatCard(
                         iconRes = stat.iconRes,
                         value = stat.value,
@@ -32,6 +29,11 @@ fun DashboardStatsSection(
                         color = stat.color,
                         modifier = Modifier.weight(1f)
                     )
+                }
+                
+                // Add empty space if odd number of items in row
+                if (rowStats.size == 1) {
+                    Spacer(modifier = Modifier.weight(1f))
                 }
             }
         }

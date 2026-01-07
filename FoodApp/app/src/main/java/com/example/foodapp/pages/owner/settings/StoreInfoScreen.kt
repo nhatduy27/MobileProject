@@ -7,6 +7,13 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Store
+import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,27 +46,27 @@ fun StoreInfoScreen(navController: NavHostController) {
         description = "Cửa hàng đồ ăn chuyên phục vụ sinh viên KTX"
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-    ) {
-        TopAppBar(
-            title = { Text("Thông tin cửa hàng", fontWeight = FontWeight.Bold) },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigateUp() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.White,
-                titleContentColor = Color(0xFF333333)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Thông tin cửa hàng", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
+                )
             )
-        )
-
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -67,8 +75,9 @@ fun StoreInfoScreen(navController: NavHostController) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             ) {
                 Column(
                     modifier = Modifier
@@ -79,17 +88,19 @@ fun StoreInfoScreen(navController: NavHostController) {
                     Box(
                         modifier = Modifier
                             .size(120.dp)
-                            .background(Color(0xFFFF6B35), RoundedCornerShape(16.dp)),
+                            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(16.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "🏪",
-                            fontSize = 56.sp
+                        Icon(
+                            imageVector = Icons.Outlined.Store,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(56.dp)
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     TextButton(onClick = { /* TODO: Change logo */ }) {
-                        Text("Thay đổi logo cửa hàng", color = Color(0xFFFF6B35))
+                        Text("Thay đổi logo cửa hàng", color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -98,8 +109,9 @@ fun StoreInfoScreen(navController: NavHostController) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             ) {
                 Column(
                     modifier = Modifier
@@ -110,8 +122,8 @@ fun StoreInfoScreen(navController: NavHostController) {
                     Text(
                         text = "Thông tin cơ bản",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = Color(0xFF333333)
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     StoreInfoField(
@@ -119,48 +131,48 @@ fun StoreInfoScreen(navController: NavHostController) {
                         value = storeName,
                         onValueChange = { storeName = it },
                         enabled = isEditing,
-                        icon = "🏪"
+                        icon = Icons.Outlined.Store
                     )
 
-                    Divider(color = Color(0xFFEEEEEE))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
 
                     StoreInfoField(
                         label = "Số điện thoại",
                         value = storePhone,
                         onValueChange = { storePhone = it },
                         enabled = isEditing,
-                        icon = "📞"
+                        icon = Icons.Outlined.Phone
                     )
 
-                    Divider(color = Color(0xFFEEEEEE))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
 
                     StoreInfoField(
                         label = "Email",
                         value = storeEmail,
                         onValueChange = { storeEmail = it },
                         enabled = isEditing,
-                        icon = "📧"
+                        icon = Icons.Outlined.Email
                     )
 
-                    Divider(color = Color(0xFFEEEEEE))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
 
                     StoreInfoField(
                         label = "Địa chỉ",
                         value = storeAddress,
                         onValueChange = { storeAddress = it },
                         enabled = isEditing,
-                        icon = "📍",
+                        icon = Icons.Outlined.LocationOn,
                         singleLine = false
                     )
 
-                    Divider(color = Color(0xFFEEEEEE))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
 
                     StoreInfoField(
                         label = "Mô tả",
                         value = description,
                         onValueChange = { description = it },
                         enabled = isEditing,
-                        icon = "📝",
+                        icon = Icons.Outlined.Description,
                         singleLine = false
                     )
                 }
@@ -170,8 +182,9 @@ fun StoreInfoScreen(navController: NavHostController) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             ) {
                 Column(
                     modifier = Modifier
@@ -182,8 +195,8 @@ fun StoreInfoScreen(navController: NavHostController) {
                     Text(
                         text = "Giờ hoạt động",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = Color(0xFF333333)
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Row(
@@ -195,7 +208,7 @@ fun StoreInfoScreen(navController: NavHostController) {
                             value = openTime,
                             onValueChange = { openTime = it },
                             enabled = isEditing,
-                            icon = "🌅",
+                            icon = Icons.Outlined.Schedule,
                             modifier = Modifier.weight(1f)
                         )
 
@@ -204,15 +217,15 @@ fun StoreInfoScreen(navController: NavHostController) {
                             value = closeTime,
                             onValueChange = { closeTime = it },
                             enabled = isEditing,
-                            icon = "🌙",
+                            icon = Icons.Outlined.AccessTime,
                             modifier = Modifier.weight(1f)
                         )
                     }
 
                     Text(
                         text = "Thời gian hiển thị: $openTime - $closeTime",
-                        fontSize = 13.sp,
-                        color = Color(0xFF666666)
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -225,30 +238,31 @@ fun StoreInfoScreen(navController: NavHostController) {
                 if (isEditing) {
                     OutlinedButton(
                         onClick = { isEditing = false },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
                     ) {
-                        Text("Hủy", modifier = Modifier.padding(vertical = 4.dp))
+                        Text("Hủy")
                     }
                     Button(
                         onClick = {
                             // TODO: Save to Firebase
                             isEditing = false
                         },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).height(48.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35))
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Text("Lưu", modifier = Modifier.padding(vertical = 4.dp))
+                        Text("Lưu", color = Color.White)
                     }
                 } else {
                     Button(
                         onClick = { isEditing = true },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35))
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Text("Chỉnh sửa thông tin", modifier = Modifier.padding(vertical = 4.dp))
+                        Text("Chỉnh sửa thông tin", color = Color.White)
                     }
                 }
             }
@@ -262,7 +276,7 @@ fun StoreInfoField(
     value: String,
     onValueChange: (String) -> Unit,
     enabled: Boolean,
-    icon: String,
+    icon: ImageVector,
     singleLine: Boolean = true,
     modifier: Modifier = Modifier
 ) {
@@ -271,13 +285,14 @@ fun StoreInfoField(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = icon, fontSize = 18.sp)
+            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
             Text(
                 text = label,
                 fontSize = 14.sp,
-                color = Color(0xFF666666),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -288,11 +303,11 @@ fun StoreInfoField(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                disabledTextColor = Color(0xFF333333),
-                disabledBorderColor = Color(0xFFEEEEEE),
-                disabledContainerColor = Color(0xFFFAFAFA),
-                focusedBorderColor = Color(0xFFFF6B35),
-                unfocusedBorderColor = Color(0xFFEEEEEE)
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                disabledBorderColor = Color.Transparent,
+                disabledTextColor = MaterialTheme.colorScheme.onSurface
             ),
             singleLine = singleLine,
             maxLines = if (singleLine) 1 else 3

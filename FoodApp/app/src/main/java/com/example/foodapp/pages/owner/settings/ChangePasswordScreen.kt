@@ -9,8 +9,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Key
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -21,6 +26,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,27 +41,13 @@ fun ChangePasswordScreen(navController: NavHostController) {
     var successMessage by remember { mutableStateOf("") }
     var isLoading by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-    ) {
-        TopAppBar(
-            title = { Text("Đổi mật khẩu", fontWeight = FontWeight.Bold) },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigateUp() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.White,
-                titleContentColor = Color(0xFF333333)
-            )
-        )
-
+    Scaffold(
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -64,26 +56,25 @@ fun ChangePasswordScreen(navController: NavHostController) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0)),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(text = "ℹ️", fontSize = 24.sp)
+                    Icon(Icons.Outlined.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Column {
                         Text(
                             text = "Yêu cầu mật khẩu mới:",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 14.sp,
-                            color = Color(0xFF333333)
+                            style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = "• Tối thiểu 8 ký tự\n• Chứa chữ hoa và chữ thường\n• Chứa ít nhất 1 số",
-                            fontSize = 13.sp,
-                            color = Color(0xFF666666),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             lineHeight = 20.sp
                         )
                     }
@@ -94,8 +85,9 @@ fun ChangePasswordScreen(navController: NavHostController) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha=0.5f))
             ) {
                 Column(
                     modifier = Modifier
@@ -110,10 +102,10 @@ fun ChangePasswordScreen(navController: NavHostController) {
                         onValueChange = { currentPassword = it },
                         passwordVisible = currentPasswordVisible,
                         onVisibilityChange = { currentPasswordVisible = it },
-                        icon = "🔒"
+                        icon = Icons.Outlined.Lock
                     )
 
-                    Divider(color = Color(0xFFEEEEEE))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
 
                     // New Password
                     PasswordField(
@@ -122,10 +114,10 @@ fun ChangePasswordScreen(navController: NavHostController) {
                         onValueChange = { newPassword = it },
                         passwordVisible = newPasswordVisible,
                         onVisibilityChange = { newPasswordVisible = it },
-                        icon = "🔑"
+                        icon = Icons.Outlined.Key
                     )
 
-                    Divider(color = Color(0xFFEEEEEE))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
 
                     // Confirm Password
                     PasswordField(
@@ -134,7 +126,7 @@ fun ChangePasswordScreen(navController: NavHostController) {
                         onValueChange = { confirmPassword = it },
                         passwordVisible = confirmPasswordVisible,
                         onVisibilityChange = { confirmPasswordVisible = it },
-                        icon = "✅"
+                        icon = Icons.Outlined.CheckCircle
                     )
                 }
             }
@@ -144,13 +136,13 @@ fun ChangePasswordScreen(navController: NavHostController) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE))
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                 ) {
                     Text(
                         text = errorMessage,
-                        color = Color(0xFFD32F2F),
+                        color = MaterialTheme.colorScheme.onErrorContainer,
                         modifier = Modifier.padding(16.dp),
-                        fontSize = 14.sp
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
@@ -159,13 +151,13 @@ fun ChangePasswordScreen(navController: NavHostController) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9))
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)) // Keep green for success
                 ) {
                     Text(
                         text = successMessage,
                         color = Color(0xFF388E3C),
                         modifier = Modifier.padding(16.dp),
-                        fontSize = 14.sp
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
@@ -212,9 +204,9 @@ fun ChangePasswordScreen(navController: NavHostController) {
                         }
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(48.dp),
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35)),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 enabled = !isLoading
             ) {
                 if (isLoading) {
@@ -223,7 +215,7 @@ fun ChangePasswordScreen(navController: NavHostController) {
                         color = Color.White
                     )
                 } else {
-                    Text("Đổi mật khẩu", modifier = Modifier.padding(vertical = 4.dp))
+                    Text("Đổi mật khẩu", color = Color.White)
                 }
             }
         }
@@ -237,19 +229,20 @@ fun PasswordField(
     onValueChange: (String) -> Unit,
     passwordVisible: Boolean,
     onVisibilityChange: (Boolean) -> Unit,
-    icon: String
+    icon: ImageVector
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(text = icon, fontSize = 18.sp)
+            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
             Text(
                 text = label,
-                fontSize = 14.sp,
-                color = Color(0xFF666666),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -263,13 +256,15 @@ fun PasswordField(
                 IconButton(onClick = { onVisibilityChange(!passwordVisible) }) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                        contentDescription = if (passwordVisible) "Ẩn mật khẩu" else "Hiện mật khẩu"
+                        contentDescription = if (passwordVisible) "Ẩn mật khẩu" else "Hiện mật khẩu",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             },
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFFFF6B35),
-                unfocusedBorderColor = Color(0xFFEEEEEE)
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                cursorColor = MaterialTheme.colorScheme.primary
             ),
             singleLine = true
         )

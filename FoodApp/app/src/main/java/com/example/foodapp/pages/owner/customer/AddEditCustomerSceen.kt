@@ -56,23 +56,6 @@ fun AddCustomerScreen(
     var revenueInfo by remember(customer) { mutableStateOf(customer?.revenueInfo ?: "0đ") }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        if (isReadOnly) "Thông tin khách hàng" else "Thêm khách hàng",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.White)
-            )
-        },
         containerColor = Color(0xFFF9F9F9),
         bottomBar = {
             if (!isReadOnly) {

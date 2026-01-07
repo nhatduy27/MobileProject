@@ -1,9 +1,11 @@
 package com.example.foodapp.pages.owner.settings
 
+import androidx.compose.ui.graphics.vector.ImageVector
+
 data class SettingItem(
     val title: String,
     val subtitle: String? = null,
-    val icon: String,
+    val icon: ImageVector,
     val hasSwitch: Boolean = false,
     val isEnabled: Boolean = false,
     val onClick: (() -> Unit)? = null

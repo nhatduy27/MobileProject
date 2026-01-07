@@ -10,6 +10,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
 
 @Composable
 fun DashboardStatCard(
@@ -20,48 +21,62 @@ fun DashboardStatCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        // Style đồng nhất với StatCard / ShipperStatCard / OrderStatCard
-        modifier = modifier.size(width = 145.dp, height = 110.dp),
-        shape = RoundedCornerShape(24.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .height(130.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = color.copy(alpha = 0.15f)
+            containerColor = Color.White
         ),
-        elevation = CardDefaults.cardElevation(0.dp)
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(16.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // Icon + label phía trên
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            // Icon with background circle
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = color.copy(alpha = 0.15f)
             ) {
-            Icon(
-                painterResource(iconRes),
-                contentDescription = "",
-                tint = color,
-                modifier = Modifier.size(24.dp)
-            )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(iconRes),
+                        contentDescription = label,
+                        tint = color,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+            }
 
+            // Value and label
+            Column {
+                Text(
+                    text = value,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1A1A),
+                    letterSpacing = (-0.5).sp,
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = label,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
-                    color = color.copy(alpha = 0.85f)
+                    color = Color(0xFF757575),
+                    lineHeight = 16.sp,
+                    maxLines = 2
                 )
             }
-
-            // Giá trị lớn bên dưới
-            Text(
-                text = value,
-                fontSize = 28.sp,
-                fontWeight = FontWeight.Bold,
-                color = color,
-                letterSpacing = (-0.5).sp
-            )
         }
     }
 }
