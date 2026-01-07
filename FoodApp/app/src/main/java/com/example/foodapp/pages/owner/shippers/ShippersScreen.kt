@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -38,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 
 @Composable
 fun ShippersScreen(
+    onMenuClick: () -> Unit,
     shippersViewModel: ShippersViewModel = viewModel()
 ) {
     val uiState by shippersViewModel.uiState.collectAsState()
@@ -58,7 +60,8 @@ fun ShippersScreen(
             topBar = {
                 ShippersSearchHeader(
                     query = uiState.searchQuery,
-                    onQueryChange = shippersViewModel::onSearchQueryChanged
+                    onQueryChange = shippersViewModel::onSearchQueryChanged,
+                    onMenuClick = onMenuClick
                 )
             },
             floatingActionButton = {
@@ -165,7 +168,8 @@ fun ShippersScreen(
 @Composable
 fun ShippersSearchHeader(
     query: String,
-    onQueryChange: (String) -> Unit
+    onQueryChange: (String) -> Unit,
+    onMenuClick: () -> Unit
 ) {
     var isSearchActive by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
@@ -179,7 +183,7 @@ fun ShippersSearchHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .height(64.dp)
             .background(Color.White)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart
@@ -195,9 +199,17 @@ fun ShippersSearchHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
-                    Text("Shipper", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
-                    Text("Quản lý đội ngũ giao hàng", fontSize = 14.sp, color = Color.Gray)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onMenuClick) {
+                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color(0xFF1A1A1A))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Shipper",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1A1A1A)
+                    )
                 }
                 IconButton(
                     onClick = { isSearchActive = true },

@@ -7,6 +7,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Smartphone
+import androidx.compose.material.icons.outlined.Laptop
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.Language
+import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.compose.ui.graphics.vector.ImageVector
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -63,46 +70,46 @@ fun LoginHistoryScreen(navController: NavHostController) {
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-    ) {
-        TopAppBar(
-            title = { Text("Lịch sử đăng nhập", fontWeight = FontWeight.Bold) },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigateUp() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.White,
-                titleContentColor = Color(0xFF333333)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Lịch sử đăng nhập", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
+                )
             )
-        )
-
+        }
+    ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(padding),
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha=0.3f)),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Row(
                         modifier = Modifier.padding(16.dp),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text(text = "🔐", fontSize = 24.sp)
+                        Icon(Icons.Outlined.Lock, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                         Text(
                             text = "Đây là danh sách các thiết bị đã đăng nhập vào tài khoản của bạn. Nếu bạn không nhận ra thiết bị nào, hãy đổi mật khẩu ngay lập tức.",
-                            fontSize = 13.sp,
-                            color = Color(0xFF666666),
-                            lineHeight = 20.sp
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -124,19 +131,20 @@ fun LoginSessionCard(
 ) {
     val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     val deviceIcon = when (session.deviceType) {
-        "Android" -> "📱"
-        "iOS" -> "📱"
-        "Web" -> "💻"
-        else -> "📱"
+        "Android" -> Icons.Outlined.Smartphone
+        "iOS" -> Icons.Outlined.Smartphone
+        "Web" -> Icons.Outlined.Laptop
+        else -> Icons.Outlined.Smartphone
     }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (session.isCurrentSession) Color(0xFFFFF3E0) else Color.White
+            containerColor = if (session.isCurrentSession) MaterialTheme.colorScheme.primaryContainer.copy(alpha=0.1f) else MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, if(session.isCurrentSession) MaterialTheme.colorScheme.primary.copy(alpha=0.5f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha=0.3f))
     ) {
         Column(
             modifier = Modifier
@@ -154,36 +162,34 @@ fun LoginSessionCard(
                     Box(
                         modifier = Modifier
                             .size(48.dp)
-                            .background(Color(0xFFFF6B35), RoundedCornerShape(12.dp)),
+                            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = deviceIcon, fontSize = 24.sp)
+                        Icon(imageVector = deviceIcon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                     }
                     Column {
                         Text(
                             text = session.deviceName,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = Color(0xFF333333)
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = session.deviceType,
-                            fontSize = 13.sp,
-                            color = Color(0xFF666666)
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
                 if (session.isCurrentSession) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = Color(0xFF4CAF50)
+                        color = Color(0xFF4CAF50) // Keep green for "Active"
                     ) {
                         Text(
                             text = "Hiện tại",
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                             color = Color.White,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                         )
                     }
                 }
@@ -194,14 +200,14 @@ fun LoginSessionCard(
             Column(
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                InfoRow(icon = "📍", text = session.location)
-                InfoRow(icon = "🌐", text = session.ipAddress)
-                InfoRow(icon = "🕐", text = dateFormat.format(session.loginTime))
+                InfoRow(icon = Icons.Outlined.LocationOn, text = session.location)
+                InfoRow(icon = Icons.Outlined.Language, text = session.ipAddress)
+                InfoRow(icon = Icons.Outlined.AccessTime, text = dateFormat.format(session.loginTime))
             }
 
             if (!session.isCurrentSession) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Divider(color = Color(0xFFEEEEEE))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                 Spacer(modifier = Modifier.height(12.dp))
 
                 OutlinedButton(
@@ -209,8 +215,9 @@ fun LoginSessionCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color(0xFFD32F2F)
-                    )
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
                 ) {
                     Text("Đăng xuất khỏi thiết bị này", fontSize = 13.sp)
                 }
@@ -220,16 +227,16 @@ fun LoginSessionCard(
 }
 
 @Composable
-fun InfoRow(icon: String, text: String) {
+fun InfoRow(icon: ImageVector, text: String) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(text = icon, fontSize = 16.sp)
+        Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
         Text(
             text = text,
-            fontSize = 14.sp,
-            color = Color(0xFF666666)
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

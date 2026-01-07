@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -35,7 +36,7 @@ import com.example.foodapp.data.model.owner.Customer
 
 // --- 1. COMPONENT ĐIỀU HƯỚNG CHÍNH ---
 @Composable
-fun CustomerScreenMain() {
+fun CustomerScreenMain(onMenuClick: () -> Unit) {
     // State để quản lý màn hình hiện tại: "LIST" (danh sách) hoặc "ADD" (thêm mới)
     var currentScreen by remember { mutableStateOf("LIST") }
 
@@ -75,7 +76,8 @@ fun CustomerScreenMain() {
                     selectedCustomer = customer
                     isReadOnly = true
                     currentScreen = "ADD"
-                }
+                },
+                onMenuClick = onMenuClick
             )
             "ADD" -> AddCustomerScreen(
                 // Truyền một hàm để khi bấm nút Back, state sẽ đổi lại thành "LIST"
@@ -97,7 +99,8 @@ fun CustomerScreenMain() {
 fun CustomerScreen(
     customerViewModel: CustomerViewModel = viewModel(),
     onNavigateToAdd: () -> Unit, // Nhận hàm điều hướng từ CustomerScreenMain
-    onCustomerClick: (Customer) -> Unit // Khi bấm vào 1 khách hàng trong danh sách
+    onCustomerClick: (Customer) -> Unit, // Khi bấm vào 1 khách hàng trong danh sách
+    onMenuClick: () -> Unit
 ) {
     val uiState by customerViewModel.uiState.collectAsState()
 
@@ -113,7 +116,8 @@ fun CustomerScreen(
         topBar = {
             ExpandableSearchHeader(
                 query = uiState.searchQuery,
-                onQueryChange = customerViewModel::onSearchQueryChanged
+                onQueryChange = customerViewModel::onSearchQueryChanged,
+                onMenuClick = onMenuClick
             )
         },
         floatingActionButton = {
@@ -172,7 +176,8 @@ fun CustomerScreen(
 @Composable
 fun ExpandableSearchHeader(
     query: String,
-    onQueryChange: (String) -> Unit
+    onQueryChange: (String) -> Unit,
+    onMenuClick: () -> Unit
 ) {
     var isSearchActive by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
@@ -186,7 +191,7 @@ fun ExpandableSearchHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .height(64.dp)
             .background(Color.White)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart
@@ -202,9 +207,17 @@ fun ExpandableSearchHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
-                    Text("Khách hàng", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
-                    Text("Quản lý danh sách", fontSize = 14.sp, color = Color.Gray)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onMenuClick) {
+                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color(0xFF1A1A1A))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Khách hàng",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1A1A1A)
+                    )
                 }
                 IconButton(
                     onClick = { isSearchActive = true },

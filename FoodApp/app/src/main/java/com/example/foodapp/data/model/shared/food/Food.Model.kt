@@ -1,4 +1,4 @@
-package com.example.foodapp.data.model.owner
+package com.example.foodapp.data.model.shared.food
 
 data class Food(
     val id: Int,

@@ -15,6 +15,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavHostController
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.Store
+import androidx.compose.material.icons.outlined.CreditCard
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.CardGiftcard
+import androidx.compose.material.icons.outlined.Security
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.PrivacyTip
+import androidx.compose.material.icons.outlined.SupportAgent
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.HorizontalDivider
 
 @Composable
 fun SettingsScreen(navController: NavHostController) {
@@ -25,13 +40,13 @@ fun SettingsScreen(navController: NavHostController) {
                 SettingItem(
                     title = "Thông tin cá nhân",
                     subtitle = "Chỉnh sửa thông tin tài khoản",
-                    icon = "👤",
+                    icon = androidx.compose.material.icons.Icons.Outlined.Person,
                     onClick = { navController.navigate("personal_info") }
                 ),
                 SettingItem(
                     title = "Đổi mật khẩu",
                     subtitle = "Thay đổi mật khẩu đăng nhập",
-                    icon = "🔐",
+                    icon = androidx.compose.material.icons.Icons.Outlined.Lock,
                     onClick = { navController.navigate("change_password") }
                 )
             )
@@ -42,13 +57,13 @@ fun SettingsScreen(navController: NavHostController) {
                 SettingItem(
                     title = "Thông tin cửa hàng",
                     subtitle = "Tên, địa chỉ, giờ mở cửa",
-                    icon = "🏪",
+                    icon = androidx.compose.material.icons.Icons.Outlined.Store,
                     onClick = { navController.navigate("store_info") }
                 ),
                 SettingItem(
                     title = "Phương thức thanh toán",
                     subtitle = "Quản lý tài khoản ngân hàng",
-                    icon = "💳",
+                    icon = androidx.compose.material.icons.Icons.Outlined.CreditCard,
                     onClick = { navController.navigate("payment_method") }
                 )
             )
@@ -59,21 +74,22 @@ fun SettingsScreen(navController: NavHostController) {
                 SettingItem(
                     title = "Đơn hàng mới",
                     subtitle = "Nhận thông báo khi có đơn mới",
-                    icon = "🔔",
+                    icon = androidx.compose.material.icons.Icons.Outlined.Notifications,
                     hasSwitch = true,
                     isEnabled = true
                 ),
                 SettingItem(
                     title = "Cập nhật đơn hàng",
                     subtitle = "Thông báo trạng thái đơn hàng",
-                    icon = "📦",
+                    // Inventory2 might be missing, using List or a generic Box
+                    icon = androidx.compose.material.icons.Icons.Default.List,
                     hasSwitch = true,
                     isEnabled = true
                 ),
                 SettingItem(
                     title = "Khuyến mãi",
                     subtitle = "Nhận thông báo ưu đãi",
-                    icon = "🎁",
+                    icon = androidx.compose.material.icons.Icons.Outlined.CardGiftcard,
                     hasSwitch = true,
                     isEnabled = false
                 )
@@ -85,14 +101,14 @@ fun SettingsScreen(navController: NavHostController) {
                 SettingItem(
                     title = "Xác thực 2 bước",
                     subtitle = "Tăng cường bảo mật tài khoản",
-                    icon = "🔒",
+                    icon = androidx.compose.material.icons.Icons.Outlined.Security,
                     hasSwitch = true,
                     isEnabled = false
                 ),
                 SettingItem(
                     title = "Lịch sử đăng nhập",
                     subtitle = "Xem các phiên đăng nhập gần đây",
-                    icon = "📱",
+                    icon = androidx.compose.material.icons.Icons.Outlined.History,
                     onClick = { navController.navigate("login_history") }
                 )
             )
@@ -103,19 +119,20 @@ fun SettingsScreen(navController: NavHostController) {
                 SettingItem(
                     title = "Điều khoản sử dụng",
                     subtitle = "Quy định và chính sách",
-                    icon = "📋",
+                     // AutoMirrored.Outlined.List might be tricky, using Default.List for safety
+                    icon = androidx.compose.material.icons.Icons.Default.List,
                     onClick = { navController.navigate("terms") }
                 ),
                 SettingItem(
                     title = "Chính sách bảo mật",
                     subtitle = "Cách chúng tôi bảo vệ dữ liệu",
-                    icon = "🛡️",
+                    icon = androidx.compose.material.icons.Icons.Outlined.PrivacyTip,
                     onClick = { navController.navigate("privacy") }
                 ),
                 SettingItem(
                     title = "Trợ giúp & Hỗ trợ",
                     subtitle = "Liên hệ với chúng tôi",
-                    icon = "💬",
+                    icon = androidx.compose.material.icons.Icons.Outlined.SupportAgent,
                     onClick = { navController.navigate("support") }
                 )
             )
@@ -125,28 +142,49 @@ fun SettingsScreen(navController: NavHostController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(MaterialTheme.colorScheme.background)
     ) {
-        // Header
-        SettingsHeader()
-
         // Settings List
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp)
-                .padding(bottom = 80.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+                .padding(horizontal = 24.dp) // Wider padding
+                .padding(top = 16.dp, bottom = 80.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             sections.forEach { section ->
-                SettingSectionCard(
-                    section = section,
-                    onSwitchChanged = { title, enabled ->
-                        // TODO: Handle switch changes
-                        println("$title switched to $enabled")
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = section.title, 
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    // Card chứa các items
+                    androidx.compose.material3.Card(
+                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                         shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                         elevation = CardDefaults.cardElevation(2.dp)
+                    ) {
+                         Column {
+                             section.items.forEachIndexed { index, item ->
+                                 SettingItemCard(
+                                     item = item,
+                                     onSwitchChanged = { enabled ->
+                                         println("${item.title} switched to $enabled")
+                                     }
+                                 )
+                                 if (index < section.items.size - 1) {
+                                     HorizontalDivider(
+                                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f), 
+                                         thickness = 1.dp,
+                                         modifier = Modifier.padding(horizontal = 16.dp)
+                                     )
+                                 }
+                             }
+                         }
                     }
-                )
+                }
             }
 
             // Nút đăng xuất
@@ -157,22 +195,22 @@ fun SettingsScreen(navController: NavHostController) {
                         popUpTo(0)
                     }
                 },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35)),
-                shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp)
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
             ) {
-                Text("Đăng xuất", color = Color.White, fontWeight = FontWeight.Bold)
+                Text("Đăng xuất", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
             }
 
             // Version Info
             Text(
-                text = "KTX Food Store\nVersion 1.0.0",
-                fontSize = 12.sp,
-                color = Color(0xFF999999),
+                text = "KTX Food Store v1.0.0",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha=0.5f),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp, bottom = 8.dp)
+                    .padding(bottom = 16.dp)
             )
         }
     }

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,8 +21,8 @@ fun TopProductCard(product: TopProduct) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        shape = RoundedCornerShape(12.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier
@@ -29,12 +30,27 @@ fun TopProductCard(product: TopProduct) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = product.rank,
-                fontSize = 24.sp,
-                modifier = Modifier.size(32.dp),
-                textAlign = TextAlign.Center
-            )
+            // Rank medal with background
+            Surface(
+                modifier = Modifier.size(40.dp),
+                shape = RoundedCornerShape(10.dp),
+                color = when (product.rank) {
+                    "🥇" -> Color(0xFFFFF3E0)
+                    "🥈" -> Color(0xFFECEFF1)
+                    "🥉" -> Color(0xFFFFEBEE)
+                    else -> Color(0xFFF5F5F5)
+                }
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = product.rank,
+                        fontSize = 20.sp
+                    )
+                }
+            }
 
             Column(
                 modifier = Modifier
@@ -48,11 +64,12 @@ fun TopProductCard(product: TopProduct) {
                     color = Color(0xFF1A1A1A)
                 )
 
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Text(
                     text = "${product.quantity} phần • ${"%,d".format(product.unitPrice)}đ/phần",
                     fontSize = 12.sp,
-                    color = Color(0xFF757575),
-                    modifier = Modifier.padding(top = 2.dp)
+                    color = Color(0xFF757575)
                 )
             }
 

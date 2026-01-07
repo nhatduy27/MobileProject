@@ -9,6 +9,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.AccountBalance
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -52,27 +54,27 @@ fun PaymentMethodScreen(navController: NavHostController) {
     }
     var showAddDialog by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-    ) {
-        TopAppBar(
-            title = { Text("Phương thức thanh toán", fontWeight = FontWeight.Bold) },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigateUp() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.White,
-                titleContentColor = Color(0xFF333333)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Phương thức thanh toán", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
+                )
             )
-        )
-
+        }
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -81,19 +83,18 @@ fun PaymentMethodScreen(navController: NavHostController) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFE3F2FD)),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha=0.3f)),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
             ) {
                 Row(
                     modifier = Modifier.padding(16.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Text(text = "ℹ️", fontSize = 24.sp)
+                    Icon(Icons.Outlined.Info, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                     Text(
                         text = "Thêm tài khoản ngân hàng để nhận thanh toán từ khách hàng. Bạn có thể thêm nhiều tài khoản và chọn một làm mặc định.",
-                        fontSize = 13.sp,
-                        color = Color(0xFF666666),
-                        lineHeight = 20.sp
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -116,15 +117,15 @@ fun PaymentMethodScreen(navController: NavHostController) {
             // Add Bank Account Button
             OutlinedButton(
                 onClick = { showAddDialog = true },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().height(50.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color(0xFFFF6B35)
+                    contentColor = MaterialTheme.colorScheme.primary
                 )
             ) {
                 Icon(Icons.Default.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Thêm tài khoản ngân hàng", modifier = Modifier.padding(vertical = 4.dp))
+                Text("Thêm tài khoản ngân hàng", fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -157,9 +158,10 @@ fun BankAccountCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (account.isDefault) Color(0xFFFFF3E0) else Color.White
+            containerColor = if (account.isDefault) MaterialTheme.colorScheme.primaryContainer.copy(alpha=0.2f) else MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, if(account.isDefault) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha=0.3f))
     ) {
         Column(
             modifier = Modifier
@@ -178,36 +180,34 @@ fun BankAccountCard(
                     Box(
                         modifier = Modifier
                             .size(48.dp)
-                            .background(Color(0xFFFF6B35), RoundedCornerShape(12.dp)),
+                            .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(text = "🏦", fontSize = 24.sp)
+                        Icon(imageVector = Icons.Outlined.AccountBalance, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
                     }
                     Column {
                         Text(
                             text = account.bankName,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp,
-                            color = Color(0xFF333333)
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = account.accountNumber,
-                            fontSize = 14.sp,
-                            color = Color(0xFF666666)
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
                 if (account.isDefault) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = Color(0xFFFF6B35)
+                        color = MaterialTheme.colorScheme.primary
                     ) {
                         Text(
                             text = "Mặc định",
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
                             color = Color.White,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
                         )
                     }
                 }
@@ -216,13 +216,13 @@ fun BankAccountCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             Text(
-                text = "Chủ tài khoản: ${account.accountName}",
-                fontSize = 14.sp,
-                color = Color(0xFF666666)
+                text = "Chủ tài khoản: ${account.accountName.uppercase()}",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             Spacer(modifier = Modifier.height(16.dp))
-            Divider(color = Color(0xFFEEEEEE))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
             Spacer(modifier = Modifier.height(12.dp))
 
             Row(
@@ -235,7 +235,7 @@ fun BankAccountCard(
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Text("Đặt làm mặc định", fontSize = 13.sp)
+                        Text("Đặt làm mặc định", fontSize = 12.sp)
                     }
                 }
                 OutlinedButton(
@@ -243,8 +243,9 @@ fun BankAccountCard(
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color(0xFFD32F2F)
-                    )
+                        contentColor = MaterialTheme.colorScheme.error
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.error)
                 ) {
                     Icon(
                         Icons.Default.Delete,
@@ -252,7 +253,7 @@ fun BankAccountCard(
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Xóa", fontSize = 13.sp)
+                    Text("Xóa", fontSize = 12.sp)
                 }
             }
         }
@@ -305,17 +306,18 @@ fun AddBankAccountDialog(
                         onAdd(bankName, accountNumber, accountName)
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35)),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Thêm")
+                Text("Thêm", color = Color.White)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Hủy", color = Color(0xFF666666))
+                Text("Hủy", color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         },
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(16.dp),
+        containerColor = MaterialTheme.colorScheme.surface
     )
 }

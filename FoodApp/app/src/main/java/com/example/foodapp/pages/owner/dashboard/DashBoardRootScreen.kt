@@ -9,18 +9,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.*
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-// SỬA LỖI: Thêm import cho CustomerScreen
-import com.example.foodapp.pages.owner.customer.CustomerScreen
-// SỬA LỖI: Import DashboardScreen thật sự, không phải placeholder
-import com.example.foodapp.pages.owner.dashboard.DashboardScreen
+
 // Import FoodsScreen
 import com.example.foodapp.pages.owner.foods.FoodsScreen
 // Import OrdersScreen
@@ -39,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.foodapp.R
 import kotlinx.coroutines.launch
@@ -71,46 +66,46 @@ fun DashBoardRootScreen(navController: NavHostController) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(240.dp)
-                        .background(Color(0xFFFF6B35))
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.Center
+                        .padding(24.dp), // More whitespace
                 ) {
+                    // Close Button
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close",
-                        tint = Color.White,
+                        tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier
                             .align(Alignment.End)
-                            .offset(y = (-16).dp)
-                            .size(32.dp)
+                            .size(24.dp)
                             .clickable { scope.launch { drawerState.close() } }
                     )
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                    Image(
-                        painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                        contentDescription = "Logo",
-                        modifier = Modifier
-                            .size(70.dp)
-                            .align(Alignment.CenterHorizontally)
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        "KTX Food Store",
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
-                    Text(
-                        "Chủ cửa hàng",
-                        color = Color(0xFFFFE5D9),
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.align(Alignment.CenterHorizontally)
-                    )
+                    // Brand Info
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(48.dp)
+                        ) {
+                             Box(contentAlignment = Alignment.Center) {
+                                 Text("K", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+                             }
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column {
+                            Text(
+                                "KTX Food",
+                                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                "Chủ cửa hàng",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
 
                 // ===== Sidebar Items =====
@@ -121,39 +116,67 @@ fun DashBoardRootScreen(navController: NavHostController) {
                         .padding(horizontal = 12.dp, vertical = 16.dp)
                 ) {
 
-                    DrawerItem("Dashboard", R.drawable.ic_dashboard) {
+                    DrawerItem(
+                        text = "Dashboard", 
+                        iconRes = R.drawable.ic_dashboard, 
+                        isSelected = currentScreen == "dashboard"
+                    ) {
                         currentScreen = "dashboard"
                         scope.launch { drawerState.close() }
                     }
 
-                    DrawerItem("Quản lý đơn hàng", R.drawable.ic_shopping_cart) {
+                    DrawerItem(
+                        text = "Quản lý đơn hàng", 
+                        iconRes = R.drawable.ic_shopping_cart,
+                        isSelected = currentScreen == "orders"
+                    ) {
                         currentScreen = "orders"
                         scope.launch { drawerState.close() }
                     }
 
-                    DrawerItem("Quản lý món ăn", R.drawable.ic_restaurant) {
+                    DrawerItem(
+                        text = "Quản lý món ăn", 
+                        iconRes = R.drawable.ic_restaurant,
+                        isSelected = currentScreen == "foods"
+                    ) {
                         currentScreen = "foods"
                         scope.launch { drawerState.close() }
                     }
 
-                    DrawerItem("Quản lý Shipper", R.drawable.ic_delivery) {
+                    DrawerItem(
+                        text = "Quản lý Shipper", 
+                        iconRes = R.drawable.ic_delivery,
+                        isSelected = currentScreen == "shippers"
+                    ) {
                         currentScreen = "shippers"
                         scope.launch { drawerState.close() }
                     }
 
-                    DrawerItem("Khách hàng", R.drawable.ic_customer) {
+                    DrawerItem(
+                        text = "Khách hàng", 
+                        iconRes = R.drawable.ic_customer,
+                        isSelected = currentScreen == "customers"
+                    ) {
                         currentScreen = "customers"
                         scope.launch { drawerState.close() }
                     }
 
-                    DrawerItem("Báo cáo doanh thu", R.drawable.ic_bar_chart) {
+                    DrawerItem(
+                        text = "Báo cáo doanh thu", 
+                        iconRes = R.drawable.ic_bar_chart,
+                        isSelected = currentScreen == "revenue"
+                    ) {
                         currentScreen = "revenue"
                         scope.launch { drawerState.close() }
                     }
 
-                    Divider(modifier = Modifier.padding(vertical = 12.dp))
+                    Divider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha=0.3f))
 
-                    DrawerItem("Cài đặt", R.drawable.ic_settings) {
+                    DrawerItem(
+                        text = "Cài đặt", 
+                        iconRes = R.drawable.ic_settings,
+                        isSelected = currentScreen == "settings"
+                    ) {
                         currentScreen = "settings"
                         scope.launch { drawerState.close() }
                     }
@@ -176,37 +199,38 @@ fun DashBoardRootScreen(navController: NavHostController) {
         // ===== Main Screen =====
         Scaffold(
             topBar = {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .background(Color(0xFFFF6B35))
-                        .padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                        Icon(Icons.Default.Menu, contentDescription = "Open Menu", tint = Color.White)
-                    }
+                // HIDE TopBar if we are on Dashboard
 
-                    Text(
-                        text = when (currentScreen) {
-                            "dashboard" -> "KTX Food Dashboard"
-                            "orders" -> "Quản lý đơn hàng"
-                            "foods" -> "Quản lý món ăn"
-                            "shippers" -> "Quản lý Shipper"
-                            "customers" -> "Quản lý khách hàng"
-                            "revenue" -> "Báo cáo doanh thu"
-                            "settings" -> "Cài đặt"
-                            else -> "KTX Food Dashboard"
-                        },
-                        color = Color.White,
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.weight(1f),
-                        textAlign = TextAlign.Center
-                    )
+                // HIDE TopBar if we are on Dashboard
+                if (currentScreen != "dashboard" && currentScreen != "orders" && currentScreen != "foods" && currentScreen != "shippers" && currentScreen != "customers") {
 
-                    IconButton(onClick = {}) {
-                        Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = Color.White)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp) // Taller header
+                            .background(MaterialTheme.colorScheme.background) // White background
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(Icons.Default.Menu, contentDescription = "Open Menu", tint = MaterialTheme.colorScheme.onSurface)
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = when (currentScreen) {
+                                "orders" -> "Quản lý đơn hàng"
+                                "foods" -> "Quản lý món ăn"
+                                "shippers" -> "Quản lý Shipper"
+                                "customers" -> "Quản lý khách hàng"
+                                "revenue" -> "Báo cáo doanh thu"
+                                "settings" -> "Cài đặt"
+                                else -> "KTX Food"
+                            },
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 }
             }
@@ -217,14 +241,14 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     .fillMaxSize()
             ) {
                 when (currentScreen) {
-                    "dashboard" -> DashboardScreen()
-                    "orders" -> OrdersScreen()
-                    "foods" -> FoodsScreen()
-                    "shippers" -> ShippersScreen()
-                    "customers" -> CustomerScreenMain()
+                    "dashboard" -> DashboardScreen(onMenuClick = { scope.launch { drawerState.open() } }) // Pass Open Drawer
+                    "orders" -> OrdersScreen(onMenuClick = { scope.launch { drawerState.open() } })
+                    "foods" -> FoodsScreen(onMenuClick = { scope.launch { drawerState.open() } })
+                    "shippers" -> ShippersScreen(onMenuClick = { scope.launch { drawerState.open() } })
+                    "customers" -> CustomerScreenMain(onMenuClick = { scope.launch { drawerState.open() } }) 
                     "revenue" -> RevenueScreen()
                     "settings" -> SettingsNavHost(navController = settingsNavController)
-                    else -> DashboardScreen()
+                    else -> DashboardScreen(onMenuClick = { scope.launch { drawerState.open() } })
                 }
             }
         }
@@ -232,23 +256,33 @@ fun DashBoardRootScreen(navController: NavHostController) {
 }
 
 @Composable
-fun DrawerItem(text: String, iconRes: Int, onClick: () -> Unit) {
-    Row(
+fun DrawerItem(text: String, iconRes: Int, isSelected: Boolean, onClick: () -> Unit) {
+    val backgroundColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else Color.Transparent
+    val contentColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    val fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
+
+    Surface(
+        color = backgroundColor,
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .height(52.dp)
+            .padding(vertical = 4.dp)
             .clickable { onClick() }
-            .padding(horizontal = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            painter = painterResource(id = iconRes),
-            contentDescription = text,
-            modifier = Modifier.size(24.dp),
-            tint = Color(0xFF333333)
-        )
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(text, style = MaterialTheme.typography.bodyMedium, color = Color(0xFF333333))
+        Row(
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                painter = painterResource(id = iconRes),
+                contentDescription = text,
+                modifier = Modifier.size(24.dp),
+                tint = contentColor
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(text, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = fontWeight), color = contentColor)
+        }
     }
 }
 

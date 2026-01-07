@@ -2,8 +2,6 @@ package com.example.foodapp.pages.owner.dashboard
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -21,54 +19,79 @@ fun DashboardSummaryLists(
     recentOrders: List<DashboardRecentOrder>,
     topProducts: List<DashboardTopProduct>
 ) {
-    Row(modifier = Modifier.fillMaxWidth()) {
-
-        // Đơn hàng gần đây
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Recent Orders Section
         Card(
-            modifier = Modifier
-                .weight(1f)
-                .height(400.dp),
+            modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(3.dp)
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(2.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Đơn hàng gần đây", style = MaterialTheme.typography.titleMedium)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Đơn hàng gần đây",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color(0xFF1A1A1A)
+                    )
+                    TextButton(onClick = { /* TODO: Navigate to orders */ }) {
+                        Text(
+                            "Xem tất cả",
+                            fontSize = 13.sp,
+                            color = Color(0xFFFF6B35)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(recentOrders) { order ->
-                        RecentOrderCard(order)
-                    }
+                // Show only first 3 orders
+                recentOrders.take(3).forEach { order ->
+                    RecentOrderCard(order)
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
 
-        Spacer(modifier = Modifier.width(16.dp))
-
-        // Món bán chạy
+        // Top Products Section
         Card(
-            modifier = Modifier
-                .weight(1f)
-                .height(400.dp),
+            modifier = Modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = Color.White),
-            shape = RoundedCornerShape(12.dp),
-            elevation = CardDefaults.cardElevation(3.dp)
+            shape = RoundedCornerShape(16.dp),
+            elevation = CardDefaults.cardElevation(2.dp)
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
-                Text("Món bán chạy", style = MaterialTheme.typography.titleMedium)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Món bán chạy",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color(0xFF1A1A1A)
+                    )
+                    TextButton(onClick = { /* TODO: Navigate to foods */ }) {
+                        Text(
+                            "Xem tất cả",
+                            fontSize = 13.sp,
+                            color = Color(0xFFFF6B35)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(12.dp))
 
-                LazyColumn(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(topProducts) { product ->
-                        TopProductCard(product)
-                    }
+                // Show only first 3 products
+                topProducts.take(3).forEach { product ->
+                    TopProductCard(product)
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
@@ -79,41 +102,40 @@ fun DashboardSummaryLists(
 fun RecentOrderCard(order: DashboardRecentOrder) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        order.orderId,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1A1A)
-                    )
-                    Text(
-                        order.customer,
-                        fontSize = 11.sp,
-                        color = Color(0xFF757575)
-                    )
-                }
-                
-                StatusBadge(order.status)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    order.orderId,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF1A1A1A)
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    order.customer,
+                    fontSize = 12.sp,
+                    color = Color(0xFF757575)
+                )
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    "${String.format("%,d", order.amount)}đ",
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFF6B35)
+                )
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                "₫${String.format("%,d", order.amount)}",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFFFF6B35)
-            )
+            
+            StatusBadge(order.status)
         }
     }
 }
@@ -127,16 +149,16 @@ fun StatusBadge(status: String) {
         else -> Pair(Color(0xFFF5F5F5), Color(0xFF757575))
     }
 
-    Box(
-        modifier = Modifier
-            .background(bgColor.copy(alpha = 0.1f), shape = RoundedCornerShape(100))
-            .padding(horizontal = 10.dp, vertical = 4.dp)
+    Surface(
+        color = bgColor,
+        shape = RoundedCornerShape(8.dp)
     ) {
         Text(
             status,
             fontSize = 11.sp,
             color = textColor,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
         )
     }
 }
@@ -145,38 +167,49 @@ fun StatusBadge(status: String) {
 fun TopProductCard(product: DashboardTopProduct) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(2.dp)
+        elevation = CardDefaults.cardElevation(0.dp)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.weight(1f),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                // Product emoji/icon
+                Text(
+                    product.name.take(2), // Get emoji
+                    fontSize = 24.sp
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
                     Text(
-                        product.name,
-                        fontSize = 13.sp,
+                        product.name.drop(2).trim(), // Get name without emoji
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1A1A1A)
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         "${product.quantity} đơn",
-                        fontSize = 11.sp,
+                        fontSize = 12.sp,
                         color = Color(0xFF757575)
                     )
                 }
-
-                Text(
-                    product.revenue,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFF6B35)
-                )
             }
+
+            Text(
+                product.revenue,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFFFF6B35)
+            )
         }
     }
 }
-

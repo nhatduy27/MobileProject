@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -38,6 +39,7 @@ import com.example.foodapp.data.model.owner.Order
 import androidx.compose.ui.text.font.FontWeight
 @Composable
 fun OrdersScreen(
+    onMenuClick: () -> Unit,
     ordersViewModel: OrdersViewModel = viewModel()
 ) {
     val uiState by ordersViewModel.uiState.collectAsState()
@@ -58,7 +60,8 @@ fun OrdersScreen(
             topBar = {
                 OrdersSearchHeader(
                     query = uiState.searchQuery,
-                    onQueryChange = ordersViewModel::onSearchQueryChanged
+                    onQueryChange = ordersViewModel::onSearchQueryChanged,
+                    onMenuClick = onMenuClick
                 )
             },
             floatingActionButton = {
@@ -136,7 +139,8 @@ fun OrdersScreen(
 @Composable
 fun OrdersSearchHeader(
     query: String,
-    onQueryChange: (String) -> Unit
+    onQueryChange: (String) -> Unit,
+    onMenuClick: () -> Unit
 ) {
     var isSearchActive by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
@@ -150,7 +154,7 @@ fun OrdersSearchHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .height(64.dp) // Adjusted height
             .background(Color.White)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart
@@ -165,10 +169,19 @@ fun OrdersSearchHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
-                    Text("Đơn hàng", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
-                    Text("Quản lý đơn hàng", fontSize = 14.sp, color = Color.Gray)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onMenuClick) {
+                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color(0xFF1A1A1A))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Quản lý đơn hàng",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1A1A1A)
+                    )
                 }
+
                 IconButton(
                     onClick = { isSearchActive = true },
                     modifier = Modifier

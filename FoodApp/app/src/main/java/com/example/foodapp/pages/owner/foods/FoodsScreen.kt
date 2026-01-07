@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -35,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.font.FontWeight
+import com.example.foodapp.data.model.shared.food.Food
 
 /**
  * Màn hình quản lý món ăn - FoodsScreen
@@ -52,6 +54,7 @@ import androidx.compose.ui.text.font.FontWeight
  */
 @Composable
 fun FoodsScreen(
+    onMenuClick: () -> Unit,
     viewModel: FoodsViewModel = viewModel()
 ) {
     // Lắng nghe state từ ViewModel
@@ -64,7 +67,7 @@ fun FoodsScreen(
     }
 
     var isEditing by remember { mutableStateOf(false) }
-    var editingFood by remember { mutableStateOf<com.example.foodapp.data.model.owner.Food?>(null) }
+    var editingFood by remember { mutableStateOf<Food?>(null) }
 
     if (!isEditing) {
         // Màn hình danh sách món ăn
@@ -77,7 +80,8 @@ fun FoodsScreen(
             topBar = {
                 FoodsSearchHeader(
                     query = uiState.searchQuery,
-                    onQueryChange = viewModel::onSearchQueryChanged
+                    onQueryChange = viewModel::onSearchQueryChanged,
+                    onMenuClick = onMenuClick
                 )
             },
             floatingActionButton = {
@@ -178,7 +182,8 @@ fun FoodsScreen(
 @Composable
 fun FoodsSearchHeader(
     query: String,
-    onQueryChange: (String) -> Unit
+    onQueryChange: (String) -> Unit,
+    onMenuClick: () -> Unit
 ) {
     var isSearchActive by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
@@ -192,7 +197,7 @@ fun FoodsSearchHeader(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(80.dp)
+            .height(64.dp)
             .background(Color.White)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart
@@ -208,9 +213,17 @@ fun FoodsSearchHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column {
-                    Text("Món ăn", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
-                    Text("Quản lý thực đơn", fontSize = 14.sp, color = Color.Gray)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onMenuClick) {
+                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color(0xFF1A1A1A))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Món ăn",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF1A1A1A)
+                    )
                 }
                 IconButton(
                     onClick = { isSearchActive = true },

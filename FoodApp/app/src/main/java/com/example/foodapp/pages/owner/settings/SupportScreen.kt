@@ -10,6 +10,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.compose.ui.graphics.vector.ImageVector
 
 data class FAQItem(
     val question: String,
@@ -61,28 +65,29 @@ fun SupportScreen(navController: NavHostController) {
         )
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-    ) {
-        TopAppBar(
-            title = { Text("Trợ giúp & Hỗ trợ", fontWeight = FontWeight.Bold) },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigateUp() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.White,
-                titleContentColor = Color(0xFF333333)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Trợ giúp & Hỗ trợ", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background,
+                    titleContentColor = MaterialTheme.colorScheme.onBackground
+                )
             )
-        )
-
+        }
+    ) { padding ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(padding),
             contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Contact Cards
             item {
@@ -91,13 +96,13 @@ fun SupportScreen(navController: NavHostController) {
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     ContactCard(
-                        icon = "📧",
+                        icon = Icons.Outlined.Email,
                         title = "Email",
                         subtitle = "support@ktxfood.com",
                         modifier = Modifier.weight(1f)
                     )
                     ContactCard(
-                        icon = "📞",
+                        icon = Icons.Outlined.Phone,
                         title = "Hotline",
                         subtitle = "1900-xxxx",
                         modifier = Modifier.weight(1f)
@@ -107,7 +112,7 @@ fun SupportScreen(navController: NavHostController) {
 
             item {
                 ContactCard(
-                    icon = "💬",
+                    icon = Icons.Outlined.Chat,
                     title = "Chat trực tuyến",
                     subtitle = "Nhấn để trò chuyện với đội ngũ hỗ trợ",
                     modifier = Modifier.fillMaxWidth()
@@ -118,9 +123,8 @@ fun SupportScreen(navController: NavHostController) {
             item {
                 Text(
                     text = "Câu hỏi thường gặp",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF333333),
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
                 )
             }
@@ -135,7 +139,7 @@ fun SupportScreen(navController: NavHostController) {
 
 @Composable
 fun ContactCard(
-    icon: String,
+    icon: ImageVector,
     title: String,
     subtitle: String,
     modifier: Modifier = Modifier
@@ -143,8 +147,9 @@ fun ContactCard(
     Card(
         modifier = modifier.clickable { /* TODO: Handle click */ },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha=0.5f))
     ) {
         Column(
             modifier = Modifier
@@ -153,24 +158,24 @@ fun ContactCard(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            /* Avatar background for icon */
             Box(
                 modifier = Modifier
                     .size(56.dp)
-                    .background(Color(0xFFFF6B35), RoundedCornerShape(28.dp)),
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha=0.5f), RoundedCornerShape(28.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = icon, fontSize = 28.sp)
+                Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
             }
             Text(
                 text = title,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                color = Color(0xFF333333)
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = subtitle,
-                fontSize = 12.sp,
-                color = Color(0xFF666666)
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -185,8 +190,9 @@ fun FAQCard(faq: FAQItem) {
             .fillMaxWidth()
             .clickable { expanded = !expanded },
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha=0.5f))
     ) {
         Column(
             modifier = Modifier
@@ -200,26 +206,25 @@ fun FAQCard(faq: FAQItem) {
             ) {
                 Text(
                     text = faq.question,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF333333),
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
                 Icon(
                     imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = if (expanded) "Thu gọn" else "Mở rộng",
-                    tint = Color(0xFF666666)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             if (expanded) {
                 Spacer(modifier = Modifier.height(12.dp))
-                Divider(color = Color(0xFFEEEEEE))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f))
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
                     text = faq.answer,
-                    fontSize = 14.sp,
-                    color = Color(0xFF666666),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     lineHeight = 22.sp
                 )
             }

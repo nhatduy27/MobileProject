@@ -7,6 +7,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import androidx.compose.ui.graphics.vector.ImageVector
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,28 +39,13 @@ fun PersonalInfoScreen(navController: NavHostController) {
         phone = currentUser?.phoneNumber ?: ""
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
-    ) {
-        // Top App Bar
-        TopAppBar(
-            title = { Text("Thông tin cá nhân", fontWeight = FontWeight.Bold) },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigateUp() }) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.White,
-                titleContentColor = Color(0xFF333333)
-            )
-        )
-
+    Scaffold(
+    ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(padding)
                 .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -64,8 +54,9 @@ fun PersonalInfoScreen(navController: NavHostController) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             ) {
                 Column(
                     modifier = Modifier
@@ -77,19 +68,19 @@ fun PersonalInfoScreen(navController: NavHostController) {
                     Box(
                         modifier = Modifier
                             .size(100.dp)
-                            .background(Color(0xFFFF6B35), RoundedCornerShape(50.dp)),
+                            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(50.dp)),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = fullName.firstOrNull()?.toString() ?: "U",
                             fontSize = 40.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
                     TextButton(onClick = { /* TODO: Change avatar */ }) {
-                        Text("Thay đổi ảnh đại diện", color = Color(0xFFFF6B35))
+                        Text("Thay đổi ảnh đại diện", color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
@@ -98,8 +89,9 @@ fun PersonalInfoScreen(navController: NavHostController) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
             ) {
                 Column(
                     modifier = Modifier
@@ -113,10 +105,10 @@ fun PersonalInfoScreen(navController: NavHostController) {
                         value = fullName,
                         onValueChange = { fullName = it },
                         enabled = isEditing,
-                        icon = "👤"
+                        icon = Icons.Outlined.Person
                     )
 
-                    Divider(color = Color(0xFFEEEEEE))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
 
                     // Email
                     InfoField(
@@ -124,10 +116,10 @@ fun PersonalInfoScreen(navController: NavHostController) {
                         value = email,
                         onValueChange = { email = it },
                         enabled = false, // Email không được thay đổi
-                        icon = "📧"
+                        icon = Icons.Outlined.Email
                     )
 
-                    Divider(color = Color(0xFFEEEEEE))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
 
                     // Số điện thoại
                     InfoField(
@@ -135,10 +127,10 @@ fun PersonalInfoScreen(navController: NavHostController) {
                         value = phone,
                         onValueChange = { phone = it },
                         enabled = isEditing,
-                        icon = "📱"
+                        icon = Icons.Outlined.Phone
                     )
 
-                    Divider(color = Color(0xFFEEEEEE))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f))
 
                     // Địa chỉ
                     InfoField(
@@ -146,7 +138,7 @@ fun PersonalInfoScreen(navController: NavHostController) {
                         value = address,
                         onValueChange = { address = it },
                         enabled = isEditing,
-                        icon = "📍",
+                        icon = Icons.Outlined.LocationOn,
                         singleLine = false
                     )
                 }
@@ -160,30 +152,31 @@ fun PersonalInfoScreen(navController: NavHostController) {
                 if (isEditing) {
                     OutlinedButton(
                         onClick = { isEditing = false },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        modifier = Modifier.weight(1f).height(48.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface)
                     ) {
-                        Text("Hủy", modifier = Modifier.padding(vertical = 4.dp))
+                        Text("Hủy")
                     }
                     Button(
                         onClick = {
                             // TODO: Save changes to Firebase
                             isEditing = false
                         },
-                        modifier = Modifier.weight(1f),
+                        modifier = Modifier.weight(1f).height(48.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35))
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Text("Lưu", modifier = Modifier.padding(vertical = 4.dp))
+                        Text("Lưu", color = Color.White)
                     }
                 } else {
                     Button(
                         onClick = { isEditing = true },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().height(48.dp),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35))
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
-                        Text("Chỉnh sửa thông tin", modifier = Modifier.padding(vertical = 4.dp))
+                        Text("Chỉnh sửa thông tin", color = Color.White)
                     }
                 }
             }
@@ -197,7 +190,7 @@ fun InfoField(
     value: String,
     onValueChange: (String) -> Unit,
     enabled: Boolean,
-    icon: String,
+    icon: ImageVector,
     singleLine: Boolean = true
 ) {
     Column(
@@ -207,11 +200,11 @@ fun InfoField(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(text = icon, fontSize = 18.sp)
+            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
             Text(
                 text = label,
-                fontSize = 14.sp,
-                color = Color(0xFF666666),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -222,11 +215,11 @@ fun InfoField(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                disabledTextColor = Color(0xFF333333),
-                disabledBorderColor = Color(0xFFEEEEEE),
-                disabledContainerColor = Color(0xFFFAFAFA),
-                focusedBorderColor = Color(0xFFFF6B35),
-                unfocusedBorderColor = Color(0xFFEEEEEE)
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                disabledBorderColor = Color.Transparent,
+                disabledTextColor = MaterialTheme.colorScheme.onSurface
             ),
             singleLine = singleLine,
             maxLines = if (singleLine) 1 else 3

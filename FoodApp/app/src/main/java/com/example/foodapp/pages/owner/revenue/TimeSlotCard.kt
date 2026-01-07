@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,8 +21,8 @@ fun TimeSlotCard(timeSlot: TimeSlotRevenue) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-        shape = RoundedCornerShape(12.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             modifier = Modifier
@@ -29,19 +30,21 @@ fun TimeSlotCard(timeSlot: TimeSlotRevenue) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .background(
-                        color = Color(0xFFFFF3ED),
-                        shape = RoundedCornerShape(4.dp)
-                    ),
-                contentAlignment = Alignment.Center
+            // Emoji icon with background
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color(0xFFFFF3ED)
             ) {
-                Text(
-                    text = timeSlot.emoji,
-                    fontSize = 24.sp
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = timeSlot.emoji,
+                        fontSize = 24.sp
+                    )
+                }
             }
 
             Column(
@@ -56,11 +59,12 @@ fun TimeSlotCard(timeSlot: TimeSlotRevenue) {
                     color = Color(0xFF1A1A1A)
                 )
 
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Text(
                     text = "${timeSlot.ordersCount} đơn hàng • ${timeSlot.percentage}% tổng doanh thu",
                     fontSize = 12.sp,
-                    color = Color(0xFF757575),
-                    modifier = Modifier.padding(top = 2.dp)
+                    color = Color(0xFF757575)
                 )
             }
 
