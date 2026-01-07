@@ -49,19 +49,34 @@ const createNestServer = async (expressInstance: express.Express) => {
   // Swagger setup
   const config = new DocumentBuilder()
     .setTitle('KTX Delivery API')
-    .setDescription('API documentation for KTX Delivery App')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .addTag('auth', 'Authentication endpoints')
-    .addTag('users', 'User management')
-    .addTag('categories', 'Product categories')
-    .addTag('shops', 'Shop management')
-    .addTag('products', 'Product management')
-    .addTag('orders', 'Order management')
+    .setDescription('REST API cho ứng dụng giao hàng KTX')
+    .setVersion('2.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'Firebase ID Token',
+        description: 'Enter Firebase ID Token (get from Firebase Auth client SDK)',
+      },
+      'firebase-auth',
+    )
+    .addTag('Auth', 'Authentication & Authorization')
+    .addTag('Admin - Categories', 'Admin: Category management')
+    .addTag('Admin - Users', 'Admin: User management')
+    .addTag('Admin - Payouts', 'Admin: Payout approval')
+    .addTag('Admin - Shops', 'Admin: Shop management')
+    .addTag('Admin - Dashboard', 'Admin: Statistics')
+    .addTag('Categories', 'Public: Product categories')
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: {
+      persistAuthorization: true, // Remember token in browser
+      tagsSorter: 'alpha',
+      operationsSorter: 'alpha',
+    },
+  });
 
   await app.init();
   return app;

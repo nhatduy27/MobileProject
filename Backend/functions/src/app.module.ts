@@ -1,17 +1,23 @@
 import { Module } from '@nestjs/common';
 import { CoreModule } from './core/core.module';
 import { SharedModule } from './shared/shared.module';
+import { EmailModule } from './modules/email';
 
-// Feature modules - uncomment khi làm đến Epic tương ứng
-// import { CategoriesModule } from './modules/categories/categories.module';  // Epic 0: Admin
-import { AuthModule } from './modules/auth/auth.module';                       // Epic 1: Auth ✅
-// import { UsersModule } from './modules/users/users.module';                 // Epic 2: User
-// import { ShopsModule } from './modules/shops/shops.module';                 // Epic 3: Shop
-// import { ProductsModule } from './modules/products/products.module';        // Epic 3: Product
-// import { OrdersModule } from './modules/orders/orders.module';              // Epic 4: Order
-// import { PaymentsModule } from './modules/payments/payments.module';        // Epic 5: Payment
-// import { WalletsModule } from './modules/wallets/wallets.module';           // Epic 6: Wallet
-// import { NotificationsModule } from './modules/notifications/notifications.module'; // Epic 7
+// Feature modules - EPIC 01
+import { CategoriesModule } from './modules/categories/categories.module';
+import { AdminModule } from './modules/admin/admin.module';
+
+// Feature modules - EPIC 02
+import { AuthModule } from './modules/auth/auth.module';
+
+// Feature modules - sẽ import khi hoàn thành
+// import { UsersModule } from './modules/users/users.module';
+// import { ShopsModule } from './modules/shops/shops.module';
+// import { ProductsModule } from './modules/products/products.module';
+// import { OrdersModule } from './modules/orders/orders.module';
+// import { PaymentsModule } from './modules/payments/payments.module';
+// import { WalletsModule } from './modules/wallets/wallets.module';
+// import { NotificationsModule } from './modules/notifications/notifications.module';
 
 @Module({
   imports: [
@@ -20,19 +26,28 @@ import { AuthModule } from './modules/auth/auth.module';                       /
     // ============================================
     CoreModule,
     SharedModule,
+    EmailModule, // Global module for sending emails
 
+    // EPIC 02: Auth ✅
+    AuthModule,
+    
     // ============================================
-    // Feature modules - uncomment theo Epic order
+    // Feature modules
     // ============================================
-    // CategoriesModule,   // Epic 0: Admin Categories
-    AuthModule,            // Epic 1: Authentication ✅
-    // UsersModule,        // Epic 2: User Management
-    // ShopsModule,        // Epic 3: Shop & Product
-    // ProductsModule,     // Epic 3: Shop & Product
-    // OrdersModule,       // Epic 4: Order
-    // PaymentsModule,     // Epic 5: Payment
-    // WalletsModule,      // Epic 6: Wallet
-    // NotificationsModule,// Epic 7: Notification
+    // EPIC 01: Admin Core ✅
+    CategoriesModule,
+    AdminModule,
+
+    // EPIC 03: User Management (uncomment khi hoàn thành)
+    // UsersModule,
+
+    // Future EPICs
+    // ShopsModule,
+    // ProductsModule,
+    // OrdersModule,
+    // PaymentsModule,
+    // WalletsModule,
+    // NotificationsModule,
   ],
 })
 export class AppModule {}

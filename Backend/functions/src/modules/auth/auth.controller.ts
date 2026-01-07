@@ -1,9 +1,7 @@
 import {
   Controller,
   Post,
-  Get,
   Put,
-  Delete,
   Body,
   UseGuards,
   HttpCode,
@@ -16,29 +14,33 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
+import { AuthGuard } from '../../core/guards';
+import { CurrentUser } from '../../core/decorators';
 import {
   RegisterDto,
+  RegisterResponseDto,
   LoginDto,
+  LoginResponseDto,
   GoogleAuthDto,
-  UpdateRoleDto,
-  UpdateProfileDto,
+  GoogleAuthResponseDto,
+  SendOTPDto,
+  VerifyOTPDto,
+  ForgotPasswordDto,
+  ResetPasswordDto,
+  ChangePasswordDto,
+  LogoutDto,
 } from './dto';
-import { AuthGuard } from '../../core/guards/auth.guard';
-import { CurrentUser } from '../../core/decorators/current-user.decorator';
-import { Public } from '../../core/decorators/public.decorator';
-import { IUser } from '../../core/interfaces/user.interface';
 
 /**
  * Auth Controller
- *
- * Handles authentication endpoints:
- * - POST /auth/register - Register new user
- * - POST /auth/login - Verify login token
- * - POST /auth/google - Google Sign-In
- * - GET /auth/profile - Get current user profile
- * - PUT /auth/profile - Update profile
- * - PUT /auth/role - Update user role
- * - DELETE /auth/account - Delete account
+ * 
+ * Handles all authentication endpoints:
+ * - Registration
+ * - Login
+ * - Google Sign-In
+ * - OTP verification
+ * - Password reset
+ * - Logout
  */
 @ApiTags('Auth')
 @Controller('auth')
@@ -46,245 +48,240 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   /**
+   * POST /auth/register
    * Register new user with email/password
-   *
-   * Creates Firebase Auth user and Firestore profile.
-   * After registration, user should verify email/OTP then select role.
+   * 
+   * AUTH-003
    */
   @Post('register')
-  @Public()
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Đăng ký tài khoản mới' })
-  @ApiResponse({
-    status: 201,
-    description: 'Đăng ký thành công',
-    schema: {
-      example: {
-        success: true,
-        data: {
-          user: {
-            id: 'abc123',
-            fullName: 'Nguyễn Văn A',
-            email: 'user@example.com',
-            isVerify: false,
-            phone: '',
-            role: 'user',
-            imageAvatar: '',
-            createdAt: 1704700000000,
-            updatedAt: 1704700000000,
-          },
-          uid: 'abc123',
-        },
-      },
-    },
+  @ApiOperation({ 
+    summary: 'Register new user',
+    description: 'Create a new user account with email and password. Returns custom token for client-side Firebase sign-in.',
   })
-  @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
-  @ApiResponse({ status: 409, description: 'Email đã được sử dụng' })
+  @ApiResponse({ 
+    status: 201, 
+    description: 'User registered successfully',
+    type: RegisterResponseDto,
+  })
+  @ApiResponse({ status: 409, description: 'Email or phone already exists' })
+  @ApiResponse({ status: 400, description: 'Invalid input data' })
   async register(@Body() dto: RegisterDto) {
     const result = await this.authService.register(dto);
     return {
       success: true,
-      message: 'Đăng ký thành công',
       data: result,
     };
   }
 
   /**
-   * Verify login token
-   *
-   * Client logs in with Firebase Auth SDK, then calls this endpoint
-   * with the ID token to verify and get user profile.
+   * POST /auth/login
+   * Login with email/password
    */
   @Post('login')
-  @Public()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Xác thực đăng nhập' })
-  @ApiResponse({
-    status: 200,
-    description: 'Đăng nhập thành công',
-    schema: {
-      example: {
-        success: true,
-        data: {
-          user: {
-            id: 'abc123',
-            fullName: 'Nguyễn Văn A',
-            email: 'user@example.com',
-            isVerify: true,
-            phone: '0901234567',
-            role: 'user',
-            imageAvatar: '',
-            createdAt: 1704700000000,
-            updatedAt: 1704700000000,
-          },
+  @ApiOperation({ 
+    summary: 'Login with email/password',
+    description: 'Authenticate user with email and password. Returns custom token for client-side Firebase sign-in.',
+  })
+  @ApiResponse({ 
+    status: 200, 
+    description: 'Login successful',
+    type: LoginResponseDto,
+    example: {
+      success: true,
+      data: {
+        user: {
+          id: 'firebase-user-uid',
+          email: 'user@example.com',
+          displayName: 'John Doe',
+          role: 'CUSTOMER',
+          status: 'ACTIVE',
+          emailVerified: true,
         },
+        customToken: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...',
+        message: 'Đăng nhập thành công',
       },
     },
   })
-  @ApiResponse({ status: 401, description: 'Token không hợp lệ' })
-  @ApiResponse({ status: 404, description: 'Không tìm thấy người dùng' })
-  async login(@Body() _dto: LoginDto) {
-    // Note: Client should use Firebase Auth SDK to login first,
-    // then send the ID token here. This endpoint verifies the token
-    // and returns the user profile.
-    //
-    // For now, we'll treat this as a "verify token" endpoint.
-    // The actual email/password login happens on client with Firebase SDK.
-    //
-    // If you want backend-only login, you'd need Firebase Auth REST API.
+  @ApiResponse({ status: 401, description: 'Invalid credentials or account banned' })
+  async login(@Body() dto: LoginDto) {
+    const result = await this.authService.login(dto);
     return {
       success: true,
-      message:
-        'Sử dụng Firebase Auth SDK để đăng nhập, sau đó gọi /auth/verify-token với ID token',
-      data: null,
-    };
-  }
-
-  /**
-   * Verify Firebase ID Token and get user profile
-   *
-   * Called after client login with Firebase Auth SDK.
-   */
-  @Post('verify-token')
-  @Public()
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Xác thực ID Token và lấy thông tin user' })
-  @ApiResponse({ status: 200, description: 'Xác thực thành công' })
-  @ApiResponse({ status: 401, description: 'Token không hợp lệ' })
-  async verifyToken(@Body() dto: GoogleAuthDto) {
-    // Reuse GoogleAuthDto since it has idToken field
-    const result = await this.authService.verifyToken(dto.idToken);
-    return {
-      success: true,
-      message: 'Xác thực thành công',
       data: result,
     };
   }
 
   /**
-   * Google Sign-In
-   *
-   * Client signs in with Google SDK, then sends the ID token here.
-   * Backend verifies and creates user profile if new.
+   * POST /auth/google
+   * Sign in with Google
+   * 
+   * AUTH-004
    */
   @Post('google')
-  @Public()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Đăng nhập bằng Google' })
+  @ApiOperation({
+    summary: 'Google Sign-In',
+    description: 'Authenticate with Google ID token. Creates new user if first time, otherwise returns existing user.',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Đăng nhập Google thành công',
-    schema: {
-      example: {
-        success: true,
-        data: {
-          user: {
-            id: 'abc123',
-            fullName: 'Google User',
-            email: 'user@gmail.com',
-            isVerify: true,
-            phone: '',
-            role: 'user',
-            imageAvatar: 'https://...',
-            createdAt: 1704700000000,
-            updatedAt: 1704700000000,
-          },
-          isNewUser: true,
-        },
-      },
-    },
+    description: 'Google sign-in successful',
+    type: GoogleAuthResponseDto,
   })
-  @ApiResponse({ status: 401, description: 'Token không hợp lệ' })
+  @ApiResponse({ status: 401, description: 'Invalid Google token' })
   async googleSignIn(@Body() dto: GoogleAuthDto) {
-    const result = await this.authService.googleSignIn(dto.idToken);
+    const result = await this.authService.googleSignIn(dto);
     return {
       success: true,
-      message: result.isNewUser
-        ? 'Đăng ký mới thành công, vui lòng chọn vai trò'
-        : 'Đăng nhập thành công',
       data: result,
     };
   }
 
   /**
-   * Get current user profile
-   *
-   * Requires authentication.
+   * POST /auth/send-otp
+   * Send OTP to email for verification
+   * 
+   * AUTH-005
    */
-  @Get('profile')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Lấy thông tin profile' })
-  @ApiResponse({ status: 200, description: 'Thành công' })
-  @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
-  async getProfile(@CurrentUser() user: IUser) {
-    const profile = await this.authService.getProfile(user.uid);
-    return {
-      success: true,
-      data: profile,
-    };
-  }
-
-  /**
-   * Update user profile
-   *
-   * Requires authentication.
-   */
-  @Put('profile')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Cập nhật thông tin profile' })
-  @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
-  @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
-  async updateProfile(
-    @CurrentUser() user: IUser,
-    @Body() dto: UpdateProfileDto,
-  ) {
-    const profile = await this.authService.updateProfile(user.uid, dto);
-    return {
-      success: true,
-      message: 'Cập nhật thành công',
-      data: profile,
-    };
-  }
-
-  /**
-   * Update user role (Role Selection screen)
-   *
-   * Called after registration/Google sign-in to set user role.
-   */
-  @Put('role')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Cập nhật vai trò (user/seller/delivery)' })
-  @ApiResponse({ status: 200, description: 'Cập nhật thành công' })
-  @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
-  async updateRole(@CurrentUser() user: IUser, @Body() dto: UpdateRoleDto) {
-    const profile = await this.authService.updateRole(user.uid, dto.role);
-    return {
-      success: true,
-      message: 'Cập nhật vai trò thành công',
-      data: profile,
-    };
-  }
-
-  /**
-   * Delete user account
-   *
-   * Deletes both Firebase Auth and Firestore data.
-   */
-  @Delete('account')
-  @UseGuards(AuthGuard)
-  @ApiBearerAuth()
+  @Post('send-otp')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Xóa tài khoản' })
-  @ApiResponse({ status: 200, description: 'Xóa thành công' })
-  @ApiResponse({ status: 401, description: 'Chưa đăng nhập' })
-  async deleteAccount(@CurrentUser() user: IUser) {
-    await this.authService.deleteAccount(user.uid);
+  @ApiOperation({
+    summary: 'Send OTP to email',
+    description: 'Generate and send 6-digit OTP code to email. Valid for 5 minutes. Rate limited to 1 request per 60 seconds.',
+  })
+  @ApiResponse({ status: 200, description: 'OTP sent successfully' })
+  @ApiResponse({ status: 429, description: 'Too many requests. Please wait before requesting again.' })
+  async sendOTP(@Body() dto: SendOTPDto) {
+    const result = await this.authService.sendOTP(dto);
     return {
       success: true,
-      message: 'Xóa tài khoản thành công',
+      ...result,
+    };
+  }
+
+  /**
+   * POST /auth/verify-otp
+   * Verify OTP code
+   * 
+   * AUTH-005
+   */
+  @Post('verify-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Verify OTP code',
+    description: 'Verify 6-digit OTP code sent to email. Max 3 attempts.',
+  })
+  @ApiResponse({ status: 200, description: 'Email verified successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid OTP or expired' })
+  @ApiResponse({ status: 404, description: 'OTP not found' })
+  async verifyOTP(@Body() dto: VerifyOTPDto) {
+    const result = await this.authService.verifyOTP(dto);
+    return {
+      success: true,
+      ...result,
+    };
+  }
+
+  /**
+   * POST /auth/forgot-password
+   * Request password reset OTP
+   * 
+   * AUTH-006
+   */
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Request password reset',
+    description: 'Send OTP code to email for password reset.',
+  })
+  @ApiResponse({ status: 200, description: 'OTP sent successfully' })
+  @ApiResponse({ status: 404, description: 'Email not found' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    const result = await this.authService.forgotPassword(dto);
+    return {
+      success: true,
+      ...result,
+    };
+  }
+
+  /**
+   * POST /auth/reset-password
+   * Reset password with OTP
+   * 
+   * AUTH-006
+   */
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Reset password',
+    description: 'Reset password using OTP code sent to email.',
+  })
+  @ApiResponse({ status: 200, description: 'Password reset successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid OTP' })
+  @ApiResponse({ status: 404, description: 'OTP not found or user not found' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    const result = await this.authService.resetPassword(dto);
+    return {
+      success: true,
+      ...result,
+    };
+  }
+
+  /**
+   * PUT /auth/change-password
+   * Change password (authenticated)
+   * 
+   * AUTH-007
+   */
+  @Put('change-password')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('firebase-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Change password',
+    description: 'Change password for authenticated user. Requires current password.',
+  })
+  @ApiResponse({ status: 200, description: 'Password changed successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 400, description: 'Invalid old password' })
+  async changePassword(
+    @CurrentUser() user: any,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    const result = await this.authService.changePassword(user.uid, dto);
+    return {
+      success: true,
+      ...result,
+    };
+  }
+
+  /**
+   * POST /auth/logout
+   * Logout - remove FCM token
+   * 
+   * AUTH-008
+   */
+  @Post('logout')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('firebase-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Logout',
+    description: 'Remove FCM token from user devices. Note: Firebase Auth tokens cannot be invalidated server-side.',
+  })
+  @ApiResponse({ status: 200, description: 'Logged out successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async logout(
+    @CurrentUser() user: any,
+    @Body() dto: LogoutDto,
+  ) {
+    const result = await this.authService.logout(user.uid, dto);
+    return {
+      success: true,
+      ...result,
     };
   }
 }

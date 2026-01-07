@@ -1,63 +1,73 @@
-import {
-  IsEmail,
-  IsNotEmpty,
-  IsString,
-  MinLength,
-  MaxLength,
-  Matches,
-  IsOptional,
-} from 'class-validator';
+import { IsEmail, IsString, MinLength, MaxLength, IsEnum, IsOptional, Matches } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { UserRole } from '../entities';
 
 /**
- * DTO for user registration
- *
- * Validates all required fields for creating a new account.
+ * Register DTO
+ * 
+ * Request body for POST /auth/register
  */
 export class RegisterDto {
   @ApiProperty({
-    description: 'Full name of the user',
-    example: 'Nguyễn Văn A',
-    minLength: 2,
-    maxLength: 100,
-  })
-  @IsNotEmpty({ message: 'Họ tên không được để trống' })
-  @IsString({ message: 'Họ tên phải là chuỗi' })
-  @MinLength(2, { message: 'Họ tên phải có ít nhất 2 ký tự' })
-  @MaxLength(100, { message: 'Họ tên không được quá 100 ký tự' })
-  fullName: string;
-
-  @ApiProperty({
-    description: 'Email address (must be valid format)',
     example: 'user@example.com',
+    description: 'Email address',
   })
-  @IsNotEmpty({ message: 'Email không được để trống' })
   @IsEmail({}, { message: 'Email không hợp lệ' })
-  @MaxLength(255, { message: 'Email không được quá 255 ký tự' })
   email: string;
 
   @ApiProperty({
-    description: 'Password (min 6 chars, must contain letter and number)',
-    example: 'Password123',
+    example: 'Password123!',
+    description: 'Password (min 6 characters)',
     minLength: 6,
   })
-  @IsNotEmpty({ message: 'Mật khẩu không được để trống' })
-  @IsString({ message: 'Mật khẩu phải là chuỗi' })
+  @IsString()
   @MinLength(6, { message: 'Mật khẩu phải có ít nhất 6 ký tự' })
-  @MaxLength(50, { message: 'Mật khẩu không được quá 50 ký tự' })
-  @Matches(/^(?=.*[A-Za-z])(?=.*\d).+$/, {
-    message: 'Mật khẩu phải chứa ít nhất 1 chữ cái và 1 số',
-  })
   password: string;
 
+  @ApiProperty({
+    example: 'Nguyễn Văn A',
+    description: 'Display name',
+  })
+  @IsString()
+  @MinLength(2, { message: 'Tên phải có ít nhất 2 ký tự' })
+  @MaxLength(100, { message: 'Tên không được quá 100 ký tự' })
+  displayName: string;
+
   @ApiPropertyOptional({
-    description: 'Phone number (Vietnamese format)',
     example: '0901234567',
+    description: 'Phone number (Vietnamese format)',
   })
   @IsOptional()
-  @IsString({ message: 'Số điện thoại phải là chuỗi' })
-  @Matches(/^(0[3|5|7|8|9])+([0-9]{8})$/, {
-    message: 'Số điện thoại không hợp lệ (VD: 0901234567)',
-  })
+  @IsString()
+  @Matches(/^(0|\+84)[0-9]{9}$/, { message: 'Số điện thoại không hợp lệ' })
   phone?: string;
+
+  @ApiProperty({
+    enum: UserRole,
+    example: UserRole.CUSTOMER,
+    description: 'User role',
+  })
+  @IsEnum(UserRole, { message: 'Role không hợp lệ' })
+  role: UserRole;
+}
+
+/**
+ * Register Response DTO
+ */
+export class RegisterResponseDto {
+  @ApiProperty({
+    description: 'User data',
+  })
+  user: {
+    id: string;
+    email: string;
+    displayName: string;
+    role: UserRole;
+    status: string;
+  };
+
+  @ApiProperty({
+    description: 'Firebase custom token for client-side sign-in',
+  })
+  customToken: string;
 }

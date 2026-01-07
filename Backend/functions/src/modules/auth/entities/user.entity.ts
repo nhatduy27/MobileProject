@@ -1,80 +1,55 @@
+import { IBaseEntity } from '../../../core/database/interfaces';
+
 /**
- * User Entity - Firestore Document Structure
- *
- * Matches frontend User model exactly.
- * Collection: users/{userId}
+ * User Entity
+ * 
+ * Represents a user in the system.
+ * Stored in Firestore collection: users
  */
-export interface UserEntity {
-  /** Firebase UID (same as document ID) */
-  id: string;
-
-  /** User's full name */
-  fullName: string;
-
-  /** Email address */
+export interface UserEntity extends IBaseEntity {
   email: string;
-
-  /** Email/Phone verification status */
-  isVerify: boolean;
-
-  /** Phone number (Vietnamese format) */
-  phone: string;
-
-  /** User role: user (customer), seller, delivery (shipper) */
-  role: 'user' | 'seller' | 'delivery';
-
-  /** Avatar image URL */
-  imageAvatar: string;
-
-  /** Timestamp when user was created */
-  createdAt: number;
-
-  /** Timestamp when user was last updated */
-  updatedAt: number;
+  displayName: string;
+  phone?: string;
+  photoUrl?: string;
+  
+  // Role-based access control
+  role: UserRole;
+  
+  // Account status
+  status: UserStatus;
+  emailVerified: boolean;
+  
+  // Ban information (if status === BANNED)
+  bannedAt?: Date;
+  bannedBy?: string; // Admin UID
+  bannedReason?: string;
+  
+  // Unban information (if previously banned)
+  unbannedAt?: Date;
+  unbannedBy?: string; // Admin UID
+  
+  // Push notifications
+  fcmTokens?: string[]; // Array of FCM tokens for multiple devices
+  
+  // Additional metadata
+  lastLoginAt?: Date;
+  loginCount?: number;
 }
 
 /**
- * Create default UserEntity for new registration
+ * User Role Enum
  */
-export function createDefaultUserEntity(
-  id: string,
-  email: string,
-  fullName: string,
-): UserEntity {
-  const now = Date.now();
-  return {
-    id,
-    fullName,
-    email,
-    isVerify: false,
-    phone: '',
-    role: 'user', // Default role, will be updated in Role Selection
-    imageAvatar: '',
-    createdAt: now,
-    updatedAt: now,
-  };
+export enum UserRole {
+  CUSTOMER = 'CUSTOMER',
+  OWNER = 'OWNER',
+  SHIPPER = 'SHIPPER',
+  ADMIN = 'ADMIN',
 }
 
 /**
- * Create UserEntity for Google Sign-In
- * isVerify = true because Google already verified email
+ * User Status Enum
  */
-export function createGoogleUserEntity(
-  id: string,
-  email: string,
-  displayName: string,
-  photoUrl?: string,
-): UserEntity {
-  const now = Date.now();
-  return {
-    id,
-    fullName: displayName || 'Google User',
-    email: email || '',
-    isVerify: true, // Google email is already verified
-    phone: '',
-    role: 'user',
-    imageAvatar: photoUrl || '',
-    createdAt: now,
-    updatedAt: now,
-  };
+export enum UserStatus {
+  ACTIVE = 'ACTIVE',
+  BANNED = 'BANNED',
 }

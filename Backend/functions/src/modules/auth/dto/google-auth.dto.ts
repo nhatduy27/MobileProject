@@ -1,18 +1,49 @@
-import { IsNotEmpty, IsString } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsEnum, IsOptional } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { UserRole } from '../entities';
 
 /**
- * DTO for Google Sign-In authentication
- *
- * Client sends the Google ID Token received from Google Sign-In SDK.
- * Backend verifies this token with Firebase Auth.
+ * Google Auth DTO
+ * 
+ * Request body for POST /auth/google
  */
 export class GoogleAuthDto {
   @ApiProperty({
-    description: 'Google ID Token from Google Sign-In SDK',
-    example: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...',
+    description: 'Google ID Token from Firebase Auth client SDK',
+    example: 'eyJhbGciOiJSUzI1NiIsImtpZCI6IjE...',
   })
-  @IsNotEmpty({ message: 'ID Token không được để trống' })
-  @IsString({ message: 'ID Token phải là chuỗi' })
+  @IsString({ message: 'ID Token là bắt buộc' })
   idToken: string;
+
+  @ApiPropertyOptional({
+    enum: UserRole,
+    example: UserRole.CUSTOMER,
+    description: 'Role for new users (defaults to CUSTOMER)',
+  })
+  @IsOptional()
+  @IsEnum(UserRole, { message: 'Role không hợp lệ' })
+  role?: UserRole;
+}
+
+/**
+ * Google Auth Response DTO
+ */
+export class GoogleAuthResponseDto {
+  @ApiProperty({
+    description: 'User data',
+  })
+  user: {
+    id: string;
+    email: string;
+    displayName: string;
+    photoUrl?: string;
+    role: UserRole;
+    status: string;
+    emailVerified: boolean;
+  };
+
+  @ApiProperty({
+    description: 'Whether this was a new user registration',
+  })
+  isNewUser: boolean;
 }
