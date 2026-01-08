@@ -39,7 +39,7 @@ export class FirebaseService {
             const serviceAccount = require(serviceAccountPath);
             this._app = admin.initializeApp({
               credential: admin.credential.cert(serviceAccount),
-              storageBucket: `${serviceAccount.project_id}.appspot.com`,
+              storageBucket: `${serviceAccount.project_id}.firebasestorage.app`,
             });
             this.logger.log(`Firebase Admin SDK initialized with: ${serviceAccountPath}`);
           } else {

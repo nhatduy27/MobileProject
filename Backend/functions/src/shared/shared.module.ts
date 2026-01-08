@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { CoreModule } from '../core/core.module';
-import { OtpService } from './services';
+import { OtpService, StorageService } from './services';
 
 /**
  * Shared Module
@@ -10,7 +10,7 @@ import { OtpService } from './services';
  */
 @Module({
   imports: [CoreModule],
-  providers: [OtpService],
-  exports: [OtpService],
+  providers: [OtpService, StorageService],
+  exports: [OtpService, StorageService],
 })
 export class SharedModule {}

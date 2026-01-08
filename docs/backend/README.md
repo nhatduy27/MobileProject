@@ -111,17 +111,20 @@ Backend/
 
 ### 🔲 Planned
 
-| Module               | Description                   |
-| -------------------- | ----------------------------- |
-| `CategoriesModule`   | Quản lý danh mục (Admin)      |
-| `ShopsModule`        | CRUD shop, trạng thái mở/đóng |
-| `ProductsModule`     | CRUD sản phẩm của shop        |
-| `CartModule`         | Giỏ hàng khách hàng           |
-| `OrdersModule`       | Luồng đơn hàng                |
-| `VouchersModule`     | Mã giảm giá                   |
-| `WalletModule`       | Ví tiền Seller/Shipper        |
-| `ShipperModule`      | Nhận và giao đơn              |
-| `NotificationModule` | Push notifications            |
+| Module               | Status         | Description                               |
+| -------------------- | -------------- | ----------------------------------------- |
+| `CategoriesModule`   | ✅ Done        | Quản lý danh mục (Admin + Public)         |
+| `UsersModule`        | ✅ Done        | Profile, addresses, settings              |
+| `FavoritesModule`    | ✅ Done        | Favorite products                         |
+| `AdminModule`        | 🟡 Partial     | Categories ✅, Users ✅, Shops/Payouts ⛔ |
+| `ShopsModule`        | 🔴 Not Started | CRUD shop, trạng thái mở/đóng             |
+| `ProductsModule`     | 🔴 Not Started | CRUD sản phẩm của shop                    |
+| `CartModule`         | 🔴 Not Started | Giỏ hàng khách hàng                       |
+| `OrdersModule`       | 🔴 Not Started | Luồng đơn hàng                            |
+| `VouchersModule`     | 🔴 Not Started | Mã giảm giá                               |
+| `WalletModule`       | 🔴 Not Started | Ví tiền Seller/Shipper                    |
+| `ShipperModule`      | 🔴 Not Started | Nhận và giao đơn                          |
+| `NotificationModule` | 🔴 Not Started | Push notifications                        |
 
 ## 5. Database
 

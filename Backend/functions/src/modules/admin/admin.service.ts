@@ -126,7 +126,9 @@ export class AdminService {
     // 1. Kiểm tra user tồn tại và không phải admin
     const user = await this.usersRepository.findByIdOrThrow(userId);
 
-    if (user.roles.includes(UserRole.ADMIN)) {
+    // Check if user is admin (handle both role string and roles array)
+    const isAdmin = user.roles?.includes(UserRole.ADMIN) || (user as any).role === UserRole.ADMIN;
+    if (isAdmin) {
       throw new ForbiddenException('Không thể ban admin khác');
     }
 

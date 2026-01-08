@@ -10,8 +10,9 @@ import { AdminModule } from './modules/admin/admin.module';
 // Feature modules - EPIC 02
 import { AuthModule } from './modules/auth/auth.module';
 
-// Feature modules - sẽ import khi hoàn thành
-// import { UsersModule } from './modules/users/users.module';
+// Feature modules - EPIC 03
+import { UsersModule } from './modules/users/users.module';
+import { FavoritesModule } from './modules/favorites/favorites.module';
 // import { ShopsModule } from './modules/shops/shops.module';
 // import { ProductsModule } from './modules/products/products.module';
 // import { OrdersModule } from './modules/orders/orders.module';
@@ -38,8 +39,9 @@ import { AuthModule } from './modules/auth/auth.module';
     CategoriesModule,
     AdminModule,
 
-    // EPIC 03: User Management (uncomment khi hoàn thành)
-    // UsersModule,
+    // EPIC 03: User Management ✅
+    UsersModule,
+    FavoritesModule,
 
     // Future EPICs
     // ShopsModule,

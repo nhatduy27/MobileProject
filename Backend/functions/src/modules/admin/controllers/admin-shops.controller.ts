@@ -44,7 +44,7 @@ export class AdminShopsController {
    * ADMIN-012: List/Manage Shops
    */
   @Get()
-  @ApiOperation({ summary: 'Lấy danh sách shops' })
+  @ApiOperation({ summary: 'Lấy danh sách shops (⛔ BLOCKED — cần: ShopModule)' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'status', required: false, enum: ShopAdminStatus })
@@ -64,7 +64,7 @@ export class AdminShopsController {
    * Lấy chi tiết shop
    */
   @Get(':shopId')
-  @ApiOperation({ summary: 'Lấy chi tiết shop' })
+  @ApiOperation({ summary: 'Lấy chi tiết shop (⛔ BLOCKED — cần: ShopModule)' })
   @ApiResponse({ status: 200, description: 'Chi tiết shop' })
   @ApiResponse({ status: 404, description: 'Shop không tồn tại' })
   async getShop(@Param('shopId') shopId: string) {
@@ -82,7 +82,7 @@ export class AdminShopsController {
    * ADMIN-012: List/Manage Shops
    */
   @Put(':shopId/status')
-  @ApiOperation({ summary: 'Suspend/Ban shop' })
+  @ApiOperation({ summary: 'Suspend/Ban shop (⛔ BLOCKED — cần: ShopModule)' })
   @ApiResponse({ status: 200, description: 'Cập nhật status thành công' })
   @ApiResponse({ status: 400, description: 'Dữ liệu không hợp lệ' })
   @ApiResponse({ status: 404, description: 'Shop không tồn tại' })
