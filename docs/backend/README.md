@@ -98,16 +98,36 @@ Backend/
 - ✅ Change Password (protected)
 - ✅ Logout (protected)
 
-**Features:**
+📖 **[Authentication Guide](AUTH_GUIDE.md)**
 
-- Firebase Authentication integration
-- Custom token generation
-- Email verification with SendGrid
-- OTP system (rate limiting, expiry, max attempts)
-- Phone number E.164 normalization
-- Role-based access control
+---
 
-📖 **[Authentication Guide](AUTH_GUIDE.md)** - Chi tiết cách integrate với frontend
+#### `UsersModule` - **COMPLETED**
+
+**16 User Profile APIs:**
+
+- ✅ GET/PUT /me (profile)
+- ✅ POST /me/avatar (upload)
+- ✅ DELETE /me (delete account)
+- ✅ CRUD /me/addresses
+- ✅ GET/PUT /me/settings
+- ✅ PUT /me/fcm-token
+- ✅ CRUD /me/favorites/products
+
+📖 **[User Guide](USER_GUIDE.md)**
+
+---
+
+#### `AdminModule` - **PARTIAL**
+
+- ✅ Users management (list, ban/unban)
+- ✅ Categories management (CRUD)
+- ⛔ Shops management (blocked by ShopModule)
+- ⛔ Payouts management (blocked by WalletModule)
+
+📖 **[Admin Guide](ADMIN_GUIDE.md)**
+
+---
 
 ### 🔲 Planned
 
@@ -138,9 +158,14 @@ Xem chi tiết:
 
 ## 6. API Reference
 
-- **[Authentication Guide](AUTH_GUIDE.md)** - 📖 Hướng dẫn chi tiết authentication flow
-- [OpenAPI Specification](../common/OPENAPI.md) - Danh sách endpoints với status
-- Swagger UI: http://localhost:3000/api/docs
+| Document | Description |
+|----------|-------------|
+| [Authentication Guide](AUTH_GUIDE.md) | Auth flow chi tiết |
+| [User Guide](USER_GUIDE.md) | User profile, addresses, favorites |
+| [Admin Guide](ADMIN_GUIDE.md) | Admin management APIs |
+| [Test Accounts](TEST_ACCOUNTS.md) | Accounts có sẵn để test |
+| [OpenAPI Specification](../common/OPENAPI.md) | Danh sách endpoints với status |
+| Swagger UI | http://localhost:3000/api/docs |
 
 ### Authentication
 
