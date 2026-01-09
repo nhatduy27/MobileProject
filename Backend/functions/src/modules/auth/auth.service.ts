@@ -75,7 +75,7 @@ export class AuthService {
       // Note: Firebase Admin SDK doesn't have direct password verification
       // We use signInWithEmailAndPassword via REST API
       const signInUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.FIREBASE_API_KEY}`;
-      
+
       const response = await fetch(signInUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

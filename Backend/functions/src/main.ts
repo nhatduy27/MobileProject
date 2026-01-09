@@ -43,7 +43,17 @@ async function bootstrap() {
     .setTitle('KTX Delivery API')
     .setDescription('API documentation for KTX Delivery App')
     .setVersion('1.0')
-    .addBearerAuth()
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'firebase-auth', // @ApiBearerAuth('firebase-auth')
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, config);

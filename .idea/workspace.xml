@@ -4,7 +4,14 @@
     <option name="autoReloadType" value="NONE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="06c3b686-a663-4097-a1a0-6ce6cee04ec9" name="Changes" comment="" />
+    <list default="true" id="06c3b686-a663-4097-a1a0-6ce6cee04ec9" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gradle/config.properties" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/config.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/deviceStreaming.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/functions/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/functions/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/functions/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/functions/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/functions/src/app.module.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/functions/src/app.module.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Backend/functions/src/modules/auth/auth.service.ts" beforeDir="false" afterPath="$PROJECT_DIR$/Backend/functions/src/modules/auth/auth.service.ts" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -16,10 +23,22 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 2
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "ninhbilly123"
+  }
 }]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/nhatduy27/MobileProject",
+    "accountId": "346ec97a-b24c-4f35-983d-9f872c1a14c9"
+  }
+}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 2
+}</component>
   <component name="ProjectId" id="37qcXUrKi8iHB7UfH1jYkdX6SwB" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -29,13 +48,15 @@
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager": "true",
     "RunOnceActivity.cidr.known.project.marker": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "android.gradle.sync.needed": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "develop"
+    "git-widget-placeholder": "develop",
+    "ignore.virus.scanning.warn.message": "true"
   }
 }]]></component>
   <component name="TaskManager">
