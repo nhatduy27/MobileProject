@@ -10,11 +10,7 @@ export class FirestoreShopsRepository implements IShopsRepository {
 
   constructor(@Inject('FIRESTORE') private readonly firestore: Firestore) {}
 
-  async create(
-    ownerId: string,
-    ownerName: string,
-    data: CreateShopDto,
-  ): Promise<ShopEntity> {
+  async create(ownerId: string, ownerName: string, data: CreateShopDto): Promise<ShopEntity> {
     const shopRef = this.firestore.collection(this.collection).doc();
     const now = Timestamp.now();
     const trialEndDate = new Date();
@@ -85,10 +81,14 @@ export class FirestoreShopsRepository implements IShopsRepository {
   }
 
   async toggleStatus(shopId: string, isOpen: boolean): Promise<void> {
-    await this.firestore.collection(this.collection).doc(shopId).update({
-      isOpen,
-      updatedAt: FieldValue.serverTimestamp(),
-    });
+    await this.firestore
+      .collection(this.collection)
+      .doc(shopId)
+      .update({
+        isOpen,
+        status: isOpen ? ShopStatus.OPEN : ShopStatus.CLOSED,
+        updatedAt: FieldValue.serverTimestamp(),
+      });
   }
 
   async findAll(params: {
