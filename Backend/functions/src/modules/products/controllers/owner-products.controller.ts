@@ -8,15 +8,31 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiConsumes,
+} from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from '../services';
-import { CreateProductDto, UpdateProductDto, ToggleAvailabilityDto, ProductFilterDto } from '../dto';
-import { FirebaseAuthGuard } from '../../../common/guards/firebase-auth.guard';
-import { RolesGuard } from '../../../common/guards/roles.guard';
-import { Roles } from '../../../common/decorators/roles.decorator';
-import { CurrentUser } from '../../../common/decorators/current-user.decorator';
-import { UserRole } from '../../../common/enums/user-role.enum';
+import {
+  CreateProductDto,
+  UpdateProductDto,
+  ToggleAvailabilityDto,
+  ProductFilterDto,
+} from '../dto';
+import { AuthGuard } from '../../../core/guards/auth.guard';
+import { RolesGuard } from '../../../core/guards/roles.guard';
+import { Roles } from '../../../core/decorators/roles.decorator';
+import { CurrentUser } from '../../../core/decorators/current-user.decorator';
+import { UserRole } from '../../../core/interfaces/user.interface';
 
 /**
  * Owner Products Controller
@@ -30,7 +46,7 @@ import { UserRole } from '../../../common/enums/user-role.enum';
  */
 @ApiTags('Owner Products')
 @ApiBearerAuth()
-@UseGuards(FirebaseAuthGuard, RolesGuard)
+@UseGuards(AuthGuard, RolesGuard)
 @Roles(UserRole.OWNER)
 @Controller('owner/products')
 export class OwnerProductsController {
@@ -68,6 +84,10 @@ export class OwnerProductsController {
           rating: 0,
           totalRatings: 0,
           soldCount: 0,
+          sortOrder: 0,
+          isDeleted: false,
+          createdAt: '2026-01-11T10:00:00.000Z',
+          updatedAt: '2026-01-11T10:00:00.000Z',
         },
       },
     },
@@ -101,10 +121,23 @@ export class OwnerProductsController {
           products: [
             {
               id: 'prod_abc',
+              shopId: 'shop_123',
+              shopName: 'Quán Phở Việt',
               name: 'Cơm sườn nướng',
+              description: 'Cơm sườn nướng mật ong + trứng',
               price: 35000,
+              categoryId: 'cat_1',
+              categoryName: 'Cơm',
+              imageUrl: 'https://...',
               isAvailable: true,
+              preparationTime: 15,
+              rating: 0,
+              totalRatings: 0,
               soldCount: 50,
+              sortOrder: 0,
+              isDeleted: false,
+              createdAt: '2026-01-11T10:00:00.000Z',
+              updatedAt: '2026-01-11T10:00:00.000Z',
             },
           ],
           total: 15,
@@ -132,6 +165,31 @@ export class OwnerProductsController {
   @ApiResponse({
     status: 200,
     description: 'Product details',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          id: 'prod_abc',
+          shopId: 'shop_123',
+          shopName: 'Quán Phở Việt',
+          name: 'Cơm sườn nướng',
+          description: 'Cơm sườn nướng mật ong + trứng',
+          price: 35000,
+          categoryId: 'cat_1',
+          categoryName: 'Cơm',
+          imageUrl: 'https://...',
+          isAvailable: true,
+          preparationTime: 15,
+          rating: 0,
+          totalRatings: 0,
+          soldCount: 0,
+          sortOrder: 0,
+          isDeleted: false,
+          createdAt: '2026-01-11T10:00:00.000Z',
+          updatedAt: '2026-01-11T10:00:00.000Z',
+        },
+      },
+    },
   })
   async getMyProduct(@CurrentUser('uid') ownerId: string, @Param('id') productId: string) {
     return this.productsService.getMyProduct(ownerId, productId);
@@ -207,5 +265,65 @@ export class OwnerProductsController {
   async deleteProduct(@CurrentUser('uid') ownerId: string, @Param('id') productId: string) {
     await this.productsService.deleteProduct(ownerId, productId);
     return { message: 'Xóa sản phẩm thành công' };
+  }
+
+  /**
+   * POST /owner/products/:id/image
+   * Upload product image
+   *
+   * PROD-005
+   */
+  @Post(':id/image')
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Upload product image',
+    description: 'Upload product image. Accepts JPEG/PNG. Max 5MB.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Image uploaded successfully',
+    schema: {
+      example: {
+        success: true,
+        data: {
+          imageUrl: 'https://firebasestorage.googleapis.com/...',
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid file',
+  })
+  async uploadProductImage(
+    @CurrentUser('uid') ownerId: string,
+    @Param('id') productId: string,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded');
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!allowedTypes.includes(file.mimetype)) {
+      throw new BadRequestException('Only JPEG and PNG images are allowed');
+    }
+
+    // Validate file size (5MB max)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      throw new BadRequestException('File size must not exceed 5MB');
+    }
+
+    const imageUrl = await this.productsService.uploadProductImage(
+      ownerId,
+      productId,
+      file.buffer,
+      file.mimetype,
+    );
+
+    return { imageUrl };
   }
 }

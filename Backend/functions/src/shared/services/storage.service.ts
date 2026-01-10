@@ -53,6 +53,51 @@ export class StorageService {
   }
 
   /**
+   * Upload product image to Firebase Storage
+   * 
+   * @param shopId - Shop ID
+   * @param productId - Product ID
+   * @param buffer - Image buffer
+   * @param mimetype - Image mime type (image/jpeg, image/png)
+   * @returns Public URL of uploaded image
+   */
+  async uploadProductImage(
+    shopId: string,
+    productId: string,
+    buffer: Buffer,
+    mimetype: string,
+  ): Promise<string> {
+    const bucketName = 'foodappproject-7c136.firebasestorage.app';
+    const bucket = this.firebase.storage.bucket(bucketName);
+
+    // Generate filename: products/{shopId}/{productId}.{ext}
+    const ext = mimetype === 'image/png' ? 'png' : 'jpg';
+    const filename = `products/${shopId}/${productId}.${ext}`;
+
+    // Generate download token
+    const downloadToken = crypto.randomBytes(16).toString('hex');
+
+    // Upload file
+    const file = bucket.file(filename);
+    await file.save(buffer, {
+      metadata: {
+        contentType: mimetype,
+        metadata: {
+          firebaseStorageDownloadTokens: downloadToken,
+        },
+      },
+    });
+
+    // Make file publicly accessible
+    await file.makePublic();
+
+    // Return public URL
+    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(filename)}?alt=media&token=${downloadToken}`;
+
+    return publicUrl;
+  }
+
+  /**
    * Delete avatar image from Firebase Storage
    * 
    * @param avatarUrl - Full URL of avatar to delete

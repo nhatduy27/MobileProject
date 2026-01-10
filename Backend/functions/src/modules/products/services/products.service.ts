@@ -3,11 +3,13 @@ import {
   Inject,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { IProductsRepository } from '../interfaces';
 import { ProductEntity } from '../entities';
 import { CreateProductDto, UpdateProductDto, ProductFilterDto, ToggleAvailabilityDto } from '../dto';
 import { ShopsService } from '../../shops/services/shops.service';
+import { StorageService } from '../../../shared/services/storage.service';
 
 @Injectable()
 export class ProductsService {
@@ -15,6 +17,7 @@ export class ProductsService {
     @Inject('PRODUCTS_REPOSITORY')
     private readonly productsRepository: IProductsRepository,
     private readonly shopsService: ShopsService,
+    private readonly storageService: StorageService,
   ) {}
 
   // ==================== Owner Operations ====================
@@ -200,5 +203,31 @@ export class ProductsService {
     },
   ): Promise<void> {
     await this.productsRepository.updateStats(productId, stats);
+  }
+
+  /**
+   * Upload product image
+   * PROD-005
+   */
+  async uploadProductImage(
+    ownerId: string,
+    productId: string,
+    buffer: Buffer,
+    mimetype: string,
+  ): Promise<string> {
+    const product = await this.getMyProduct(ownerId, productId);
+
+    // Upload to Storage
+    const imageUrl = await this.storageService.uploadProductImage(
+      product.shopId,
+      productId,
+      buffer,
+      mimetype,
+    );
+
+    // Update product imageUrl
+    await this.productsRepository.update(productId, { imageUrl });
+
+    return imageUrl;
   }
 }
