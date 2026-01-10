@@ -1,7 +1,6 @@
 package com.example.foodapp.authentication.signup
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -21,14 +20,14 @@ import kotlinx.coroutines.launch
 sealed class SignUpState {
     object Idle : SignUpState()
     object Loading : SignUpState()
-    object Success : SignUpState()  // Không cần userId nữa
+    object Success : SignUpState()
     data class Error(val message: String) : SignUpState()
 }
 
 sealed class GoogleSignInState {
     object Idle : GoogleSignInState()
     object Loading : GoogleSignInState()
-    object Success : GoogleSignInState()  // Không cần userId nữa
+    object Success : GoogleSignInState()
     data class Error(val message: String) : GoogleSignInState()
 }
 

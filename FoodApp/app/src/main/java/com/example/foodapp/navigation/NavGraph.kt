@@ -14,13 +14,17 @@ import com.example.foodapp.authentication.login.LoginScreen
 import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
 import com.example.foodapp.pages.client.profile.UserProfileScreen
 import com.example.foodapp.authentication.roleselection.RoleSelectionScreen
-import com.example.foodapp.authentication.forgotpassword.NewPasswordScreen
+import com.example.foodapp.authentication.forgotpassword.emailinput.ForgotPasswordEmailScreen
+import com.example.foodapp.authentication.forgotpassword.verifyotp.ForgotPasswordOTPScreen
+import com.example.foodapp.authentication.forgotpassword.resetpassword.ResetPasswordScreen
 import com.example.foodapp.authentication.otpverification.OtpVerificationScreen
 import com.example.foodapp.authentication.signup.SignUpScreen
 import com.example.foodapp.presentation.view.user.home.UserHomeScreen
 import com.example.foodapp.pages.client.cart.CartScreen
 import com.example.foodapp.pages.client.favorites.FavoritesScreen
 import com.example.foodapp.pages.client.notifications.UserNotificationsScreen
+
+
 
 import com.google.firebase.auth.FirebaseAuth
 import androidx.compose.ui.platform.LocalContext
@@ -39,7 +43,9 @@ sealed class Screen(val route: String) {
     object UserNotifications : Screen("user_notifications")
     object ShipperHome : Screen("shipper_home")
     object OwnerHome : Screen("owner_home")
-    object NewPasswordScreen : Screen("new_password")
+    object InputEmail : Screen("input_email")
+    object OtpResetPassword :Screen ("otp_resetpassword")
+    object ResetPassword :Screen ("resetpassword")
 }
 
 @Composable
@@ -173,7 +179,7 @@ fun FoodAppNavHost(
                     }
                 },
                 onForgotPasswordClicked = {
-                    navController.navigate(Screen.NewPasswordScreen.route)
+                    navController.navigate(Screen.InputEmail.route)
                 },
                 onBackClicked = { navController.navigateUp() },
                 onSignUpClicked = { navController.navigate(Screen.SignUp.route) },
@@ -184,15 +190,60 @@ fun FoodAppNavHost(
         }
 
 
-        composable(Screen.NewPasswordScreen.route) {
-            NewPasswordScreen(
+        composable(Screen.InputEmail.route) {
+            ForgotPasswordEmailScreen(
                 onBackClicked = {
-                    navController.navigate(Screen.Login.route) {
+                    navController.navigateUp()
+                },
+
+                onSuccess = {
+                    navController.navigate(Screen.OtpResetPassword.route)
+                }
+            )
+        }
+
+        composable(Screen.OtpResetPassword.route) {
+            ForgotPasswordOTPScreen(
+                onBackClicked = {
+                    navController.navigate(Screen.Login.route){
                         popUpTo(0) { inclusive = true }
                     }
                 },
-                onResetEmailSent = {
-                    navController.navigate(Screen.Login.route) {
+
+                onSuccess = {
+                    navController.navigate(Screen.Login.route){
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.OtpResetPassword.route) {
+            ForgotPasswordOTPScreen(
+                onBackClicked = {
+                    navController.navigate(Screen.Login.route){
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+
+                onSuccess = {
+                    navController.navigate(Screen.ResetPassword.route){
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.ResetPassword.route) {
+            ResetPasswordScreen (
+                onBackClicked = {
+                    navController.navigate(Screen.Login.route){
+                        popUpTo(0) { inclusive = true }
+                    }
+                },
+
+                onSuccess = {
+                    navController.navigate(Screen.Login.route){
                         popUpTo(0) { inclusive = true }
                     }
                 }

@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, Length } from 'class-validator';
+import { IsEmail, IsString, MinLength } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 /**
@@ -27,14 +27,6 @@ export class ResetPasswordDto {
   })
   @IsEmail({}, { message: 'Email không hợp lệ' })
   email: string;
-
-  @ApiProperty({
-    example: '123456',
-    description: '6-digit OTP code',
-  })
-  @IsString()
-  @Length(6, 6, { message: 'Mã OTP phải có 6 ký tự' })
-  code: string;
 
   @ApiProperty({
     example: 'NewPassword123!',

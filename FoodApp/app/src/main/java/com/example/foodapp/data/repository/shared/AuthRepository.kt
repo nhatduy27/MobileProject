@@ -15,7 +15,7 @@ class AuthRepository {
         email: String,
         displayName: String,
         password: String
-    ): ApiResult<ApiResponse> {  // ← Sửa: ApiResult<ApiResponse>
+    ): ApiResult<ApiResponse> {
         return try {
             withContext(Dispatchers.IO) {
                 val request = RegisterRequest(email, displayName, password)
@@ -48,7 +48,7 @@ class AuthRepository {
     suspend fun resetPassword(
         email: String,
         newPassword: String
-    ): ApiResult<ApiResponse> {  // ← Sửa: ApiResult<ApiResponse>
+    ): ApiResult<ApiResponse> {
         return try {
             withContext(Dispatchers.IO) {
                 val request = ResetPasswordRequest(email, newPassword)

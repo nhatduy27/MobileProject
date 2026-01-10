@@ -116,7 +116,11 @@ data class ResetPasswordRequest(
     val newPassword: String
 )
 
-data class ResetPasswordData @JvmOverloads constructor(
+data class ResetPasswordResponse @JvmOverloads constructor(
+
+    @SerializedName("success")
+    val success: Boolean,
+
     @SerializedName("message")
     val message: String = ""
 )

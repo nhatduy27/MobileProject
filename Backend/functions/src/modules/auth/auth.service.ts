@@ -348,15 +348,14 @@ export class AuthService {
    * AUTH-005
    */
   async verifyOTP(dto: VerifyOTPDto) {
-    const { email, code } = dto;
+    const { email, code, type } = dto;
 
     // Find latest OTP
-    const otp = await this.otpRepository.findLatestByEmail(email, OTPType.EMAIL_VERIFICATION);
+    const otp = await this.otpRepository.findLatestByEmail(email, type);
 
     if (!otp) {
       throw new NotFoundException('Không tìm thấy OTP. Vui lòng gửi lại OTP.');
     }
-
     // Check if expired (convert Firestore Timestamp to Date)
     const expiresAt = otp.expiresAt instanceof Date 
       ? otp.expiresAt 
@@ -389,7 +388,7 @@ export class AuthService {
     }
 
     // Delete all OTPs for this email
-    await this.otpRepository.deleteByEmail(email, OTPType.EMAIL_VERIFICATION);
+    await this.otpRepository.deleteByEmail(email, type);
 
     return {
       message: 'Xác thực email thành công',
@@ -403,12 +402,6 @@ export class AuthService {
    */
   async forgotPassword(dto: ForgotPasswordDto) {
     const { email } = dto;
-
-    // Check if user exists
-    const user = await this.usersRepository.findByEmail(email);
-    if (!user) {
-      throw new NotFoundException('Email không tồn tại trong hệ thống');
-    }
 
     // Check rate limiting
     const hasRecent = await this.otpRepository.hasRecentRequest(
@@ -453,35 +446,7 @@ export class AuthService {
    * AUTH-006
    */
   async resetPassword(dto: ResetPasswordDto) {
-    const { email, code, newPassword } = dto;
-
-    // Find OTP
-    const otp = await this.otpRepository.findLatestByEmail(email, OTPType.PASSWORD_RESET);
-
-    if (!otp) {
-      throw new NotFoundException('Không tìm thấy OTP. Vui lòng gửi lại yêu cầu.');
-    }
-
-    // Check expiry (convert Firestore Timestamp to Date)
-    const expiresAt = otp.expiresAt instanceof Date 
-      ? otp.expiresAt 
-      : (otp.expiresAt as any).toDate();
-    
-    if (new Date() > expiresAt) {
-      throw new BadRequestException('OTP đã hết hạn. Vui lòng gửi lại yêu cầu.');
-    }
-
-    // Check attempts
-    if (otp.attempts >= OTP_CONFIG.MAX_ATTEMPTS) {
-      throw new BadRequestException('Đã vượt quá số lần thử. Vui lòng gửi lại yêu cầu.');
-    }
-
-    // Verify code
-    if (otp.code !== code) {
-      if (!otp.id) throw new Error('OTP ID missing');
-      await this.otpRepository.incrementAttempts(otp.id);
-      throw new BadRequestException('Mã OTP không chính xác');
-    }
+    const { email, newPassword } = dto;
 
     // Find user
     const user = await this.usersRepository.findByEmail(email);
@@ -493,11 +458,6 @@ export class AuthService {
     await this.firebaseService.auth.updateUser(user.id, {
       password: newPassword,
     });
-
-    // Mark OTP as verified and delete
-    if (!otp.id) throw new Error('OTP ID missing');
-    await this.otpRepository.markVerified(otp.id);
-    await this.otpRepository.deleteByEmail(email, OTPType.PASSWORD_RESET);
 
     return {
       message: 'Đặt lại mật khẩu thành công',
@@ -511,10 +471,7 @@ export class AuthService {
    */
   async changePassword(userId: string, dto: ChangePasswordDto) {
     const { newPassword } = dto;
-    // Note: Firebase Admin SDK doesn't have direct password verification
-    // Client should reauthenticate before calling this endpoint
-
-    // Get user
+    
     const user = await this.usersRepository.findById(userId);
     if (!user) {
       throw new NotFoundException('User không tồn tại');

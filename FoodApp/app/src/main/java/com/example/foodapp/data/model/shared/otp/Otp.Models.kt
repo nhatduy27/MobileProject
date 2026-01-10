@@ -23,21 +23,21 @@ data class ApiResponse<T>(
     val error: String? = null
 )
 
+// Enum cho OTP Type
+enum class OTPType {
+    @SerializedName("EMAIL_VERIFICATION")
+    EMAIL_VERIFICATION,
+
+    @SerializedName("PASSWORD_RESET")
+    PASSWORD_RESET
+}
+
 // Request models
 data class SendOtpRequest(
     @SerializedName("email")
     val email: String
 )
 
-data class VerifyOtpRequest(
-    @SerializedName("email")
-    val email: String,
-
-    @SerializedName("code")
-    val code: String
-)
-
-// Response models
 data class SendOtpResponse(
     @SerializedName("success")
     val success: Boolean,
@@ -49,6 +49,18 @@ data class SendOtpResponse(
     val expiresAt: String
 )
 
+data class VerifyOtpRequest(
+    @SerializedName("email")
+    val email: String,
+
+    @SerializedName("code")
+    val code: String,
+
+    @SerializedName("type")
+    val otpType: OTPType
+)
+
+// Response models
 data class VerifyOtpResponse(
     @SerializedName("success")
     val success: Boolean,
@@ -58,13 +70,18 @@ data class VerifyOtpResponse(
 
 )
 
-data class VerificationStatusResponse(
+data class SendOtpResetPasswordRequest(
     @SerializedName("email")
-    val email: String,
+    val email: String
+)
 
-    @SerializedName("isVerified")
-    val isVerified: Boolean,
+data class SendOtpResetPasswordResponse(
+    @SerializedName("success")
+    val success: Boolean,
 
-    @SerializedName("verifiedAt")
-    val verifiedAt: String? = null
+    @SerializedName("message")
+    val message: String,
+
+    @SerializedName("expiresAt")
+    val expiresAt: String
 )

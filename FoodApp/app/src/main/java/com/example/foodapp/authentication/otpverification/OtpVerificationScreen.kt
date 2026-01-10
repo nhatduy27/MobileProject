@@ -1,10 +1,11 @@
 package com.example.foodapp.authentication.otpverification
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -14,12 +15,16 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -76,8 +81,7 @@ fun OtpVerificationContent(
     onResendOtp: () -> Unit,
     onBackClicked: () -> Unit
 ) {
-    var otpCode by rememberSaveable { mutableStateOf("") }
-    val keyboardController = LocalSoftwareKeyboardController.current
+    var otpValue by rememberSaveable { mutableStateOf("") }
 
     val isLoading = otpState is OtpVerificationState.Verifying ||
             otpState is OtpVerificationState.Sending
@@ -85,6 +89,13 @@ fun OtpVerificationContent(
     val errorMessage = when (otpState) {
         is OtpVerificationState.Error -> otpState.message
         else -> null
+    }
+
+    // Auto submit when OTP is complete
+    LaunchedEffect(otpValue) {
+        if (otpValue.length == 6 && !isLoading && !isSuccess) {
+            onVerifyOtp(otpValue)
+        }
     }
 
     Column(
@@ -95,25 +106,29 @@ fun OtpVerificationContent(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Back Button
-        IconButton(
-            onClick = {
-                if (!isLoading) onBackClicked()
-            },
-            enabled = !isLoading,
-            modifier = Modifier.align(Alignment.Start)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start
         ) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Quay lại",
-                tint = if (isLoading) Color.Gray else Color.Black
-            )
+            IconButton(
+                onClick = {
+                    if (!isLoading) onBackClicked()
+                },
+                enabled = !isLoading
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Quay lại",
+                    tint = if (isLoading) Color.Gray else Color.Black
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
         // Title
         Text(
-            "Xác thực Email",
+            "Xác thực OTP",
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black
@@ -123,7 +138,7 @@ fun OtpVerificationContent(
 
         // Email display
         Text(
-            "Chúng tôi đã gửi mã OTP 6 số đến:",
+            "Mã OTP 6 số đã được gửi đến:",
             fontSize = 16.sp,
             color = Color(0xFF666666)
         )
@@ -148,41 +163,16 @@ fun OtpVerificationContent(
             )
         }
 
-        // OTP Input
-        TextField(
-            value = otpCode,
-            onValueChange = { newValue ->
+        // OTP Input với 6 ô riêng biệt
+        SixDigitOtpInput(
+            otpText = otpValue,
+            onOtpTextChange = { newValue ->
                 if (newValue.length <= 6 && newValue.all { it.isDigit() }) {
-                    otpCode = newValue
-                    if (newValue.length == 6) {
-                        onVerifyOtp(newValue)
-                        keyboardController?.hide()
-                    }
+                    otpValue = newValue
                 }
             },
-            modifier = Modifier.fillMaxWidth(),
-            placeholder = {
-                Text("Nhập mã OTP 6 số", color = Color.Gray)
-            },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    if (otpCode.length == 6) onVerifyOtp(otpCode)
-                    keyboardController?.hide()
-                }
-            ),
-            shape = RoundedCornerShape(12.dp),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFFFAFAFA),
-                unfocusedContainerColor = Color(0xFFFAFAFA),
-                focusedIndicatorColor = Color.Transparent,
-                unfocusedIndicatorColor = Color.Transparent
-            ),
-            enabled = !isLoading && !isSuccess
+            enabled = !isLoading && !isSuccess,
+            modifier = Modifier.padding(vertical = 16.dp)
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -212,7 +202,7 @@ fun OtpVerificationContent(
                         enabled = !isLoading,
                         onClick = {
                             onResendOtp()
-                            otpCode = ""
+                            otpValue = ""
                         }
                     )
                 )
@@ -224,15 +214,18 @@ fun OtpVerificationContent(
         // Verify Button
         Button(
             onClick = {
-                if (otpCode.length == 6 && !isLoading && !isSuccess) {
-                    onVerifyOtp(otpCode)
+                if (otpValue.length == 6 && !isLoading && !isSuccess) {
+                    onVerifyOtp(otpValue)
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
-            enabled = otpCode.length == 6 && !isLoading && !isSuccess,
-            shape = RoundedCornerShape(28.dp)
+            enabled = otpValue.length == 6 && !isLoading && !isSuccess,
+            shape = RoundedCornerShape(28.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFF6B35)
+            )
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
@@ -257,6 +250,269 @@ fun OtpVerificationContent(
             fontSize = 14.sp,
             color = Color(0xFF999999),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
+    }
+}
+@Composable
+fun SixDigitOtpInput(
+    otpText: String,
+    onOtpTextChange: (String) -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
+) {
+    val focusRequesters = remember { List(6) { FocusRequester() } }
+
+    // Theo dõi độ dài OTP trước đó
+    val previousOtpLength = remember { mutableStateOf(0) }
+
+    // Tự động focus khi nhập hoặc xóa
+    LaunchedEffect(otpText) {
+        val currentLength = otpText.length
+
+        if (currentLength > previousOtpLength.value) {
+            // Đang nhập - focus ô tiếp theo
+            if (currentLength < 6) {
+                focusRequesters[currentLength].requestFocus()
+            }
+        } else if (currentLength < previousOtpLength.value) {
+            // Đang xóa - focus ô trước đó (thụt lùi)
+            if (currentLength < 6) {
+                focusRequesters[currentLength].requestFocus()
+            }
+        }
+
+        previousOtpLength.value = currentLength
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = modifier
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            for (index in 0 until 6) {
+                OtpDigitBox(
+                    index = index,
+                    value = otpText.getOrNull(index)?.toString() ?: "",
+                    focusRequester = focusRequesters[index],
+                    onValueChange = { newChar ->
+                        if (newChar.isNotEmpty()) {
+                            // Nhập số
+                            val newOtp = buildString {
+                                append(otpText.take(index))
+                                append(newChar)
+                                append(otpText.drop(index + 1))
+                            }.take(6)
+                            onOtpTextChange(newOtp)
+                        } else {
+                            // Xóa (backspace)
+                            if (index > 0) {
+                                // Xóa ký tự tại vị trí index-1
+                                val newOtp = buildString {
+                                    append(otpText.take(index - 1))
+                                    append(otpText.drop(index))
+                                }
+                                onOtpTextChange(newOtp)
+                            } else if (index == 0) {
+                                // Xóa ở ô đầu tiên
+                                onOtpTextChange("")
+                            }
+                        }
+                    },
+                    enabled = enabled,
+                    isFilled = index < otpText.length
+                )
+            }
+        }
+
+        // Hướng dẫn nhỏ bên dưới
+        Text(
+            text = "Nhập mã OTP 6 số",
+            fontSize = 12.sp,
+            color = Color(0xFF666666),
+            modifier = Modifier.padding(top = 8.dp)
+        )
+    }
+}
+
+@Composable
+fun OtpDigitBox(
+    index: Int,
+    value: String,
+    focusRequester: FocusRequester,
+    onValueChange: (String) -> Unit,
+    enabled: Boolean,
+    isFilled: Boolean
+) {
+    var isFocused by remember { mutableStateOf(false) }
+
+    // Kích thước cố định cho mỗi ô
+    val boxSize = 48.dp
+    val borderWidth = 1.5.dp
+
+    Box(
+        modifier = Modifier
+            .size(boxSize)
+            .background(
+                color = when {
+                    !enabled -> Color(0xFFF5F5F5)
+                    isFocused -> Color(0xFFE3F2FD)
+                    isFilled -> Color(0xFFE8F5E9)
+                    else -> Color.White
+                },
+                shape = RoundedCornerShape(12.dp)
+            )
+            .border(
+                width = borderWidth,
+                color = when {
+                    !enabled -> Color.Gray
+                    isFocused -> Color(0xFF2196F3)
+                    isFilled -> Color(0xFF4CAF50)
+                    else -> Color(0xFFE0E0E0)
+                },
+                shape = RoundedCornerShape(12.dp)
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        BasicTextField(
+            value = value,
+            onValueChange = { newValue ->
+                if (newValue.length <= 1 && newValue.all { it.isDigit() }) {
+                    onValueChange(newValue)
+                }
+            },
+            modifier = Modifier
+                .fillMaxSize()
+                .focusRequester(focusRequester)
+                .onFocusChanged { isFocused = it.isFocused },
+            enabled = enabled,
+            singleLine = true,
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Number,
+                imeAction = if (index == 5) ImeAction.Done else ImeAction.Next
+            ),
+            textStyle = LocalTextStyle.current.copy(
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (enabled) Color.Black else Color.Gray,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            ),
+            cursorBrush = SolidColor(Color(0xFFFF6B35)),
+            decorationBox = { innerTextField ->
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Hiển thị placeholder khi chưa có giá trị
+                    if (value.isEmpty() && !isFocused) {
+                        Text(
+                            text = "•",
+                            fontSize = 24.sp,
+                            color = Color(0xFFBDBDBD),
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    innerTextField()
+                }
+            }
+        )
+    }
+}
+
+// Extension function để lấy ký tự tại index
+private fun String.getOrNull(index: Int): Char? {
+    return if (index in indices) this[index] else null
+}
+
+// Preview Composable
+@Preview(showBackground = true, showSystemUi = false)
+@Composable
+fun OtpVerificationContentPreview() {
+    OtpVerificationContent(
+        email = "example@gmail.com",
+        otpState = OtpVerificationState.Idle,
+        remainingTime = 120,
+        onVerifyOtp = {},
+        onResendOtp = {},
+        onBackClicked = {}
+    )
+}
+
+@Preview(showBackground = true, showSystemUi = false)
+@Composable
+fun SixDigitOtpInputPreview() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+            .padding(24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        var otpText by remember { mutableStateOf("123") }
+
+        SixDigitOtpInput(
+            otpText = otpText,
+            onOtpTextChange = { otpText = it },
+            enabled = true,
+            modifier = Modifier.padding(16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "OTP Text: $otpText",
+            fontSize = 14.sp,
+            color = Color.Black
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = false)
+@Composable
+fun OtpDigitBoxPreview() {
+    // Tạo FocusRequester với remember để tránh lỗi @RememberInComposition
+    val focusRequester1 = remember { FocusRequester() }
+    val focusRequester2 = remember { FocusRequester() }
+    val focusRequester3 = remember { FocusRequester() }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(Color.White)
+            .padding(24.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        // Ô trống
+        OtpDigitBox(
+            index = 0,
+            value = "",
+            focusRequester = focusRequester1,
+            onValueChange = {},
+            enabled = true,
+            isFilled = false
+        )
+
+        // Ô có giá trị
+        OtpDigitBox(
+            index = 1,
+            value = "5",
+            focusRequester = focusRequester2,
+            onValueChange = {},
+            enabled = true,
+            isFilled = true
+        )
+
+        // Ô disabled
+        OtpDigitBox(
+            index = 2,
+            value = "3",
+            focusRequester = focusRequester3,
+            onValueChange = {},
+            enabled = false,
+            isFilled = true
         )
     }
 }

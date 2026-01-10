@@ -68,6 +68,32 @@ class UserFirebaseRepository(private val context : Context) {
     }
 
 
+    fun checkEmailExists(
+        email: String,
+        onComplete: (Boolean) -> Unit
+    ) {
+        // Kiểm tra email hợp lệ
+        if (email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            onComplete(false)
+            return
+        }
+
+        db.collection("users")
+            .whereEqualTo("email", email.trim().lowercase())
+            .limit(1) // Chỉ cần 1 kết quả
+            .get()
+            .addOnSuccessListener { querySnapshot ->
+                val exists = !querySnapshot.isEmpty
+                onComplete(exists)
+            }
+            .addOnFailureListener { exception ->
+                println("Lỗi kiểm tra email: ${exception.message}")
+                onComplete(false)
+            }
+    }
+
+
+
     fun setUserVerified(onComplete: (Boolean) -> Unit) {
 
         val currentUser = auth.currentUser
