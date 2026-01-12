@@ -11,7 +11,7 @@ import { UserRole, IUser } from '../interfaces/user.interface';
  *
  * Usage:
  *   @UseGuards(AuthGuard, RolesGuard)
- *   @Roles(UserRole.ADMIN, UserRole.SELLER)
+ *   @Roles(UserRole.ADMIN, UserRole.OWNER)
  *   @Controller('admin')
  */
 @Injectable()

@@ -8,7 +8,7 @@ export enum OrderStatus {
   /** Payment confirmed */
   PAID = 'paid',
 
-  /** Seller confirmed the order */
+  /** Owner confirmed the order */
   CONFIRMED = 'confirmed',
 
   /** Order is being prepared */
@@ -29,7 +29,7 @@ export enum OrderStatus {
   /** Order cancelled */
   CANCELLED = 'cancelled',
 
-  /** Order rejected by seller */
+  /** Order rejected by owner */
   REJECTED = 'rejected',
 }
 

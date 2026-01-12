@@ -16,15 +16,15 @@ service cloud.firestore {
     }
     
     function isAdmin() {
-      return hasRole('admin');
+      return hasRole('ADMIN');
     }
     
-    function isSeller() {
-      return hasRole('seller');
+    function isOwner() {
+      return hasRole('OWNER');
     }
     
     function isShipper() {
-      return hasRole('shipper');
+      return hasRole('SHIPPER');
     }
     
     // Users collection

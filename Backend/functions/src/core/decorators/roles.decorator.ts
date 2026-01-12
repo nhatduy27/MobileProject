@@ -11,6 +11,6 @@ export const ROLES_KEY = 'roles';
  *
  * Usage:
  *   @Roles(UserRole.ADMIN)
- *   @Roles(UserRole.SELLER, UserRole.ADMIN)
+ *   @Roles(UserRole.OWNER, UserRole.ADMIN)
  */
 export const Roles = (...roles: UserRole[]) => SetMetadata(ROLES_KEY, roles);
