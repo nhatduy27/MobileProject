@@ -1,5 +1,6 @@
-import { IsEmail, IsString, Length } from 'class-validator';
+import { IsEmail, IsString, Length, IsEnum } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import {OTPType} from '../entities/otp.entity'
 
 /**
  * Send OTP DTO
@@ -35,4 +36,13 @@ export class VerifyOTPDto {
   @IsString()
   @Length(6, 6, { message: 'Mã OTP phải có 6 ký tự' })
   code: string;
+
+  @ApiProperty({
+    example: 'PASSWORD_RESET',
+    description: 'Type of OTP verification',
+    enum: OTPType,
+    enumName: 'OTPType'
+  })
+  @IsEnum(OTPType, { message: 'Loại OTP không hợp lệ' })
+  type: OTPType; // Đổi tên thành type
 }

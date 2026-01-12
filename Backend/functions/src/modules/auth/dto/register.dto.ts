@@ -47,6 +47,7 @@ export class RegisterDto {
     example: UserRole.CUSTOMER,
     description: 'User role',
   })
+  @IsOptional()
   @IsEnum(UserRole, { message: 'Role không hợp lệ' })
   role: UserRole;
 }

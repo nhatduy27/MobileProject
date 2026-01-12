@@ -1,29 +1,13 @@
 package com.example.foodapp.data.api
 
-import com.example.foodapp.data.model.shared.otp.ApiResponse
-import com.example.foodapp.data.model.shared.otp.SendOtpRequest
-import com.example.foodapp.data.model.shared.otp.SendOtpResponse
-import com.example.foodapp.data.model.shared.otp.VerificationStatusResponse
-import com.example.foodapp.data.model.shared.otp.VerifyOtpRequest
-import com.example.foodapp.data.model.shared.otp.VerifyOtpResponse
+import com.example.foodapp.data.api.shared.AuthApiService
+import com.example.foodapp.data.api.shared.OtpApiService
+import com.example.foodapp.data.api.client.ProfileApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import retrofit2.http.*
 import java.util.concurrent.TimeUnit
-
-interface OtpApiService {
-    @POST("otp/send")
-    suspend fun sendOtp(@Body request: SendOtpRequest): Response<ApiResponse<SendOtpResponse>>
-
-    @POST("otp/verify")
-    suspend fun verifyOtp(@Body request: VerifyOtpRequest): Response<ApiResponse<VerifyOtpResponse>>
-
-    @GET("otp/check-verification")
-    suspend fun checkVerification(@Query("email") email: String): Response<ApiResponse<VerificationStatusResponse>>
-}
 
 object ApiClient {
     private const val BASE_URL = "http://10.0.2.2:3000/api/" // Cho Android emulator
@@ -54,5 +38,13 @@ object ApiClient {
 
     val otpApiService: OtpApiService by lazy {
         retrofit.create(OtpApiService::class.java)
+    }
+
+    val authApiService: AuthApiService by lazy {
+        retrofit.create(AuthApiService::class.java)
+    }
+
+    val profileApiService: ProfileApiService by lazy {
+        retrofit.create(ProfileApiService::class.java)
     }
 }

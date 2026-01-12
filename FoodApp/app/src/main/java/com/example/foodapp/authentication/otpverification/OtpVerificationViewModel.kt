@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.model.shared.otp.ApiResult
 import com.example.foodapp.data.repository.OtpRepository
 import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
+import com.example.foodapp.data.model.shared.otp.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -17,7 +18,7 @@ import java.util.concurrent.TimeUnit
 
 sealed class OtpVerificationState {
     object Idle : OtpVerificationState()
-    object LoadingEmail : OtpVerificationState() // 👈 Thêm state mới
+    object LoadingEmail : OtpVerificationState()
     object Sending : OtpVerificationState()
     object Verifying : OtpVerificationState()
     object Success : OtpVerificationState()
@@ -100,27 +101,6 @@ class OtpVerificationViewModel(
         timerJob?.cancel()
     }
 
-    fun getCurrentUserEmailAndSendOtp() { // 👈 Đổi tên hàm cho rõ ràng
-        viewModelScope.launch {
-            // State 1: Đang tải email
-            _otpState.value = OtpVerificationState.LoadingEmail
-
-            userRepository.getUserEmailByUid { email ->
-                if (email != null) {
-                    _userEmail.postValue(email)
-
-                    // State 2: Chuyển sang đang gửi OTP
-                    _otpState.value = OtpVerificationState.Sending
-
-                    // Gửi OTP
-                    sendOtp(email)
-                } else {
-                    _userEmail.postValue("")
-                    _otpState.value = OtpVerificationState.Error("Không tìm thấy email người dùng")
-                }
-            }
-        }
-    }
 
     private fun sendOtp(email: String) {
         viewModelScope.launch {
@@ -158,10 +138,9 @@ class OtpVerificationViewModel(
         viewModelScope.launch {
             _otpState.value = OtpVerificationState.Verifying
 
-            when (val result = otpRepository.verifyOtp(email, otpCode)) {
+            when (val result = otpRepository.verifyOtp(email, otpCode, OTPType.EMAIL_VERIFICATION)) {
                 is ApiResult.Success -> {
-                    if (result.data.verified) {
-                        // Cập nhật isVerify = true
+                    if (result.data.success) {
                         userRepository.setUserVerified { success ->
                             _otpState.value = OtpVerificationState.Success
                             stopTimer()

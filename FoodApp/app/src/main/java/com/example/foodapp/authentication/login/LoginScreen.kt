@@ -18,17 +18,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.ui.theme.PrimaryOrange
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 
 @Composable
 fun LoginScreen(
@@ -45,6 +43,18 @@ fun LoginScreen(
         factory = LoginViewModel.factory(context)
     )
 
+    // Khởi tạo Google Sign-In Client
+    LaunchedEffect(Unit) {
+        val WEB_CLIENT_ID = "884959847866-5qiurc00ii1pnrs1dtou2kvau5oa9s96.apps.googleusercontent.com"
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(WEB_CLIENT_ID)
+            .requestEmail()
+            .build()
+
+        val googleSignInClient = GoogleSignIn.getClient(context, gso)
+        viewModel.initializeGoogleSignIn(googleSignInClient)
+    }
+
     // Observe ViewModel states
     val logInState by viewModel.logInState.collectAsStateWithLifecycle()
     val googleLogInState by viewModel.googleLogInState.collectAsStateWithLifecycle()
@@ -58,50 +68,47 @@ fun LoginScreen(
         viewModel.handleGoogleSignInResult(task)
     }
 
-    // Handle lifecycle
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.handlePendingGoogleSignIn(context)
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
-
-    // Navigate on success
+    // Handle successful login and navigate
     LaunchedEffect(existAccountState) {
         if (existAccountState == true) {
-            val userId = when {
-                logInState is LogInState.Success -> (logInState as LogInState.Success).userId
-                googleLogInState is GoogleLogInState.Success -> (googleLogInState as GoogleLogInState.Success).userId
-                else -> null
-            }
-
-            userId?.let { uid ->
-                viewModel.getUserRole(uid) { role ->
-                    onLoginSuccess(role ?: "user")
+            when {
+                logInState is LogInState.Success -> {
+                    val userDetail = (logInState as LogInState.Success).user
+                    userDetail?.let {
+                        onLoginSuccess(it.role)
+                    }
+                }
+                googleLogInState is GoogleLogInState.Success -> {
+                    val userId = (googleLogInState as GoogleLogInState.Success).userId
+                    viewModel.getUserRole(userId) { role ->
+                        onLoginSuccess(role ?: "CUSTOMER")
+                    }
                 }
             }
         }
     }
 
+    // Reset error when component is recomposed
+    LaunchedEffect(Unit) {
+        viewModel.resetStates()
+    }
+
     // UI Content
     LoginContent(
+        viewModel = viewModel,
         logInState = logInState,
         googleLogInState = googleLogInState,
         onLoginClick = { email, password ->
-            val validation = viewModel.validateInput(email, password)
-            if (validation is LoginViewModel.ValidationResult.Success) {
-                viewModel.logInWithEmail(email, password)
-            }
+            viewModel.login(email, password)
         },
         onGoogleClick = {
-            val signInIntent = viewModel.getGoogleSignInClient().signInIntent
-            googleSignInLauncher.launch(signInIntent)
+            try {
+                viewModel.getGoogleSignInIntent()?.let { signInIntent ->
+                    googleSignInLauncher.launch(signInIntent)
+                }
+            } catch (e: Exception) {
+                // Error will be handled by ViewModel state
+            }
         },
         onBackClicked = {
             viewModel.resetStates()
@@ -111,16 +118,14 @@ fun LoginScreen(
         onCustomerDemo = onCustomerDemo,
         onShipperDemo = onShipperDemo,
         onOwnerDemo = onOwnerDemo,
-        onForgotPasswordClicked = onForgotPasswordClicked,
-        onValidateInput = { email, password ->
-            viewModel.validateInput(email, password)
-        }
+        onForgotPasswordClicked = onForgotPasswordClicked
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginContent(
+    viewModel: LoginViewModel,
     logInState: LogInState,
     googleLogInState: GoogleLogInState,
     onLoginClick: (String, String) -> Unit,
@@ -130,23 +135,28 @@ fun LoginContent(
     onCustomerDemo: () -> Unit,
     onShipperDemo: () -> Unit,
     onOwnerDemo: () -> Unit,
-    onForgotPasswordClicked: () -> Unit,
-    onValidateInput: (String, String) -> LoginViewModel.ValidationResult
+    onForgotPasswordClicked: () -> Unit
 ) {
-    // Local UI State - KHÔNG chứa business logic
+    // Local UI State
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
-    var validationError by remember { mutableStateOf<String?>(null) }
+    var localValidationError by remember { mutableStateOf<String?>(null) }
 
-    // Derived state từ ViewModel
+    // Derived states from ViewModel
     val isLoading = logInState is LogInState.Loading || googleLogInState is GoogleLogInState.Loading
-    val isSuccess = logInState is LogInState.Success || googleLogInState is GoogleLogInState.Success
-    val serverErrorMessage = (logInState as? LogInState.Error)?.message
-        ?: (googleLogInState as? GoogleLogInState.Error)?.message
 
-    // Display error
-    val displayError = validationError ?: serverErrorMessage
+    // Check for success states
+    val isEmailLoginSuccess = logInState is LogInState.Success
+    val isGoogleLoginSuccess = googleLogInState is GoogleLogInState.Success
+    val isSuccess = isEmailLoginSuccess || isGoogleLoginSuccess
+
+    // Error messages
+    val loginError = (logInState as? LogInState.Error)?.message
+    val googleError = (googleLogInState as? GoogleLogInState.Error)?.message
+    val serverError = loginError ?: googleError
+
+    val displayError = localValidationError ?: serverError
 
     Column(
         modifier = Modifier
@@ -158,7 +168,13 @@ fun LoginContent(
     ) {
         // Back Button
         Row(modifier = Modifier.fillMaxWidth()) {
-            IconButton(onClick = onBackClicked, enabled = !isLoading) {
+            IconButton(
+                onClick = {
+                    viewModel.resetStates()
+                    onBackClicked()
+                },
+                enabled = !isLoading
+            ) {
                 Text("←", fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
         }
@@ -172,7 +188,7 @@ fun LoginContent(
         )
 
         // Error Message
-        if (displayError != null) {
+        if (displayError != null && !isSuccess) {
             Text(
                 text = displayError,
                 color = Color.Red,
@@ -182,6 +198,22 @@ fun LoginContent(
                     .background(Color(0x1AFF0000), RoundedCornerShape(8.dp))
                     .padding(12.dp),
                 fontSize = 14.sp
+            )
+        }
+
+        // Success Message
+        if (isSuccess) {
+            Text(
+                text = if (isEmailLoginSuccess) "Đăng nhập thành công!"
+                else "Đăng nhập Google thành công!",
+                color = Color(0xFF4CAF50),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .background(Color(0x1A4CAF50), RoundedCornerShape(8.dp))
+                    .padding(12.dp),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold
             )
         }
 
@@ -200,7 +232,10 @@ fun LoginContent(
         // Email Field
         LoginTextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {
+                email = it
+                localValidationError = null // Clear error when typing
+            },
             placeholder = "Email",
             enabled = !isLoading && !isSuccess,
             keyboardOptions = KeyboardOptions.Default.copy(
@@ -215,7 +250,10 @@ fun LoginContent(
         // Password Field
         LoginTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = {
+                password = it
+                localValidationError = null // Clear error when typing
+            },
             placeholder = "Mật khẩu",
             enabled = !isLoading && !isSuccess,
             isPassword = true,
@@ -232,7 +270,7 @@ fun LoginContent(
         TextButton(
             onClick = onForgotPasswordClicked,
             modifier = Modifier.align(Alignment.End),
-            enabled = !isLoading
+            enabled = !isLoading && !isSuccess
         ) {
             Text("Quên mật khẩu?", color = Color(0xFF666666))
         }
@@ -242,98 +280,104 @@ fun LoginContent(
         // Login Button
         Button(
             onClick = {
-                val validation = onValidateInput(email, password)
-                if (validation is LoginViewModel.ValidationResult.Success) {
-                    validationError = null
+                // Local validation before calling ViewModel
+                localValidationError = when {
+                    email.isBlank() -> "Vui lòng nhập email"
+                    !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> "Email không hợp lệ"
+                    password.isBlank() -> "Vui lòng nhập mật khẩu"
+                    password.length < 6 -> "Mật khẩu phải có ít nhất 6 ký tự"
+                    else -> null
+                }
+
+                if (localValidationError == null) {
                     onLoginClick(email, password)
-                } else if (validation is LoginViewModel.ValidationResult.Error) {
-                    validationError = validation.message
                 }
             },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (isSuccess) Color(0xFF4CAF50) else PrimaryOrange,
+                containerColor = if (isEmailLoginSuccess) Color(0xFF4CAF50) else PrimaryOrange,
                 disabledContainerColor = PrimaryOrange.copy(alpha = 0.5f)
             ),
             shape = RoundedCornerShape(28.dp),
             enabled = !isLoading && !isSuccess
         ) {
             when {
-                isLoading -> {
+                isLoading && logInState is LogInState.Loading -> {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
                         strokeWidth = 2.dp,
                         color = Color.White
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Đang xử lý...", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text("Đang đăng nhập...", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
-                isSuccess -> Text("Thành công!", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                isEmailLoginSuccess -> Text("Đăng nhập thành công!", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 else -> Text("Đăng nhập", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Demo Role Buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(
-                onClick = onCustomerDemo,
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.weight(1f).height(36.dp).padding(horizontal = 4.dp),
-                enabled = !isLoading
+        // Demo Role Buttons (only show when not loading/success)
+        if (!isLoading && !isSuccess) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                Text("Customer", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Button(
+                    onClick = onCustomerDemo,
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier.weight(1f).height(36.dp).padding(horizontal = 4.dp)
+                ) {
+                    Text("Customer", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = onShipperDemo,
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier.weight(1f).height(36.dp).padding(horizontal = 4.dp)
+                ) {
+                    Text("Shipper", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
+                Button(
+                    onClick = onOwnerDemo,
+                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier.weight(1f).height(36.dp).padding(horizontal = 4.dp)
+                ) {
+                    Text("Owner", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                }
             }
-            Button(
-                onClick = onShipperDemo,
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.weight(1f).height(36.dp).padding(horizontal = 4.dp),
-                enabled = !isLoading
-            ) {
-                Text("Shipper", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            }
-            Button(
-                onClick = onOwnerDemo,
-                colors = ButtonDefaults.buttonColors(containerColor = PrimaryOrange),
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.weight(1f).height(36.dp).padding(horizontal = 4.dp),
-                enabled = !isLoading
-            ) {
-                Text("Owner", fontSize = 14.sp, fontWeight = FontWeight.Bold)
-            }
+
+            Spacer(modifier = Modifier.height(24.dp))
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        // Divider với "hoặc" (only show when not loading/success)
+        if (!isLoading && !isSuccess) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    thickness = 1.dp,
+                    color = Color(0xFFDDDDDD)
+                )
+                Text(
+                    "hoặc đăng nhập với",
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = Color(0xFF666666),
+                    fontSize = 14.sp
+                )
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    thickness = 1.dp,
+                    color = Color(0xFFDDDDDD)
+                )
+            }
 
-        // Divider với "hoặc"
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            HorizontalDivider(
-                modifier = Modifier.weight(1f),
-                thickness = 1.dp,
-                color = Color(0xFFDDDDDD)
-            )
-            Text(
-                "hoặc đăng nhập với",
-                modifier = Modifier.padding(horizontal = 16.dp),
-                color = Color(0xFF666666),
-                fontSize = 14.sp
-            )
-            HorizontalDivider(
-                modifier = Modifier.weight(1f),
-                thickness = 1.dp,
-                color = Color(0xFFDDDDDD)
-            )
+            Spacer(modifier = Modifier.height(24.dp))
         }
-
-        Spacer(modifier = Modifier.height(24.dp))
 
         // Google Sign-In Button
         OutlinedButton(
@@ -362,8 +406,6 @@ fun LoginContent(
                 Text("Đang đăng nhập...", fontWeight = FontWeight.Bold)
             } else {
                 // Có thể thêm icon Google ở đây
-                // Icon(painter = painterResource(id = R.drawable.ic_google), contentDescription = null)
-                // Spacer(modifier = Modifier.width(8.dp))
                 Text("Đăng nhập với Google", color = Color.Black, fontWeight = FontWeight.Bold)
             }
         }
@@ -405,8 +447,7 @@ fun LoginTextField(
     onToggleVisibility: () -> Unit = {},
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     colors: TextFieldColors
-) {// Tạo visual transformation cho password
-
+) {
     val visualTransformation = if (isPassword && !isVisible) {
         PasswordVisualTransformation()
     } else {
