@@ -143,7 +143,7 @@ export class FirestoreShippersRepository implements IShippersRepository {
   async findShippersByShop(shopId: string): Promise<Record<string, unknown>[]> {
     const snapshot = await this.firestore
       .collection(this.usersCollection)
-      .where('roles', 'array-contains', 'SHIPPER')
+      .where('role', '==', 'SHIPPER')
       .where('shipperInfo.shopId', '==', shopId)
       .get();
 

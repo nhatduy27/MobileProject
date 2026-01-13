@@ -59,9 +59,8 @@ export class OwnerShippersController {
   async listApplications(
     @Req() req: Express.Request & { user: { uid: string } },
     @Query() filter: ApplicationFilterDto,
-  ): Promise<{ success: boolean; data: ShipperApplicationEntity[] }> {
-    const applications = await this.shippersService.listApplications(req.user.uid, filter.status);
-    return { success: true, data: applications };
+  ): Promise<ShipperApplicationEntity[]> {
+    return this.shippersService.listApplications(req.user.uid, filter.status);
   }
 
   @Post('applications/:id/approve')
@@ -93,9 +92,9 @@ export class OwnerShippersController {
   async approveApplication(
     @Req() req: Express.Request & { user: { uid: string } },
     @Param('id') id: string,
-  ): Promise<{ success: boolean; message: string }> {
+  ): Promise<{ message: string }> {
     await this.shippersService.approveApplication(req.user.uid, id);
-    return { success: true, message: 'Đã duyệt đơn xin làm shipper' };
+    return { message: 'Đã duyệt đơn xin làm shipper' };
   }
 
   @Post('applications/:id/reject')
@@ -122,9 +121,9 @@ export class OwnerShippersController {
     @Req() req: Express.Request & { user: { uid: string } },
     @Param('id') id: string,
     @Body() dto: RejectApplicationDto,
-  ): Promise<{ success: boolean; message: string }> {
+  ): Promise<{ message: string }> {
     await this.shippersService.rejectApplication(req.user.uid, id, dto);
-    return { success: true, message: 'Đã từ chối đơn xin làm shipper' };
+    return { message: 'Đã từ chối đơn xin làm shipper' };
   }
 
   @Get()
@@ -160,9 +159,8 @@ export class OwnerShippersController {
   })
   async listShopShippers(
     @Req() req: Express.Request & { user: { uid: string } },
-  ): Promise<{ success: boolean; data: ShipperEntity[] }> {
-    const shippers = await this.shippersService.listShopShippers(req.user.uid);
-    return { success: true, data: shippers };
+  ): Promise<ShipperEntity[]> {
+    return this.shippersService.listShopShippers(req.user.uid);
   }
 
   @Delete(':id')
@@ -194,8 +192,8 @@ export class OwnerShippersController {
   async removeShipper(
     @Req() req: Express.Request & { user: { uid: string } },
     @Param('id') id: string,
-  ): Promise<{ success: boolean; message: string }> {
+  ): Promise<{ message: string }> {
     await this.shippersService.removeShipper(req.user.uid, id);
-    return { success: true, message: 'Đã xóa shipper khỏi shop' };
+    return { message: 'Đã xóa shipper khỏi shop' };
   }
 }
