@@ -19,12 +19,13 @@ import {
   ApiBearerAuth,
   ApiQuery,
   ApiConsumes,
+  ApiBody,
 } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from '../services';
 import {
-  CreateProductDto,
-  UpdateProductDto,
+  CreateProductWithFileDto,
+  UpdateProductWithFileDto,
   ToggleAvailabilityDto,
   OwnerProductFilterDto,
 } from '../dto';
@@ -59,6 +60,8 @@ export class OwnerProductsController {
    * PROD-001
    */
   @Post()
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Create product',
     description: 'Owner creates a new product for their shop',
@@ -92,8 +95,15 @@ export class OwnerProductsController {
       },
     },
   })
-  async createProduct(@CurrentUser('uid') ownerId: string, @Body() dto: CreateProductDto) {
-    return this.productsService.createProduct(ownerId, dto);
+  async createProduct(
+    @CurrentUser('uid') ownerId: string,
+    @Body() dto: CreateProductWithFileDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Vui lòng upload ảnh sản phẩm');
+    }
+    return this.productsService.createProductWithFile(ownerId, dto, file);
   }
 
   /**
@@ -205,6 +215,8 @@ export class OwnerProductsController {
    * PROD-006 - Price Lock Rule applies
    */
   @Put(':id')
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Update product',
     description: 'Update product information. Cannot change price when shop is open.',
@@ -220,9 +232,10 @@ export class OwnerProductsController {
   async updateProduct(
     @CurrentUser('uid') ownerId: string,
     @Param('id') productId: string,
-    @Body() dto: UpdateProductDto,
+    @Body() dto: UpdateProductWithFileDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
-    await this.productsService.updateProduct(ownerId, productId, dto);
+    await this.productsService.updateProductWithFile(ownerId, productId, dto, file);
     return { message: 'Cập nhật sản phẩm thành công' };
   }
 
@@ -282,6 +295,17 @@ export class OwnerProductsController {
   @ApiOperation({
     summary: 'Upload product image',
     description: 'Upload product image. Accepts JPEG/PNG. Max 5MB.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        image: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 200,

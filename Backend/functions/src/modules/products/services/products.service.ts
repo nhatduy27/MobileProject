@@ -1,9 +1,11 @@
-import { Injectable, Inject, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { IProductsRepository } from '../interfaces';
 import { ProductEntity } from '../entities';
 import {
   CreateProductDto,
+  CreateProductWithFileDto,
   UpdateProductDto,
+  UpdateProductWithFileDto,
   ProductFilterDto,
   ToggleAvailabilityDto,
 } from '../dto';
@@ -36,6 +38,59 @@ export class ProductsService {
     const categoryName = category.name;
 
     return await this.productsRepository.create(shop.id, shop.name, categoryName, dto);
+  }
+
+  /**
+   * Create a new product with file upload
+   * PROD-001
+   */
+  async createProductWithFile(
+    ownerId: string,
+    dto: CreateProductWithFileDto,
+    imageFile: Express.Multer.File,
+  ): Promise<ProductEntity> {
+    // Get owner's shop
+    const shop = await this.shopsService.getMyShop(ownerId);
+
+    // Get category name from Categories service
+    const category = await this.categoriesService.findById(dto.categoryId);
+    const categoryName = category.name;
+
+    // Validate image type
+    const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (!validMimeTypes.includes(imageFile.mimetype)) {
+      throw new BadRequestException('Chỉ chấp nhận file ảnh định dạng JPG, JPEG, PNG');
+    }
+
+    // Validate image size (max 5MB)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (imageFile.size > maxSize) {
+      throw new BadRequestException('Kích thước ảnh không được vượt quá 5MB');
+    }
+
+    // Generate temporary productId for upload path
+    const tempProductId = `prod_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // Upload image to Firebase Storage
+    let imageUrl: string;
+    try {
+      imageUrl = await this.storageService.uploadProductImage(
+        shop.id,
+        tempProductId,
+        imageFile.buffer,
+        imageFile.mimetype,
+      );
+    } catch (error) {
+      throw new BadRequestException('Upload ảnh thất bại. Vui lòng thử lại');
+    }
+
+    // Create product with uploaded URL
+    const createDto: CreateProductDto = {
+      ...dto,
+      imageUrl,
+    };
+
+    return await this.productsRepository.create(shop.id, shop.name, categoryName, createDto);
   }
 
   /**
@@ -111,8 +166,71 @@ export class ProductsService {
     await this.productsRepository.update(productId, updateData);
   }
 
-  /**
-   * Toggle product availability
+  /**   * Update product with optional file upload
+   * PROD-006
+   */
+  async updateProductWithFile(
+    ownerId: string,
+    productId: string,
+    dto: UpdateProductWithFileDto,
+    imageFile?: Express.Multer.File,
+  ): Promise<void> {
+    const product = await this.getMyProduct(ownerId, productId);
+
+    // PROD-006: Price Lock Rule
+    const shop = await this.shopsService.getShopById(product.shopId);
+    if (dto.price !== undefined && dto.price !== product.price && shop.isOpen) {
+      throw new ConflictException({
+        code: 'PRODUCT_002',
+        message: 'Không thể thay đổi giá khi shop đang mở',
+        statusCode: 409,
+      });
+    }
+
+    // Get category name if categoryId changed
+    let categoryName = product.categoryName;
+    if (dto.categoryId && dto.categoryId !== product.categoryId) {
+      const category = await this.categoriesService.findById(dto.categoryId);
+      categoryName = category.name;
+    }
+
+    // Prepare update data
+    const updateData: any = {
+      ...dto,
+      categoryName,
+    };
+
+    // Handle file upload if provided
+    if (imageFile) {
+      // Validate image type
+      const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+      if (!validMimeTypes.includes(imageFile.mimetype)) {
+        throw new BadRequestException('Chỉ chấp nhận file ảnh định dạng JPG, JPEG, PNG');
+      }
+
+      // Validate image size (max 5MB)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (imageFile.size > maxSize) {
+        throw new BadRequestException('Kích thước ảnh không được vượt quá 5MB');
+      }
+
+      // Upload new image
+      try {
+        updateData.imageUrl = await this.storageService.uploadProductImage(
+          product.shopId,
+          productId,
+          imageFile.buffer,
+          imageFile.mimetype,
+        );
+      } catch (error) {
+        throw new BadRequestException('Upload ảnh thất bại. Vui lòng thử lại');
+      }
+    }
+
+    await this.productsRepository.update(productId, updateData);
+  }
+
+  /**   * Toggle product availability
    * PROD-007
    */
   async toggleAvailability(
