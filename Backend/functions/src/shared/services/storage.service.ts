@@ -98,6 +98,52 @@ export class StorageService {
   }
 
   /**
+   * Upload shipper document image to Firebase Storage
+   *
+   * @param userId - User ID
+   * @param docType - Document type (idCardFront, idCardBack, driverLicense)
+   * @param buffer - Image buffer
+   * @param mimetype - Image mime type (image/jpeg, image/png)
+   * @returns Public URL of uploaded image
+   */
+  async uploadShipperDocument(
+    userId: string,
+    docType: 'idCardFront' | 'idCardBack' | 'driverLicense',
+    buffer: Buffer,
+    mimetype: string,
+  ): Promise<string> {
+    const bucketName = 'foodappproject-7c136.firebasestorage.app';
+    const bucket = this.firebase.storage.bucket(bucketName);
+
+    // Generate unique filename
+    const ext = mimetype === 'image/png' ? 'png' : 'jpg';
+    const hash = crypto.randomBytes(8).toString('hex');
+    const filename = `shipper-documents/${userId}/${docType}_${hash}.${ext}`;
+
+    // Generate download token
+    const downloadToken = crypto.randomBytes(16).toString('hex');
+
+    // Upload file
+    const file = bucket.file(filename);
+    await file.save(buffer, {
+      metadata: {
+        contentType: mimetype,
+        metadata: {
+          firebaseStorageDownloadTokens: downloadToken,
+        },
+      },
+    });
+
+    // Make file publicly accessible
+    await file.makePublic();
+
+    // Return public URL
+    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(filename)}?alt=media&token=${downloadToken}`;
+
+    return publicUrl;
+  }
+
+  /**
    * Delete avatar image from Firebase Storage
    *
    * @param avatarUrl - Full URL of avatar to delete

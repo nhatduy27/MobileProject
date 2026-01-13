@@ -8,11 +8,12 @@ import { ShipperEntity } from './entities/shipper.entity';
 import { AuthGuard } from '../../core/guards/auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
+import { UserRole } from '../users/entities/user.entity';
 
 @ApiTags('Owner - Shippers')
-@ApiBearerAuth()
+@ApiBearerAuth('firebase-auth')
 @UseGuards(AuthGuard, RolesGuard)
-@Roles('OWNER')
+@Roles(UserRole.OWNER)
 @Controller('owner/shippers')
 export class OwnerShippersController {
   constructor(private readonly shippersService: ShippersService) {}

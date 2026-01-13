@@ -4,15 +4,18 @@ import {
   NotFoundException,
   ForbiddenException,
   Inject,
+  BadRequestException,
 } from '@nestjs/common';
 import { Firestore, FieldValue } from '@google-cloud/firestore';
 import { IShippersRepository } from './repositories/shippers-repository.interface';
 import { UsersService } from '../users/users.service';
 import { ShopsService } from '../shops/services/shops.service';
+import { StorageService } from '../../shared/services/storage.service';
 import { ApplyShipperDto } from './dto/apply-shipper.dto';
+import { ApplyShipperWithFilesDto } from './dto/apply-shipper-with-files.dto';
 import { RejectApplicationDto } from './dto/reject-application.dto';
 import { ShipperApplicationEntity, ApplicationStatus } from './entities/shipper-application.entity';
-import { ShipperEntity, ShipperStatus } from './entities/shipper.entity';
+import { ShipperEntity } from './entities/shipper.entity';
 
 @Injectable()
 export class ShippersService {
@@ -21,17 +24,22 @@ export class ShippersService {
     private readonly shippersRepository: IShippersRepository,
     private readonly usersService: UsersService,
     private readonly shopsService: ShopsService,
+    private readonly storageService: StorageService,
+    @Inject('FIRESTORE')
     private readonly firestore: Firestore,
   ) {}
 
   // SHIP-002: Apply to be Shipper
   async applyShipper(userId: string, dto: ApplyShipperDto): Promise<ShipperApplicationEntity> {
-    const user = await this.usersService.findById(userId);
+    const user = await this.usersService.getProfile(userId);
 
     // Check if already shipper
-    if (user.roles?.includes('SHIPPER')) {
+    if (user.role === 'SHIPPER') {
       throw new ConflictException('SHIPPER_001: Bạn đã là shipper rồi');
     }
+
+    // Validate shop exists first
+    const shop = await this.shopsService.getShopById(dto.shopId);
 
     // Check if already applied (PENDING)
     const existingApp = await this.shippersRepository.findPendingApplication(userId, dto.shopId);
@@ -39,15 +47,12 @@ export class ShippersService {
       throw new ConflictException('SHIPPER_005: Bạn đã nộp đơn cho shop này rồi');
     }
 
-    // Validate shop exists
-    const shop = await this.shopsService.getShopById(dto.shopId);
-
     // Create application
     const application = await this.shippersRepository.createApplication({
       userId,
-      userName: user.name,
-      userPhone: user.phone,
-      userAvatar: user.avatar || '',
+      userName: user.displayName,
+      userPhone: user.phone || '',
+      userAvatar: user.avatarUrl || '',
       shopId: dto.shopId,
       shopName: shop.name,
       vehicleType: dto.vehicleType,
@@ -56,6 +61,105 @@ export class ShippersService {
       idCardFrontUrl: dto.idCardFrontUrl,
       idCardBackUrl: dto.idCardBackUrl,
       driverLicenseUrl: dto.driverLicenseUrl,
+      message: dto.message,
+      status: ApplicationStatus.PENDING,
+    });
+
+    // TODO: Notify owner
+    // await this.notificationService.sendToOwner(dto.shopId, { ... });
+
+    return application;
+  }
+
+  // SHIP-002: Apply to be Shipper with Files
+  async applyShipperWithFiles(
+    userId: string,
+    dto: ApplyShipperWithFilesDto,
+    idCardFrontFile: Express.Multer.File,
+    idCardBackFile: Express.Multer.File,
+    driverLicenseFile: Express.Multer.File,
+  ): Promise<ShipperApplicationEntity> {
+    const user = await this.usersService.getProfile(userId);
+
+    // Check if already shipper
+    if (user.role === 'SHIPPER') {
+      throw new ConflictException('SHIPPER_001: Bạn đã là shipper rồi');
+    }
+
+    // Validate shop exists first
+    const shop = await this.shopsService.getShopById(dto.shopId);
+
+    // Check if already applied (PENDING)
+    const existingApp = await this.shippersRepository.findPendingApplication(userId, dto.shopId);
+    if (existingApp) {
+      throw new ConflictException('SHIPPER_005: Bạn đã nộp đơn cho shop này rồi');
+    }
+
+    // Validate image types
+    const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (
+      !validMimeTypes.includes(idCardFrontFile.mimetype) ||
+      !validMimeTypes.includes(idCardBackFile.mimetype) ||
+      !validMimeTypes.includes(driverLicenseFile.mimetype)
+    ) {
+      throw new BadRequestException('Chỉ chấp nhận file ảnh định dạng JPG, JPEG, PNG');
+    }
+
+    // Validate image sizes (max 5MB each)
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (
+      idCardFrontFile.size > maxSize ||
+      idCardBackFile.size > maxSize ||
+      driverLicenseFile.size > maxSize
+    ) {
+      throw new BadRequestException('Kích thước mỗi ảnh không được vượt quá 5MB');
+    }
+
+    // Upload images to Firebase Storage
+    let idCardFrontUrl: string;
+    let idCardBackUrl: string;
+    let driverLicenseUrl: string;
+
+    try {
+      // Upload all 3 documents in parallel
+      [idCardFrontUrl, idCardBackUrl, driverLicenseUrl] = await Promise.all([
+        this.storageService.uploadShipperDocument(
+          userId,
+          'idCardFront',
+          idCardFrontFile.buffer,
+          idCardFrontFile.mimetype,
+        ),
+        this.storageService.uploadShipperDocument(
+          userId,
+          'idCardBack',
+          idCardBackFile.buffer,
+          idCardBackFile.mimetype,
+        ),
+        this.storageService.uploadShipperDocument(
+          userId,
+          'driverLicense',
+          driverLicenseFile.buffer,
+          driverLicenseFile.mimetype,
+        ),
+      ]);
+    } catch (error) {
+      throw new BadRequestException('Upload ảnh thất bại. Vui lòng thử lại');
+    }
+
+    // Create application
+    const application = await this.shippersRepository.createApplication({
+      userId,
+      userName: user.displayName,
+      userPhone: user.phone || '',
+      userAvatar: user.avatarUrl || '',
+      shopId: dto.shopId,
+      shopName: shop.name,
+      vehicleType: dto.vehicleType,
+      vehicleNumber: dto.vehicleNumber,
+      idCardNumber: dto.idCardNumber,
+      idCardFrontUrl,
+      idCardBackUrl,
+      driverLicenseUrl,
       message: dto.message,
       status: ApplicationStatus.PENDING,
     });
@@ -108,7 +212,7 @@ export class ShippersService {
 
   // SHIP-006: Approve Application ⭐
   async approveApplication(ownerId: string, applicationId: string): Promise<void> {
-    const owner = await this.usersService.findById(ownerId);
+    const owner = await this.usersService.getProfile(ownerId);
 
     if (!owner.shopId) {
       throw new ForbiddenException('Bạn chưa có shop');
@@ -135,11 +239,6 @@ export class ShippersService {
       const appRef = this.firestore.collection('shipperApplications').doc(applicationId);
       const userRef = this.firestore.collection('users').doc(app.userId);
 
-      // Get current user roles
-      const userDoc = await transaction.get(userRef);
-      const userData = userDoc.data();
-      const currentRoles = userData?.roles || [];
-
       // Update application
       transaction.update(appRef, {
         status: ApplicationStatus.APPROVED,
@@ -147,19 +246,14 @@ export class ShippersService {
         reviewedAt: FieldValue.serverTimestamp(),
       });
 
-      // Update user: add SHIPPER role + shipperInfo
+      // Update user: change role to SHIPPER + shipperInfo
       transaction.update(userRef, {
-        roles: [...currentRoles, 'SHIPPER'],
+        role: 'SHIPPER',
         shipperInfo: {
           shopId: app.shopId,
           shopName: app.shopName,
-          vehicleType: app.vehicleType,
-          vehicleNumber: app.vehicleNumber,
-          status: ShipperStatus.AVAILABLE,
-          rating: 0,
-          totalDeliveries: 0,
-          currentOrders: [],
-          joinedAt: FieldValue.serverTimestamp(),
+          status: 'ACTIVE',
+          isOnline: false,
         },
         updatedAt: FieldValue.serverTimestamp(),
       });
@@ -221,11 +315,11 @@ export class ShippersService {
     return shippers.map(
       (shipper) =>
         new ShipperEntity({
-          id: shipper.id,
-          name: shipper.name,
-          phone: shipper.phone,
-          avatar: shipper.avatar,
-          shipperInfo: shipper.shipperInfo,
+          id: shipper.id as string,
+          name: (shipper.displayName || shipper.name) as string,
+          phone: shipper.phone as string,
+          avatar: (shipper.avatarUrl || shipper.avatar) as string,
+          shipperInfo: shipper.shipperInfo as any,
         }),
     );
   }
@@ -246,14 +340,16 @@ export class ShippersService {
     }
 
     // Check if shipper has active orders
-    if (shipper.shipperInfo?.currentOrders && shipper.shipperInfo.currentOrders.length > 0) {
-      throw new ConflictException('SHIPPER_003: Shipper đang có đơn chưa hoàn thành');
-    }
+    // Note: currentOrders will be populated by Orders module
+    // const shipperInfo = shipper.shipperInfo as any;
+    // if (shipperInfo?.currentOrders && Array.isArray(shipperInfo.currentOrders) && shipperInfo.currentOrders.length > 0) {
+    //   throw new ConflictException('SHIPPER_003: Shipper đang có đơn chưa hoàn thành');
+    // }
 
     // Remove SHIPPER role and clear shipperInfo
     const userRef = this.firestore.collection('users').doc(shipperId);
     await userRef.update({
-      roles: FieldValue.arrayRemove('SHIPPER'),
+      role: 'CUSTOMER', // Change back to CUSTOMER
       shipperInfo: FieldValue.delete(),
       updatedAt: FieldValue.serverTimestamp(),
     });

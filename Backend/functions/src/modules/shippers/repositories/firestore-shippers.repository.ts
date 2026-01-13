@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject } from '@nestjs/common';
 import { Firestore, FieldValue } from '@google-cloud/firestore';
 import {
   ShipperApplicationEntity,
@@ -11,7 +11,7 @@ export class FirestoreShippersRepository implements IShippersRepository {
   private readonly applicationsCollection = 'shipperApplications';
   private readonly usersCollection = 'users';
 
-  constructor(private readonly firestore: Firestore) {}
+  constructor(@Inject('FIRESTORE') private readonly firestore: Firestore) {}
 
   async createApplication(
     data: Partial<ShipperApplicationEntity>,

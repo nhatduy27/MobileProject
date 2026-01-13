@@ -1,12 +1,13 @@
-import { Controller, Post, Get, Delete, Body, Param, UseGuards, Req } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Post, Get, Delete, Body, Param, UseGuards, Req, UseInterceptors, UploadedFiles, BadRequestException } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiConsumes } from '@nestjs/swagger';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ShippersService } from './shippers.service';
-import { ApplyShipperDto } from './dto/apply-shipper.dto';
+import { ApplyShipperWithFilesDto } from './dto/apply-shipper-with-files.dto';
 import { ShipperApplicationEntity } from './entities/shipper-application.entity';
 import { AuthGuard } from '../../core/guards/auth.guard';
 
 @ApiTags('Shipper Applications')
-@ApiBearerAuth()
+@ApiBearerAuth('firebase-auth')
 @UseGuards(AuthGuard)
 @Controller('shipper-applications')
 export class ShipperApplicationsController {
@@ -52,11 +53,36 @@ export class ShipperApplicationsController {
       },
     },
   })
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'idCardFront', maxCount: 1 },
+      { name: 'idCardBack', maxCount: 1 },
+      { name: 'driverLicense', maxCount: 1 },
+    ]),
+  )
+  @ApiConsumes('multipart/form-data')
   async applyShipper(
     @Req() req: Express.Request & { user: { uid: string } },
-    @Body() dto: ApplyShipperDto,
+    @Body() dto: ApplyShipperWithFilesDto,
+    @UploadedFiles()
+    files: {
+      idCardFront?: Express.Multer.File[];
+      idCardBack?: Express.Multer.File[];
+      driverLicense?: Express.Multer.File[];
+    },
   ): Promise<{ success: boolean; data: ShipperApplicationEntity }> {
-    const application = await this.shippersService.applyShipper(req.user.uid, dto);
+    // Validate files
+    if (!files?.idCardFront?.[0] || !files?.idCardBack?.[0] || !files?.driverLicense?.[0]) {
+      throw new BadRequestException('Vui lòng upload đầy đủ 3 ảnh: CMND/CCCD mặt trước, mặt sau và bằng lái xe');
+    }
+
+    const application = await this.shippersService.applyShipperWithFiles(
+      req.user.uid,
+      dto,
+      files.idCardFront[0],
+      files.idCardBack[0],
+      files.driverLicense[0],
+    );
     return { success: true, data: application };
   }
 
