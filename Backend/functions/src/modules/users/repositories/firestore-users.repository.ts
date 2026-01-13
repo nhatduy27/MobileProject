@@ -139,7 +139,12 @@ export class FirestoreUsersRepository implements IUsersRepository {
       status: data.status,
       emailVerified: data.emailVerified,
       shopId: data.shopId,
-      shipperInfo: data.shipperInfo,
+      shipperInfo: data.shipperInfo
+        ? {
+            ...data.shipperInfo,
+            joinedAt: data.shipperInfo.joinedAt?.toDate?.() || data.shipperInfo.joinedAt,
+          }
+        : undefined,
       settings: data.settings,
       fcmTokens: data.fcmTokens,
       bannedAt: data.bannedAt?.toDate?.(),

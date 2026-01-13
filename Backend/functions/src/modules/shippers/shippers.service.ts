@@ -265,7 +265,14 @@ export class ShippersService {
           name: (shipper.displayName || shipper.name) as string,
           phone: shipper.phone as string,
           avatar: (shipper.avatarUrl || shipper.avatar) as string,
-          shipperInfo: shipper.shipperInfo as any,
+          shipperInfo: shipper.shipperInfo
+            ? ({
+                ...shipper.shipperInfo,
+                joinedAt:
+                  (shipper.shipperInfo as any).joinedAt?.toDate?.() ||
+                  (shipper.shipperInfo as any).joinedAt,
+              } as any)
+            : undefined,
         }),
     );
   }
