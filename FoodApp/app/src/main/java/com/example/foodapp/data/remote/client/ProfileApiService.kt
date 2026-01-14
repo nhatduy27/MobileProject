@@ -1,4 +1,4 @@
-package com.example.foodapp.data.api.client
+package com.example.foodapp.data.remote.client
 
 import androidx.compose.runtime.Updater
 import com.example.foodapp.data.model.client.profile.*

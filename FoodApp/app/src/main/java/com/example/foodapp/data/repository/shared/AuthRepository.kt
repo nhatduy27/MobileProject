@@ -1,6 +1,6 @@
 package com.example.foodapp.data.repository.shared
 
-import com.example.foodapp.data.api.ApiClient
+import com.example.foodapp.data.remote.api.ApiClient
 import com.example.foodapp.data.model.shared.auth.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

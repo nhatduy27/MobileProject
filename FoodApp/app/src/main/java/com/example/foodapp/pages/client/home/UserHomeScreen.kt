@@ -1,23 +1,24 @@
 package com.example.foodapp.presentation.view.user.home
 
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
-import com.example.foodapp.pages.client.home.HomeViewModel
-import com.example.foodapp.pages.client.home.UserNameState
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.foodapp.R
 import com.example.foodapp.data.model.shared.product.Product
-import com.example.foodapp.data.model.shared.product.FoodCategory
+import com.example.foodapp.pages.client.home.HomeViewModel
+import com.example.foodapp.pages.client.home.ProductState
+import com.example.foodapp.pages.client.home.UserNameState
 import com.example.foodapp.pages.client.components.UserBottomNav
 import com.example.foodapp.pages.client.components.UserCategoryList
 import com.example.foodapp.pages.client.components.UserHeader
@@ -30,96 +31,61 @@ fun UserHomeScreen(
     onProductClick: (Product) -> Unit,
     onProfileClick: () -> Unit
 ) {
-
     val context = LocalContext.current
-    //khởi tạo viewModel
+
+    // Khởi tạo ViewModel
     val viewModel: HomeViewModel = viewModel(
         factory = HomeViewModel.factory(context)
     )
-    // Quan sát trạng thái từ ViewModel
-    val nameState by viewModel.userNameState.observeAsState(UserNameState.Idle)
 
-    // Gọi fetchUserName khi vào màn hình
+    // Quan sát các state từ ViewModel
+    val nameState by viewModel.userNameState.observeAsState(UserNameState.Idle)
+    val productState by viewModel.productState.observeAsState(ProductState.Idle)
+    val products by viewModel.products.observeAsState(emptyList())
+    val isLoadingMore by viewModel.isLoadingMore.observeAsState(false)
+    val hasMore by viewModel.hasMore.observeAsState(true)
+
+    // Gọi API khi vào màn hình
     LaunchedEffect(Unit) {
         viewModel.fetchUserName()
+        viewModel.getProducts() // Lấy sản phẩm lần đầu
     }
 
+    // Xử lý khi search - Đã sử dụng trong UserSearchBar
+    val onSearch: (String) -> Unit = { query ->
+        viewModel.searchProducts(query)
+    }
 
-    val productList = listOf(
-        Product(
-            name = "Matcha Latte",
-            description = "Ngon tuyệt",
-            price = "20.000đ",
-            priceValue = 20.0,
-            imageRes = R.drawable.matchalatte,
-            category = FoodCategory.DRINK
-        ),
-        Product(
-            name = "Classic Pizza",
-            description = "Nhiều phô mai",
-            price = "150.000đ",
-            priceValue = 150.0,
-            imageRes = R.drawable.data_3,
-            category = FoodCategory.FOOD
-        ),
-        Product(
-            name = "Chocolate Cake",
-            description = "Bánh ngọt hảo hạng",
-            price = "45.000đ",
-            priceValue = 45.0,
-            imageRes = R.drawable.data_3,
-            category = FoodCategory.FOOD
-        ),
-        Product(
-            name = "Caesar Salad",
-            description = "Rau tươi ngon",
-            price = "60.000đ",
-            priceValue = 60.0,
-            imageRes = R.drawable.data_3,
-            category = FoodCategory.FOOD // SỬA: Đúng category
-        ),
-        Product(
-            name = "Espresso",
-            description = "Cà phê đậm đà",
-            price = "25.000đ",
-            priceValue = 25.0,
-            imageRes = R.drawable.data_3,
-            category = FoodCategory.DRINK
-        ),
-        Product(
-            name = "Hamburger",
-            description = "Thịt bò tươi",
-            price = "80.000đ",
-            priceValue = 80.0,
-            imageRes = R.drawable.data_3,
-            category = FoodCategory.FOOD
-        ),
-        Product(
-            name = "Ice Cream Sundae",
-            description = "Kem mát lạnh",
-            price = "35.000đ",
-            priceValue = 35.0,
-            imageRes = R.drawable.data_3,
-            category = FoodCategory.FOOD
-        )
-    )
     // Gọi hàm Content để hiển thị giao diện
     UserHomeContent(
         navController = navController,
         nameState = nameState,
-        productList = productList,
+        productState = productState,
+        products = products,
+        isLoadingMore = isLoadingMore,
+        hasMore = hasMore,
         onProductClick = onProductClick,
-        onProfileClick = onProfileClick
+        onProfileClick = onProfileClick,
+        onSearch = onSearch,
+        onRefresh = { viewModel.refresh() },
+        onLoadMore = { viewModel.loadMoreProducts() }
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun UserHomeContent(
     navController: NavHostController,
     nameState: UserNameState,
-    productList: List<Product>,
+    productState: ProductState,
+    products: List<Product>,
+    isLoadingMore: Boolean,
+    hasMore: Boolean,
     onProductClick: (Product) -> Unit,
-    onProfileClick: () -> Unit
+    onProfileClick: () -> Unit,
+    onSearch: (String) -> Unit,
+    onRefresh: () -> Unit,
+    onLoadMore: () -> Unit
 ) {
     Scaffold(
         containerColor = Color.White,
@@ -140,9 +106,15 @@ fun UserHomeContent(
             // Phần Header và Danh mục (Chiếm 2 cột)
             item(span = { GridItemSpan(2) }) {
                 Column {
-                    UserHeader(nameState)
-                    UserSearchBar()
+                    // Lựa chọn 1: Hiển thị trực tiếp
+                    SimpleUserHeader(nameState = nameState)
+
+                    // Lựa chọn 2: Sử dụng SearchBar với callback
+                    UserSearchBarWithCallback(onSearch = onSearch)
+
+                    // Tạm thời sử dụng CategoryList
                     UserCategoryList()
+
                     Text(
                         text = "Món ăn phổ biến",
                         fontWeight = FontWeight.Bold,
@@ -152,13 +124,147 @@ fun UserHomeContent(
                 }
             }
 
-            // Danh sách sản phẩm
-            items(productList) { product ->
-                UserProductCard(
-                    product = product,
-                    onClick = { onProductClick(product) }
-                )
+            // Xử lý các trạng thái loading/error/empty
+            when (productState) {
+                is ProductState.Loading -> {
+                    item(span = { GridItemSpan(2) }) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                }
+                is ProductState.Error -> {
+                    item(span = { GridItemSpan(2) }) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(text = "Đã xảy ra lỗi")
+                                Text(text = (productState as ProductState.Error).message)
+                                Button(onClick = onRefresh) {
+                                    Text("Thử lại")
+                                }
+                            }
+                        }
+                    }
+                }
+                is ProductState.Empty -> {
+                    item(span = { GridItemSpan(2) }) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(text = "Không tìm thấy sản phẩm nào")
+                                Button(onClick = onRefresh) {
+                                    Text("Làm mới")
+                                }
+                            }
+                        }
+                    }
+                }
+                is ProductState.Success -> {
+                    // Danh sách sản phẩm
+                    items(products) { product ->
+                        UserProductCard(
+                            product = product,
+                            onClick = { onProductClick(product) }
+                        )
+                    }
+
+                    // Load more indicator
+                    if (isLoadingMore) {
+                        item(span = { GridItemSpan(2) }) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    } else if (hasMore && products.isNotEmpty()) {
+                        item(span = { GridItemSpan(2) }) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                TextButton(onClick = onLoadMore) {
+                                    Text("Xem thêm sản phẩm")
+                                }
+                            }
+                        }
+                    }
+                }
+                else -> {
+                    // ProductState.Idle - không hiển thị gì
+                }
             }
         }
     }
+}
+
+// Component hiển thị header đơn giản
+@Composable
+fun SimpleUserHeader(nameState: UserNameState) {
+    val userName = when (nameState) {
+        is UserNameState.Success -> nameState.userName
+        is UserNameState.Loading -> "Đang tải..."
+        is UserNameState.Error -> "Khách"
+        is UserNameState.Empty -> "Khách"
+        else -> "Khách"
+    }
+
+    // Hiển thị header đơn giản
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "Xin chào, $userName!",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+// SearchBar với callback
+@Composable
+fun UserSearchBarWithCallback(onSearch: (String) -> Unit) {
+    var searchText by remember { mutableStateOf("") }
+
+    OutlinedTextField(
+        value = searchText,
+        onValueChange = { searchText = it },
+        placeholder = { Text("Tìm kiếm món ăn...") },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        trailingIcon = {
+            IconButton(onClick = { onSearch(searchText) }) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Tìm kiếm"
+                )
+            }
+        }
+    )
 }

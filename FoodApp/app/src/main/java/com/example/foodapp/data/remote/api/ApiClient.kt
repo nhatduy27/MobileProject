@@ -1,10 +1,12 @@
-package com.example.foodapp.data.api
+package com.example.foodapp.data.remote.api
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
-import com.example.foodapp.data.api.shared.AuthApiService
-import com.example.foodapp.data.api.shared.OtpApiService
-import com.example.foodapp.data.api.client.ProfileApiService
+import android.util.Log
+import com.example.foodapp.data.remote.shared.AuthApiService
+import com.example.foodapp.data.remote.shared.OtpApiService
+import com.example.foodapp.data.remote.client.ProfileApiService
+import com.example.foodapp.data.remote.client.ProductApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -18,7 +20,7 @@ object ApiClient {
 
     fun init(context: Context) {
         appContext = context.applicationContext
-        android.util.Log.d("ApiClient", "✅ Đã khởi tạo với context")
+        Log.d("ApiClient", "✅ Đã khởi tạo với context")
     }
 
     private fun getToken(): String? {
@@ -29,23 +31,23 @@ object ApiClient {
 
             // Debug: In tất cả keys trong auth
             val allEntries = sharedPref.all
-            android.util.Log.d("ApiClient", "🔍 All entries in 'auth' SharedPreferences:")
+            Log.d("ApiClient", "🔍 All entries in 'auth' SharedPreferences:")
             allEntries.forEach { (key, value) ->
-                android.util.Log.d("ApiClient", "   $key = ${value.toString().take(20)}...")
+                Log.d("ApiClient", "   $key = ${value.toString().take(20)}...")
             }
 
             // Tìm token
             val token = sharedPref.getString("firebase_id_token", null)
 
             if (token == null) {
-                android.util.Log.w("ApiClient", "⚠ Không tìm thấy token với key 'firebase_id_token'")
+                Log.w("ApiClient", "⚠ Không tìm thấy token với key 'firebase_id_token'")
             } else {
-                android.util.Log.d("ApiClient", "✅ Found token: ${token.take(10)}...")
+                Log.d("ApiClient", "✅ Found token: ${token.take(10)}...")
             }
 
             token
         } catch (e: Exception) {
-            android.util.Log.e("ApiClient", "❌ Lỗi khi lấy token: ${e.message}")
+            Log.e("ApiClient", "❌ Lỗi khi lấy token: ${e.message}")
             null
         }
     }
@@ -69,9 +71,9 @@ object ApiClient {
 
                 if (!token.isNullOrEmpty()) {
                     requestBuilder.addHeader("Authorization", "Bearer $token")
-                    android.util.Log.d("ApiClient", "✅ Đã thêm Authorization header")
+                    Log.d("ApiClient", "✅ Đã thêm Authorization header")
                 } else {
-                    android.util.Log.w("ApiClient", "⚠ Không có token để thêm vào header")
+                    Log.w("ApiClient", "⚠ Không có token để thêm vào header")
                 }
 
                 chain.proceed(requestBuilder.build())
@@ -90,4 +92,5 @@ object ApiClient {
     val otpApiService: OtpApiService by lazy { retrofit.create(OtpApiService::class.java) }
     val authApiService: AuthApiService by lazy { retrofit.create(AuthApiService::class.java) }
     val profileApiService: ProfileApiService by lazy { retrofit.create(ProfileApiService::class.java) }
+    val productApiService: ProductApiService by lazy { retrofit.create(ProductApiService::class.java) }
 }

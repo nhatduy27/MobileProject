@@ -4,7 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.io.IOException
-import com.example.foodapp.data.api.ApiClient
+import com.example.foodapp.data.remote.api.ApiClient
 import com.example.foodapp.data.model.shared.otp.*
 
 
