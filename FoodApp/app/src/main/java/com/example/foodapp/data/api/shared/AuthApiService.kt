@@ -1,13 +1,12 @@
 package com.example.foodapp.data.api.shared
 
-import com.example.foodapp.data.model.shared.auth.ApiResponse
-import com.example.foodapp.data.model.shared.auth.GoogleAuthRequest
-import com.example.foodapp.data.model.shared.auth.LoginRequest
-import com.example.foodapp.data.model.shared.auth.RegisterRequest
-import com.example.foodapp.data.model.shared.auth.ResetPasswordRequest
+import com.example.foodapp.data.model.shared.auth.*
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.Header
+import retrofit2.http.Headers
 import retrofit2.http.POST
+import retrofit2.http.PUT
 
 interface AuthApiService {
     @POST("auth/register")
@@ -21,4 +20,20 @@ interface AuthApiService {
 
     @POST("auth/google")
     suspend fun googleLogin(@Body request : GoogleAuthRequest) : Response<ApiResponse>
+
+
+    @POST("auth/logout")
+    @Headers("Content-Type: application/json")
+    suspend fun logout(
+        @Header("Authorization") token: String,
+        @Body request: LogoutRequest
+    ): Response<ApiResponse>
+
+
+    @PUT("auth/change-password")
+    @Headers("Content-Type: application/json")
+    suspend fun changePassword(
+        @Header("Authorization") token: String,
+        @Body request: ChangePasswordRequest
+    ): Response<ChangePasswordResponse>
 }

@@ -11,11 +11,12 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
 import com.example.foodapp.navigation.FoodAppNavHost
 import com.example.foodapp.ui.theme.FoodAppTheme
-
+import com.example.foodapp.data.api.ApiClient
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        ApiClient.init(this)
 
         setContent {
             FoodAppTheme {

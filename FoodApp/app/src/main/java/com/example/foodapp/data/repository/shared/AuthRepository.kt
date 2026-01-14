@@ -146,4 +146,87 @@ class AuthRepository {
     }
 
 
+
+    suspend fun logout(accessToken: String, fcmToken: String? = null): ApiResult<ApiResponse> {
+        return try {
+            withContext(Dispatchers.IO) {
+                // Tạo request với FCM token
+                val request = LogoutRequest(fcmToken)
+
+                // Gọi API với Authorization header
+                val response = apiService.logout("Bearer $accessToken", request)
+
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null && body.success) {
+                        ApiResult.Success(body)
+                    } else {
+                        val errorMessage = body?.message ?: "Đăng xuất thất bại"
+                        ApiResult.Failure(Exception(errorMessage))
+                    }
+                } else {
+                    val errorCode = response.code()
+                    val errorBody = response.errorBody()?.string()
+
+                    val errorMessage = when (errorCode) {
+                        401 -> "Token không hợp lệ hoặc đã hết hạn"
+                        403 -> "Không có quyền truy cập"
+                        else -> errorBody ?: "HTTP error: $errorCode"
+                    }
+
+                    ApiResult.Failure(Exception(errorMessage))
+                }
+            }
+        } catch (e: HttpException) {
+            ApiResult.Failure(Exception("HTTP error: ${e.code()} - ${e.message()}"))
+        } catch (e: IOException) {
+            ApiResult.Failure(Exception("Lỗi mạng: ${e.message}"))
+        } catch (e: Exception) {
+            ApiResult.Failure(Exception("Lỗi không xác định: ${e.message}"))
+        }
+    }
+
+
+    suspend fun changePassword(
+        accessToken: String,
+        oldPassword: String,
+        newPassword: String
+    ): ApiResult<ChangePasswordResponse> {
+        return try {
+            withContext(Dispatchers.IO) {
+                val request = ChangePasswordRequest(oldPassword, newPassword)
+                val response = apiService.changePassword("Bearer $accessToken", request)
+
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null && body.success == true) {
+                        ApiResult.Success(body)
+                    } else {
+                        val errorMessage = body?.message ?: "Thay đổi mật khẩu thất bại"
+                        ApiResult.Failure(Exception(errorMessage))
+                    }
+                } else {
+                    val errorCode = response.code()
+                    val errorBody = response.errorBody()?.string()
+
+                    val errorMessage = when (errorCode) {
+                        400 -> "Mật khẩu cũ không đúng"
+                        401 -> "Token không hợp lệ hoặc đã hết hạn"
+                        422 -> "Mật khẩu mới không đáp ứng yêu cầu bảo mật"
+                        else -> errorBody ?: "HTTP error: $errorCode"
+                    }
+
+                    ApiResult.Failure(Exception(errorMessage))
+                }
+            }
+        } catch (e: HttpException) {
+            ApiResult.Failure(Exception("HTTP error: ${e.code()} - ${e.message()}"))
+        } catch (e: IOException) {
+            ApiResult.Failure(Exception("Lỗi mạng: ${e.message}"))
+        } catch (e: Exception) {
+            ApiResult.Failure(Exception("Lỗi không xác định: ${e.message}"))
+        }
+    }
+
+
 }

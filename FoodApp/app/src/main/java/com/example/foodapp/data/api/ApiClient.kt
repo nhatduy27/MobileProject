@@ -1,5 +1,7 @@
 package com.example.foodapp.data.api
 
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import com.example.foodapp.data.api.shared.AuthApiService
 import com.example.foodapp.data.api.shared.OtpApiService
 import com.example.foodapp.data.api.client.ProfileApiService
@@ -10,41 +12,82 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 object ApiClient {
-    private const val BASE_URL = "http://10.0.2.2:3000/api/" // Cho Android emulator
+    private const val BASE_URL = "http://10.0.2.2:3000/api/"
 
-    private val loggingInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
+    private var appContext: Context? = null
+
+    fun init(context: Context) {
+        appContext = context.applicationContext
+        android.util.Log.d("ApiClient", "✅ Đã khởi tạo với context")
     }
 
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .addInterceptor(loggingInterceptor)
-        .addInterceptor { chain ->
-            val request = chain.request().newBuilder()
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Accept", "application/json")
-                .build()
-            chain.proceed(request)
+    private fun getToken(): String? {
+        return try {
+            val context = appContext ?: throw IllegalStateException("Context chưa được init")
+
+            val sharedPref = context.getSharedPreferences("auth", MODE_PRIVATE)
+
+            // Debug: In tất cả keys trong auth
+            val allEntries = sharedPref.all
+            android.util.Log.d("ApiClient", "🔍 All entries in 'auth' SharedPreferences:")
+            allEntries.forEach { (key, value) ->
+                android.util.Log.d("ApiClient", "   $key = ${value.toString().take(20)}...")
+            }
+
+            // Tìm token
+            val token = sharedPref.getString("firebase_id_token", null)
+
+            if (token == null) {
+                android.util.Log.w("ApiClient", "⚠ Không tìm thấy token với key 'firebase_id_token'")
+            } else {
+                android.util.Log.d("ApiClient", "✅ Found token: ${token.take(10)}...")
+            }
+
+            token
+        } catch (e: Exception) {
+            android.util.Log.e("ApiClient", "❌ Lỗi khi lấy token: ${e.message}")
+            null
         }
-        .build()
-
-    private val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL)
-        .client(client)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-
-    val otpApiService: OtpApiService by lazy {
-        retrofit.create(OtpApiService::class.java)
     }
 
-    val authApiService: AuthApiService by lazy {
-        retrofit.create(AuthApiService::class.java)
+    private val client: OkHttpClient by lazy {
+        OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .addInterceptor(HttpLoggingInterceptor().apply {
+                level = HttpLoggingInterceptor.Level.BODY
+            })
+            .addInterceptor { chain ->
+                val originalRequest = chain.request()
+                val requestBuilder = originalRequest.newBuilder()
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json")
+
+                // Lấy token
+                val token = getToken()
+
+                if (!token.isNullOrEmpty()) {
+                    requestBuilder.addHeader("Authorization", "Bearer $token")
+                    android.util.Log.d("ApiClient", "✅ Đã thêm Authorization header")
+                } else {
+                    android.util.Log.w("ApiClient", "⚠ Không có token để thêm vào header")
+                }
+
+                chain.proceed(requestBuilder.build())
+            }
+            .build()
     }
 
-    val profileApiService: ProfileApiService by lazy {
-        retrofit.create(ProfileApiService::class.java)
+    private val retrofit: Retrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
     }
+
+    val otpApiService: OtpApiService by lazy { retrofit.create(OtpApiService::class.java) }
+    val authApiService: AuthApiService by lazy { retrofit.create(AuthApiService::class.java) }
+    val profileApiService: ProfileApiService by lazy { retrofit.create(ProfileApiService::class.java) }
 }

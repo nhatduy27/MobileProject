@@ -30,19 +30,6 @@ class UserFirebaseRepository(private val context : Context) {
     }
 
 
-    fun signInWithCustomToken(customToken: String, callback: (Boolean, Exception?) -> Unit) {
-        auth.signInWithCustomToken(customToken)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-
-                    callback(true, null)
-                } else {
-                    callback(false, task.exception)
-                }
-            }
-    }
-
-
     fun getVerifyStateByUid(onComplete: (Boolean) -> Unit){
 
         val currentUser = auth.currentUser

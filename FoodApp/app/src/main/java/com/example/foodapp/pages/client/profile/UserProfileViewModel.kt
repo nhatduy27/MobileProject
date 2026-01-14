@@ -1,6 +1,4 @@
-/*
 package com.example.foodapp.pages.client.profile
-
 
 import android.content.Context
 import androidx.lifecycle.LiveData
@@ -9,11 +7,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.model.Client
+import com.google.firebase.messaging.FirebaseMessaging
+import com.example.foodapp.data.model.client.profile.*
+import com.example.foodapp.data.repository.shared.AuthRepository
+import com.example.foodapp.data.model.client.profile.ApiResult
+import com.example.foodapp.data.repository.firebase.AuthManager
 import com.example.foodapp.data.repository.client.profile.ProfileRepository
-import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 // Sealed class cho các trạng thái
@@ -39,8 +41,9 @@ sealed class ChangePasswordState {
 }
 
 class ProfileViewModel(
-    private val userRepository: UserFirebaseRepository,
-    private val profileRepository: ProfileRepository
+    private val authRepository: AuthRepository,
+    private val profileRepository: ProfileRepository,
+    private val authManager: AuthManager,
 ) : ViewModel() {
 
     // State cho việc lấy thông tin người dùng
@@ -66,33 +69,34 @@ class ProfileViewModel(
     // Format date cho ngày tham gia
     private val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
+
+    //Load thông tin của người dùng ngay khi vừa vào app
     init {
         fetchUserData()
     }
 
-    // Lấy thông tin người dùng
-    // Trong ViewModel
+    // user refresh thủ công
+    fun refreshUserData() {
+        fetchUserData()
+    }
+
+    // Lấy thông tin người dùng từ database
     fun fetchUserData() {
         viewModelScope.launch {
             _userState.value = ProfileState.Loading
 
-            when (val result = profileRepository.getUserProfile()) {
+            when (val result = profileRepository.getUserProfile()) { //Gọi API
                 is ApiResult.Success -> {
-                    val response = result.data
-                    if (response.success) {
-                        response.data?.let { apiData ->
-                            val user = Client.fromApiResponse(apiData)
-                            _currentUser.value = user
-                            _userState.value = ProfileState.Success(user)
-                        } ?: run {
-                            _userState.value = ProfileState.Error(
-                                response.message ?: "Không có dữ liệu người dùng"
-                            )
-                        }
+                    // Bây giờ result.data là UserProfileData, không phải GetProfileResponse
+                    val userData = result.data
+
+                    // Kiểm tra userData có null hoặc empty không
+                    if (userData.id.isNullOrEmpty()) {
+                        _userState.value = ProfileState.Error("Không có dữ liệu người dùng")
                     } else {
-                        _userState.value = ProfileState.Error(
-                            response.message ?: "Lỗi khi lấy thông tin"
-                        )
+                        val user = Client.fromApiResponse(userData)
+                        _currentUser.value = user
+                        _userState.value = ProfileState.Success(user)
                     }
                 }
                 is ApiResult.Failure -> {
@@ -104,58 +108,88 @@ class ProfileViewModel(
         }
     }
 
-    // Cập nhật thông tin profile
-    fun updateProfile(){
 
+    fun updateProfile(displayName: String?, phone: String?) {
+        viewModelScope.launch {
+            _updateState.value = UpdateProfileState.Loading
+
+            try {
+                // Tạo request
+                val request = UpdateProfileRequest(
+                    displayName = displayName?.trim().takeIf { !it.isNullOrBlank() },
+                    phone = phone?.trim().takeIf { !it.isNullOrBlank() },
+                    avatarUrl = null
+                )
+
+                println("DEBUG: [ViewModel] Update request: $request")
+
+                val result = profileRepository.updateProfile(request)
+
+                when (result) {
+                    is ApiResult.Success -> {
+                        val updatedUserData = result.data
+                        println("DEBUG: [ViewModel] Update successful: ${updatedUserData}")
+
+                        // Cập nhật current user với dữ liệu mới
+                        val currentUser = _currentUser.value
+                        currentUser?.let { user ->
+                            val updatedUser = user.copy(
+                                fullName = updatedUserData.displayName ?: user.fullName,
+                                phone = updatedUserData.phone ?: user.phone,
+                                imageAvatar = updatedUserData.avatarUrl ?: user.imageAvatar
+                            )
+                            _currentUser.value = updatedUser
+                            _userState.value = ProfileState.Success(updatedUser)
+                        }
+
+                        _updateState.value = UpdateProfileState.Success("Cập nhật thông tin thành công")
+                        println("DEBUG: [ViewModel] Update state set to success")
+                    }
+
+                    is ApiResult.Failure -> {
+                        val errorMessage = result.exception.message ?: "Cập nhật thất bại"
+                        _updateState.value = UpdateProfileState.Error(errorMessage)
+                        println("DEBUG: [ViewModel] Update failed: $errorMessage")
+                    }
+                }
+            } catch (e: Exception) {
+                val errorMessage = e.message ?: "Lỗi không xác định khi cập nhật"
+                _updateState.value = UpdateProfileState.Error(errorMessage)
+                println("DEBUG: [ViewModel] Update exception: $errorMessage")
+            }
+        }
     }
 
-    // Đổi mật khẩu
-    fun changePassword(){
-
-    }
-
-    // Đăng xuất
-    fun logout() {
-
-    }
-
-    // Format ngày tham gia
-    fun formatJoinDate(){
-
-    }
-
-    // Get formatted join date cho current user
-    fun getFormattedJoinDate(){
-
-    }
-
-    // Validate phone number
     private fun isValidPhone(phone: String): Boolean {
         val phoneRegex = "^[0-9]{10,11}\$".toRegex()
         return phone.matches(phoneRegex)
     }
 
-    // Reset update state
-    fun resetUpdateState() {
-        _updateState.value = UpdateProfileState.Idle
-    }
 
-    // Reset change password state
-    fun resetChangePasswordState() {
-        _changePasswordState.value = ChangePasswordState.Idle
-    }
+    // Factory cho ViewModel
+    class Factory(private val context: Context) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
+                val authRepository = AuthRepository()
+                val profileRepository = ProfileRepository()
+                val authManager = AuthManager(context)
+                return ProfileViewModel(authRepository, profileRepository, authManager) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
+        }
 
-    // Clear error states
-    fun clearErrors() {
-        if (_userState.value is ProfileState.Error) {
-            _userState.value = ProfileState.Idle
-        }
-        if (_updateState.value is UpdateProfileState.Error) {
-            _updateState.value = UpdateProfileState.Idle
-        }
-        if (_changePasswordState.value is ChangePasswordState.Error) {
-            _changePasswordState.value = ChangePasswordState.Idle
+        companion object {
+            @Volatile
+            private var INSTANCE: Factory? = null
+
+            fun getInstance(context: Context): Factory {
+                return INSTANCE ?: synchronized(this) {
+                    INSTANCE ?: Factory(context.applicationContext).also {
+                        INSTANCE = it
+                    }
+                }
+            }
         }
     }
 }
-*/

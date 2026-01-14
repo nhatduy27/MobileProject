@@ -154,7 +154,7 @@ data class LoginResponse  @JvmOverloads constructor(
     val isValid: Boolean get() = user?.isValid == true && !customToken.isNullOrBlank()
 }
 
-// Chi tiết user từ đăng nhập (đầy đủ thông tin)
+// Chi tiết user từ đăng nhập
 data class UserDetail @JvmOverloads constructor(
     @SerializedName("id")
     val id: String = "",
@@ -244,5 +244,30 @@ data class GoogleUserDetail @JvmOverloads constructor(
     // THÊM DÒNG NÀY
     val isValid: Boolean get() = id.isNotBlank() && email.isNotBlank()
 }
+
+
+// Request cho logout
+data class LogoutRequest(
+    @SerializedName("fcmToken")
+    val fcmToken: String? = null
+)
+
+// Request cho thay đổi mật khẩu
+data class ChangePasswordRequest(
+    @SerializedName("oldPassword")
+    val oldPassword: String,
+
+    @SerializedName("newPassword")
+    val newPassword: String
+)
+
+// Response cho thay đổi mật khẩu
+data class ChangePasswordResponse @JvmOverloads constructor(
+    @SerializedName("success")
+    val success: Boolean? = null,
+
+    @SerializedName("message")
+    val message: String? = null
+)
 
 
