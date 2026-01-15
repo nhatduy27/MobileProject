@@ -1,5 +1,6 @@
 package com.example.foodapp.data.model.shared.product
 import android.os.Parcelable
+import com.example.foodapp.data.remote.client.response.product.ProductApiModel
 import kotlinx.parcelize.Parcelize
 
 // Enum để phân loại món ăn
@@ -20,9 +21,9 @@ enum class FoodCategory {
         fun toApiString(category: FoodCategory): String? {
             return when (category) {
                 ALL -> null
-                FOOD -> "food"
-                DRINK -> "drink"
-                SNACK -> "snack"
+                FOOD -> "FOOD"
+                DRINK -> "DRINK"
+                SNACK -> "SNACK"
             }
         }
     }
@@ -83,7 +84,7 @@ data class Product(
 
     // Factory method từ ProductApiModel
     companion object {
-        fun fromApiModel(apiModel: com.example.foodapp.data.model.client.product.ProductApiModel): Product {
+        fun fromApiModel(apiModel: ProductApiModel): Product {
             return Product(
                 id = apiModel.id,
                 name = apiModel.name,
@@ -152,11 +153,11 @@ data class Product(
 }
 
 // Extension function để chuyển đổi
-fun com.example.foodapp.data.model.client.product.ProductApiModel.toProduct(): Product {
+fun ProductApiModel.toProduct(): Product {
     return Product.fromApiModel(this)
 }
 
 // List extension
-fun List<com.example.foodapp.data.model.client.product.ProductApiModel>.toProductList(): List<Product> {
+fun List<ProductApiModel>.toProductList(): List<Product> {
     return this.map { it.toProduct() }
 }

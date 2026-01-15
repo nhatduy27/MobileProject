@@ -1,3 +1,4 @@
+// UserProductDetailScreen.kt
 package com.example.foodapp.pages.client.productdetail
 
 import androidx.compose.foundation.*
@@ -22,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.foodapp.data.model.shared.product.Product
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,36 +40,47 @@ fun UserProductDetailScreen(
     val product by viewModel.product.observeAsState(null)
     val favoriteState by viewModel.favoriteState.observeAsState(FavoriteState.Idle)
 
-    // State cho số lượng
     var quantity by remember { mutableStateOf(1) }
-
-    // State cho trạng thái yêu thích
-    val isFavorite = remember(product) {
-        mutableStateOf(product?.isFavorite ?: false)
-    }
 
     // Load product detail khi vào màn hình
     LaunchedEffect(productId) {
         if (productId.isNotBlank()) {
+            println("DEBUG: [UserProductDetailScreen] Loading product detail for: $productId")
             viewModel.getProductDetail(productId)
         }
     }
 
-    // Cập nhật isFavorite khi product thay đổi
-    LaunchedEffect(product) {
-        product?.let {
-            isFavorite.value = it.isFavorite
+    // Reset favorite state khi thành công
+    LaunchedEffect(favoriteState) {
+        if (favoriteState is FavoriteState.Success) {
+            // Sau 2 giây reset state
+            kotlinx.coroutines.delay(2000)
+            viewModel.resetFavoriteState()
         }
     }
 
-    // Xử lý khi có thay đổi từ favoriteState
+    // Hiển thị Snackbar khi có thông báo
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    // Hiển thị Snackbar khi có thành công/error từ favoriteState
     LaunchedEffect(favoriteState) {
-        when (favoriteState) {
+        when (val state = favoriteState) {
             is FavoriteState.Success -> {
-                isFavorite.value = true
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = state.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
             }
             is FavoriteState.Error -> {
-                // Xử lý lỗi, không thay đổi trạng thái
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = state.message,
+                        duration = SnackbarDuration.Long
+                    )
+                }
             }
             else -> {}
         }
@@ -75,18 +88,8 @@ fun UserProductDetailScreen(
 
     Scaffold(
         topBar = {
-            // SỬA: Custom TopAppBar với button quay lại và tiêu đề cùng hàng
             ProductDetailTopBar(
-                onBackPressed = onBackPressed,
-                isFavorite = isFavorite.value,
-                isLoading = favoriteState == FavoriteState.Loading,
-                onFavoriteClick = {
-                    if (favoriteState != FavoriteState.Loading) {
-                        productId.takeIf { it.isNotBlank() }?.let { id ->
-                            viewModel.addToFavorites(id)
-                        }
-                    }
-                }
+                onBackPressed = onBackPressed
             )
         },
         bottomBar = {
@@ -106,7 +109,8 @@ fun UserProductDetailScreen(
                     }
                 )
             }
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
         Box(
             modifier = Modifier
@@ -120,7 +124,18 @@ fun UserProductDetailScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                color = Color(0xFFFF9800)
+                            )
+                            Text(
+                                text = "Đang tải thông tin sản phẩm...",
+                                color = Color.Gray
+                            )
+                        }
                     }
                 }
                 is ProductDetailState.Error -> {
@@ -129,51 +144,76 @@ fun UserProductDetailScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Text(text = "Đã xảy ra lỗi")
-                            Text(text = state.message)
-                            Button(
-                                onClick = { viewModel.getProductDetail(productId) },
-                                modifier = Modifier.padding(top = 16.dp)
-                            ) {
-                                Text("Thử lại")
-                            }
+                            Icon(
+                                imageVector = Icons.Filled.Error,
+                                contentDescription = "Lỗi",
+                                tint = Color.Red,
+                                modifier = Modifier.size(48.dp)
+                            )
+                            Text(
+                                text = "Đã xảy ra lỗi",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 18.sp
+                            )
+                            Text(
+                                text = state.message,
+                                color = Color.Gray,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 32.dp)
+                            )
 
-                            // Button quay lại trong trường hợp lỗi
-                            Button(
-                                onClick = onBackPressed,
-                                modifier = Modifier.padding(top = 16.dp),
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color.LightGray,
-                                    contentColor = Color.Black
-                                )
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.ArrowBack,
-                                        contentDescription = "Quay lại",
-                                        modifier = Modifier.size(16.dp)
+                                Button(
+                                    onClick = { viewModel.getProductDetail(productId) },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(0xFFFF9800)
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Quay lại")
+                                ) {
+                                    Text("Thử lại")
+                                }
+
+                                Button(
+                                    onClick = onBackPressed,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color.LightGray,
+                                        contentColor = Color.Black
+                                    )
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Filled.ArrowBack,
+                                            contentDescription = "Quay lại",
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Quay lại")
+                                    }
                                 }
                             }
                         }
                     }
                 }
                 is ProductDetailState.Success -> {
+                    // Sử dụng product từ LiveData thay vì từ state để có cập nhật real-time
+                    val currentProduct = product ?: state.product
+
+                    // Debug log để kiểm tra trạng thái yêu thích
+                    println("DEBUG: [UserProductDetailScreen] Product loaded - ID: ${currentProduct.id}, isFavorite: ${currentProduct.isFavorite}")
+
                     ProductDetailContent(
-                        product = state.product,
-                        isFavorite = isFavorite.value,
-                        onFavoriteClick = {
-                            productId.takeIf { it.isNotBlank() }?.let { id ->
-                                viewModel.addToFavorites(id)
-                            }
-                        },
+                        product = currentProduct,
                         isLoading = favoriteState == FavoriteState.Loading,
+                        onFavoriteClick = {
+                            println("DEBUG: [UserProductDetailScreen] Favorite button clicked for product: ${currentProduct.id}")
+                            viewModel.toggleFavorite(currentProduct.id)
+                        },
                         onBackPressed = onBackPressed
                     )
                 }
@@ -185,14 +225,10 @@ fun UserProductDetailScreen(
     }
 }
 
-// SỬA: Custom TopAppBar với button quay lại kế bên tiêu đề
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDetailTopBar(
-    onBackPressed: () -> Unit,
-    isFavorite: Boolean,
-    isLoading: Boolean,
-    onFavoriteClick: () -> Unit
+    onBackPressed: () -> Unit
 ) {
     TopAppBar(
         title = {
@@ -221,54 +257,20 @@ fun ProductDetailTopBar(
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = Color(0xFFFF9800)  // Màu cam giống bottom bar
         ),
-        actions = {
-            // Nút yêu thích bên phải
-            FavoriteIconButton(
-                isFavorite = isFavorite,
-                isLoading = isLoading,
-                onClick = onFavoriteClick
-            )
-        }
+        // KHÔNG CÓ actions nữa - bỏ nút trái tim trên top bar
     )
 }
-
-// Các Composable khác giữ nguyên...
-@Composable
-fun FavoriteIconButton(
-    isFavorite: Boolean,
-    isLoading: Boolean,
-    onClick: () -> Unit
-) {
-    IconButton(
-        onClick = onClick,
-        enabled = !isLoading
-    ) {
-        if (isLoading) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(24.dp),
-                strokeWidth = 2.dp,
-                color = Color.White
-            )
-        } else {
-            Icon(
-                imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.Favorite,
-                contentDescription = if (isFavorite) "Bỏ yêu thích" else "Thêm vào yêu thích",
-                tint = Color.White
-            )
-        }
-    }
-}
-
-// ... Các hàm khác giữ nguyên ...
 
 @Composable
 fun ProductDetailContent(
     product: Product,
-    isFavorite: Boolean,
-    onFavoriteClick: () -> Unit,
     isLoading: Boolean = false,
+    onFavoriteClick: () -> Unit,
     onBackPressed: () -> Unit = {}
 ) {
+    // Debug log
+    println("DEBUG: [ProductDetailContent] Rendering product - ID: ${product.id}, isFavorite: ${product.isFavorite}, isLoading: $isLoading")
+
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -292,10 +294,22 @@ fun ProductDetailContent(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.LightGray),
+                        .background(Color(0xFFF5F5F5)),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(text = "Không có ảnh", color = Color.Gray)
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "🍜",
+                            fontSize = 48.sp
+                        )
+                        Text(
+                            text = "Không có ảnh",
+                            color = Color.Gray
+                        )
+                    }
                 }
             }
 
@@ -306,13 +320,13 @@ fun ProductDetailContent(
                         .align(Alignment.TopEnd)
                         .padding(16.dp)
                         .clip(RoundedCornerShape(4.dp))
-                        .background(Color.Red.copy(alpha = 0.8f))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .background(Color.Red.copy(alpha = 0.9f))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = "HẾT HÀNG",
                         color = Color.White,
-                        fontSize = 12.sp,
+                        fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -325,7 +339,7 @@ fun ProductDetailContent(
                     .padding(bottom = 16.dp, end = 16.dp)
             ) {
                 FavoriteIconOnImage(
-                    isFavorite = isFavorite,
+                    isFavorite = product.isFavorite == true,
                     isLoading = isLoading,
                     onClick = onFavoriteClick
                 )
@@ -340,30 +354,32 @@ fun ProductDetailContent(
                 text = product.name,
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 8.dp)
+                color = Color.Black,
+                modifier = Modifier.padding(bottom = 12.dp)
             )
 
             // Rating and sold count
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(bottom = 8.dp)
+                modifier = Modifier.padding(bottom = 12.dp)
             ) {
                 Icon(
-                    imageVector = Icons.Default.Star,
+                    imageVector = Icons.Filled.Star,
                     contentDescription = "Rating",
                     tint = Color(0xFFFFC107),
                     modifier = Modifier.size(20.dp)
                 )
-                Spacer(modifier = Modifier.width(4.dp))
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "${product.rating} (${product.totalRatings} đánh giá)",
-                    fontSize = 14.sp
+                    text = "${String.format("%.1f", product.rating)} (${product.totalRatings} đánh giá)",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
                 )
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = "Đã bán: ${product.soldCount}",
-                    fontSize = 14.sp,
-                    color = Color.Gray
+                    fontSize = 16.sp,
+                    color = Color(0xFF666666)
                 )
             }
 
@@ -371,16 +387,16 @@ fun ProductDetailContent(
             Text(
                 text = if (product.price is String) product.price
                 else product.price.toString(),
-                fontSize = 28.sp,
+                fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFFFF9800),
-                modifier = Modifier.padding(bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 20.dp)
             )
 
             // Description
             Text(
                 text = "Mô tả",
-                fontSize = 18.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -388,27 +404,41 @@ fun ProductDetailContent(
                 text = product.description ?: "Không có mô tả",
                 fontSize = 16.sp,
                 lineHeight = 24.sp,
-                modifier = Modifier.padding(bottom = 16.dp)
+                color = Color(0xFF444444),
+                modifier = Modifier.padding(bottom = 20.dp)
             )
 
             // Shop Info
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(8.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F5F5))
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F9F9)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp)
                 ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Store,
+                            contentDescription = "Cửa hàng",
+                            tint = Color(0xFFFF9800),
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Thông tin cửa hàng",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                     Text(
-                        text = "Thông tin cửa hàng",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    Text(
-                        text = product.shopName ?: "Không có thông tin",
-                        fontSize = 16.sp
+                        text = product.shopName ?: "Không có thông tin cửa hàng",
+                        fontSize = 16.sp,
+                        color = Color(0xFF444444)
                     )
                 }
             }
@@ -417,7 +447,7 @@ fun ProductDetailContent(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
+                    .padding(top = 20.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 // Preparation Time
@@ -433,7 +463,7 @@ fun ProductDetailContent(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Chuẩn bị: ${product.preparationTime ?: 0} phút",
-                        fontSize = 14.sp,
+                        fontSize = 16.sp,
                         color = Color(0xFF666666)
                     )
                 }
@@ -444,7 +474,7 @@ fun ProductDetailContent(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(8.dp)
+                            .size(10.dp)
                             .clip(CircleShape)
                             .background(
                                 if (product.isAvailable) Color(0xFF4CAF50)
@@ -454,8 +484,9 @@ fun ProductDetailContent(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = if (product.isAvailable) "Còn hàng" else "Hết hàng",
-                        fontSize = 14.sp,
-                        color = if (product.isAvailable) Color(0xFF4CAF50) else Color.Red
+                        fontSize = 16.sp,
+                        color = if (product.isAvailable) Color(0xFF4CAF50) else Color.Red,
+                        fontWeight = FontWeight.Medium
                     )
                 }
             }
@@ -466,38 +497,43 @@ fun ProductDetailContent(
     }
 }
 
-// Nút yêu thích trên ảnh
 @Composable
 fun FavoriteIconOnImage(
     isFavorite: Boolean,
     isLoading: Boolean,
     onClick: () -> Unit
 ) {
+    // Debug log để kiểm tra
+    println("DEBUG: [FavoriteIconOnImage] isFavorite: $isFavorite, isLoading: $isLoading")
+
     Surface(
         modifier = Modifier
-            .size(48.dp)
+            .size(56.dp)
             .clip(CircleShape),
-        color = Color.White.copy(alpha = 0.9f),
-        shadowElevation = 4.dp
+        color = Color.White.copy(alpha = 0.95f),
+        shadowElevation = 8.dp,
+        tonalElevation = 4.dp
     ) {
         Box(
             contentAlignment = Alignment.Center
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    strokeWidth = 2.dp
+                    modifier = Modifier.size(28.dp),
+                    strokeWidth = 3.dp,
+                    color = Color.Red
                 )
             } else {
                 IconButton(
                     onClick = onClick,
-                    modifier = Modifier.size(48.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    enabled = !isLoading
                 ) {
                     Icon(
                         imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.Favorite,
                         contentDescription = if (isFavorite) "Bỏ yêu thích" else "Thêm vào yêu thích",
-                        tint = if (isFavorite) Color.Red else Color.Gray,
-                        modifier = Modifier.size(28.dp)
+                        tint = if (isFavorite) Color.Red else Color(0xFF666666),
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
@@ -505,7 +541,6 @@ fun FavoriteIconOnImage(
     }
 }
 
-// Các hàm khác giữ nguyên...
 @Composable
 fun ProductBottomBar(
     product: Product,
@@ -529,15 +564,14 @@ fun ProductBottomBar(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             // Phần chọn số lượng
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+            Column(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
                     text = "Số lượng:",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    modifier = Modifier.padding(end = 12.dp)
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    modifier = Modifier.padding(bottom = 4.dp)
                 )
 
                 // Container cho nút - + và số lượng
@@ -558,12 +592,13 @@ fun ProductBottomBar(
                                 onQuantityChange(quantity - 1)
                             }
                         },
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(48.dp),
+                        enabled = product.isAvailable
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Remove,
                             contentDescription = "Giảm số lượng",
-                            tint = if (quantity > 1) Color(0xFF333333) else Color(0xFFCCCCCC)
+                            tint = if (quantity > 1 && product.isAvailable) Color(0xFF333333) else Color(0xFFCCCCCC)
                         )
                     }
 
@@ -574,8 +609,9 @@ fun ProductBottomBar(
                     ) {
                         Text(
                             text = quantity.toString(),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (product.isAvailable) Color.Black else Color.Gray
                         )
                     }
 
@@ -585,12 +621,13 @@ fun ProductBottomBar(
                             // Có thể thêm giới hạn tối đa nếu cần
                             onQuantityChange(quantity + 1)
                         },
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(48.dp),
+                        enabled = product.isAvailable
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Add,
                             contentDescription = "Tăng số lượng",
-                            tint = Color(0xFF333333)
+                            tint = if (product.isAvailable) Color(0xFF333333) else Color(0xFFCCCCCC)
                         )
                     }
                 }
@@ -601,7 +638,7 @@ fun ProductBottomBar(
             // Hai button bên phải
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Button Thêm vào giỏ hàng
                 Button(
@@ -609,9 +646,11 @@ fun ProductBottomBar(
                     enabled = product.isAvailable,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.White,
-                        contentColor = Color(0xFFFF9800)
+                        contentColor = Color(0xFFFF9800),
+                        disabledContainerColor = Color.Gray.copy(alpha = 0.3f),
+                        disabledContentColor = Color.Gray
                     ),
-                    border = ButtonDefaults.outlinedButtonBorder,
+                    border = ButtonDefaults.outlinedButtonBorder.copy(width = 2.dp),
                     modifier = Modifier.weight(1f)
                 ) {
                     Row(
@@ -622,11 +661,11 @@ fun ProductBottomBar(
                             contentDescription = "Thêm vào giỏ",
                             modifier = Modifier.size(20.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "Giỏ hàng",
                             fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -637,7 +676,9 @@ fun ProductBottomBar(
                     enabled = product.isAvailable,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFF9800),
-                        contentColor = Color.White
+                        contentColor = Color.White,
+                        disabledContainerColor = Color.Gray.copy(alpha = 0.3f),
+                        disabledContentColor = Color.Gray
                     ),
                     modifier = Modifier.weight(1f)
                 ) {

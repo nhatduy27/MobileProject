@@ -7,12 +7,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.example.foodapp.data.model.shared.category.Category
 import com.example.foodapp.data.remote.api.ApiClient
-import com.example.foodapp.data.model.client.product.ProductFilterDto
+import com.example.foodapp.data.remote.client.response.product.ProductFilterDto
 import com.example.foodapp.data.model.shared.product.Product
-import com.example.foodapp.data.model.client.product.ApiResult
+import com.example.foodapp.data.remote.shared.response.ApiResult as SharedApiResult // Alias để phân biệt
+import com.example.foodapp.data.remote.client.response.product.ApiResult as ProductApiResult // Alias
 import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
 import com.example.foodapp.data.repository.client.products.ProductRepository
+import com.example.foodapp.data.repository.shared.CategoryRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 // ============== PRODUCT STATES ==============
@@ -33,11 +38,19 @@ sealed class UserNameState {
     object Empty : UserNameState()
 }
 
+sealed class CategoryState {
+    object Idle : CategoryState()
+    object Loading : CategoryState()
+    data class Success(val categories: List<Category>) : CategoryState()
+    data class Error(val message: String) : CategoryState()
+}
+
 // ============== HOME VIEW MODEL ==============
 
 class HomeViewModel(
     private val userRepository: UserFirebaseRepository,
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val categoryRepository: CategoryRepository
 ) : ViewModel() {
 
     private val _userNameState = MutableLiveData<UserNameState>(UserNameState.Idle)
@@ -60,6 +73,18 @@ class HomeViewModel(
 
     private val _isLoadingMore = MutableLiveData(false)
     val isLoadingMore: LiveData<Boolean> = _isLoadingMore
+
+    // Thêm search query và search job
+    private val _searchQuery = MutableLiveData<String>("")
+    val searchQuery: LiveData<String> = _searchQuery
+
+    private val _categoryState = MutableLiveData<CategoryState>(CategoryState.Idle)
+    val categoryState: LiveData<CategoryState> = _categoryState
+
+    private val _categories = MutableLiveData<List<Category>>(emptyList())
+    val categories: LiveData<List<Category>> = _categories
+
+    private var searchJob: Job? = null
 
     // ============== USER NAME FUNCTIONS ==============
 
@@ -96,11 +121,11 @@ class HomeViewModel(
             try {
                 val result = productRepository.getProducts(filters)
                 println("DEBUG: [ViewModel] Result type: ${result::class.simpleName}")
-                println("DEBUG: [ViewModel] Is Success: ${result is ApiResult.Success<*>}")
-                println("DEBUG: [ViewModel] Is Failure: ${result is ApiResult.Failure}")
+                println("DEBUG: [ViewModel] Is Success: ${result is ProductApiResult.Success<*>}")
+                println("DEBUG: [ViewModel] Is Failure: ${result is ProductApiResult.Failure}")
 
                 when (result) {
-                    is ApiResult.Success<*> -> {
+                    is ProductApiResult.Success<*> -> {
                         println("DEBUG: [ViewModel] Entered Success branch")
                         val products = (result.data as? List<Product>) ?: emptyList()
                         println("DEBUG: [ViewModel] Products count: ${products.size}")
@@ -118,14 +143,13 @@ class HomeViewModel(
                         }
                         _currentPage.value = 1
                     }
-                    is ApiResult.Failure -> {
+                    is ProductApiResult.Failure -> {
                         println("DEBUG: [ViewModel] Entered Failure branch: ${result.exception.message}")
                         _productState.value = ProductState.Error(
                             result.exception.message ?: "Lỗi không xác định"
                         )
                         _hasMore.value = false
                     }
-                    // XÓA else branch - chỉ để lại 2 case trên
                 }
             } catch (e: Exception) {
                 println("DEBUG: [ViewModel] Exception in getProducts: ${e.message}")
@@ -154,7 +178,7 @@ class HomeViewModel(
                 println("DEBUG: [ViewModel] Load more result type: ${result::class.simpleName}")
 
                 when (result) {
-                    is ApiResult.Success<*> -> {
+                    is ProductApiResult.Success<*> -> {
                         val newProducts = (result.data as? List<Product>) ?: emptyList()
                         println("DEBUG: [ViewModel] Load more new products count: ${newProducts.size}")
 
@@ -170,11 +194,10 @@ class HomeViewModel(
                             println("DEBUG: [ViewModel] No more products to load")
                         }
                     }
-                    is ApiResult.Failure -> {
+                    is ProductApiResult.Failure -> {
                         println("Load more failed: ${result.exception.message}")
                         _hasMore.value = false
                     }
-                    // XÓA else branch
                 }
             } catch (e: Exception) {
                 println("Load more exception: ${e.message}")
@@ -195,20 +218,69 @@ class HomeViewModel(
         getProducts(newFilters)
     }
 
+    // Cải tiến hàm search với debounce
     fun searchProducts(query: String) {
         println("DEBUG: [ViewModel] Search products: $query")
+
+        // Cập nhật search query
+        _searchQuery.value = query
+
+        // Hủy search job cũ nếu có
+        searchJob?.cancel()
+
+        // Tạo search job mới với debounce 300ms
+        searchJob = viewModelScope.launch {
+            delay(300) // Debounce để tránh gọi API liên tục khi gõ
+
+            val currentFilters = _currentFilters.value ?: ProductFilterDto()
+            val newFilters = currentFilters.copy(
+                searchQuery = query.ifBlank { null },
+                page = 1
+            )
+            getProducts(newFilters)
+        }
+    }
+
+    // Thêm hàm clear search
+    fun clearSearch() {
+        _searchQuery.value = ""
         val currentFilters = _currentFilters.value ?: ProductFilterDto()
         val newFilters = currentFilters.copy(
-            searchQuery = query.ifBlank { null },
+            searchQuery = null,
             page = 1
         )
         getProducts(newFilters)
     }
 
+    // ============== CATEGORY FUNCTIONS ==============
+
+    fun fetchCategories() {
+        _categoryState.value = CategoryState.Loading
+        viewModelScope.launch {
+            val result = categoryRepository.getCategories()
+            when (result) {
+                is SharedApiResult.Success<*> -> {
+                    val categories = (result.data as? List<Category>) ?: emptyList()
+                    _categories.value = categories
+                    _categoryState.value = CategoryState.Success(categories)
+                    println("DEBUG: [ViewModel] Fetched ${categories.size} categories")
+                }
+                is SharedApiResult.Failure -> {
+                    _categoryState.value = CategoryState.Error(
+                        result.exception.message ?: "Lỗi tải danh mục"
+                    )
+                    println("DEBUG: [ViewModel] Category fetch failed: ${result.exception.message}")
+                }
+            }
+        }
+    }
+
+    // Cập nhật refresh function
     fun refresh() {
         println("DEBUG: [ViewModel] Refresh called")
         getProducts(_currentFilters.value ?: ProductFilterDto(), forceRefresh = true)
         fetchUserName()
+        fetchCategories()
     }
 
     fun getProductById(productId: String, onResult: (Product?) -> Unit) {
@@ -229,6 +301,9 @@ class HomeViewModel(
         _hasMore.value = true
         _currentFilters.value = ProductFilterDto()
         _isLoadingMore.value = false
+        _searchQuery.value = ""
+        _categories.value = emptyList()
+        _categoryState.value = CategoryState.Idle
     }
 
     companion object {
@@ -237,7 +312,8 @@ class HomeViewModel(
                 val userRepository = UserFirebaseRepository(context)
                 val apiService = ApiClient.productApiService
                 val productRepository = ProductRepository(apiService)
-                HomeViewModel(userRepository, productRepository)
+                val categoryRepository = CategoryRepository()
+                HomeViewModel(userRepository, productRepository, categoryRepository)
             }
         }
     }

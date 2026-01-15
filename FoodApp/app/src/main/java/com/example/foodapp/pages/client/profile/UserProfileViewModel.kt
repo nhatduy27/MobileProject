@@ -8,13 +8,13 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.model.Client
 import com.example.foodapp.data.model.client.DeliveryAddress
-import com.google.firebase.messaging.FirebaseMessaging
-import com.example.foodapp.data.model.client.profile.* // Đã có ApiResult trong này
+import com.example.foodapp.data.remote.client.response.profile.ApiResult
+import com.example.foodapp.data.remote.client.response.profile.CreateAddressRequest
+import com.example.foodapp.data.remote.client.response.profile.UpdateProfileRequest
 import com.example.foodapp.data.repository.shared.AuthRepository
 import com.example.foodapp.data.repository.firebase.AuthManager
 import com.example.foodapp.data.repository.client.profile.ProfileRepository
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Locale
 

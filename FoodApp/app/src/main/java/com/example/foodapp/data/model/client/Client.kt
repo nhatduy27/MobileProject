@@ -1,6 +1,6 @@
 package com.example.foodapp.data.model
 
-import com.example.foodapp.data.model.client.profile.UserProfileData
+import com.example.foodapp.data.remote.client.response.profile.UserProfileData
 import com.example.foodapp.data.model.client.DeliveryAddress
 import java.text.SimpleDateFormat
 import java.util.Locale

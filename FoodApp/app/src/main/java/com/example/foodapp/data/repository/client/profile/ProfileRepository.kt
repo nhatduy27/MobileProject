@@ -5,7 +5,13 @@ import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.io.IOException
 import com.example.foodapp.data.remote.api.ApiClient
-import com.example.foodapp.data.model.client.profile.*
+import com.example.foodapp.data.remote.client.response.profile.AddressData
+import com.example.foodapp.data.remote.client.response.profile.ApiResult
+import com.example.foodapp.data.remote.client.response.profile.CreateAddressRequest
+import com.example.foodapp.data.remote.client.response.profile.OuterProfileResponse
+import com.example.foodapp.data.remote.client.response.profile.UpdateProfileRequest
+import com.example.foodapp.data.remote.client.response.profile.UpdatedUserData
+import com.example.foodapp.data.remote.client.response.profile.UserProfileData
 import com.google.gson.Gson
 
 class ProfileRepository {

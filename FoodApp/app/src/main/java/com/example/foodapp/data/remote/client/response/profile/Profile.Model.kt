@@ -1,4 +1,4 @@
-package com.example.foodapp.data.model.client.profile
+package com.example.foodapp.data.remote.client.response.profile
 
 import com.google.gson.annotations.SerializedName
 

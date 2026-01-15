@@ -7,6 +7,7 @@ import com.example.foodapp.data.remote.shared.AuthApiService
 import com.example.foodapp.data.remote.shared.OtpApiService
 import com.example.foodapp.data.remote.client.ProfileApiService
 import com.example.foodapp.data.remote.client.ProductApiService
+import  com.example.foodapp.data.remote.shared.CategoryService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -93,4 +94,8 @@ object ApiClient {
     val authApiService: AuthApiService by lazy { retrofit.create(AuthApiService::class.java) }
     val profileApiService: ProfileApiService by lazy { retrofit.create(ProfileApiService::class.java) }
     val productApiService: ProductApiService by lazy { retrofit.create(ProductApiService::class.java) }
+
+    val categoryApiService: CategoryService by lazy {
+        retrofit.create(CategoryService::class.java)
+    }
 }

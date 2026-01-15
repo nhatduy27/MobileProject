@@ -7,7 +7,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.foodapp.data.remote.api.ApiClient
 import com.example.foodapp.data.model.shared.product.Product
-import com.example.foodapp.data.model.client.product.ApiResult
+import com.example.foodapp.data.remote.client.response.product.ApiResult
+import com.example.foodapp.data.remote.client.response.product.FavoriteResponse
 import com.example.foodapp.data.repository.client.products.*
 import kotlinx.coroutines.launch
 
@@ -57,8 +58,8 @@ class ProductDetailViewModel(
                     is ApiResult.Success<*> -> {
                         val product = (result.data as? Product)
                         if (product != null) {
-                            _product.value = product
-                            _productDetailState.value = ProductDetailState.Success(product)
+                            // Kiểm tra trạng thái yêu thích sau khi lấy thông tin sản phẩm
+                            checkIsFavorite(productId, product)
                         } else {
                             _productDetailState.value = ProductDetailState.Error("Dữ liệu sản phẩm không hợp lệ")
                         }
@@ -73,6 +74,40 @@ class ProductDetailViewModel(
                 _productDetailState.value = ProductDetailState.Error(
                     e.message ?: "Lỗi kết nối"
                 )
+            }
+        }
+    }
+
+    // Kiểm tra sản phẩm có trong danh sách yêu thích không
+    private fun checkIsFavorite(productId: String, product: Product) {
+        viewModelScope.launch {
+            try {
+                // Gọi API checkIsFavorite
+                val result = productRepository.checkIsFavorite(productId)
+
+                when (result) {
+                    is ApiResult.Success<*> -> {
+                        val isFavorite = result.data as? Boolean ?: false
+                        // Cập nhật sản phẩm với trạng thái yêu thích
+                        val updatedProduct = product.copy(isFavorite = isFavorite)
+                        _product.value = updatedProduct
+                        _productDetailState.value = ProductDetailState.Success(updatedProduct)
+                        println("DEBUG: [ProductDetailViewModel] Product $productId is favorite: $isFavorite")
+                    }
+                    is ApiResult.Failure -> {
+                        // Nếu lỗi, mặc định là false
+                        val updatedProduct = product.copy(isFavorite = false)
+                        _product.value = updatedProduct
+                        _productDetailState.value = ProductDetailState.Success(updatedProduct)
+                        println("DEBUG: [ProductDetailViewModel] Check favorite failed: ${result.exception.message}")
+                    }
+                }
+            } catch (e: Exception) {
+                // Nếu có exception, mặc định là false
+                val updatedProduct = product.copy(isFavorite = false)
+                _product.value = updatedProduct
+                _productDetailState.value = ProductDetailState.Success(updatedProduct)
+                println("DEBUG: [ProductDetailViewModel] Exception in checkIsFavorite: ${e.message}")
             }
         }
     }
@@ -98,16 +133,14 @@ class ProductDetailViewModel(
                 when (result) {
                     is ApiResult.Success<*> -> {
                         val response = result.data
-                        // Kiểm tra response có phải là AddToFavoriteResponse không
-                        if (response is com.example.foodapp.data.model.client.product.AddToFavoriteResponse) {
+                        if (response is FavoriteResponse) {
                             if (response.success) {
                                 val successMessage = response.message.ifBlank { "Đã thêm vào yêu thích" }
                                 _favoriteState.value = FavoriteState.Success(successMessage)
 
-                                // Cập nhật sản phẩm hiện tại nếu productId khớp
+                                // Cập nhật sản phẩm hiện tại với trạng thái yêu thích = true
                                 _product.value?.let { currentProduct ->
                                     if (currentProduct.id == productId) {
-                                        // Cập nhật sản phẩm với trạng thái yêu thích
                                         val updatedProduct = currentProduct.copy(isFavorite = true)
                                         _product.value = updatedProduct
                                     }
@@ -153,6 +186,101 @@ class ProductDetailViewModel(
                     e.message ?: "Lỗi kết nối"
                 )
             }
+        }
+    }
+
+    // Xóa sản phẩm khỏi danh sách yêu thích
+    fun removeFromFavorites(productId: String) {
+        if (productId.isBlank()) {
+            _favoriteState.value = FavoriteState.Error("ID sản phẩm không hợp lệ")
+            return
+        }
+
+        // Kiểm tra nếu đang loading thì không thực hiện
+        if (_favoriteState.value == FavoriteState.Loading) {
+            return
+        }
+
+        _favoriteState.value = FavoriteState.Loading
+
+        viewModelScope.launch {
+            try {
+                val result = productRepository.removeFromFavorites(productId)
+
+                when (result) {
+                    is ApiResult.Success<*> -> {
+                        val response = result.data
+                        // Kiểm tra response có phải là FavoriteResponse không
+                        if (response is FavoriteResponse) {
+                            if (response.success) {
+                                val successMessage = response.message.ifBlank { "Đã xóa khỏi yêu thích" }
+                                _favoriteState.value = FavoriteState.Success(successMessage)
+
+                                // Cập nhật sản phẩm hiện tại với trạng thái yêu thích = false
+                                _product.value?.let { currentProduct ->
+                                    if (currentProduct.id == productId) {
+                                        val updatedProduct = currentProduct.copy(isFavorite = false)
+                                        _product.value = updatedProduct
+                                    }
+                                }
+                            } else {
+                                _favoriteState.value = FavoriteState.Error(
+                                    response.message.ifBlank { "Không thể xóa khỏi yêu thích" }
+                                )
+                            }
+                        } else {
+                            _favoriteState.value = FavoriteState.Error("Định dạng response không hợp lệ")
+                        }
+                    }
+                    is ApiResult.Failure -> {
+                        val errorMessage = result.exception.message ?: "Lỗi không xác định"
+
+                        // Xử lý các lỗi đặc biệt
+                        when {
+                            errorMessage.contains("không có trong danh sách yêu thích", ignoreCase = true) ||
+                                    errorMessage.contains("not in favorites", ignoreCase = true) ||
+                                    errorMessage.contains("404", ignoreCase = true) -> {
+                                // Nếu không có trong favorites, cập nhật UI
+                                _product.value?.let { currentProduct ->
+                                    if (currentProduct.id == productId) {
+                                        val updatedProduct = currentProduct.copy(isFavorite = false)
+                                        _product.value = updatedProduct
+                                    }
+                                }
+                                _favoriteState.value = FavoriteState.Success("Sản phẩm không có trong yêu thích")
+                            }
+                            errorMessage.contains("đăng nhập", ignoreCase = true) ||
+                                    errorMessage.contains("login", ignoreCase = true) ||
+                                    errorMessage.contains("401", ignoreCase = true) -> {
+                                _favoriteState.value = FavoriteState.Error("Vui lòng đăng nhập để xóa khỏi yêu thích")
+                            }
+                            else -> {
+                                _favoriteState.value = FavoriteState.Error(errorMessage)
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _favoriteState.value = FavoriteState.Error(
+                    e.message ?: "Lỗi kết nối"
+                )
+            }
+        }
+    }
+
+    // Toggle favorite - kiểm tra trạng thái hiện tại và thực hiện hành động phù hợp
+    fun toggleFavorite(productId: String) {
+        val currentProduct = _product.value
+        if (currentProduct == null || currentProduct.id != productId) {
+            _favoriteState.value = FavoriteState.Error("Không tìm thấy thông tin sản phẩm")
+            return
+        }
+
+        // Dựa vào trạng thái hiện tại để quyết định thêm hay xóa
+        if (currentProduct.isFavorite == true) {
+            removeFromFavorites(productId)
+        } else {
+            addToFavorites(productId)
         }
     }
 
