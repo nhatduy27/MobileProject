@@ -9,12 +9,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
 import com.example.foodapp.data.repository.shared.AuthRepository
+import com.example.foodapp.data.repository.firebase.AuthManager
 import com.example.foodapp.data.model.shared.auth.ApiResult
-import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
-import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.tasks.Task
 import kotlinx.coroutines.launch
 
 sealed class SignUpState {
@@ -34,6 +30,9 @@ class SignUpViewModel(
     private val authRepository: AuthRepository,
     private val context: Context
 ) : ViewModel() {
+
+    // Thêm AuthManager
+    private val authManager = AuthManager(context)
 
     private val _signUpState = MutableLiveData<SignUpState>(SignUpState.Idle)
     val signUpState: LiveData<SignUpState> = _signUpState
@@ -66,20 +65,37 @@ class SignUpViewModel(
 
                             if (innerSuccess && userInfo != null && userInfo.isValid) {
 
-                                saveUserInfoLocally(userInfo)
+                                // SỬA: Dùng AuthManager để lưu user info
+                                authManager.saveUserInfo(
+                                    userId = userInfo.id,
+                                    email = userInfo.email,
+                                    name = userInfo.displayName,
+                                    role = userInfo.role,
+                                    status = userInfo.status
+                                )
 
-                                // 2. Đăng nhập Firebase với customToken (nếu có)
                                 val customToken = registerData.customToken
                                 if (!customToken.isNullOrEmpty()) {
-                                    repository.signInWithCustomToken(customToken) { isSuccessful, error ->
+                                    authManager.signInWithCustomToken(customToken) { isSuccessful, idToken, error ->
                                         if (isSuccessful) {
-                                            Log.d("SignUpViewModel", "Đã sign in Firebase thành công")
+                                            if (!idToken.isNullOrEmpty()) {
+                                                // SỬA: Dùng AuthManager để lưu token với expiry time
+                                                authManager.saveFirebaseToken(idToken)
+
+                                                Log.d("SignUpViewModel", "✅ Đăng ký & lưu token thành công")
+
+                                                // Debug: In thông tin token
+                                                authManager.debugTokenInfo()
+                                            } else {
+                                                Log.w("SignUpViewModel", "⚠ Firebase ID Token trống")
+                                            }
                                         } else {
-                                            Log.w("SignUpViewModel", "⚠Không thể sign in Firebase: $error")
+                                            Log.w("SignUpViewModel", "⚠ Không thể sign in Firebase: $error")
                                         }
                                         _signUpState.postValue(SignUpState.Success)
                                     }
                                 } else {
+                                    Log.w("SignUpViewModel", "⚠ Custom token trống từ backend")
                                     _signUpState.value = SignUpState.Success
                                 }
                             } else {
@@ -101,24 +117,8 @@ class SignUpViewModel(
                     }
                 }
             } catch (e: Exception) {
-                Log.e("SignUpViewModel", "❌ Unexpected error", e)
                 _signUpState.value = SignUpState.Error("Lỗi không xác định: ${e.message}")
             }
-        }
-    }
-
-    private fun saveUserInfoLocally(userInfo: com.example.foodapp.data.model.shared.auth.UserInfo) {
-        try {
-            val sharedPref = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-            val editor = sharedPref.edit()
-            editor.putString("user_id", userInfo.id)
-            editor.putString("user_email", userInfo.email)
-            editor.putString("user_name", userInfo.displayName)
-            editor.putString("user_role", userInfo.role)
-            editor.putString("user_status", userInfo.status)
-            editor.apply()
-        } catch (e: Exception) {
-            Log.e("SignUpViewModel", "Lỗi khi lưu user info", e)
         }
     }
 

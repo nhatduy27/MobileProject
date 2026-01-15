@@ -1,16 +1,12 @@
 package com.example.foodapp.pages.owner.dashboard
 
-import com.example.foodapp.data.model.owner.DashboardDayRevenue
-import com.example.foodapp.data.model.owner.DashboardRecentOrder
-import com.example.foodapp.data.model.owner.DashboardStat
-import com.example.foodapp.data.model.owner.DashboardTopProduct
+import com.example.foodapp.data.model.owner.DashboardData
 
 /**
- * UI state cho màn hình Dashboard.
+ * UI state cho màn hình Dashboard API.
  */
 data class DashboardUiState(
-    val stats: List<DashboardStat> = emptyList(),
-    val weeklyRevenue: List<DashboardDayRevenue> = emptyList(),
-    val recentOrders: List<DashboardRecentOrder> = emptyList(),
-    val topProducts: List<DashboardTopProduct> = emptyList()
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val data: DashboardData? = null
 )

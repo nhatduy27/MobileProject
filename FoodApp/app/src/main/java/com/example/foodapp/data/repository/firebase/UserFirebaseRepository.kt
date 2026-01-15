@@ -10,6 +10,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
+import com.example.foodapp.data.remote.api.ApiClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class UserFirebaseRepository(private val context : Context) {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
@@ -27,19 +32,6 @@ class UserFirebaseRepository(private val context : Context) {
 
     fun getGoogleSignInClient(): GoogleSignInClient {
         return googleSignInClient
-    }
-
-
-    fun signInWithCustomToken(customToken: String, callback: (Boolean, Exception?) -> Unit) {
-        auth.signInWithCustomToken(customToken)
-            .addOnCompleteListener { task ->
-                if (task.isSuccessful) {
-
-                    callback(true, null)
-                } else {
-                    callback(false, task.exception)
-                }
-            }
     }
 
 
@@ -250,14 +242,15 @@ class UserFirebaseRepository(private val context : Context) {
                 onComplete(null)
             }
     }
-    // Lưu vai trò user vào Firestore (RoleSelection)
+    // Lưu vai trò user vào Firestore và Backend (RoleSelection)
     fun saveUserRole(userId: String, role: String, onComplete: (Boolean, String?) -> Unit) {
         val userRef = db.collection("users").document(userId)
 
         // Cập nhật trường role (merge nếu chưa có document)
         userRef.update("role", role)
             .addOnSuccessListener {
-                onComplete(true, null)
+                // Sau khi lưu vào Firestore, gọi backend API để update Custom Claims
+                callBackendSetRole(role, onComplete)
             }
             .addOnFailureListener {
                 // Sử dụng mapOf với explicit type
@@ -267,9 +260,37 @@ class UserFirebaseRepository(private val context : Context) {
                     "updatedAt" to System.currentTimeMillis()
                 )
                 userRef.set(data, SetOptions.merge())
-                    .addOnSuccessListener { onComplete(true, null) }
+                    .addOnSuccessListener { 
+                        // Sau khi lưu vào Firestore, gọi backend API để update Custom Claims
+                        callBackendSetRole(role, onComplete)
+                    }
                     .addOnFailureListener { e -> onComplete(false, e.message) }
             }
+    }
+
+    // Gọi backend API để set role và update Custom Claims
+    private fun callBackendSetRole(role: String, onComplete: (Boolean, String?) -> Unit) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val authApiService = ApiClient.createService(com.example.foodapp.data.remote.shared.AuthApiService::class.java)
+                val request = com.example.foodapp.data.remote.shared.SetRoleRequest(role)
+                val response = authApiService.setRole(request)
+                
+                if (response.isSuccessful && response.body()?.success == true) {
+                    withContext(Dispatchers.Main) {
+                        onComplete(true, null)
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        onComplete(false, "Failed to update role in backend")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    onComplete(false, e.message)
+                }
+            }
+        }
     }
 
     fun getUserById(userId: String, onComplete: (Client?) -> Unit) {

@@ -43,6 +43,10 @@ android {
 
 dependencies {
 
+    implementation("com.google.firebase:firebase-messaging:23.3.1")
+    implementation("com.google.firebase:firebase-analytics:21.5.0")
+
+    implementation("io.coil-kt:coil-compose:2.4.0")
     implementation("com.jakewharton.timber:timber:5.0.1")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")

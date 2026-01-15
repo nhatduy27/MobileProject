@@ -1,4 +1,4 @@
-package com.example.foodapp.data.api.shared
+package com.example.foodapp.data.remote.shared
 
 import com.example.foodapp.data.model.shared.otp.ApiResponse
 import com.example.foodapp.data.model.shared.otp.SendOtpRequest

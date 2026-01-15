@@ -23,7 +23,7 @@ interface OwnerApiService {
      * Endpoint: GET /api/owner/dashboard
      */
     // @GET("api/owner/dashboard")
-    suspend fun getDashboardData(): DashboardResponse
+    // suspend fun getDashboardData(): DashboardResponse
     
     /**
      * Lấy danh sách đơn hàng

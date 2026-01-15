@@ -113,13 +113,12 @@ object RepositoryProvider {
     // ==================== OWNER DASHBOARD REPOSITORY ====================
     
     fun getDashboardRepository(): OwnerDashboardRepository {
-        return if (USE_MOCK) {
-            MockDashboardRepository()
-        } else {
-            // TODO: Khi backend ready, uncomment dòng dưới
-            // RealDashboardRepository(getOwnerApiService())
-            MockDashboardRepository()
-        }
+        // Use Real Repository for Dashboard API integration
+        return com.example.foodapp.data.repository.owner.dashboard.RealDashboardRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.owner.ShopApiService::class.java
+            )
+        )
     }
     
     // ==================== OWNER ORDERS REPOSITORY ====================

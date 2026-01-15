@@ -1,32 +1,42 @@
 package com.example.foodapp.data.model.owner
 
-import androidx.compose.ui.graphics.Color
+import com.google.gson.annotations.SerializedName
 
 /**
- * Models dữ liệu cho màn hình Dashboard của chủ quán.
+ * API Response Models for /api/owner/shop/dashboard
  */
-
-data class DashboardStat(
-    val iconRes: Int,
-    val value: String,
-    val label: String,
-    val color: Color
+data class GetDashboardResponse(
+    @SerializedName("success") val success: Boolean,
+    @SerializedName("data") val data: DashboardData
 )
 
-data class DashboardDayRevenue(
-    val day: String,
-    val amount: Int
+data class DashboardData(
+    @SerializedName("today") val today: PeriodStats,
+    @SerializedName("thisWeek") val thisWeek: PeriodStats,
+    @SerializedName("thisMonth") val thisMonth: PeriodStats,
+    @SerializedName("ordersByStatus") val ordersByStatus: Map<String, Int>,
+    @SerializedName("topProducts") val topProducts: List<TopProductStat>,
+    @SerializedName("recentOrders") val recentOrders: List<RecentOrderStat>
 )
 
-data class DashboardRecentOrder(
-    val orderId: String,
-    val customer: String,
-    val status: String,
-    val amount: Int
+data class PeriodStats(
+    @SerializedName("revenue") val revenue: Double?,
+    @SerializedName("orderCount") val orderCount: Int?,
+    @SerializedName("avgOrderValue") val avgOrderValue: Double?,
+    @SerializedName("pendingOrders") val pendingOrders: Int? // Only present in 'today' usually
 )
 
-data class DashboardTopProduct(
-    val name: String,
-    val quantity: Int,
-    val revenue: String
+data class TopProductStat(
+    @SerializedName("id") val id: String,
+    @SerializedName("name") val name: String,
+    @SerializedName("soldCount") val soldCount: Int,
+    @SerializedName("revenue") val revenue: Double
+)
+
+data class RecentOrderStat(
+    @SerializedName("id") val id: String,
+    @SerializedName("orderNumber") val orderNumber: String,
+    @SerializedName("status") val status: String,
+    @SerializedName("total") val total: Double,
+    @SerializedName("createdAt") val createdAt: String
 )

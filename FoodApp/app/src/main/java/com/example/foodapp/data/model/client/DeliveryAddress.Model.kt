@@ -1,25 +1,31 @@
 package com.example.foodapp.data.model.client
 
-/**
- * Model đại diện cho địa chỉ giao hàng của người mua.
- * @param id ID địa chỉ
- * @param clientId ID người mua
- * @param name Tên người nhận
- * @param phone Số điện thoại người nhận
- * @param address Địa chỉ chi tiết
- * @param note Ghi chú (tầng, căn hộ, v.v.)
- * @param isDefault Có phải địa chỉ mặc định không
- * @param latitude Vĩ độ (cho map)
- * @param longitude Kinh độ (cho map)
- */
+import com.google.gson.annotations.SerializedName
+import okhttp3.Address
+
 data class DeliveryAddress(
+    @SerializedName("id")
     val id: String = "",
-    val clientId: String = "",
-    val name: String = "",
-    val phone: String = "",
-    val address: String = "",
-    val note: String = "",
+
+    @SerializedName("label")
+    val label: String = "",
+
+    @SerializedName("fullAddress")
+    val fullAddress: String = "",
+
+    @SerializedName("isDefault")
     val isDefault: Boolean = false,
-    val latitude: Double? = null,
-    val longitude: Double? = null
-)
+
+    // Thêm các trường cần thiết cho app
+    var clientId: String = "",
+    var name: String = "",
+    var phone: String = "",
+    var note: String = "",
+    var address: String = "",
+    var latitude: Double? = null,
+    var longitude: Double? = null
+) {
+    // Helper property để lấy address
+    val getAddress: String
+        get() = fullAddress
+}

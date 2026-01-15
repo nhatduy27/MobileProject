@@ -39,6 +39,11 @@ import com.example.foodapp.R
 import kotlinx.coroutines.launch
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.foodapp.pages.owner.customer.CustomerScreenMain
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.pages.owner.shopmanagement.ShopManagementViewModel
+import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 @Preview(showBackground = true, backgroundColor = 0xFF00FF00)
 
@@ -53,6 +58,18 @@ fun DashBoardRootScreen(navController: NavHostController) {
     
     // NavController riêng cho settings navigation
     val settingsNavController = rememberNavController()
+
+    // ViewModel for Shop Info
+    val context = LocalContext.current
+    val shopViewModel: ShopManagementViewModel = viewModel(
+        factory = object : androidx.lifecycle.ViewModelProvider.Factory {
+            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                @Suppress("UNCHECKED_CAST")
+                return ShopManagementViewModel(context) as T
+            }
+        }
+    )
+    val shopState by shopViewModel.uiState.collectAsState()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -88,14 +105,24 @@ fun DashBoardRootScreen(navController: NavHostController) {
                             color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(48.dp)
                         ) {
-                             Box(contentAlignment = Alignment.Center) {
-                                 Text("K", color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+                             if (shopState.logoUrl.isNotEmpty()) {
+                                 AsyncImage(
+                                     model = shopState.logoUrl,
+                                     contentDescription = "Logo",
+                                     modifier = Modifier.fillMaxSize(),
+                                     contentScale = ContentScale.Crop
+                                 )
+                             } else {
+                                 Box(contentAlignment = Alignment.Center) {
+                                     val initial = if (shopState.shopName.isNotEmpty()) shopState.shopName.first().toString() else "K"
+                                     Text(initial, color = Color.White, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+                                 }
                              }
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
                             Text(
-                                "KTX Food",
+                                text = shopState.shopName.ifEmpty { "Đang tải..." },
                                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -226,7 +253,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                                 "customers" -> "Quản lý khách hàng"
                                 "revenue" -> "Báo cáo doanh thu"
                                 "settings" -> "Cài đặt"
-                                else -> "KTX Food"
+                                else -> shopState.shopName.ifEmpty { "KTX Food" }
                             },
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface

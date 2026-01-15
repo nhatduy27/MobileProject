@@ -6,7 +6,7 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    function isOwner(userId) {
+    function isCurrentUser(userId) {
       return request.auth.uid == userId;
     }
     
@@ -19,21 +19,25 @@ service cloud.firestore {
       return hasRole('ADMIN');
     }
     
-    function isOwner() {
+    function hasOwnerRole() {
       return hasRole('OWNER');
     }
     
-    function isShipper() {
+    function hasShipperRole() {
       return hasRole('SHIPPER');
     }
     
     // Users collection
     match /users/{userId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && isOwner(userId);
-      allow update: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isCurrentUser(userId);
+      // Allow user to update their own data (including role)
+      // Use isCurrentUser(userId) directly to avoid circular dependency with hasRole()
+      allow update: if isAuthenticated() && isCurrentUser(userId);
       allow delete: if isAdmin();
     }
+
+
     
     // Categories collection (Admin only write)
     match /categories/{categoryId} {
@@ -63,9 +67,10 @@ service cloud.firestore {
     
     // Wallets collection
     match /wallets/{walletId} {
-      allow read: if isOwner(walletId) || isAdmin();
+      allow read: if isCurrentUser(walletId) || isAdmin();
       allow write: if false; // Only via Cloud Functions
     }
+
     
     // Default deny
     match /{document=**} {

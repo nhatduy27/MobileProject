@@ -75,11 +75,13 @@ fun RoleSelectionScreen(
         }
 
         // Danh sách các vai trò (Không dùng Icon)
+        // Role values phải khớp với backend UserRole enum: CUSTOMER, OWNER, SHIPPER
         val roles = listOf(
-            Triple("user", "Người dùng", "Đặt món và đánh giá nhà hàng"),
-            Triple("seller", "Nhà bán hàng", "Quản lý cửa hàng và thực đơn"),
-            Triple("delivery", "Người giao hàng", "Nhận đơn và giao hàng tận nơi")
+            Triple("CUSTOMER", "Người dùng", "Đặt món và đánh giá nhà hàng"),
+            Triple("OWNER", "Nhà bán hàng", "Quản lý cửa hàng và thực đơn"),
+            Triple("SHIPPER", "Người giao hàng", "Nhận đơn và giao hàng tận nơi")
         )
+
 
         roles.forEach { role ->
             RoleItem(
