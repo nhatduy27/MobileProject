@@ -514,6 +514,24 @@ export class AuthService {
   }
 
   /**
+   * Set user role
+   * 
+   * Updates role in both Firestore and Firebase Custom Claims
+   */
+  async setRole(userId: string, role: UserRole) {
+    // Update role in Firestore
+    await this.usersRepository.update(userId, { role } as Partial<UserEntity>);
+
+    // Update custom claims in Firebase Auth
+    await this.firebaseService.auth.setCustomUserClaims(userId, { role });
+
+    return {
+      message: 'Role updated successfully',
+      role,
+    };
+  }
+
+  /**
    * Generate random 6-digit OTP code
    */
   private generateOTPCode(): string {

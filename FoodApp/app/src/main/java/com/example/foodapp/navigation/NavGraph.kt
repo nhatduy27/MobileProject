@@ -35,6 +35,7 @@ sealed class Screen(val route: String) {
     object SignUp : Screen("signup")
     object OtpVerification : Screen("otp_verification")
     object RoleSelection : Screen("role_selection")
+    object ShopSetup : Screen("shop_setup")
     object UserHome : Screen("user_home")
     object UserProfile : Screen("user_profile")
     object UserCart : Screen("user_cart")
@@ -47,6 +48,7 @@ sealed class Screen(val route: String) {
     object ResetPassword : Screen("resetpassword")
     object UserSetting : Screen ("setting")
 }
+
 
 @Composable
 fun FoodAppNavHost(
@@ -84,15 +86,15 @@ fun FoodAppNavHost(
                                     destination = if (isVerified) {
                                         // Vào trang home theo role
                                         when (role) {
-                                            "user" -> {
+                                            "CUSTOMER" -> {
 
                                                 Screen.UserHome.route
                                             }
-                                            "seller" -> {
+                                            "OWNER" -> {
 
                                                 Screen.OwnerHome.route
                                             }
-                                            "delivery" -> {
+                                            "SHIPPER" -> {
 
                                                 Screen.ShipperHome.route
                                             }
@@ -190,9 +192,9 @@ fun FoodAppNavHost(
             RoleSelectionScreen(
                 onRoleSaved = { role ->
                     val destination = when (role) {
-                        "user" -> Screen.UserHome.route
-                        "seller" -> Screen.OwnerHome.route
-                        "delivery" -> Screen.ShipperHome.route
+                        "CUSTOMER" -> Screen.UserHome.route
+                        "OWNER" -> Screen.ShopSetup.route
+                        "SHIPPER" -> Screen.ShipperHome.route
                         else -> Screen.UserHome.route
                     }
 
@@ -203,6 +205,7 @@ fun FoodAppNavHost(
             )
         }
 
+
         composable(Screen.Login.route) {
             LoginScreen(
                 onLoginSuccess = { role ->
@@ -212,9 +215,14 @@ fun FoodAppNavHost(
                         repository.getVerifyStateByUid() { isVerified ->
                             if (isVerified) {
                                 val destination = when (role) {
-                                    "user" -> Screen.UserHome.route
-                                    "seller" -> Screen.OwnerHome.route
-                                    "delivery" -> Screen.ShipperHome.route
+                                    "CUSTOMER" -> Screen.UserHome.route
+                                    "OWNER" -> {
+                                        // TODO: Kiểm tra xem owner đã có shop chưa
+                                        // Hiện tại mặc định vào OwnerHome
+                                        // Trong thực tế cần gọi API để check
+                                        Screen.OwnerHome.route
+                                    }
+                                    "SHIPPER" -> Screen.ShipperHome.route
                                     else -> Screen.UserHome.route
                                 }
 
@@ -235,6 +243,7 @@ fun FoodAppNavHost(
                 onCustomerDemo = { navController.navigate(Screen.UserHome.route) },
                 onShipperDemo = { navController.navigate(Screen.ShipperHome.route) },
                 onOwnerDemo = { navController.navigate(Screen.OwnerHome.route) }
+
             )
         }
 
@@ -349,8 +358,25 @@ fun FoodAppNavHost(
             com.example.foodapp.pages.shipper.dashboard.ShipperDashboardRootScreen(navController)
         }
 
-        composable(Screen.OwnerHome.route) {
-            com.example.foodapp.pages.owner.dashboard.DashBoardRootScreen(navController)
+        composable(Screen.ShopSetup.route) {
+            com.example.foodapp.pages.owner.shopsetup.ShopSetupScreen(
+                onSetupComplete = {
+                    navController.navigate(Screen.OwnerHome.route) {
+                        popUpTo(Screen.ShopSetup.route) { inclusive = true }
+                    }
+                }
+            )
         }
+
+        composable(Screen.OwnerHome.route) {
+            com.example.foodapp.pages.owner.shopsetup.OwnerHomeWrapper(
+                navController = navController,
+                shopSetupRoute = Screen.ShopSetup.route
+            ) {
+                com.example.foodapp.pages.owner.dashboard.DashBoardRootScreen(navController)
+            }
+        }
+
+
     }
 }

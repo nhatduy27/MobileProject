@@ -16,6 +16,8 @@ import {
   ResetPasswordDto,
   ChangePasswordDto,
   LogoutDto,
+  SetRoleDto,
+  SetRoleResponseDto,
 } from './dto';
 
 /**
@@ -268,6 +270,35 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async logout(@CurrentUser() user: any, @Body() dto: LogoutDto) {
     const result = await this.authService.logout(user.uid, dto);
+    return {
+      success: true,
+      ...result,
+    };
+  }
+
+  /**
+   * PUT /auth/set-role
+   * Set user role
+   * 
+   * Updates role in both Firestore and Firebase Custom Claims.
+   * User must be authenticated. After setting role, user should refresh their token.
+   */
+  @Put('set-role')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('firebase-auth')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Set user role',
+    description: 'Set role for authenticated user. Updates both Firestore and Firebase Custom Claims.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Role updated successfully',
+    type: SetRoleResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async setRole(@CurrentUser() user: any, @Body() dto: SetRoleDto) {
+    const result = await this.authService.setRole(user.uid, dto.role);
     return {
       success: true,
       ...result,
