@@ -4,9 +4,10 @@ import { FavoritesService } from './favorites.service';
 import { FirestoreFavoritesRepository } from './repositories/firestore-favorites.repository';
 import { FAVORITES_REPOSITORY } from './interfaces';
 import { FirebaseModule } from '../../core/firebase/firebase.module';
+import { ProductsModule } from '../products/products.module'; 
 
 @Module({
-  imports: [FirebaseModule],
+  imports: [FirebaseModule, ProductsModule],
   controllers: [FavoritesController],
   providers: [
     FavoritesService,

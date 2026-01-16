@@ -183,3 +183,63 @@ data class AddressData(
     @SerializedName("updatedAt")
     val updatedAt: String
 )
+
+// ========== GET ADDRESSES RESPONSE MODELS ==========
+
+/**
+ * Response chính cho API GET /me/addresses
+ * Format: { "success": true, "data": { "success": true, "data": [array] } }
+ */
+data class GetAddressesResponse(
+    @SerializedName("success")
+    val success: Boolean,
+
+    @SerializedName("data")
+    val data: InnerAddressData? = null  // Đây là một object, không phải List
+)
+
+/**
+ * Inner data structure - chứa mảng addresses thực sự
+ */
+data class InnerAddressData(
+    @SerializedName("success")
+    val success: Boolean,
+
+    @SerializedName("data")
+    val data: List<AddressResponse>? = null
+)
+
+/**
+ * Model chi tiết cho địa chỉ - mapping với AddressEntity của backend
+ */
+data class AddressResponse(
+    @SerializedName("id")
+    val id: String? = null,
+
+    @SerializedName("userId")
+    val userId: String? = null,
+
+    @SerializedName("label")
+    val label: String? = null,
+
+    @SerializedName("fullAddress")
+    val fullAddress: String? = null,
+
+    @SerializedName("building")
+    val building: String? = null,
+
+    @SerializedName("room")
+    val room: String? = null,
+
+    @SerializedName("note")
+    val note: String? = null,
+
+    @SerializedName("isDefault")
+    val isDefault: Boolean = false,
+
+    @SerializedName("createdAt")
+    val createdAt: String? = null,
+
+    @SerializedName("updatedAt")
+    val updatedAt: String? = null
+)

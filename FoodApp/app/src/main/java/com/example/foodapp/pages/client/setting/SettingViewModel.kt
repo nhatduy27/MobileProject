@@ -1,6 +1,5 @@
 package com.example.foodapp.pages.client.setting
 
-
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -9,10 +8,11 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.repository.shared.AuthRepository
 import com.example.foodapp.data.repository.firebase.AuthManager
+import com.example.foodapp.data.model.shared.auth.ApiResult
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import com.example.foodapp.data.model.shared.auth.ApiResult
+import kotlinx.coroutines.delay
 
 // Sealed class cho các trạng thái
 sealed class ChangePasswordState {
@@ -30,7 +30,6 @@ sealed class DeleteAccountState {
     data class Error(val message: String) : DeleteAccountState()
 }
 
-
 class SettingsViewModel(
     private val authRepository: AuthRepository,
     private val authManager: AuthManager
@@ -44,20 +43,22 @@ class SettingsViewModel(
     private val _deleteAccountState = MutableLiveData<DeleteAccountState>(DeleteAccountState.Idle)
     val deleteAccountState: LiveData<DeleteAccountState> = _deleteAccountState
 
-    // State logout (kế thừa từ ProfileViewModel nếu cần)
+    // State logout
     private val _logoutState = MutableLiveData<Boolean>(false)
     val logoutState: LiveData<Boolean> = _logoutState
+
+    // State điều hướng về login (sau khi xóa tài khoản thành công)
+    private val _navigateToLogin = MutableLiveData<Boolean>(false)
+    val navigateToLogin: LiveData<Boolean> = _navigateToLogin
 
     // Thông báo tổng quát
     private val _notification = MutableLiveData<String?>()
     val notification: LiveData<String?> = _notification
 
+    // Biến tạm lưu trạng thái xác nhận
+    private var _deleteAccountConfirmed = false
 
-
-
-    //--------------CÁC HÀM LOGIC------------------
-
-
+    // ==================== CHANGE PASSWORD ====================
 
     fun changePassword(oldPassword: String, newPassword: String) {
         _changePasswordState.value = ChangePasswordState.Loading
@@ -68,6 +69,7 @@ class SettingsViewModel(
 
                 if (accessToken == null) {
                     _changePasswordState.value = ChangePasswordState.Error("Vui lòng đăng nhập lại")
+                    resetChangePasswordStateAfterDelay()
                     return@launch
                 }
 
@@ -84,36 +86,181 @@ class SettingsViewModel(
                         val message = response.message ?: "Đổi mật khẩu thành công"
                         _changePasswordState.value = ChangePasswordState.Success(message)
 
-                        // 4. Reset state sau 2 giây
-                        resetPasswordStateAfterDelay()
+                        // Reset state sau 2 giây
+                        resetChangePasswordStateAfterDelay()
                     }
 
                     is ApiResult.Failure -> {
                         val errorMessage = result.exception.message ?: "Đổi mật khẩu thất bại"
                         _changePasswordState.value = ChangePasswordState.Error(errorMessage)
+                        resetChangePasswordStateAfterDelay()
                     }
                 }
 
             } catch (e: Exception) {
                 _changePasswordState.value = ChangePasswordState.Error("Lỗi hệ thống: ${e.message}")
+                resetChangePasswordStateAfterDelay()
             }
         }
     }
 
-    private fun resetPasswordStateAfterDelay() {
+    private fun resetChangePasswordStateAfterDelay() {
         viewModelScope.launch {
-            kotlinx.coroutines.delay(1000)
+            delay(2000)
             _changePasswordState.value = ChangePasswordState.Idle
         }
     }
 
-    fun DeleteAccount() {
+    // ==================== DELETE ACCOUNT ====================
+
+    // Hiển thị dialog xác nhận xóa tài khoản
+    fun showDeleteAccountConfirmation() {
         _deleteAccountState.value = DeleteAccountState.ConfirmRequired
     }
 
+    // Xác nhận xóa tài khoản (sau khi người dùng đã confirm)
+    fun confirmDeleteAccount() {
+        if (_deleteAccountState.value == DeleteAccountState.ConfirmRequired) {
+            performDeleteAccount()
+        }
+    }
 
+    // Hủy xóa tài khoản
+    fun cancelDeleteAccount() {
+        _deleteAccountState.value = DeleteAccountState.Idle
+    }
 
-    //Hàm đăng xuất
+    // Thực hiện xóa tài khoản
+    private fun performDeleteAccount() {
+        _deleteAccountState.value = DeleteAccountState.Loading
+        viewModelScope.launch {
+            try {
+                // 1. Lấy access token từ AuthManager
+                val accessToken = authManager.getCurrentToken()
+
+                if (accessToken == null) {
+                    _deleteAccountState.value = DeleteAccountState.Error(
+                        "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại"
+                    )
+                    resetDeleteAccountStateAfterDelay()
+                    return@launch
+                }
+
+                // 2. Gọi repository để xóa tài khoản
+                val result = authRepository.deleteAccount(accessToken)
+
+                when (result) {
+                    is ApiResult.Success -> {
+                        val response = result.data
+                        if (response.success) {
+                            val message = response.message ?: "Tài khoản đã được xóa thành công"
+
+                            // 3. Xử lý sau khi xóa thành công
+                            onDeleteAccountSuccess(message)
+                        } else {
+                            // Trường hợp success = false trong response
+                            val errorMessage = response.message ?: "Xóa tài khoản thất bại"
+                            _deleteAccountState.value = DeleteAccountState.Error(errorMessage)
+                            resetDeleteAccountStateAfterDelay()
+                        }
+                    }
+
+                    is ApiResult.Failure -> {
+                        // 4. Xử lý lỗi chi tiết hơn
+                        handleDeleteAccountFailure(result.exception)
+                    }
+                }
+
+            } catch (e: Exception) {
+                _deleteAccountState.value = DeleteAccountState.Error(
+                    "Lỗi hệ thống: ${e.message ?: "Không xác định"}"
+                )
+                resetDeleteAccountStateAfterDelay()
+            }
+        }
+    }
+
+    private suspend fun onDeleteAccountSuccess(message: String) {
+        // 1. Xóa FCM token để không nhận thông báo nữa
+        revokeFCMToken()
+
+        // 2. Xóa tất cả dữ liệu local
+        clearAllLocalData()
+
+        // 3. Cập nhật state thành công
+        _deleteAccountState.value = DeleteAccountState.Success(message)
+
+        // 4. Delay 2 giây rồi điều hướng về login
+        delay(2000)
+        _navigateToLogin.value = true
+
+        // 5. Reset state về idle
+        _deleteAccountState.value = DeleteAccountState.Idle
+    }
+
+    private suspend fun revokeFCMToken() {
+        try {
+            FirebaseMessaging.getInstance().deleteToken().await()
+        } catch (e: Exception) {
+            // Log lỗi nhưng không ảnh hưởng đến flow chính
+            println("Failed to revoke FCM token: ${e.message}")
+        }
+    }
+
+    private fun clearAllLocalData() {
+        // Xóa dữ liệu auth
+        authManager.clearAuthData()
+
+        // Có thể thêm xóa cache, shared preferences khác ở đây
+        // cacheManager.clearAll()
+        // sharedPreferences.clear()
+    }
+
+    private fun handleDeleteAccountFailure(exception: Exception) {
+        val errorMessage = when {
+            exception.message?.contains("401") == true ->
+                "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại"
+            exception.message?.contains("403") == true ->
+                "Bạn không có quyền xóa tài khoản"
+            exception.message?.contains("404") == true ->
+                "Tài khoản không tồn tại"
+            exception.message?.contains("409") == true ->
+                "Không thể xóa tài khoản vì có đơn hàng đang xử lý"
+            exception.message?.contains("500") == true ->
+                "Lỗi máy chủ. Vui lòng thử lại sau"
+            exception.message?.contains("mạng") == true ||
+                    exception.message?.contains("kết nối") == true ->
+                "Vui lòng kiểm tra kết nối internet"
+            else -> exception.message ?: "Không thể xóa tài khoản lúc này"
+        }
+
+        _deleteAccountState.value = DeleteAccountState.Error(errorMessage)
+        resetDeleteAccountStateAfterDelay()
+    }
+
+    private fun resetDeleteAccountStateAfterDelay() {
+        viewModelScope.launch {
+            delay(2000)
+            // Chỉ reset nếu không phải trạng thái Success
+            if (_deleteAccountState.value !is DeleteAccountState.Success) {
+                _deleteAccountState.value = DeleteAccountState.Idle
+            }
+        }
+    }
+
+    // Reset state về idle (gọi từ UI khi cần)
+    fun resetDeleteAccountState() {
+        if (_deleteAccountState.value !is DeleteAccountState.Success) {
+            _deleteAccountState.value = DeleteAccountState.Idle
+        }
+    }
+
+    fun resetNavigateToLogin() {
+        _navigateToLogin.value = false
+    }
+
+    // ==================== LOGOUT ====================
+
     fun logout() {
         viewModelScope.launch {
             try {
@@ -151,10 +298,22 @@ class SettingsViewModel(
         _logoutState.value = true
     }
 
+    // Reset logout state
+    fun resetLogoutState() {
+        _logoutState.value = false
+    }
 
+    // ==================== NOTIFICATION ====================
 
+    fun showNotification(message: String) {
+        _notification.value = message
+        viewModelScope.launch {
+            delay(3000)
+            _notification.value = null
+        }
+    }
 
-    // ============== FACTORY ==============
+    // ==================== FACTORY ====================
 
     class Factory(private val context: Context) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")

@@ -31,6 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.example.foodapp.data.model.Client
+import com.example.foodapp.data.remote.client.response.profile.AddressResponse
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlinx.coroutines.launch
@@ -52,12 +53,16 @@ fun UserProfileScreen(
     // State cho các popup
     var showEditProfileDialog by remember { mutableStateOf(false) }
     var showAddAddressDialog by remember { mutableStateOf(false) }
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var addressToDelete by remember { mutableStateOf<String?>(null) }
 
     // Observe state từ ViewModel
     val userState by viewModel.userState.observeAsState(ProfileState.Idle)
     val currentUser by viewModel.currentUser.observeAsState()
+    val addresses by viewModel.addresses.observeAsState(emptyList())
     val updateState by viewModel.updateState.observeAsState()
     val createAddressState by viewModel.createAddressState.observeAsState()
+    val deleteAddressState by viewModel.deleteAddressState.observeAsState()
 
     // Xử lý khi update thành công
     LaunchedEffect(updateState) {
@@ -68,7 +73,7 @@ fun UserProfileScreen(
                         message = state.message,
                         duration = SnackbarDuration.Short
                     )
-                    showEditProfileDialog = false // Đóng dialog sau khi thành công
+                    showEditProfileDialog = false
                 }
             }
             is UpdateProfileState.Error -> {
@@ -87,13 +92,37 @@ fun UserProfileScreen(
                         message = state.message,
                         duration = SnackbarDuration.Short
                     )
-                    showAddAddressDialog = false // Đóng dialog sau khi thành công
+                    showAddAddressDialog = false
                 }
-                // Reset state
                 viewModel.resetCreateAddressState()
             }
             is CreateAddressState.Error -> {
                 // Error được xử lý trong dialog
+            }
+            else -> {}
+        }
+    }
+
+    // Xử lý khi xóa địa chỉ thành công
+    LaunchedEffect(deleteAddressState) {
+        when (val state = deleteAddressState) {
+            is DeleteAddressState.Success -> {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = state.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+                viewModel.resetDeleteAddressState()
+            }
+            is DeleteAddressState.Error -> {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = state.message,
+                        duration = SnackbarDuration.Short
+                    )
+                }
+                viewModel.resetDeleteAddressState()
             }
             else -> {}
         }
@@ -115,6 +144,39 @@ fun UserProfileScreen(
             viewModel = viewModel,
             createAddressState = createAddressState,
             onDismiss = { showAddAddressDialog = false }
+        )
+    }
+
+    // Dialog xác nhận xóa địa chỉ
+    if (showDeleteConfirmDialog && addressToDelete != null) {
+        AlertDialog(
+            onDismissRequest = {
+                showDeleteConfirmDialog = false
+                addressToDelete = null
+            },
+            title = { Text("Xác nhận xóa") },
+            text = { Text("Bạn có chắc chắn muốn xóa địa chỉ này?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        //addressToDelete?.let { viewModel.deleteAddress(it) }
+                        showDeleteConfirmDialog = false
+                        addressToDelete = null
+                    }
+                ) {
+                    Text("Xóa")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmDialog = false
+                        addressToDelete = null
+                    }
+                ) {
+                    Text("Hủy")
+                }
+            }
         )
     }
 
@@ -140,9 +202,10 @@ fun UserProfileScreen(
                 )
             }
             is ProfileState.Success -> {
-                currentUser?.let { user ->
+                state.user?.let { user ->
                     ProfileContent(
                         user = user,
+                        addresses = state.addresses,
                         modifier = Modifier
                             .background(Color.White)
                             .fillMaxSize()
@@ -151,7 +214,11 @@ fun UserProfileScreen(
                         onAddAddressClick = { showAddAddressDialog = true },
                         onEditAddressClick = onEditAddressClick,
                         onChangePasswordClick = onChangePasswordClick,
-                        onEditProfileClick = { showEditProfileDialog = true }
+                        onEditProfileClick = { showEditProfileDialog = true },
+                        onDeleteAddressClick = { addressId ->
+                            addressToDelete = addressId
+                            showDeleteConfirmDialog = true
+                        }
                     )
                 } ?: run {
                     EmptyScreen(
@@ -659,11 +726,13 @@ fun ProfileTopBar(
 @Composable
 fun ProfileContent(
     user: Client,
+    addresses: List<AddressResponse>,
     modifier: Modifier = Modifier,
     onAddAddressClick: () -> Unit,
     onEditAddressClick: (String) -> Unit,
     onChangePasswordClick: () -> Unit,
-    onEditProfileClick: () -> Unit
+    onEditProfileClick: () -> Unit,
+    onDeleteAddressClick: (String) -> Unit
 ) {
     // Format ngày tham gia từ timestamp
     val joinDate = remember(user.createdAt) {
@@ -693,11 +762,12 @@ fun ProfileContent(
         AccountStatusCard(user = user)
 
         // Địa chỉ - Chỉ hiển thị nếu có địa chỉ
-        if (user.addresses.isNotEmpty()) {
+        if (addresses.isNotEmpty()) {
             AddressCard(
-                addresses = user.addresses,
+                addresses = addresses,
                 onAddClick = onAddAddressClick,
-                onEditClick = onEditAddressClick
+                onEditClick = onEditAddressClick,
+                onDeleteClick = onDeleteAddressClick
             )
         } else {
             EmptyAddressCard(onAddClick = onAddAddressClick)
@@ -753,7 +823,7 @@ fun OrderStatusSection() {
                 OrderStatusButton(
                     icon = Icons.Filled.LocalShipping,
                     text = "Chờ giao hàng",
-                    badgeCount = 5, // Số 5 như hình
+                    badgeCount = 5,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -761,7 +831,7 @@ fun OrderStatusSection() {
                 OrderStatusButton(
                     icon = Icons.Filled.RestaurantMenu,
                     text = "Chờ Lấy món",
-                    badgeCount = null, // Không có số
+                    badgeCount = null,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -777,7 +847,7 @@ fun OrderStatusSection() {
                 OrderStatusButton(
                     icon = Icons.Filled.HourglassEmpty,
                     text = "Chờ Xác Nhận",
-                    badgeCount = 3, // Số 3 như hình
+                    badgeCount = 3,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -785,7 +855,7 @@ fun OrderStatusSection() {
                 OrderStatusButton(
                     icon = Icons.Filled.StarRate,
                     text = "Đánh giá",
-                    badgeCount = null, // Không có số
+                    badgeCount = null,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -801,32 +871,31 @@ fun OrderStatusButton(
     modifier: Modifier = Modifier
 ) {
     val backgroundColor = Color.White
-    val iconColor = Color(0xFF4CAF50) // Màu xanh lá như hình
+    val iconColor = Color(0xFF4CAF50)
 
     Box(
         modifier = modifier
-            .height(100.dp) // Chiều cao cố định
-            .clip(RoundedCornerShape(8.dp)) // Bo góc nhỏ hơn
+            .height(100.dp)
+            .clip(RoundedCornerShape(8.dp))
             .background(backgroundColor)
             .clickable {
                 // TODO: Xử lý click cho từng button
             }
             .border(
                 width = 1.dp,
-                color = Color(0xFFE0E0E0), // Viền xám nhạt
+                color = Color(0xFFE0E0E0),
                 shape = RoundedCornerShape(8.dp)
             ),
-        contentAlignment = Alignment.Center // Toàn bộ nội dung nằm giữa
+        contentAlignment = Alignment.Center
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp),
             modifier = Modifier.padding(8.dp)
         ) {
-            // Badge ở góc trái - sử dụng Box với contentAlignment = TopStart
             Box(
                 modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.TopStart // Badge ở góc trên bên trái
+                contentAlignment = Alignment.TopStart
             ) {
                 // Icon container nằm giữa
                 Box(
@@ -844,14 +913,13 @@ fun OrderStatusButton(
                     )
                 }
 
-                // Badge số lượng - nằm góc trên bên trái của button
                 if (badgeCount != null) {
                     Box(
                         modifier = Modifier
-                            .offset(x = (-4).dp, y = (-4).dp) // Dịch chuyển ra ngoài góc trái
+                            .offset(x = (-4).dp, y = (-4).dp)
                             .size(20.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFFFF5252)), // Màu đỏ như hình
+                            .background(Color(0xFFFF5252)),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
@@ -1040,50 +1108,130 @@ fun AccountStatusCard(user: Client) {
 
 @Composable
 fun AddressCard(
-    addresses: List<com.example.foodapp.data.model.client.DeliveryAddress>,
+    addresses: List<AddressResponse>,
     onAddClick: () -> Unit,
-    onEditClick: (String) -> Unit
+    onEditClick: (String) -> Unit,
+    onDeleteClick: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = Color.White
-        )
+        ),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(20.dp)
         ) {
-            Text(
-                text = "Địa chỉ giao hàng",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(bottom = 12.dp)
-            )
+            // Header với icon
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(
+                            color = Color(0xFFFFF3E0),
+                            shape = RoundedCornerShape(10.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.LocationOn,
+                        contentDescription = null,
+                        tint = Color(0xFFFF9800),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
 
-            addresses.forEach { address ->
-                AddressItem(
-                    address = address,
-                    onEditClick = { onEditClick(address.id) },
-                    modifier = Modifier.padding(vertical = 4.dp)
+                Spacer(modifier = Modifier.width(12.dp))
+
+                Text(
+                    text = "Địa chỉ giao hàng",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF212121)
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            // Danh sách địa chỉ
+            if (addresses.isNotEmpty()) {
+                addresses.forEachIndexed { index, address ->
+                    AddressItem(
+                        address = address,
+                        onEditClick = { address.id?.let { onEditClick(it) } },
+                        onDeleteClick = { address.id?.let { onDeleteClick(it) } },
+                        modifier = Modifier.padding(vertical = 6.dp)
+                    )
 
-            OutlinedButton(
+                    if (index < addresses.size - 1) {
+                        Divider(
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            color = Color(0xFFEEEEEE),
+                            thickness = 1.dp
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            } else {
+                // Empty state
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.LocationOn,
+                        contentDescription = null,
+                        tint = Color(0xFFBDBDBD),
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Chưa có địa chỉ giao hàng",
+                        fontSize = 14.sp,
+                        color = Color(0xFF9E9E9E)
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+
+            // Button thêm địa chỉ
+            Button(
                 onClick = onAddClick,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFF9800),
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(12.dp),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 2.dp
+                )
             ) {
                 Icon(
                     imageVector = Icons.Filled.Add,
                     contentDescription = "Thêm địa chỉ",
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(22.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Thêm địa chỉ mới")
+                Text(
+                    text = "Thêm địa chỉ mới",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }
@@ -1321,8 +1469,9 @@ fun StatusChip(
 
 @Composable
 fun AddressItem(
-    address: com.example.foodapp.data.model.client.DeliveryAddress,
+    address: AddressResponse,
     onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -1333,27 +1482,63 @@ fun AddressItem(
             modifier = Modifier.padding(12.dp)
         ) {
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = address.name,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
+                Column(
                     modifier = Modifier.weight(1f)
-                )
-
-                if (address.isDefault) {
-                    Badge(
-                        containerColor = Color.Green.copy(alpha = 0.1f),
-                        contentColor = Color.Green,
-                        modifier = Modifier.padding(horizontal = 4.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Mặc định", fontSize = 10.sp)
+                        Text(
+                            text = address.label ?: "Địa chỉ",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        if (address.isDefault) {
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Badge(
+                                containerColor = Color.Green.copy(alpha = 0.1f),
+                                contentColor = Color.Green,
+                            ) {
+                                Text("Mặc định", fontSize = 10.sp)
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = address.fullAddress ?: "",
+                        fontSize = 14.sp,
+                        color = Color.Gray,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+
+                    // Hiển thị thông tin tòa nhà và phòng nếu có
+                    if (!address.building.isNullOrBlank() || !address.room.isNullOrBlank()) {
+                        Text(
+                            text = "${address.building ?: ""} ${if (!address.room.isNullOrBlank()) "Phòng ${address.room}" else ""}".trim(),
+                            fontSize = 13.sp,
+                            color = Color(0xFF666666),
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
+
+                    // Hiển thị ghi chú nếu có
+                    if (!address.note.isNullOrBlank()) {
+                        Text(
+                            text = "📝 ${address.note}",
+                            fontSize = 12.sp,
+                            color = Color(0xFF888888),
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
                     }
                 }
 
                 Spacer(modifier = Modifier.width(8.dp))
 
+                // Nút chỉnh sửa
                 IconButton(
                     onClick = onEditClick,
                     modifier = Modifier.size(24.dp)
@@ -1365,14 +1550,20 @@ fun AddressItem(
                         modifier = Modifier.size(16.dp)
                     )
                 }
-            }
 
-            Text(
-                text = address.address,
-                fontSize = 14.sp,
-                color = Color.Gray,
-                modifier = Modifier.padding(top = 4.dp)
-            )
+                // Nút xóa
+                IconButton(
+                    onClick = onDeleteClick,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = "Xóa",
+                        tint = Color.Red,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
         }
     }
 }

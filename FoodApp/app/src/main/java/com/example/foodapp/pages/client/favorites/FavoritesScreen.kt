@@ -32,6 +32,7 @@ import com.example.foodapp.pages.client.components.UserBottomNav
 fun FavoritesScreen(
     navController: NavHostController,
     onBackClick: () -> Unit,
+    onProductClick :(String) -> Unit
 ) {
     val context = LocalContext.current
     val viewModel: FavoritesViewModel = viewModel(
@@ -116,7 +117,9 @@ fun FavoritesScreen(
                             products = products,
                             onRemoveFavorite = { productId ->
                                 viewModel.removeFromFavorites(productId)
-                            }
+                            },
+                            onProductClick = onProductClick
+
                         )
                     }
                 }
@@ -145,7 +148,8 @@ fun FavoritesScreen(
 private fun FavoritesContent(
     products: List<com.example.foodapp.data.model.shared.product.Product>,
     onRemoveFavorite: (String) -> Unit,
-    modifier: Modifier = Modifier
+    onProductClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     LazyColumn(
         modifier = modifier
@@ -157,7 +161,8 @@ private fun FavoritesContent(
         items(products) { product ->
             FavoriteProductCard(
                 product = product,
-                onRemove = { onRemoveFavorite(product.id) }
+                onRemove = { onRemoveFavorite(product.id) },
+                onClick = { onProductClick(product.id) }
             )
         }
     }
@@ -166,7 +171,8 @@ private fun FavoritesContent(
 @Composable
 private fun FavoriteProductCard(
     product: com.example.foodapp.data.model.shared.product.Product,
-    onRemove: () -> Unit
+    onRemove: () -> Unit,
+    onClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -174,9 +180,7 @@ private fun FavoriteProductCard(
             .height(120.dp),
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        onClick = {
-            // TODO: Điều hướng đến chi tiết sản phẩm
-        }
+        onClick = onClick
     ) {
         Row(
             modifier = Modifier

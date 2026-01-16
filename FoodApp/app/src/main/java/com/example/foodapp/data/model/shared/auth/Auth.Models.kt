@@ -270,4 +270,13 @@ data class ChangePasswordResponse @JvmOverloads constructor(
     val message: String? = null
 )
 
+// Response cho xóa tài khoản
+data class DeleteAccountResponse @JvmOverloads constructor(
+    @SerializedName("success")
+    val success: Boolean = false,
+
+    @SerializedName("message")
+    val message: String? = null
+)
+
 

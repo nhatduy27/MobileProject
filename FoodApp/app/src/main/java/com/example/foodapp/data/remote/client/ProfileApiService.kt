@@ -1,9 +1,6 @@
 package com.example.foodapp.data.remote.client
 
-import com.example.foodapp.data.remote.client.response.profile.CreateAddressRequest
-import com.example.foodapp.data.remote.client.response.profile.CreateAddressResponse
-import com.example.foodapp.data.remote.client.response.profile.UpdateProfileRequest
-import com.example.foodapp.data.remote.client.response.profile.UpdateProfileResponse
+import com.example.foodapp.data.remote.client.response.profile.*
 import retrofit2.Response
 import okhttp3.ResponseBody
 import retrofit2.http.Body
@@ -21,5 +18,9 @@ interface ProfileApiService {
 
     @POST("me/addresses")
     suspend fun createAddress(@Body request: CreateAddressRequest): Response<CreateAddressResponse>
+
+    @GET("me/addresses")
+    suspend fun getAddresses(): Response<GetAddressesResponse>
+
 
 }

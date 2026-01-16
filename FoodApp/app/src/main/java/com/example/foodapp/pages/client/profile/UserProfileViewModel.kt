@@ -8,9 +8,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.model.Client
 import com.example.foodapp.data.model.client.DeliveryAddress
-import com.example.foodapp.data.remote.client.response.profile.ApiResult
-import com.example.foodapp.data.remote.client.response.profile.CreateAddressRequest
-import com.example.foodapp.data.remote.client.response.profile.UpdateProfileRequest
+import com.example.foodapp.data.remote.client.response.profile.*
 import com.example.foodapp.data.repository.shared.AuthRepository
 import com.example.foodapp.data.repository.firebase.AuthManager
 import com.example.foodapp.data.repository.client.profile.ProfileRepository
@@ -22,7 +20,7 @@ import java.util.Locale
 sealed class ProfileState {
     object Idle : ProfileState()
     object Loading : ProfileState()
-    data class Success(val user: Client) : ProfileState()
+    data class Success(val user: Client, val addresses: List<AddressResponse>) : ProfileState()
     data class Error(val message: String) : ProfileState()
 }
 
@@ -48,6 +46,14 @@ sealed class CreateAddressState {
     data class Error(val message: String) : CreateAddressState()
 }
 
+// Thêm state cho xóa địa chỉ
+sealed class DeleteAddressState {
+    object Idle : DeleteAddressState()
+    object Loading : DeleteAddressState()
+    data class Success(val message: String) : DeleteAddressState()
+    data class Error(val message: String) : DeleteAddressState()
+}
+
 class ProfileViewModel(
     private val authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
@@ -70,6 +76,10 @@ class ProfileViewModel(
     private val _createAddressState = MutableLiveData<CreateAddressState>(CreateAddressState.Idle)
     val createAddressState: LiveData<CreateAddressState> = _createAddressState
 
+    // State cho việc xóa địa chỉ
+    private val _deleteAddressState = MutableLiveData<DeleteAddressState>(DeleteAddressState.Idle)
+    val deleteAddressState: LiveData<DeleteAddressState> = _deleteAddressState
+
     // State cho logout
     private val _logoutState = MutableLiveData<Boolean>(false)
     val logoutState: LiveData<Boolean> = _logoutState
@@ -78,9 +88,12 @@ class ProfileViewModel(
     private val _currentUser = MutableLiveData<Client?>()
     val currentUser: LiveData<Client?> = _currentUser
 
+    // Current addresses
+    private val _addresses = MutableLiveData<List<AddressResponse>>(emptyList())
+    val addresses: LiveData<List<AddressResponse>> = _addresses
+
     // Format date cho ngày tham gia
     private val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-
 
     //Load thông tin của người dùng ngay khi vừa vào app
     init {
@@ -92,34 +105,82 @@ class ProfileViewModel(
         fetchUserData()
     }
 
-    // Lấy thông tin người dùng từ database
+    // Lấy thông tin người dùng và địa chỉ từ database
     fun fetchUserData() {
         viewModelScope.launch {
             _userState.value = ProfileState.Loading
 
-            when (val result = profileRepository.getUserProfile()) { //Gọi API
-                is ApiResult.Success -> {
-                    // Bây giờ result.data là UserProfileData, không phải GetProfileResponse
-                    val userData = result.data
+            try {
+                // Lấy profile và addresses đồng thời
+                val userResult = profileRepository.getUserProfile()
+                val addressesResult = profileRepository.getAddresses()
 
-                    // Kiểm tra userData có null hoặc empty không
-                    if (userData.id.isNullOrEmpty()) {
-                        _userState.value = ProfileState.Error("Không có dữ liệu người dùng")
-                    } else {
-                        val user = Client.fromApiResponse(userData)
-                        _currentUser.value = user
-                        _userState.value = ProfileState.Success(user)
+                when (userResult) {
+                    is ApiResult.Success -> {
+                        val userData = userResult.data
+
+                        // Kiểm tra userData có null hoặc empty không
+                        if (userData.id.isNullOrEmpty()) {
+                            _userState.value = ProfileState.Error("Không có dữ liệu người dùng")
+                        } else {
+                            val user = Client.fromApiResponse(userData)
+                            _currentUser.value = user
+
+                            // Xử lý địa chỉ
+                            val addresses = when (addressesResult) {
+                                is ApiResult.Success -> (addressesResult.data as? List<AddressResponse>) ?: emptyList()
+                                is ApiResult.Failure -> emptyList()
+                            }
+
+                            _addresses.value = addresses
+                            _userState.value = ProfileState.Success(user, addresses)
+                        }
+                    }
+                    is ApiResult.Failure -> {
+                        _userState.value = ProfileState.Error(
+                            userResult.exception.message ?: "Lỗi không xác định"
+                        )
                     }
                 }
-                is ApiResult.Failure -> {
-                    _userState.value = ProfileState.Error(
-                        result.exception.message ?: "Lỗi không xác định"
-                    )
-                }
+            } catch (e: Exception) {
+                _userState.value = ProfileState.Error(
+                    e.message ?: "Lỗi không xác định"
+                )
             }
         }
     }
 
+    // Tải lại danh sách địa chỉ
+    fun refreshAddresses() {
+        viewModelScope.launch {
+            try {
+                val result = profileRepository.getAddresses()
+                when (result) {
+                    is ApiResult.Success -> {
+                        val addresses = (result.data as? List<AddressResponse>) ?: emptyList()
+                        _addresses.value = addresses
+
+                        // Cập nhật state nếu có current user
+                        _currentUser.value?.let { user ->
+                            _userState.value = ProfileState.Success(user, addresses)
+                        }
+                    }
+                    is ApiResult.Failure -> {
+                        // Không cần thông báo lỗi ở đây, vì đây chỉ là refresh background
+                        println("DEBUG: [ViewModel] Refresh addresses failed: ${result.exception.message}")
+                    }
+                }
+            } catch (e: Exception) {
+                println("DEBUG: [ViewModel] Refresh addresses exception: ${e.message}")
+            }
+        }
+    }
+
+
+    // Reset delete address state
+    fun resetDeleteAddressState() {
+        _deleteAddressState.value = DeleteAddressState.Idle
+    }
 
     fun updateProfile(displayName: String?, phone: String?) {
         viewModelScope.launch {
@@ -151,7 +212,8 @@ class ProfileViewModel(
                                 imageAvatar = updatedUserData.avatarUrl ?: user.imageAvatar
                             )
                             _currentUser.value = updatedUser
-                            _userState.value = ProfileState.Success(updatedUser)
+                            // Giữ nguyên danh sách địa chỉ
+                            _userState.value = ProfileState.Success(updatedUser, _addresses.value ?: emptyList())
                         }
 
                         _updateState.value = UpdateProfileState.Success("Cập nhật thông tin thành công")
@@ -177,7 +239,6 @@ class ProfileViewModel(
         return phone.matches(phoneRegex)
     }
 
-    // Hàm thêm địa chỉ mới
     // Hàm thêm địa chỉ mới
     fun createAddress(
         label: String,
@@ -210,34 +271,8 @@ class ProfileViewModel(
                         val addressData = result.data
                         println("DEBUG: [ViewModel] Address created successfully: ${addressData}")
 
-                        // Cập nhật lại danh sách địa chỉ của người dùng
-                        val currentUser = _currentUser.value
-                        currentUser?.let { user ->
-                            val newAddress = DeliveryAddress(
-                                id = addressData.id,
-                                label = addressData.label,
-                                fullAddress = addressData.fullAddress,
-                                isDefault = addressData.isDefault,
-                                note = note ?: ""
-                            )
-
-                            val updatedAddresses = user.addresses?.toMutableList() ?: mutableListOf()
-                            updatedAddresses.add(newAddress)
-
-                            if (isDefault) {
-                                updatedAddresses.forEach {
-                                    if (it is DeliveryAddress) {
-
-                                    }
-                                }
-                            }
-
-                            val updatedUser = user.copy(
-                                addresses = updatedAddresses
-                            )
-                            _currentUser.value = updatedUser
-                            _userState.value = ProfileState.Success(updatedUser)
-                        }
+                        // Refresh danh sách địa chỉ
+                        refreshAddresses()
 
                         _createAddressState.value = CreateAddressState.Success("Thêm địa chỉ thành công")
                         println("DEBUG: [ViewModel] Create address state set to success")

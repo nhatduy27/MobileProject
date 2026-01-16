@@ -1,6 +1,7 @@
 import { Injectable, Inject, ConflictException, NotFoundException } from '@nestjs/common';
 import { IFavoritesRepository, FAVORITES_REPOSITORY, PaginatedResult } from './interfaces';
 import { FavoriteEntity } from './entities';
+import { ProductsService } from '../products/services/products.service';
 
 /**
  * Mock product data structure
@@ -20,6 +21,7 @@ export class FavoritesService {
   constructor(
     @Inject(FAVORITES_REPOSITORY)
     private readonly favoritesRepository: IFavoritesRepository,
+    private readonly productsService: ProductsService,
   ) {}
 
   /**
@@ -89,14 +91,37 @@ export class FavoritesService {
    * TODO: Replace with real ProductsService call
    */
   private async getProductData(productId: string): Promise<ProductData> {
-    // Placeholder - in production this would fetch from ProductsService
+  try {
+    // Gọi ProductsService để lấy thông tin sản phẩm
+    const product = await this.productsService.findOne(productId);
+
+    if (!product) {
+      throw new Error('Product not found');
+    }
+
+    return {
+      id: product.id,
+      name: product.name || 'Product Name',
+      price: product.price || 0,
+      // Sửa: product.imageUrl là string, không phải array
+      imageUrl: product.imageUrl || undefined,
+      shopId: product.shopId || 'shop_placeholder',
+      // Sửa: product.shopName là trường trực tiếp
+      shopName: product.shopName || 'Shop Name',
+    };
+  } catch (error) {
+    // Xử lý lỗi - có thể log hoặc throw custom exception
+    console.error(`Error fetching product data for ${productId}:`, error);
+    
+    // Fallback về placeholder data nếu có lỗi
     return {
       id: productId,
-      name: 'Product Name', // Will be fetched from Products module
+      name: 'Product Name',
       price: 0,
       imageUrl: undefined,
       shopId: 'shop_placeholder',
       shopName: 'Shop Name',
     };
   }
+}
 }

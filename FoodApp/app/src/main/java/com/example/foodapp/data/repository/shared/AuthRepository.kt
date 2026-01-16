@@ -229,4 +229,63 @@ class AuthRepository {
     }
 
 
+    // AuthRepository.kt
+    suspend fun deleteAccount(
+        accessToken: String
+    ): ApiResult<DeleteAccountResponse> {
+        println("DEBUG [AuthRepository] deleteAccount called")
+        println("DEBUG [AuthRepository] Access token: ${accessToken.take(20)}...")
+
+        return try {
+            withContext(Dispatchers.IO) {
+                println("DEBUG [AuthRepository] Making API call to DELETE /api/me")
+
+                val response = apiService.deleteAccount("Bearer $accessToken")
+
+                println("DEBUG [AuthRepository] Response code: ${response.code()}")
+                println("DEBUG [AuthRepository] Response message: ${response.message()}")
+                println("DEBUG [AuthRepository] Is successful: ${response.isSuccessful}")
+
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    println("DEBUG [AuthRepository] Response body: $body")
+
+                    if (body != null && body.success) {
+                        ApiResult.Success(body)
+                    } else {
+                        val errorMessage = body?.message ?: "Xóa tài khoản thất bại"
+                        println("DEBUG [AuthRepository] Error: $errorMessage")
+                        ApiResult.Failure(Exception(errorMessage))
+                    }
+                } else {
+                    val errorCode = response.code()
+                    val errorBody = response.errorBody()?.string()
+
+                    println("DEBUG [AuthRepository] HTTP Error $errorCode: $errorBody")
+
+                    val errorMessage = when (errorCode) {
+                        401 -> "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại"
+                        403 -> "Không có quyền xóa tài khoản"
+                        404 -> "Tài khoản không tồn tại"
+                        409 -> "Không thể xóa tài khoản vì có dữ liệu liên quan"
+                        500 -> "Lỗi máy chủ. Vui lòng thử lại sau"
+                        else -> errorBody ?: "Lỗi không xác định (Mã: $errorCode)"
+                    }
+                    ApiResult.Failure(Exception(errorMessage))
+                }
+            }
+        } catch (e: HttpException) {
+            println("DEBUG [AuthRepository] HttpException: ${e.message}")
+            ApiResult.Failure(Exception("Lỗi kết nối: ${e.message}"))
+        } catch (e: IOException) {
+            println("DEBUG [AuthRepository] IOException: ${e.message}")
+            ApiResult.Failure(Exception("Không có kết nối mạng. Vui lòng kiểm tra internet"))
+        } catch (e: Exception) {
+            println("DEBUG [AuthRepository] Exception: ${e.message}")
+            ApiResult.Failure(Exception("Lỗi không xác định: ${e.message}"))
+        }
+    }
+
+
+
 }

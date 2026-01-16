@@ -3,6 +3,7 @@ package com.example.foodapp.data.remote.shared
 import com.example.foodapp.data.model.shared.auth.*
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.Header
 import retrofit2.http.Headers
 import retrofit2.http.POST
@@ -36,4 +37,10 @@ interface AuthApiService {
         @Header("Authorization") token: String,
         @Body request: ChangePasswordRequest
     ): Response<ChangePasswordResponse>
+
+    @DELETE("me")
+    @Headers("Content-Type: application/json")
+    suspend fun deleteAccount(
+        @Header("Authorization") token: String
+    ): Response<DeleteAccountResponse>
 }

@@ -31,7 +31,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun UserProductDetailScreen(
     productId: String,
-    onBackPressed: () -> Unit = {}
+    onBackPressed: () -> Unit = {},
+    onNavigateToPayment: (Product) -> Unit = { }
 ) {
     val context = LocalContext.current
     val viewModel: ProductDetailViewModel = viewModel(
@@ -100,6 +101,7 @@ fun UserProductDetailScreen(
                     },
                     onBuyNow = {
                         println("Mua ngay: ${product!!.name} x $quantity")
+                        onNavigateToPayment(product!!)
                     }
                 )
             }

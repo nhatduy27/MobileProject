@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -29,8 +30,6 @@ fun SettingsScreen(
     onChangePassword: () -> Unit,
     onDeleteAccount: () -> Unit
 ) {
-
-
     val context = LocalContext.current
     val viewModel: SettingsViewModel = viewModel(
         factory = SettingsViewModel.Factory(context)
@@ -38,9 +37,7 @@ fun SettingsScreen(
 
     var showChangePasswordDialog by remember { mutableStateOf(false) }
     var showConfirmDeleteDialog by remember { mutableStateOf(false) }
-    var showFinalDeleteDialog by remember { mutableStateOf(false) }
-    var showLogoutConfirmDialog by remember { mutableStateOf(false) } // Thêm dialog xác nhận logout
-
+    var showLogoutConfirmDialog by remember { mutableStateOf(false) }
 
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
@@ -52,9 +49,93 @@ fun SettingsScreen(
     // State cho Confirm Delete Dialog
     var agreeToTerms by remember { mutableStateOf(false) }
 
-    // State cho Final Delete Dialog
-    var deletePassword by remember { mutableStateOf("") }
-    var showDeletePassword by remember { mutableStateOf(false) }
+    // Observe state từ ViewModel
+    val deleteAccountState by viewModel.deleteAccountState.observeAsState()
+    val changePasswordState by viewModel.changePasswordState.observeAsState()
+    val logoutState by viewModel.logoutState.observeAsState()
+    val navigateToLogin by viewModel.navigateToLogin.observeAsState()
+
+    // Xử lý khi logout thành công
+    LaunchedEffect(logoutState) {
+        if (logoutState == true) {
+            println("DEBUG [SettingsScreen] Logout successful, navigating...")
+            onLogout()
+        }
+    }
+
+    // Xử lý khi xóa tài khoản thành công
+    LaunchedEffect(deleteAccountState) {
+        when (deleteAccountState) {
+            is DeleteAccountState.Success -> {
+                val message = (deleteAccountState as DeleteAccountState.Success).message
+                println("DEBUG [SettingsScreen] Delete account success: $message")
+
+                // Delay để hiển thị message trước khi navigate
+                delay(1500)
+
+                // Đóng dialog
+                showConfirmDeleteDialog = false
+
+                // Điều hướng về màn hình đăng nhập
+                onDeleteAccount()
+            }
+            is DeleteAccountState.Error -> {
+                val error = (deleteAccountState as DeleteAccountState.Error).message
+                println("DEBUG [SettingsScreen] Delete account error: $error")
+            }
+            is DeleteAccountState.Loading -> {
+                println("DEBUG [SettingsScreen] Delete account loading...")
+            }
+            else -> {}
+        }
+    }
+
+    // Xử lý navigate to login khi cần
+    LaunchedEffect(navigateToLogin) {
+        if (navigateToLogin == true) {
+            println("DEBUG [SettingsScreen] Navigate to login triggered")
+            onDeleteAccount()
+            viewModel.resetNavigateToLogin()
+        }
+    }
+
+    // Xử lý change password success
+    LaunchedEffect(changePasswordState) {
+        when (changePasswordState) {
+            is ChangePasswordState.Success -> {
+                val message = (changePasswordState as ChangePasswordState.Success).message
+                println("DEBUG [SettingsScreen] Change password success: $message")
+
+                // Tự động đóng dialog sau 1.5 giây
+                delay(1500)
+                showChangePasswordDialog = false
+            }
+            is ChangePasswordState.Error -> {
+                val error = (changePasswordState as ChangePasswordState.Error).message
+                println("DEBUG [SettingsScreen] Change password error: $error")
+            }
+            else -> {}
+        }
+    }
+
+    // Reset password state khi đóng dialog
+    LaunchedEffect(showChangePasswordDialog) {
+        if (!showChangePasswordDialog) {
+            currentPassword = ""
+            newPassword = ""
+            confirmPassword = ""
+            // Reset state trong ViewModel
+            viewModel.resetDeleteAccountState()
+        }
+    }
+
+    // Reset dialog state khi đóng
+    LaunchedEffect(showConfirmDeleteDialog) {
+        if (!showConfirmDeleteDialog) {
+            agreeToTerms = false
+            viewModel.resetDeleteAccountState()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -80,14 +161,20 @@ fun SettingsScreen(
                     icon = Icons.Default.Lock,
                     title = "Đổi mật khẩu",
                     description = "Thay đổi mật khẩu đăng nhập",
-                    onClick = { showChangePasswordDialog = true }
+                    onClick = {
+                        println("DEBUG [SettingsScreen] Change password clicked")
+                        showChangePasswordDialog = true
+                    }
                 )
 
                 SettingsItem(
                     icon = Icons.Default.Delete,
                     title = "Xóa tài khoản",
                     description = "Xóa vĩnh viễn tài khoản của bạn",
-                    onClick = { showConfirmDeleteDialog = true },
+                    onClick = {
+                        println("DEBUG [SettingsScreen] Delete account clicked")
+                        showConfirmDeleteDialog = true
+                    },
                     iconTint = MaterialTheme.colorScheme.error,
                     textColor = MaterialTheme.colorScheme.error
                 )
@@ -101,7 +188,10 @@ fun SettingsScreen(
                     icon = Icons.Default.Logout,
                     title = "Đăng xuất",
                     description = "Đăng xuất khỏi tài khoản hiện tại",
-                    onClick = { showLogoutConfirmDialog = true }, // Mở dialog xác nhận
+                    onClick = {
+                        println("DEBUG [SettingsScreen] Logout clicked")
+                        showLogoutConfirmDialog = true
+                    },
                     iconTint = MaterialTheme.colorScheme.primary
                 )
             }
@@ -132,9 +222,9 @@ fun SettingsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
+                        println("DEBUG [SettingsScreen] Logout confirmed")
                         showLogoutConfirmDialog = false
                         viewModel.logout()
-                        onLogout()
                     },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.error
@@ -145,7 +235,10 @@ fun SettingsScreen(
             },
             dismissButton = {
                 TextButton(
-                    onClick = { showLogoutConfirmDialog = false }
+                    onClick = {
+                        println("DEBUG [SettingsScreen] Logout cancelled")
+                        showLogoutConfirmDialog = false
+                    }
                 ) {
                     Text("Hủy")
                 }
@@ -155,11 +248,12 @@ fun SettingsScreen(
 
     // Dialog đổi mật khẩu
     if (showChangePasswordDialog) {
-        // Thêm state tracking
-        val changePasswordState: ChangePasswordState? by viewModel.changePasswordState.observeAsState()
-
         Dialog(
-            onDismissRequest = { showChangePasswordDialog = false },
+            onDismissRequest = {
+                println("DEBUG [SettingsScreen] Change password dialog dismissed")
+                showChangePasswordDialog = false
+                viewModel.resetDeleteAccountState()
+            },
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
             Card(
@@ -178,131 +272,195 @@ fun SettingsScreen(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    // Hiển thị thông báo thành công
-                    if (changePasswordState is ChangePasswordState.Success) {
-                        val success = (changePasswordState as ChangePasswordState.Success).message
+                    // Hiển thị thông báo
+                    when (changePasswordState) {
+                        is ChangePasswordState.Success -> {
+                            val success = (changePasswordState as ChangePasswordState.Success).message
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "✅ $success",
+                                    color = Color(0xFF2E7D32),
+                                    fontWeight = FontWeight.Medium,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        }
+                        is ChangePasswordState.Error -> {
+                            val error = (changePasswordState as ChangePasswordState.Error).message
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "❌ $error",
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontWeight = FontWeight.Medium,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        }
+                        else -> {}
+                    }
+
+                    // Hiển thị loading
+                    if (changePasswordState is ChangePasswordState.Loading) {
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(bottom = 16.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "✅ $success",
-                                color = Color(0xFF2E7D32), // Màu xanh lá
-                                fontWeight = FontWeight.Medium,
-                                style = MaterialTheme.typography.bodyLarge
-                            )
+                            CircularProgressIndicator()
                         }
                     }
 
-                    // Mật khẩu hiện tại
-                    OutlinedTextField(
-                        value = currentPassword,
-                        onValueChange = { currentPassword = it },
-                        label = { Text("Mật khẩu hiện tại") },
-                        modifier = Modifier.fillMaxWidth(),
-                        visualTransformation = if (showCurrentPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { showCurrentPassword = !showCurrentPassword }) {
-                                Icon(
-                                    if (showCurrentPassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = "Hiện mật khẩu"
-                                )
+                    // Chỉ hiển thị form khi không loading/success/error
+                    if (changePasswordState !is ChangePasswordState.Loading &&
+                        changePasswordState !is ChangePasswordState.Success &&
+                        changePasswordState !is ChangePasswordState.Error
+                    ) {
+                        // Mật khẩu hiện tại
+                        OutlinedTextField(
+                            value = currentPassword,
+                            onValueChange = { currentPassword = it },
+                            label = { Text("Mật khẩu hiện tại") },
+                            modifier = Modifier.fillMaxWidth(),
+                            visualTransformation = if (showCurrentPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { showCurrentPassword = !showCurrentPassword }) {
+                                    Icon(
+                                        if (showCurrentPassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                        contentDescription = "Hiện mật khẩu"
+                                    )
+                                }
                             }
-                        }
-                    )
+                        )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                    // Mật khẩu mới
-                    OutlinedTextField(
-                        value = newPassword,
-                        onValueChange = { newPassword = it },
-                        label = { Text("Mật khẩu mới") },
-                        modifier = Modifier.fillMaxWidth(),
-                        visualTransformation = if (showNewPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { showNewPassword = !showNewPassword }) {
-                                Icon(
-                                    if (showNewPassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = "Hiện mật khẩu"
-                                )
+                        // Mật khẩu mới
+                        OutlinedTextField(
+                            value = newPassword,
+                            onValueChange = { newPassword = it },
+                            label = { Text("Mật khẩu mới") },
+                            modifier = Modifier.fillMaxWidth(),
+                            visualTransformation = if (showNewPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { showNewPassword = !showNewPassword }) {
+                                    Icon(
+                                        if (showNewPassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                        contentDescription = "Hiện mật khẩu"
+                                    )
+                                }
                             }
-                        }
-                    )
+                        )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                    // Xác nhận mật khẩu
-                    OutlinedTextField(
-                        value = confirmPassword,
-                        onValueChange = { confirmPassword = it },
-                        label = { Text("Xác nhận mật khẩu mới") },
-                        modifier = Modifier.fillMaxWidth(),
-                        visualTransformation = if (showConfirmPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { showConfirmPassword = !showConfirmPassword }) {
-                                Icon(
-                                    if (showConfirmPassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = "Hiện mật khẩu"
-                                )
+                        // Xác nhận mật khẩu
+                        OutlinedTextField(
+                            value = confirmPassword,
+                            onValueChange = { confirmPassword = it },
+                            label = { Text("Xác nhận mật khẩu mới") },
+                            modifier = Modifier.fillMaxWidth(),
+                            visualTransformation = if (showConfirmPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { showConfirmPassword = !showConfirmPassword }) {
+                                    Icon(
+                                        if (showConfirmPassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                        contentDescription = "Hiện mật khẩu"
+                                    )
+                                }
                             }
-                        }
-                    )
+                        )
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                        // Kiểm tra mật khẩu
+                        if (newPassword.isNotEmpty() && confirmPassword.isNotEmpty() && newPassword != confirmPassword) {
+                            Text(
+                                text = "Mật khẩu không khớp",
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+                    }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(
-                            onClick = {
-                                showChangePasswordDialog = false
-                                currentPassword = ""
-                                newPassword = ""
-                                confirmPassword = ""
+                        // Nếu đang loading/success/error, chỉ hiển thị nút đóng
+                        if (changePasswordState is ChangePasswordState.Loading ||
+                            changePasswordState is ChangePasswordState.Success ||
+                            changePasswordState is ChangePasswordState.Error
+                        ) {
+                            Button(
+                                onClick = {
+                                    showChangePasswordDialog = false
+                                    viewModel.resetDeleteAccountState()
+                                }
+                            ) {
+                                Text("Đóng")
                             }
-                        ) {
-                            Text("Hủy")
-                        }
+                        } else {
+                            // Trạng thái bình thường
+                            TextButton(
+                                onClick = {
+                                    showChangePasswordDialog = false
+                                    viewModel.resetDeleteAccountState()
+                                }
+                            ) {
+                                Text("Hủy")
+                            }
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
 
-                        Button(
-                            onClick = {
-                                viewModel.changePassword(currentPassword, newPassword)
-                                // KHÔNG đóng dialog ngay, để hiển thị thông báo
-                            },
-                            enabled = currentPassword.isNotBlank() &&
-                                    newPassword.isNotBlank() &&
-                                    confirmPassword.isNotBlank() &&
-                                    newPassword == confirmPassword
-                        ) {
-                            Text("Xác nhận")
+                            Button(
+                                onClick = {
+                                    println("DEBUG [SettingsScreen] Confirm change password clicked")
+                                    viewModel.changePassword(currentPassword, newPassword)
+                                },
+                                enabled = currentPassword.isNotBlank() &&
+                                        newPassword.isNotBlank() &&
+                                        confirmPassword.isNotBlank() &&
+                                        newPassword == confirmPassword &&
+                                        newPassword.length >= 6
+                            ) {
+                                if (changePasswordState is ChangePasswordState.Loading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                } else {
+                                    Text("Xác nhận")
+                                }
+                            }
                         }
                     }
                 }
             }
         }
-
-        // Tự động đóng dialog sau 2 giây khi thành công
-        LaunchedEffect(changePasswordState) {
-            if (changePasswordState is ChangePasswordState.Success) {
-                showChangePasswordDialog = false
-                currentPassword = ""
-                newPassword = ""
-                confirmPassword = ""
-            }
-        }
     }
 
-    // Dialog xác nhận xóa (bước 1)
+    // Dialog xác nhận xóa tài khoản
     if (showConfirmDeleteDialog) {
+        viewModel.showDeleteAccountConfirmation()
         Dialog(
-            onDismissRequest = { showConfirmDeleteDialog = false },
+            onDismissRequest = {
+                println("DEBUG [SettingsScreen] Delete dialog dismissed")
+                showConfirmDeleteDialog = false
+                viewModel.resetDeleteAccountState()
+            },
             properties = DialogProperties(usePlatformDefaultWidth = false)
         ) {
             Card(
@@ -329,146 +487,137 @@ fun SettingsScreen(
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
 
-                    Text(
-                        text = "Bạn có chắc chắn muốn xóa tài khoản này? Hành động này sẽ:",
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-
-                    Column(
-                        modifier = Modifier.padding(start = 8.dp, bottom = 16.dp)
-                    ) {
-                        Text("• Xóa vĩnh viễn tài khoản của bạn")
-                        Text("• Xóa tất cả dữ liệu liên quan")
-                        Text("• Không thể khôi phục lại")
-                    }
-
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(bottom = 20.dp)
-                    ) {
-                        Checkbox(
-                            checked = agreeToTerms,
-                            onCheckedChange = { agreeToTerms = it }
-                        )
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Text(
-                            text = "Tôi hiểu hậu quả và muốn xóa tài khoản",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TextButton(
-                            onClick = {
-                                showConfirmDeleteDialog = false
-                                agreeToTerms = false
-                            }
-                        ) {
-                            Text("Hủy")
-                        }
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        Button(
-                            onClick = {
-                                showConfirmDeleteDialog = false
-                                showFinalDeleteDialog = true
-                                agreeToTerms = false
-                            },
-                            enabled = agreeToTerms,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error,
-                                contentColor = MaterialTheme.colorScheme.onError
-                            )
-                        ) {
-                            Text("Tiếp tục")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    // Dialog nhập mật khẩu xác nhận xóa (bước 2)
-    if (showFinalDeleteDialog) {
-        Dialog(
-            onDismissRequest = { showFinalDeleteDialog = false },
-            properties = DialogProperties(usePlatformDefaultWidth = false)
-        ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                shape = MaterialTheme.shapes.large
-            ) {
-                Column(
-                    modifier = Modifier.padding(24.dp)
-                ) {
-                    Text(
-                        text = "🔒 Xác nhận cuối cùng",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    Text(
-                        text = "Vui lòng nhập mật khẩu của bạn để xác nhận xóa tài khoản:",
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
-
-                    OutlinedTextField(
-                        value = deletePassword,
-                        onValueChange = { deletePassword = it },
-                        label = { Text("Mật khẩu hiện tại") },
-                        modifier = Modifier.fillMaxWidth(),
-                        visualTransformation = if (showDeletePassword) VisualTransformation.None else PasswordVisualTransformation(),
-                        trailingIcon = {
-                            IconButton(onClick = { showDeletePassword = !showDeletePassword }) {
-                                Icon(
-                                    if (showDeletePassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                    contentDescription = "Hiện mật khẩu"
+                    // Hiển thị thông báo từ ViewModel
+                    when (deleteAccountState) {
+                        is DeleteAccountState.Success -> {
+                            val success = (deleteAccountState as DeleteAccountState.Success).message
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "✅ $success",
+                                    color = Color(0xFF2E7D32),
+                                    fontWeight = FontWeight.Medium,
+                                    style = MaterialTheme.typography.bodyLarge
                                 )
                             }
                         }
-                    )
+                        is DeleteAccountState.Error -> {
+                            val error = (deleteAccountState as DeleteAccountState.Error).message
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(bottom = 16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "❌ $error",
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontWeight = FontWeight.Medium,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        }
+                        else -> {}
+                    }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    // Hiển thị loading
+                    if (deleteAccountState is DeleteAccountState.Loading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+
+                    // Chỉ hiển thị content khi không ở trạng thái loading/success/error
+                    if (deleteAccountState !is DeleteAccountState.Loading &&
+                        deleteAccountState !is DeleteAccountState.Success &&
+                        deleteAccountState !is DeleteAccountState.Error
+                    ) {
+                        Text(
+                            text = "Bạn có chắc chắn muốn xóa tài khoản này? Hành động này sẽ:",
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        Column(
+                            modifier = Modifier.padding(start = 8.dp, bottom = 16.dp)
+                        ) {
+                            Text("• Xóa vĩnh viễn tài khoản của bạn")
+                            Text("• Xóa tất cả dữ liệu liên quan")
+                            Text("• Không thể khôi phục lại")
+                        }
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(bottom = 20.dp)
+                        ) {
+                            Checkbox(
+                                checked = agreeToTerms,
+                                onCheckedChange = { agreeToTerms = it }
+                            )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Text(
+                                text = "Tôi hiểu hậu quả và muốn xóa tài khoản",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TextButton(
-                            onClick = {
-                                showFinalDeleteDialog = false
-                                deletePassword = ""
+                        // Nếu đang loading hoặc đã thành công/lỗi, chỉ hiển thị nút đóng
+                        if (deleteAccountState is DeleteAccountState.Loading ||
+                            deleteAccountState is DeleteAccountState.Success ||
+                            deleteAccountState is DeleteAccountState.Error
+                        ) {
+                            Button(
+                                onClick = {
+                                    showConfirmDeleteDialog = false
+                                    viewModel.resetDeleteAccountState()
+                                }
+                            ) {
+                                Text("Đóng")
                             }
-                        ) {
-                            Text("Hủy")
-                        }
+                        } else {
+                            // Trạng thái bình thường
+                            TextButton(
+                                onClick = {
+                                    println("DEBUG [SettingsScreen] Delete cancelled")
+                                    showConfirmDeleteDialog = false
+                                    viewModel.resetDeleteAccountState()
+                                }
+                            ) {
+                                Text("Hủy")
+                            }
 
-                        Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
 
-                        Button(
-                            onClick = {
-                                onDeleteAccount()
-                                showFinalDeleteDialog = false
-                                deletePassword = ""
-                            },
-                            enabled = deletePassword.isNotBlank(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.error,
-                                contentColor = MaterialTheme.colorScheme.onError
-                            )
-                        ) {
-                            Text("Xóa tài khoản")
+                            Button(
+                                onClick = {
+                                    println("DEBUG [SettingsScreen] Confirm delete account clicked")
+                                    viewModel.confirmDeleteAccount()
+                                    onDeleteAccount()
+                                },
+                                enabled = agreeToTerms,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = MaterialTheme.colorScheme.onError
+                                )
+                            ) {
+                                Text("Xóa tài khoản")
+                            }
                         }
                     }
                 }
@@ -504,7 +653,6 @@ fun SettingsSection(
         }
     }
 }
-
 
 @Composable
 fun SettingsItem(

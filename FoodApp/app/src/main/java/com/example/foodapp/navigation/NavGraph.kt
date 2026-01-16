@@ -1,21 +1,28 @@
 package com.example.foodapp.navigation
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType // Quan trọng
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument // Quan trọng
+import androidx.navigation.navArgument
 import com.example.foodapp.authentication.intro.IntroScreen
 import com.example.foodapp.authentication.login.LoginScreen
+import com.example.foodapp.data.model.shared.product.Product
 import com.example.foodapp.data.repository.firebase.AuthManager
 import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
+import com.example.foodapp.pages.client.payment.PaymentScreen
 import com.example.foodapp.pages.client.profile.UserProfileScreen
 import com.example.foodapp.authentication.roleselection.RoleSelectionScreen
 import com.example.foodapp.authentication.forgotpassword.emailinput.ForgotPasswordEmailScreen
@@ -49,10 +56,12 @@ sealed class Screen(val route: String) {
     object ResetPassword : Screen("resetpassword")
     object UserSetting : Screen ("setting")
 
-    // ĐÃ SỬA: Định nghĩa route nhận tham số productId
     object UserProductDetail : Screen ("product_detail/{productId}") {
         fun createRoute(productId: String) = "product_detail/$productId"
     }
+
+    // THÊM: Screen cho thanh toán
+    object UserPayment : Screen("payment")
 }
 
 @Composable
@@ -220,7 +229,6 @@ fun FoodAppNavHost(
         composable(Screen.UserHome.route) {
             UserHomeScreen(
                 navController = navController,
-                // ĐÃ SỬA: Điều hướng sang màn hình chi tiết bằng ID
                 onProductClick = { productId ->
                     navController.navigate(Screen.UserProductDetail.createRoute(productId))
                 },
@@ -235,11 +243,36 @@ fun FoodAppNavHost(
             val productId = backStackEntry.arguments?.getString("productId") ?: ""
             UserProductDetailScreen(
                 productId = productId,
-
                 onBackPressed = {
                     navController.navigateUp()
+                },
+                onNavigateToPayment = { product ->
+                    // Truyền product qua SavedStateHandle
+                    navController.currentBackStackEntry?.savedStateHandle?.set("payment_product", product)
+                    navController.navigate(Screen.UserPayment.route)
                 }
             )
+        }
+
+        // Màn hình thanh toána
+        composable(Screen.UserPayment.route) { backStackEntry ->
+            val product = remember {
+                navController.previousBackStackEntry?.savedStateHandle?.get<Product>("payment_product")
+            }
+
+            if (product != null) {
+                PaymentScreen(
+                    product = product,
+                    onBackPressed = { navController.navigateUp() },
+                    onOrderPlaced = {
+                        navController.popBackStack(Screen.UserHome.route, false)
+                    }
+                )
+            } else {
+                LaunchedEffect(Unit) {
+                    navController.navigateUp()
+                }
+            }
         }
 
         composable(Screen.UserProfile.route) {
@@ -258,7 +291,11 @@ fun FoodAppNavHost(
                     navController.navigate(Screen.Login.route) { popUpTo(0) }
                 },
                 onChangePassword= { },
-                onDeleteAccount = { }
+                onDeleteAccount = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
             )
         }
 
@@ -267,7 +304,13 @@ fun FoodAppNavHost(
         }
 
         composable(Screen.UserFavorites.route) {
-            FavoritesScreen(navController = navController, onBackClick = { navController.navigateUp() })
+            FavoritesScreen(
+                navController = navController,
+                onBackClick = { navController.navigateUp() },
+                onProductClick = { productId ->
+                    navController.navigate(Screen.UserProductDetail.createRoute(productId))
+                }
+            )
         }
 
         composable(Screen.UserNotifications.route) {
