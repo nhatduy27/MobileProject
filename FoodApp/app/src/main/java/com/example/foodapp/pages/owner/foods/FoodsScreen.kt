@@ -23,7 +23,9 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,58 +38,73 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.font.FontWeight
-import com.example.foodapp.data.model.shared.food.Food
+import com.example.foodapp.data.model.owner.product.Product
 
 /**
- * Màn hình quản lý món ăn - FoodsScreen
+ * Màn hình quản lý sản phẩm - FoodsScreen
  *
- * Màn hình này hiển thị danh sách món ăn với các tính năng:
- * - Lọc món ăn theo category (Tất cả, Cơm, Phở/Bún, Đồ uống, Ăn vặt)
- * - Hiển thị thống kê: Tổng món, Còn hàng, Hết hàng
- * - Thêm món ăn mới
- * - Xem chi tiết món ăn
- *
- * Kiến trúc:
- * - FoodsScreen (UI Layer) - Composable chính hiển thị giao diện
- * - FoodsViewModel (Presentation Layer) - Quản lý state và logic nghiệp vụ
- * - MockFoodRepository (Data Layer) - Nguồn dữ liệu
+ * Kết nối với backend API qua RealProductRepository.
+ * Hiển thị danh sách sản phẩm với các tính năng:
+ * - Lọc theo category
+ * - Tìm kiếm theo tên
+ * - Thêm/Sửa/Xóa sản phẩm
+ * - Toggle trạng thái còn hàng
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoodsScreen(
     onMenuClick: () -> Unit,
     viewModel: FoodsViewModel = viewModel()
 ) {
-    // Lắng nghe state từ ViewModel
     val uiState by viewModel.uiState.collectAsState()
 
-    // Các danh sách categories và filtered foods
-    val categories = uiState.categories
-    val filteredFoods = remember(uiState.foods, uiState.selectedCategory, uiState.searchQuery) {
-        viewModel.getFilteredFoods()
+    // Filtered products
+    val filteredProducts = remember(uiState.products, uiState.searchQuery) {
+        viewModel.getFilteredProducts()
     }
 
+    // Stats
+    val stats = remember(uiState.products) {
+        viewModel.getStats()
+    }
+
+    // Screen state: list or edit
     var isEditing by remember { mutableStateOf(false) }
-    var editingFood by remember { mutableStateOf<Food?>(null) }
+    var editingProduct by remember { mutableStateOf<Product?>(null) }
+
+    // Snackbar
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    // Show error/success messages
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { message ->
+            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
+            viewModel.clearError()
+        }
+    }
+
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let { message ->
+            snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
+            viewModel.clearSuccess()
+        }
+    }
 
     if (!isEditing) {
-        // Màn hình danh sách món ăn
-        // Statistics
-        val totalFoods = remember(uiState.foods) { viewModel.getTotalFoods() }
-        val availableFoods = remember(uiState.foods) { viewModel.getAvailableFoods() }
-        val outOfStockFoods = remember(uiState.foods) { viewModel.getOutOfStockFoods() }
-
         Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 FoodsSearchHeader(
                     query = uiState.searchQuery,
                     onQueryChange = viewModel::onSearchQueryChanged,
-                    onMenuClick = onMenuClick
+                    onMenuClick = onMenuClick,
+                    onRefresh = { viewModel.refreshProducts() }
                 )
             },
             floatingActionButton = {
                 FloatingActionButton(
                     onClick = {
-                        editingFood = null
+                        editingProduct = null
                         isEditing = true
                     },
                     containerColor = Color(0xFFFF6B35),
@@ -95,95 +112,200 @@ fun FoodsScreen(
                     shape = CircleShape,
                     elevation = FloatingActionButtonDefaults.elevation(4.dp)
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = "Thêm món")
+                    Icon(Icons.Filled.Add, contentDescription = "Thêm sản phẩm")
                 }
             },
             containerColor = Color(0xFFF5F5F5)
         ) { paddingValues ->
-            Column(
+
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
             ) {
-                // Filter Tabs
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White)
-                        .horizontalScroll(rememberScrollState())
-                        .padding(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    categories.forEach { category ->
-                        FilterChip(
-                            category = category,
-                            isSelected = uiState.selectedCategory == category,
-                            onClick = { viewModel.onCategorySelected(category) }
-                        )
+                // Loading indicator
+                if (uiState.isLoading && uiState.products.isEmpty()) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            CircularProgressIndicator(color = Color(0xFFFF6B35))
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text("Đang tải sản phẩm...", color = Color.Gray)
+                        }
                     }
-                }
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    contentPadding = PaddingValues(
-                        bottom = 80.dp // Giữ khoảng cách với cuối màn hình (tránh bị FAB che)
-                    ),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Statistics Cards ở đầu list để cuộn theo
-                    item {
+                } else {
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        // Filter Tabs
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
+                                .background(Color.White)
                                 .horizontalScroll(rememberScrollState())
-                                .padding(vertical = 16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            StatCard(title = "Tổng món", value = totalFoods.toString(), color = Color(0xFFFF6B35))
-                            StatCard(title = "Còn hàng", value = availableFoods.toString(), color = Color(0xFF4CAF50))
-                            StatCard(title = "Hết hàng", value = outOfStockFoods.toString(), color = Color(0xFFF44336))
-                        }
-                    }
-
-                    items(filteredFoods) { food ->
-                        FoodItem(
-                            food = food,
-                            onClick = {
-                                editingFood = food
-                                isEditing = true
+                            uiState.categories.forEach { category ->
+                                FilterChip(
+                                    category = category.name,
+                                    isSelected = uiState.selectedCategoryName == category.name,
+                                    onClick = { viewModel.onCategorySelected(category) }
+                                )
                             }
-                        )
+                        }
+
+                        // Product list with pull-to-refresh
+                        PullToRefreshBox(
+                            isRefreshing = uiState.isRefreshing,
+                            onRefresh = { viewModel.refreshProducts() },
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp),
+                                contentPadding = PaddingValues(bottom = 80.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                // Statistics Cards
+                                item {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .horizontalScroll(rememberScrollState())
+                                            .padding(vertical = 16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        StatCard(
+                                            title = "Tổng sản phẩm",
+                                            value = stats.total.toString(),
+                                            color = Color(0xFFFF6B35)
+                                        )
+                                        StatCard(
+                                            title = "Còn hàng",
+                                            value = stats.available.toString(),
+                                            color = Color(0xFF4CAF50)
+                                        )
+                                        StatCard(
+                                            title = "Hết hàng",
+                                            value = stats.outOfStock.toString(),
+                                            color = Color(0xFFF44336)
+                                        )
+                                    }
+                                }
+
+                                // Empty state
+                                if (filteredProducts.isEmpty() && !uiState.isLoading) {
+                                    item {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(32.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                                Text(
+                                                    text = if (uiState.searchQuery.isNotEmpty())
+                                                        "Không tìm thấy sản phẩm"
+                                                    else
+                                                        "Chưa có sản phẩm nào",
+                                                    fontSize = 16.sp,
+                                                    color = Color.Gray
+                                                )
+                                                if (uiState.searchQuery.isEmpty()) {
+                                                    Spacer(modifier = Modifier.height(8.dp))
+                                                    Text(
+                                                        text = "Nhấn + để thêm sản phẩm mới",
+                                                        fontSize = 14.sp,
+                                                        color = Color.Gray
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                // Product items
+                                items(filteredProducts, key = { it.id }) { product ->
+                                    ProductItem(
+                                        product = product,
+                                        onClick = {
+                                            editingProduct = product
+                                            isEditing = true
+                                        },
+                                        onToggleAvailability = {
+                                            viewModel.toggleAvailability(product.id, product.isAvailable)
+                                        },
+                                        onDelete = {
+                                            viewModel.deleteProduct(product.id)
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
     } else {
-        // Màn hình thêm / sửa món ăn
-        AddEditFoodScreen(
-            initialFood = editingFood,
+        // Add/Edit screen
+        AddEditProductScreen(
+            initialProduct = editingProduct,
+            categories = uiState.categories.filter { it.id != null },
+            isLoading = uiState.isCreating || uiState.isUpdating,
             onBack = {
                 isEditing = false
-                editingFood = null
+                editingProduct = null
             },
-            onSave = { food ->
-                if (editingFood == null) {
-                    viewModel.addFood(food)
+            onSave = { name, description, price, categoryId, prepTime, imageFile ->
+                if (editingProduct == null) {
+                    // Create new
+                    if (imageFile != null) {
+                        viewModel.createProduct(
+                            name = name,
+                            description = description,
+                            price = price,
+                            categoryId = categoryId,
+                            preparationTime = prepTime,
+                            imageFile = imageFile,
+                            onSuccess = {
+                                isEditing = false
+                                editingProduct = null
+                            }
+                        )
+                    }
                 } else {
-                    viewModel.updateFood(food)
+                    // Update existing
+                    viewModel.updateProduct(
+                        productId = editingProduct!!.id,
+                        name = name,
+                        description = description,
+                        price = price,
+                        categoryId = categoryId,
+                        preparationTime = prepTime,
+                        imageFile = imageFile,
+                        onSuccess = {
+                            isEditing = false
+                            editingProduct = null
+                        }
+                    )
                 }
             }
         )
     }
 }
 
-// Thanh tìm kiếm có hiệu ứng giống màn Customer
+/**
+ * Search header with animation
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FoodsSearchHeader(
     query: String,
     onQueryChange: (String) -> Unit,
-    onMenuClick: () -> Unit
+    onMenuClick: () -> Unit,
+    onRefresh: () -> Unit
 ) {
     var isSearchActive by remember { mutableStateOf(false) }
     val focusRequester = remember { FocusRequester() }
@@ -202,7 +324,7 @@ fun FoodsSearchHeader(
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart
     ) {
-        // STATE 1: Header bình thường
+        // Normal header
         AnimatedVisibility(
             visible = !isSearchActive,
             enter = fadeIn(tween(300)) + slideInHorizontally(),
@@ -219,24 +341,30 @@ fun FoodsSearchHeader(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Món ăn",
+                        text = "Sản phẩm",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF1A1A1A)
                     )
                 }
-                IconButton(
-                    onClick = { isSearchActive = true },
-                    modifier = Modifier
-                        .background(Color(0xFFF5F5F5), CircleShape)
-                        .size(40.dp)
-                ) {
-                    Icon(Icons.Default.Search, contentDescription = "Search", tint = Color(0xFF1A1A1A))
+
+                Row {
+                    IconButton(onClick = onRefresh) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = Color(0xFF1A1A1A))
+                    }
+                    IconButton(
+                        onClick = { isSearchActive = true },
+                        modifier = Modifier
+                            .background(Color(0xFFF5F5F5), CircleShape)
+                            .size(40.dp)
+                    ) {
+                        Icon(Icons.Default.Search, contentDescription = "Search", tint = Color(0xFF1A1A1A))
+                    }
                 }
             }
         }
 
-        // STATE 2: Thanh Search mở rộng
+        // Search mode
         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
             AnimatedVisibility(
                 visible = isSearchActive,
@@ -244,7 +372,10 @@ fun FoodsSearchHeader(
                 exit = fadeOut() + shrinkHorizontally(shrinkTowards = Alignment.End, animationSpec = tween(300))
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { isSearchActive = false }) {
+                    IconButton(onClick = {
+                        isSearchActive = false
+                        onQueryChange("")
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF1A1A1A))
                     }
                     TextField(
@@ -254,7 +385,7 @@ fun FoodsSearchHeader(
                             .weight(1f)
                             .height(50.dp)
                             .focusRequester(focusRequester),
-                        placeholder = { Text("Tìm món ăn...", color = Color.Gray, fontSize = 14.sp) },
+                        placeholder = { Text("Tìm sản phẩm...", color = Color.Gray, fontSize = 14.sp) },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFFF5F5F5),

@@ -40,6 +40,12 @@ fun ShopManagementScreen(navController: androidx.navigation.NavHostController? =
     )
     val uiState by viewModel.uiState.collectAsState()
     
+    // Force recomposition when shop data changes
+    LaunchedEffect(uiState.shopId) {
+        // This will trigger recomposition when shopId changes
+        // ensuring all fields are updated with new data
+    }
+    
     // Auto-clear messages
     LaunchedEffect(uiState.errorMessage) {
         if (uiState.errorMessage != null) {

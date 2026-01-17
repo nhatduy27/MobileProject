@@ -1,181 +1,369 @@
 package com.example.foodapp.pages.owner.foods
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.di.RepositoryProvider
-import com.example.foodapp.data.model.shared.food.Food
+import com.example.foodapp.data.model.owner.product.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 
 /**
- * File này định nghĩa ViewModel cho màn hình FoodsScreen.
- *
- * ViewModel đóng vai trò là "bộ não" của màn hình, có các nhiệm vụ chính:
- * 1. Giao tiếp với lớp Repository (nguồn dữ liệu) để lấy và cập nhật dữ liệu.
- * 2. Giữ và quản lý trạng thái giao diện (FoodUiState) trong vòng đời của màn hình,
- *    giúp trạng thái không bị mất khi xoay màn hình hay có thay đổi cấu hình.
- * 3. Cung cấp các hàm để xử lý sự kiện từ người dùng (ví dụ: thay đổi bộ lọc, thêm món).
- * 4. Tách biệt logic nghiệp vụ khỏi tầng giao diện (Composable).
+ * ViewModel cho màn hình quản lý sản phẩm.
+ * Sử dụng Real Repository để gọi API backend.
  */
 class FoodsViewModel : ViewModel() {
 
-    // ✅ SỬ DỤNG DI - Lấy repository từ RepositoryProvider
-    private val foodRepository = RepositoryProvider.getFoodsRepository()
+    companion object {
+        private const val TAG = "FoodsViewModel"
+    }
+
+    // Repository
+    private val productRepository = RepositoryProvider.getProductRepository()
     private val categoryRepository = RepositoryProvider.getCategoryRepository()
 
-    // StateFlow nội bộ, chỉ ViewModel mới có quyền chỉnh sửa.
+    // UI State
     private val _uiState = MutableStateFlow(FoodUiState())
-
-    // StateFlow công khai, chỉ cho phép đọc từ bên ngoài (UI).
     val uiState: StateFlow<FoodUiState> = _uiState.asStateFlow()
 
     init {
-        // Ngay khi ViewModel được tạo, bắt đầu lắng nghe sự thay đổi từ Repository.
-        loadFoods()
+        loadProducts()
         loadCategories()
     }
 
+    // ==================== LOAD DATA ====================
+
     /**
-     * Lắng nghe luồng dữ liệu món ăn từ Repository và cập nhật UI State.
+     * Load danh sách sản phẩm từ API
      */
-    private fun loadFoods() {
-        // viewModelScope tự động hủy coroutine khi ViewModel bị hủy, tránh rò rỉ bộ nhớ.
+    fun loadProducts(refresh: Boolean = false) {
         viewModelScope.launch {
-            // Bắt đầu lắng nghe Flow từ repository
-            foodRepository.getFoods().collect { foods ->
-                // Cập nhật StateFlow với danh sách món ăn mới nhất.
-                _uiState.update { currentState ->
-                    currentState.copy(foods = foods)
+            val currentState = _uiState.value
+
+            _uiState.update {
+                it.copy(
+                    isLoading = !refresh,
+                    isRefreshing = refresh,
+                    errorMessage = null
+                )
+            }
+
+            val result = productRepository.getProducts(
+                categoryId = currentState.selectedCategoryId,
+                isAvailable = currentState.filterAvailability,
+                page = if (refresh) 1 else currentState.currentPage
+            )
+
+            result.onSuccess { data ->
+                Log.d(TAG, "✅ Loaded ${data.products.size} products")
+                _uiState.update {
+                    it.copy(
+                        products = data.products,
+                        totalProducts = data.total,
+                        currentPage = data.page,
+                        hasMore = data.products.size < data.total,
+                        isLoading = false,
+                        isRefreshing = false,
+                        errorMessage = null
+                    )
+                }
+            }.onFailure { error ->
+                Log.e(TAG, "❌ Failed to load products", error)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isRefreshing = false,
+                        errorMessage = "Không thể tải danh sách sản phẩm: ${error.message}"
+                    )
                 }
             }
         }
     }
 
     /**
-     * Lấy danh sách categories từ API
+     * Refresh danh sách sản phẩm
+     */
+    fun refreshProducts() {
+        loadProducts(refresh = true)
+    }
+
+    /**
+     * Load danh sách categories từ API
      */
     private fun loadCategories() {
         viewModelScope.launch {
             _uiState.update { it.copy(categoriesLoading = true) }
-            
+
             val result = categoryRepository.getCategories()
+
             result.onSuccess { categories ->
-                // Thêm "Tất cả" vào đầu danh sách
-                val categoryNames = listOf("Tất cả") + categories.map { it.name }
-                _uiState.update { 
+                val categoryItems = listOf(CategoryItem(null, "Tất cả")) +
+                    categories.map { CategoryItem(it.id, it.name) }
+
+                _uiState.update {
                     it.copy(
-                        categories = categoryNames,
+                        categories = categoryItems,
                         categoriesLoading = false
                     )
                 }
             }.onFailure { error ->
-                // Nếu lỗi, dùng danh sách mặc định
-                _uiState.update { 
+                Log.e(TAG, "❌ Failed to load categories", error)
+                _uiState.update {
                     it.copy(
-                        categories = listOf("Tất cả"),
-                        categoriesLoading = false,
-                        errorMessage = error.message
+                        categories = listOf(CategoryItem(null, "Tất cả")),
+                        categoriesLoading = false
                     )
                 }
             }
         }
     }
 
+    // ==================== FILTER & SEARCH ====================
+
     /**
-     * Lọc danh sách món ăn theo category được chọn.
-     * Computed property, tự động tính toán lại khi foods hoặc selectedCategory thay đổi.
+     * Lọc theo category
      */
-    fun getFilteredFoods(): List<Food> {
-        val currentState = _uiState.value
-
-        // Lọc theo category trước
-        val categoryFiltered = if (currentState.selectedCategory == "Tất cả") {
-            currentState.foods
-        } else {
-            currentState.foods.filter { it.category == currentState.selectedCategory }
+    fun onCategorySelected(categoryItem: CategoryItem) {
+        _uiState.update {
+            it.copy(
+                selectedCategoryId = categoryItem.id,
+                selectedCategoryName = categoryItem.name
+            )
         }
+        loadProducts(refresh = true)
+    }
 
-        // Sau đó lọc tiếp theo query tìm kiếm (tên món)
-        val query = currentState.searchQuery.trim()
+    /**
+     * Lọc theo availability
+     */
+    fun onAvailabilityFilterChanged(isAvailable: Boolean?) {
+        _uiState.update { it.copy(filterAvailability = isAvailable) }
+        loadProducts(refresh = true)
+    }
+
+    /**
+     * Tìm kiếm theo tên (local filter)
+     */
+    fun onSearchQueryChanged(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+    }
+
+    /**
+     * Lấy danh sách sản phẩm đã lọc theo search query
+     */
+    fun getFilteredProducts(): List<Product> {
+        val state = _uiState.value
+        val query = state.searchQuery.trim()
+
         return if (query.isBlank()) {
-            categoryFiltered
+            state.products
         } else {
-            categoryFiltered.filter { it.name.contains(query, ignoreCase = true) }
+            state.products.filter {
+                it.name.contains(query, ignoreCase = true) ||
+                it.description.contains(query, ignoreCase = true)
+            }
+        }
+    }
+
+    // ==================== STATISTICS ====================
+
+    /**
+     * Lấy thống kê sản phẩm
+     */
+    fun getStats(): ProductStats {
+        val products = _uiState.value.products
+        return ProductStats(
+            total = products.size,
+            available = products.count { it.isAvailable },
+            outOfStock = products.count { !it.isAvailable }
+        )
+    }
+
+    // ==================== CREATE/UPDATE/DELETE ====================
+
+    /**
+     * Tạo sản phẩm mới
+     */
+    fun createProduct(
+        name: String,
+        description: String,
+        price: Double,
+        categoryId: String,
+        preparationTime: Int,
+        imageFile: File,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isCreating = true, errorMessage = null) }
+
+            val request = CreateProductRequest(
+                name = name,
+                description = description,
+                price = price,
+                categoryId = categoryId,
+                preparationTime = preparationTime
+            )
+
+            val result = productRepository.createProduct(request, imageFile)
+
+            result.onSuccess { product ->
+                Log.d(TAG, "✅ Created product: ${product.name}")
+                _uiState.update {
+                    it.copy(
+                        isCreating = false,
+                        successMessage = "Đã thêm sản phẩm: ${product.name}"
+                    )
+                }
+                loadProducts(refresh = true)
+                onSuccess()
+            }.onFailure { error ->
+                Log.e(TAG, "❌ Failed to create product", error)
+                _uiState.update {
+                    it.copy(
+                        isCreating = false,
+                        errorMessage = "Không thể tạo sản phẩm: ${error.message}"
+                    )
+                }
+                onError(error.message ?: "Unknown error")
+            }
         }
     }
 
     /**
-     * Lấy tổng số món ăn
+     * Cập nhật sản phẩm
      */
-    fun getTotalFoods(): Int = _uiState.value.foods.size
+    fun updateProduct(
+        productId: String,
+        name: String? = null,
+        description: String? = null,
+        price: Double? = null,
+        categoryId: String? = null,
+        preparationTime: Int? = null,
+        imageFile: File? = null,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isUpdating = true, errorMessage = null) }
 
-    /**
-     * Lấy số món còn hàng
-     */
-    fun getAvailableFoods(): Int = _uiState.value.foods.count { it.isAvailable }
+            val request = UpdateProductRequest(
+                name = name,
+                description = description,
+                price = price,
+                categoryId = categoryId,
+                preparationTime = preparationTime
+            )
 
-    /**
-     * Lấy số món hết hàng
-     */
-    fun getOutOfStockFoods(): Int = _uiState.value.foods.count { !it.isAvailable }
+            val result = productRepository.updateProduct(productId, request, imageFile)
 
-    /**
-     * Người dùng chọn một bộ lọc category mới.
-     */
-    fun onCategorySelected(category: String) {
-        _uiState.update { it.copy(selectedCategory = category) }
-    }
-
-    /**
-     * Cập nhật nội dung query tìm kiếm món ăn.
-     */
-    fun onSearchQueryChanged(newQuery: String) {
-        _uiState.update { it.copy(searchQuery = newQuery) }
-    }
-
-    /**
-     * Hiển thị dialog thêm món ăn
-     */
-    fun showAddDialog() {
-        _uiState.update { it.copy(showAddDialog = true) }
-    }
-
-    /**
-     * Ẩn dialog thêm món ăn
-     */
-    fun hideAddDialog() {
-        _uiState.update { it.copy(showAddDialog = false) }
-    }
-
-    /**
-     * Thêm món ăn mới
-     */
-    fun addFood(food: Food) {
-        foodRepository.addFood(food)
-        hideAddDialog()
-    }
-
-    /**
-     * Cập nhật thông tin món ăn
-     */
-    fun updateFood(food: Food) {
-        foodRepository.updateFood(food)
-    }
-
-    /**
-     * Xóa món ăn
-     */
-    fun deleteFood(foodId: Int) {
-        foodRepository.deleteFood(foodId)
+            result.onSuccess { message ->
+                Log.d(TAG, "✅ Updated product: $message")
+                _uiState.update {
+                    it.copy(
+                        isUpdating = false,
+                        successMessage = message
+                    )
+                }
+                loadProducts(refresh = true)
+                onSuccess()
+            }.onFailure { error ->
+                Log.e(TAG, "❌ Failed to update product", error)
+                _uiState.update {
+                    it.copy(
+                        isUpdating = false,
+                        errorMessage = "Không thể cập nhật sản phẩm: ${error.message}"
+                    )
+                }
+                onError(error.message ?: "Unknown error")
+            }
+        }
     }
 
     /**
      * Toggle trạng thái còn hàng/hết hàng
      */
-    fun toggleFoodAvailability(foodId: Int) {
-        foodRepository.toggleFoodAvailability(foodId)
+    fun toggleAvailability(productId: String, currentAvailability: Boolean) {
+        viewModelScope.launch {
+            val result = productRepository.toggleAvailability(productId, !currentAvailability)
+
+            result.onSuccess { message ->
+                Log.d(TAG, "✅ Toggled availability: $message")
+                // Update local state immediately for better UX
+                _uiState.update { state ->
+                    state.copy(
+                        products = state.products.map {
+                            if (it.id == productId) it.copy(isAvailable = !it.isAvailable)
+                            else it
+                        },
+                        successMessage = message
+                    )
+                }
+            }.onFailure { error ->
+                Log.e(TAG, "❌ Failed to toggle availability", error)
+                _uiState.update {
+                    it.copy(errorMessage = "Không thể cập nhật trạng thái: ${error.message}")
+                }
+            }
+        }
+    }
+
+    /**
+     * Xóa sản phẩm
+     */
+    fun deleteProduct(productId: String, onSuccess: () -> Unit = {}) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isDeleting = true, errorMessage = null) }
+
+            val result = productRepository.deleteProduct(productId)
+
+            result.onSuccess { message ->
+                Log.d(TAG, "✅ Deleted product: $message")
+                _uiState.update {
+                    it.copy(
+                        isDeleting = false,
+                        successMessage = message,
+                        // Remove from local list immediately
+                        products = it.products.filter { p -> p.id != productId }
+                    )
+                }
+                onSuccess()
+            }.onFailure { error ->
+                Log.e(TAG, "❌ Failed to delete product", error)
+                _uiState.update {
+                    it.copy(
+                        isDeleting = false,
+                        errorMessage = "Không thể xóa sản phẩm: ${error.message}"
+                    )
+                }
+            }
+        }
+    }
+
+    // ==================== UI HELPERS ====================
+
+    /**
+     * Clear error message
+     */
+    fun clearError() {
+        _uiState.update { it.copy(errorMessage = null) }
+    }
+
+    /**
+     * Clear success message
+     */
+    fun clearSuccess() {
+        _uiState.update { it.copy(successMessage = null) }
+    }
+
+    /**
+     * Set editing product
+     */
+    fun setEditingProduct(product: Product?) {
+        _uiState.update { it.copy(editingProduct = product) }
     }
 }

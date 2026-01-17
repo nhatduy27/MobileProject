@@ -2,11 +2,9 @@ package com.example.foodapp.data.di
 
 import com.example.foodapp.data.repository.owner.base.*
 import com.example.foodapp.data.repository.owner.customer.MockCustomerRepository
-import com.example.foodapp.data.repository.owner.dashboard.MockDashboardRepository
 import com.example.foodapp.data.repository.owner.foods.MockFoodRepository
 import com.example.foodapp.data.repository.owner.orders.MockOrderRepository
 import com.example.foodapp.data.repository.owner.revenue.MockRevenueRepository
-import com.example.foodapp.data.repository.owner.shipper.MockShipperRepository
 import com.example.foodapp.data.repository.shipper.base.ShipperEarningsRepository
 import com.example.foodapp.data.repository.shipper.base.ShipperHistoryRepository
 import com.example.foodapp.data.repository.shipper.base.ShipperHomeRepository
@@ -171,14 +169,22 @@ object RepositoryProvider {
     
     // ==================== OWNER SHIPPER REPOSITORY ====================
     
-    fun getOwnerShipperRepository(): OwnerShipperRepository {
-        return if (USE_MOCK) {
-            MockShipperRepository()
-        } else {
-            // TODO: Khi backend ready, uncomment dòng dưới
-            // RealOwnerShipperRepository(getOwnerApiService())
-            MockShipperRepository()
-        }
+    fun getOwnerShipperRepository(): com.example.foodapp.data.repository.owner.base.OwnerShipperRepository {
+        return com.example.foodapp.data.repository.owner.shippers.RealShipperRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.owner.ShipperApiService::class.java
+            )
+        )
+    }
+    
+    // ==================== OWNER PRODUCT REPOSITORY ====================
+    
+    fun getProductRepository(): com.example.foodapp.data.repository.owner.base.OwnerProductRepository {
+        return com.example.foodapp.data.repository.owner.products.RealProductRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.owner.ProductApiService::class.java
+            )
+        )
     }
     
     // ==================== OWNER CATEGORY REPOSITORY ====================

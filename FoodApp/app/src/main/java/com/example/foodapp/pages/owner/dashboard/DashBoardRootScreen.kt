@@ -70,6 +70,16 @@ fun DashBoardRootScreen(navController: NavHostController) {
         }
     )
     val shopState by shopViewModel.uiState.collectAsState()
+    
+    // Reload shop data when returning from settings screen
+    LaunchedEffect(currentScreen) {
+        if (currentScreen != "settings") {
+            // Reload shop data to get latest updates
+            // This ensures sidebar shows updated shop name and logo
+            shopViewModel.refreshShopData()
+        }
+    }
+
 
     ModalNavigationDrawer(
         drawerState = drawerState,

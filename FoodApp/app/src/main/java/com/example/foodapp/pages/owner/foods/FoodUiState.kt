@@ -1,36 +1,70 @@
 package com.example.foodapp.pages.owner.foods
 
-import com.example.foodapp.data.model.shared.food.Food
+import com.example.foodapp.data.model.owner.product.Product
 
 /**
- * File này định nghĩa trạng thái giao diện (UI State) cho màn hình FoodsScreen.
+ * UI State cho màn hình quản lý sản phẩm (FoodsScreen)
  *
- * Nó sử dụng một 'data class' để đóng gói tất cả các thông tin cần thiết
- * để vẽ lên giao diện. Việc này giúp cho Composable (UI) trở nên "thụ động",
- * chỉ nhận dữ liệu và hiển thị, trong khi mọi logic xử lý được chuyển sang ViewModel.
+ * Sử dụng Product model từ backend thay vì Food model cũ.
  */
 data class FoodUiState(
-    // Danh sách món ăn sẽ được hiển thị trên màn hình
-    val foods: List<Food> = emptyList(),
+    // Danh sách sản phẩm từ API
+    val products: List<Product> = emptyList(),
 
-    // Bộ lọc category đang được chọn ("Tất cả", "Cơm", "Phở/Bún", ...)
-    val selectedCategory: String = "Tất cả",
+    // Tổng số sản phẩm (từ API pagination)
+    val totalProducts: Int = 0,
 
-    // Cờ báo hiệu màn hình đang trong quá trình tải dữ liệu
+    // Bộ lọc category đang được chọn
+    val selectedCategoryId: String? = null,
+    val selectedCategoryName: String = "Tất cả",
+
+    // Bộ lọc availability
+    val filterAvailability: Boolean? = null,
+
+    // Trạng thái loading
     val isLoading: Boolean = false,
+    val isRefreshing: Boolean = false,
 
-    // Thông báo lỗi nếu có sự cố xảy ra
+    // Thông báo lỗi
     val errorMessage: String? = null,
 
-    // Hiển thị dialog thêm món ăn
-    val showAddDialog: Boolean = false,
+    // Thông báo thành công
+    val successMessage: String? = null,
 
-    // Query tìm kiếm món ăn theo tên
+    // Hiển thị dialog thêm/sửa
+    val showAddDialog: Boolean = false,
+    val editingProduct: Product? = null,
+
+    // Query tìm kiếm
     val searchQuery: String = "",
-    
-    // Danh sách categories từ API
-    val categories: List<String> = listOf("Tất cả"),
-    
-    // Trạng thái loading categories
-    val categoriesLoading: Boolean = false
+
+    // Danh sách categories từ API (id -> name)
+    val categories: List<CategoryItem> = listOf(CategoryItem(null, "Tất cả")),
+    val categoriesLoading: Boolean = false,
+
+    // Pagination
+    val currentPage: Int = 1,
+    val hasMore: Boolean = false,
+
+    // Trạng thái các thao tác
+    val isCreating: Boolean = false,
+    val isUpdating: Boolean = false,
+    val isDeleting: Boolean = false
+)
+
+/**
+ * Category item cho dropdown
+ */
+data class CategoryItem(
+    val id: String?,
+    val name: String
+)
+
+/**
+ * Các thống kê đã tính toán
+ */
+data class ProductStats(
+    val total: Int = 0,
+    val available: Int = 0,
+    val outOfStock: Int = 0
 )

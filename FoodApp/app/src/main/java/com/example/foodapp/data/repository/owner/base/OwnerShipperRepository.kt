@@ -1,31 +1,34 @@
 package com.example.foodapp.data.repository.owner.base
 
-import com.example.foodapp.data.model.owner.Shipper
-import kotlinx.coroutines.flow.Flow
+import com.example.foodapp.data.model.owner.shipper.*
 
 /**
- * Interface cho Shipper Repository của Owner (quản lý shipper).
- * Định nghĩa các phương thức mà bất kỳ implementation nào (Mock/Real) phải tuân theo.
+ * Interface cho Owner Shipper Repository
  */
 interface OwnerShipperRepository {
-    
+
     /**
-     * Lấy danh sách tất cả shipper (sử dụng Flow để real-time update)
+     * Lấy danh sách đơn xin làm shipper
      */
-    fun getShippers(): Flow<List<Shipper>>
-    
+    suspend fun getApplications(status: ApplicationStatus? = null): Result<List<ShipperApplication>>
+
     /**
-     * Thêm shipper mới
+     * Duyệt đơn xin làm shipper
      */
-    fun addShipper(shipper: Shipper)
-    
+    suspend fun approveApplication(applicationId: String): Result<String>
+
     /**
-     * Cập nhật thông tin shipper
+     * Từ chối đơn xin làm shipper
      */
-    fun updateShipper(updated: Shipper)
-    
+    suspend fun rejectApplication(applicationId: String, reason: String): Result<String>
+
     /**
-     * Xóa shipper
+     * Lấy danh sách shipper đang hoạt động
      */
-    fun deleteShipper(shipperId: String)
+    suspend fun getShippers(): Result<List<Shipper>>
+
+    /**
+     * Xóa shipper khỏi shop
+     */
+    suspend fun removeShipper(shipperId: String): Result<String>
 }
