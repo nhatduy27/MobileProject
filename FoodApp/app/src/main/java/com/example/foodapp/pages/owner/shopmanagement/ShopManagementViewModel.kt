@@ -68,6 +68,14 @@ class ShopManagementViewModel(context: Context) : ViewModel() {
         }
     }
     
+    /**
+     * Public method để refresh shop data từ bên ngoài
+     * Dùng cho sidebar để cập nhật thông tin mới nhất
+     */
+    fun refreshShopData() {
+        loadShopData()
+    }
+    
     // Update methods
     fun updateShopName(name: String) {
         _uiState.update { it.copy(shopName = name, shopNameError = null) }
@@ -239,7 +247,9 @@ class ShopManagementViewModel(context: Context) : ViewModel() {
                         newLogoUri = null
                     )
                 }
-                // Reload shop data to get updated URLs
+                // Small delay to ensure backend has updated
+                kotlinx.coroutines.delay(500)
+                // Reload shop data to get updated information
                 loadShopData()
                 onSuccess()
             }.onFailure { error ->
