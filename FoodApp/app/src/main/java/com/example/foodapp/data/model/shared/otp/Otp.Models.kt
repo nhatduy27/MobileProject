@@ -39,14 +39,11 @@ data class SendOtpRequest(
 )
 
 data class SendOtpResponse(
-    @SerializedName("success")
-    val success: Boolean,
-
     @SerializedName("message")
-    val message: String,
+    val message: String? = null,
 
     @SerializedName("expiresAt")
-    val expiresAt: String
+    val expiresAt: String? = null
 )
 
 data class VerifyOtpRequest(
@@ -62,12 +59,8 @@ data class VerifyOtpRequest(
 
 // Response models
 data class VerifyOtpResponse(
-    @SerializedName("success")
-    val success: Boolean,
-
     @SerializedName("message")
-    val message: String,
-
+    val message: String? = null
 )
 
 data class SendOtpResetPasswordRequest(
@@ -76,14 +69,11 @@ data class SendOtpResetPasswordRequest(
 )
 
 data class SendOtpResetPasswordResponse(
-    @SerializedName("success")
-    val success: Boolean,
-
     @SerializedName("message")
-    val message: String,
+    val message: String? = null,
 
     @SerializedName("expiresAt")
-    val expiresAt: String
+    val expiresAt: String? = null
 )
 
 

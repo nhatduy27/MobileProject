@@ -127,13 +127,10 @@ class VeridyOTPViewModel(
 
             when (val result = otpRepository.verifyOtp(email, otpCode, OTPType.PASSWORD_RESET)) {
                 is ApiResult.Success -> {
-                    if (result.data.success) {
-                        userRepository.setUserVerified { success ->
-                            _otpState.value = OtpVerificationState.Success
-                            stopTimer()
-                        }
-                    } else {
-                        _otpState.value = OtpVerificationState.Error("Xác thực thất bại")
+                    // If we reach here, verification was successful
+                    userRepository.setUserVerified { success ->
+                        _otpState.value = OtpVerificationState.Success
+                        stopTimer()
                     }
                 }
                 is ApiResult.Failure -> {

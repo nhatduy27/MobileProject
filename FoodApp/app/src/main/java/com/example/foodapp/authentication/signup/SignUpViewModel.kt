@@ -59,22 +59,29 @@ class SignUpViewModel(
 
                         // Kiểm tra outer success
                         if (apiResponse.success) {
-                            val innerSuccess = apiResponse.data?.success ?: false
-                            val registerData = apiResponse.data?.data
-                            val userInfo = registerData?.user
+                            // Parse data from Map (backend returns: {user: {...}, customToken: "..."})
+                            val dataMap = apiResponse.data as? Map<*, *>
+                            val userMap = dataMap?.get("user") as? Map<*, *>
+                            val customToken = dataMap?.get("customToken") as? String
+                            
+                            val userId = userMap?.get("id") as? String ?: ""
+                            val userEmail = userMap?.get("email") as? String ?: ""
+                            val userName = userMap?.get("displayName") as? String ?: ""
+                            val userRole = userMap?.get("role") as? String ?: ""
+                            val userStatus = userMap?.get("status") as? String ?: ""
+                            val isValidUser = userId.isNotBlank() && userEmail.isNotBlank()
 
-                            if (innerSuccess && userInfo != null && userInfo.isValid) {
+                            if (isValidUser) {
 
                                 // SỬA: Dùng AuthManager để lưu user info
                                 authManager.saveUserInfo(
-                                    userId = userInfo.id,
-                                    email = userInfo.email,
-                                    name = userInfo.displayName,
-                                    role = userInfo.role,
-                                    status = userInfo.status
+                                    userId = userId,
+                                    email = userEmail,
+                                    name = userName,
+                                    role = userRole,
+                                    status = userStatus
                                 )
 
-                                val customToken = registerData.customToken
                                 if (!customToken.isNullOrEmpty()) {
                                     authManager.signInWithCustomToken(customToken) { isSuccessful, idToken, error ->
                                         if (isSuccessful) {
@@ -99,8 +106,8 @@ class SignUpViewModel(
                                     _signUpState.value = SignUpState.Success
                                 }
                             } else {
-                                val errorMsg = apiResponse.data?.message ?: "Không nhận được thông tin người dùng"
-                                Log.w("SignUpViewModel", "❌ Inner failure: $errorMsg")
+                                val errorMsg = apiResponse.message ?: "Không nhận được thông tin người dùng"
+                                Log.w("SignUpViewModel", "❌ Invalid user data: $errorMsg")
                                 _signUpState.value = SignUpState.Error(errorMsg)
                             }
                         } else {

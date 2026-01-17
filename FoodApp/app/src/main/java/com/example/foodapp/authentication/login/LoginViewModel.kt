@@ -219,10 +219,38 @@ class LoginViewModel(
      */
     private fun extractGoogleAuthData(apiResponse: ApiResponse): Pair<GoogleAuthResponse?, GoogleUserDetail?> {
         return try {
-            val innerResponse = apiResponse.data as? InnerResponse
-            val googleResponse = innerResponse?.data as? GoogleAuthResponse
-            val googleUser = googleResponse?.user
-            Pair(googleResponse, googleUser)
+            when (val data = apiResponse.data) {
+                is Map<*, *> -> {
+                    val userMap = data["user"] as? Map<*, *>
+                    val isNewUser = data["isNewUser"] as? Boolean ?: false
+                    val message = data["message"] as? String
+                    
+                    val googleUser = userMap?.let { uMap ->
+                        GoogleUserDetail(
+                            id = uMap["id"] as? String ?: "",
+                            email = uMap["email"] as? String ?: "",
+                            displayName = uMap["displayName"] as? String,
+                            photoUrl = uMap["photoUrl"] as? String,
+                            role = uMap["role"] as? String ?: "CUSTOMER",
+                            status = uMap["status"] as? String ?: "ACTIVE",
+                            emailVerified = uMap["emailVerified"] as? Boolean ?: false
+                        )
+                    }
+                    
+                    val googleResponse = GoogleAuthResponse(
+                        success = true,
+                        user = googleUser,
+                        isNewUser = isNewUser,
+                        message = message
+                    )
+                    
+                    Pair(googleResponse, googleUser)
+                }
+                else -> {
+                    Log.e("LoginViewModel", "Unexpected Google data type: ${data?.javaClass?.name}")
+                    Pair(null, null)
+                }
+            }
         } catch (e: Exception) {
             Log.e("LoginViewModel", "Error extracting Google auth data", e)
             Pair(null, null)
@@ -489,33 +517,41 @@ class LoginViewModel(
     }
 
     //Xử lí dữ liệu từ backend thành object bên frontend
+    // Backend returns: {"success": true, "data": {"user": {...}, "customToken": "...", "message": "..."}}
     private fun extractLoginResponse(apiResponse: ApiResponse): LoginResponse? {
         return try {
             when (val data = apiResponse.data) {
-                is InnerResponse -> {
-                    data.data?.let { registerData ->
-                        val userInfo = registerData.user
-                        val userDetail = userInfo?.let {
-                            UserDetail(
-                                id = it.id,
-                                email = it.email,
-                                displayName = it.displayName,
-                                role = it.role,
-                                status = it.status
-                            )
-                        }
-                        LoginResponse(
-                            success = true,
-                            user = userDetail,
-                            customToken = registerData.customToken,
-                            message = data.message
+                is Map<*, *> -> {
+                    // Parse user from Map
+                    val userMap = data["user"] as? Map<*, *>
+                    val customToken = data["customToken"] as? String
+                    val message = data["message"] as? String
+                    
+                    val userDetail = userMap?.let { uMap ->
+                        UserDetail(
+                            id = uMap["id"] as? String ?: "",
+                            email = uMap["email"] as? String ?: "",
+                            displayName = uMap["displayName"] as? String,
+                            role = uMap["role"] as? String ?: "",
+                            status = uMap["status"] as? String ?: ""
                         )
                     }
+                    
+                    LoginResponse(
+                        success = true,
+                        user = userDetail,
+                        customToken = customToken,
+                        message = message
+                    )
                 }
                 is LoginResponse -> data
-                else -> null
+                else -> {
+                    Log.e("LoginViewModel", "Unexpected data type: ${data?.javaClass?.name}")
+                    null
+                }
             }
         } catch (e: Exception) {
+            Log.e("LoginViewModel", "Error extracting login response", e)
             null
         }
     }

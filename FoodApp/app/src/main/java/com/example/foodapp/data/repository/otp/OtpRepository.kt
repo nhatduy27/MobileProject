@@ -17,7 +17,11 @@ class OtpRepository {
                 val response = apiService.sendOtp(SendOtpRequest(email))
 
                 if (response.isSuccessful && response.body()?.success == true) {
-                    ApiResult.Success(response.body()?.data!!)
+                    // data may be null, handle safely
+                    val data = response.body()?.data ?: SendOtpResponse(
+                        message = response.body()?.message ?: "OTP đã được gửi"
+                    )
+                    ApiResult.Success(data)
                 } else {
                     val errorMessage = response.body()?.message ?:
                     response.body()?.error ?:
@@ -40,7 +44,11 @@ class OtpRepository {
                 val response = apiService.verifyOtp(VerifyOtpRequest(email, otp, type))
 
                 if (response.isSuccessful && response.body()?.success == true) {
-                    ApiResult.Success(response.body()?.data!!)
+                    // data may be null or contain just message, handle both cases
+                    val data = response.body()?.data ?: VerifyOtpResponse(
+                        message = response.body()?.message ?: "Xác thực thành công"
+                    )
+                    ApiResult.Success(data)
                 } else {
                     val errorMessage = response.body()?.message ?:
                     response.body()?.error ?:
@@ -64,7 +72,11 @@ class OtpRepository {
                 val response = apiService.sendOtpResetPassword(SendOtpResetPasswordRequest(email))
 
                 if (response.isSuccessful && response.body()?.success == true) {
-                    ApiResult.Success(response.body()?.data!!)
+                    // data may be null, handle safely
+                    val data = response.body()?.data ?: SendOtpResetPasswordResponse(
+                        message = response.body()?.message ?: "OTP đã được gửi"
+                    )
+                    ApiResult.Success(data)
                 } else {
                     val errorMessage = response.body()?.message ?:
                     response.body()?.error ?:
