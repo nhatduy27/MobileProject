@@ -27,8 +27,9 @@ sealed class LogInState {
     object Loading : LogInState()
     data class Success(
         val userId: String,
-        val user: UserDetail? = null,
-        val isNewUser: Boolean = false
+        val email: String,
+        val displayName: String,
+        val role: String
     ) : LogInState()
     data class Error(val message: String, val code: String? = null) : LogInState()
 }
@@ -38,8 +39,9 @@ sealed class GoogleLogInState {
     object Loading : GoogleLogInState()
     data class Success(
         val userId: String,
-        val email: String? = null,
-        val displayName: String? = null,
+        val email: String,
+        val displayName: String,
+        val role: String,
         val isNewUser: Boolean = false
     ) : GoogleLogInState()
     data class Error(val message: String, val code: String? = null) : GoogleLogInState()
@@ -72,9 +74,6 @@ class LoginViewModel(
 
     private val _existAccountState = MutableStateFlow<Boolean?>(null)
     val existAccountState: StateFlow<Boolean?> = _existAccountState.asStateFlow()
-
-    private val _googleIdToken = MutableStateFlow<String?>(null)
-    val googleIdToken: StateFlow<String?> = _googleIdToken.asStateFlow()
 
     // ============= GOOGLE SIGN-IN =============
 
@@ -140,28 +139,41 @@ class LoginViewModel(
             return
         }
 
-        // Lưu thông tin tạm thời từ Google
-        val tempUserInfo = GoogleUserDetail(
-            id = account.id ?: "",
-            email = account.email ?: "",
-            displayName = account.displayName,
-            photoUrl = account.photoUrl?.toString(),
-            emailVerified = true,
-            provider = "google"
-        )
-
-        saveTempGoogleInfo(tempUserInfo)
-
         // Gửi token lên server
         signInWithGoogleToken(idToken)
     }
 
     private suspend fun signInWithGoogleToken(idToken: String) {
         try {
-            when (val result = authRepository.signInWithGoogle(idToken)) {
+            val result = authRepository.signInWithGoogle(idToken)
+
+            when (result) {
                 is ApiResult.Success -> {
-                    handleGoogleApiResponse(result.data)
+                    // result.data bây giờ là AuthData (trực tiếp)
+                    val authData = result.data
+
+                    if (authData.isValid) {
+                        val userInfo = authData.user
+
+                        // Lưu thông tin user
+                        authManager.saveUserInfo(
+                            userId = userInfo.id,
+                            email = userInfo.email,
+                            name = userInfo.displayName,
+                            role = userInfo.role,
+                            status = userInfo.status
+                        )
+
+                        // Xử lý custom token để sign in Firebase
+                        handleGoogleCustomToken(authData.customToken, userInfo)
+                    } else {
+                        _googleLogInState.value = GoogleLogInState.Error(
+                            "Dữ liệu người dùng không hợp lệ",
+                            "INVALID_USER_DATA"
+                        )
+                    }
                 }
+
                 is ApiResult.Failure -> {
                     val errorMsg = parseGoogleErrorMessage(result.exception)
                     _googleLogInState.value = GoogleLogInState.Error(
@@ -179,151 +191,39 @@ class LoginViewModel(
         }
     }
 
-    /**
-     * Xử lý response từ API Google Sign-In
-     */
-    private fun handleGoogleApiResponse(apiResponse: ApiResponse) {
-        if (!apiResponse.success) {
-            _googleLogInState.value = GoogleLogInState.Error(
-                apiResponse.message ?: "Đăng nhập Google thất bại",
-                "API_ERROR"
-            )
-            return
-        }
-
-        // Trích xuất thông tin user từ response
-        val (googleResponse, googleUser) = extractGoogleAuthData(apiResponse)
-
-        when {
-            googleUser == null -> {
-                _googleLogInState.value = GoogleLogInState.Error(
-                    "Không có thông tin người dùng",
-                    "USER_DATA_NULL"
-                )
-            }
-            !googleUser.isValid -> {
-                _googleLogInState.value = GoogleLogInState.Error(
-                    googleResponse?.message ?: "Đăng nhập Google thất bại",
-                    "INVALID_USER"
-                )
-            }
-            else -> {
-                val isNewUser = googleResponse?.isNewUser ?: false
-                handleSuccessfulGoogleSignIn(googleUser, isNewUser)
-            }
-        }
-    }
-
-    /**
-     * Trích xuất dữ liệu Google Auth từ response
-     */
-    private fun extractGoogleAuthData(apiResponse: ApiResponse): Pair<GoogleAuthResponse?, GoogleUserDetail?> {
-        return try {
-            when (val data = apiResponse.data) {
-                is Map<*, *> -> {
-                    val userMap = data["user"] as? Map<*, *>
-                    val isNewUser = data["isNewUser"] as? Boolean ?: false
-                    val message = data["message"] as? String
-                    
-                    val googleUser = userMap?.let { uMap ->
-                        GoogleUserDetail(
-                            id = uMap["id"] as? String ?: "",
-                            email = uMap["email"] as? String ?: "",
-                            displayName = uMap["displayName"] as? String,
-                            photoUrl = uMap["photoUrl"] as? String,
-                            role = uMap["role"] as? String ?: "CUSTOMER",
-                            status = uMap["status"] as? String ?: "ACTIVE",
-                            emailVerified = uMap["emailVerified"] as? Boolean ?: false
-                        )
-                    }
-                    
-                    val googleResponse = GoogleAuthResponse(
-                        success = true,
-                        user = googleUser,
-                        isNewUser = isNewUser,
-                        message = message
-                    )
-                    
-                    Pair(googleResponse, googleUser)
+    private fun handleGoogleCustomToken(customToken: String, userInfo: UserInfo) {
+        authManager.signInWithCustomToken(customToken) { isSuccessful, idToken, error ->
+            if (isSuccessful) {
+                if (!idToken.isNullOrEmpty()) {
+                    authManager.saveFirebaseToken(idToken)
+                    Log.d("LoginViewModel", "✅ Đã lưu Firebase ID Token cho Google user")
                 }
-                else -> {
-                    Log.e("LoginViewModel", "Unexpected Google data type: ${data?.javaClass?.name}")
-                    Pair(null, null)
-                }
+
+                // Cập nhật state
+                _googleLogInState.value = GoogleLogInState.Success(
+                    userId = userInfo.id,
+                    email = userInfo.email,
+                    displayName = userInfo.displayName,
+                    role = userInfo.role
+                )
+                _existAccountState.value = true
+
+                Log.d("LoginViewModel", "✅ Google Sign-In thành công")
+                Log.d("LoginViewModel", "User ID: ${userInfo.id}")
+                Log.d("LoginViewModel", "Email: ${userInfo.email}")
+                Log.d("LoginViewModel", "Role: ${userInfo.role}")
+            } else {
+                // Vẫn coi là thành công vì đã có user info
+                _googleLogInState.value = GoogleLogInState.Success(
+                    userId = userInfo.id,
+                    email = userInfo.email,
+                    displayName = userInfo.displayName,
+                    role = userInfo.role
+                )
+                _existAccountState.value = true
+
+                Log.w("LoginViewModel", "⚠ Không thể sign in Firebase: $error")
             }
-        } catch (e: Exception) {
-            Log.e("LoginViewModel", "Error extracting Google auth data", e)
-            Pair(null, null)
-        }
-    }
-
-    /**
-     * Xử lý khi Google Sign-In thành công
-     */
-    private fun handleSuccessfulGoogleSignIn(
-        googleUser: GoogleUserDetail,
-        isNewUser: Boolean
-    ) {
-        // SỬA: Dùng AuthManager để lưu user info
-        authManager.saveUserInfo(
-            userId = googleUser.id,
-            email = googleUser.email,
-            name = googleUser.displayName ?: "",
-            role = googleUser.role ?: "CUSTOMER",
-            status = googleUser.status ?: "ACTIVE"
-        )
-
-        // Lưu thêm thông tin Google-specific
-        saveGoogleSpecificInfo(googleUser, isNewUser)
-
-        // Cập nhật state
-        _googleLogInState.value = GoogleLogInState.Success(
-            userId = googleUser.id,
-            email = googleUser.email,
-            displayName = googleUser.displayName,
-            isNewUser = isNewUser
-        )
-
-        _existAccountState.value = !isNewUser
-    }
-
-    /**
-     * Lưu thông tin Google-specific
-     */
-    private fun saveGoogleSpecificInfo(user: GoogleUserDetail, isNewUser: Boolean) {
-        try {
-            val sharedPref = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-            val editor = sharedPref.edit()
-
-            with(editor) {
-                putString("user_photo_url", user.photoUrl ?: "")
-                putBoolean("user_email_verified", user.emailVerified)
-                putString("auth_provider", "google")
-                putBoolean("is_new_user", isNewUser)
-                apply()
-            }
-
-        } catch (e: Exception) {
-            Log.e("LoginViewModel", "Lỗi khi lưu thông tin Google", e)
-        }
-    }
-
-    /**
-     * Lưu thông tin tạm thời từ Google trước khi xác thực server
-     */
-    private fun saveTempGoogleInfo(user: GoogleUserDetail) {
-        try {
-            val sharedPref = context.getSharedPreferences("temp_google_info", Context.MODE_PRIVATE)
-            val editor = sharedPref.edit()
-
-            with(editor) {
-                putString("temp_email", user.email)
-                putString("temp_name", user.displayName ?: "")
-                putString("temp_photo", user.photoUrl ?: "")
-                apply()
-            }
-        } catch (e: Exception) {
-            Log.e("LoginViewModel", "Lỗi lưu temp Google info", e)
         }
     }
 
@@ -382,79 +282,20 @@ class LoginViewModel(
      */
     fun signOutGoogle() {
         googleSignInClient?.signOut()?.addOnCompleteListener {
-            clearGoogleUserInfo()
+            // Clear user info
+            authManager.clearAuthData()
+
             _googleLogInState.value = GoogleLogInState.Idle
-            _googleIdToken.value = null
+            _existAccountState.value = null
+
             Log.d("LoginViewModel", "Đã đăng xuất Google")
-        }
-    }
-
-    /**
-     * Xoá thông tin Google user
-     */
-    private fun clearGoogleUserInfo() {
-        try {
-            val sharedPref = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-            val editor = sharedPref.edit()
-
-            with(editor) {
-                remove("auth_provider")
-                remove("google_id_token")
-                putBoolean("is_logged_in", false)
-                apply()
-            }
-
-            // Xóa temp info
-            context.getSharedPreferences("temp_google_info", Context.MODE_PRIVATE)
-                .edit().clear().apply()
-
-        } catch (e: Exception) {
-            Log.e("LoginViewModel", "Lỗi khi xoá thông tin Google user", e)
-        }
-    }
-
-    /**
-     * Kiểm tra xem có đang đăng nhập bằng Google không
-     */
-    fun isGoogleSignedIn(): Boolean {
-        val sharedPref = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-        return sharedPref.getString("auth_provider", "") == "google" &&
-                sharedPref.getBoolean("is_logged_in", false)
-    }
-
-    /**
-     * Lấy thông tin user hiện tại (nếu đã đăng nhập)
-     */
-    fun getCurrentUser(): GoogleUserDetail? {
-        return try {
-            val sharedPref = context.getSharedPreferences("user_prefs", Context.MODE_PRIVATE)
-
-            val id = sharedPref.getString("user_id", null) ?: return null
-            val email = sharedPref.getString("user_email", null) ?: return null
-            val provider = sharedPref.getString("auth_provider", null)
-
-            if (provider != "google") return null
-
-            GoogleUserDetail(
-                id = id,
-                email = email,
-                displayName = sharedPref.getString("user_name", null),
-                photoUrl = sharedPref.getString("user_photo_url", null),
-                role = sharedPref.getString("user_role", "CUSTOMER") ?: "CUSTOMER",
-                status = sharedPref.getString("user_status", "ACTIVE") ?: "ACTIVE",
-                emailVerified = sharedPref.getBoolean("user_email_verified", false),
-                provider = provider
-            )
-        } catch (e: Exception) {
-            Log.e("LoginViewModel", "Lỗi khi lấy thông tin user", e)
-            null
         }
     }
 
     // -------------------ĐĂNG NHẬP BẰNG EMAIL/PASSWORD -----------------------
     fun login(email: String, password: String) {
         when (val validation = validateInput(email, password)) {
-            is ValidationResult.Error -> {       //Nếu có lỗi
+            is ValidationResult.Error -> {
                 _logInState.value = LogInState.Error(validation.message, "VALIDATION_ERROR")
                 return
             }
@@ -466,13 +307,50 @@ class LoginViewModel(
         viewModelScope.launch {
             _logInState.value = LogInState.Loading
             try {
-                when (val result = authRepository.login(email, password)) { //Gọi API
+                val result = authRepository.login(email, password)
+
+                when (result) {
                     is ApiResult.Success -> {
-                        handleApiResponse(result.data)  //Xử lí dữ liệu trả về
+                        // result.data bây giờ là AuthData (trực tiếp)
+                        val authData = result.data
+
+                        if (authData.isValid) {
+                            val userInfo = authData.user
+
+                            // Kiểm tra trạng thái tài khoản
+                            when {
+                                userInfo.status.equals("BANNED", ignoreCase = true) -> {
+                                    _logInState.value = LogInState.Error("Tài khoản đã bị khóa", "ACCOUNT_BANNED")
+                                }
+                                !userInfo.isActive() -> {
+                                    _logInState.value = LogInState.Error("Tài khoản chưa được kích hoạt", "ACCOUNT_INACTIVE")
+                                }
+                                else -> {
+                                    // Lưu thông tin user
+                                    authManager.saveUserInfo(
+                                        userId = userInfo.id,
+                                        email = userInfo.email,
+                                        name = userInfo.displayName,
+                                        role = userInfo.role,
+                                        status = userInfo.status
+                                    )
+
+                                    // Xử lý custom token để sign in Firebase
+                                    handleLoginCustomToken(authData.customToken, userInfo)
+                                }
+                            }
+                        } else {
+                            _logInState.value = LogInState.Error(
+                                "Dữ liệu đăng nhập không hợp lệ",
+                                "INVALID_LOGIN_DATA"
+                            )
+                        }
                     }
+
                     is ApiResult.Failure -> {
                         val errorMsg = parseErrorMessage(result.exception.message)
                         _logInState.value = LogInState.Error(errorMsg, "LOGIN_FAILED")
+                        Log.e("LoginViewModel", "Login error", result.exception)
                     }
                 }
             } catch (e: Exception) {
@@ -480,116 +358,41 @@ class LoginViewModel(
                     "Lỗi hệ thống: ${e.message ?: "Vui lòng thử lại sau"}",
                     "SYSTEM_ERROR"
                 )
+                Log.e("LoginViewModel", "Login exception", e)
             }
         }
     }
 
-    private fun handleApiResponse(apiResponse: ApiResponse) {
-        if (!apiResponse.success) {
-            _logInState.value = LogInState.Error(
-                apiResponse.message ?: "Đăng nhập thất bại",
-                "API_RESPONSE_ERROR"
-            )
-            return
-        }
-
-        val loginResponse = extractLoginResponse(apiResponse)
-        when {
-            loginResponse == null -> {
-                _logInState.value = LogInState.Error("Dữ liệu không hợp lệ", "INVALID_DATA")
-            }
-            !loginResponse.isValid -> {
-                _logInState.value = LogInState.Error(
-                    loginResponse.message ?: "Đăng nhập thất bại",
-                    "INVALID_LOGIN"
-                )
-            }
-            loginResponse.user?.isBanned == true -> {
-                _logInState.value = LogInState.Error("Tài khoản đã bị khóa", "ACCOUNT_BANNED")
-            }
-            loginResponse.user?.isActive == false -> {
-                _logInState.value = LogInState.Error("Tài khoản chưa được kích hoạt", "ACCOUNT_INACTIVE")
-            }
-            else -> {
-                handleSuccessfulLogin(loginResponse)
-            }
-        }
-    }
-
-    //Xử lí dữ liệu từ backend thành object bên frontend
-    // Backend returns: {"success": true, "data": {"user": {...}, "customToken": "...", "message": "..."}}
-    private fun extractLoginResponse(apiResponse: ApiResponse): LoginResponse? {
-        return try {
-            when (val data = apiResponse.data) {
-                is Map<*, *> -> {
-                    // Parse user from Map
-                    val userMap = data["user"] as? Map<*, *>
-                    val customToken = data["customToken"] as? String
-                    val message = data["message"] as? String
-                    
-                    val userDetail = userMap?.let { uMap ->
-                        UserDetail(
-                            id = uMap["id"] as? String ?: "",
-                            email = uMap["email"] as? String ?: "",
-                            displayName = uMap["displayName"] as? String,
-                            role = uMap["role"] as? String ?: "",
-                            status = uMap["status"] as? String ?: ""
-                        )
-                    }
-                    
-                    LoginResponse(
-                        success = true,
-                        user = userDetail,
-                        customToken = customToken,
-                        message = message
-                    )
-                }
-                is LoginResponse -> data
-                else -> {
-                    Log.e("LoginViewModel", "Unexpected data type: ${data?.javaClass?.name}")
-                    null
-                }
-            }
-        } catch (e: Exception) {
-            Log.e("LoginViewModel", "Error extracting login response", e)
-            null
-        }
-    }
-
-    private fun handleSuccessfulLogin(loginResponse: LoginResponse) {
-        val userDetail = loginResponse.user
-        val customToken = loginResponse.customToken
-
-        if (userDetail == null || customToken == null) {
-            _logInState.value = LogInState.Error("Thiếu thông tin đăng nhập", "MISSING_DATA")
-            return
-        }
-
-        // SỬA: Dùng AuthManager để lưu user info
-        authManager.saveUserInfo(
-            userId = userDetail.id,
-            email = userDetail.email,
-            name = userDetail.displayName ?: "",
-            role = userDetail.role,
-            status = userDetail.status
-        )
-
-        //Lấy Firebase ID Token và lưu
+    private fun handleLoginCustomToken(customToken: String, userInfo: UserInfo) {
         authManager.signInWithCustomToken(customToken) { isSuccessful, idToken, error ->
             if (isSuccessful) {
-                // SỬA: Dùng AuthManager để lưu token
                 if (!idToken.isNullOrEmpty()) {
                     authManager.saveFirebaseToken(idToken)
-                    authManager.debugTokenInfo() // Debug
                     Log.d("LoginViewModel", "✅ Đã lưu Firebase ID Token")
                 }
 
-                _logInState.value = LogInState.Success(userDetail.id, userDetail)
+                _logInState.value = LogInState.Success(
+                    userId = userInfo.id,
+                    email = userInfo.email,
+                    displayName = userInfo.displayName,
+                    role = userInfo.role
+                )
                 _existAccountState.value = true
+
                 Log.d("LoginViewModel", "✅ Đăng nhập thành công")
+                Log.d("LoginViewModel", "User ID: ${userInfo.id}")
+                Log.d("LoginViewModel", "Email: ${userInfo.email}")
+                Log.d("LoginViewModel", "Role: ${userInfo.role}")
             } else {
-                _logInState.value = LogInState.Success(userDetail.id, userDetail)
+                // Vẫn coi là thành công vì đã có user info
+                _logInState.value = LogInState.Success(
+                    userId = userInfo.id,
+                    email = userInfo.email,
+                    displayName = userInfo.displayName,
+                    role = userInfo.role
+                )
                 _existAccountState.value = true
+
                 Log.w("LoginViewModel", "⚠ Không thể sign in Firebase: $error")
             }
         }
@@ -608,12 +411,6 @@ class LoginViewModel(
         }
     }
 
-    // XÓA hàm saveAuthToken (đã chuyển sang AuthManager)
-    // private fun saveAuthToken(token: String) { ... }
-
-    // XÓA hàm saveUserInfoLocally (đã chuyển sang AuthManager)
-    // private fun saveUserInfoLocally(userDetail: UserDetail) { ... }
-
     fun getUserRole(userId: String, onComplete: (String?) -> Unit) {
         repository.getUserRole(userId, onComplete)
     }
@@ -622,7 +419,6 @@ class LoginViewModel(
         _logInState.value = LogInState.Idle
         _googleLogInState.value = GoogleLogInState.Idle
         _existAccountState.value = null
-        _googleIdToken.value = null
     }
 
     fun validateInput(email: String, password: String): ValidationResult {

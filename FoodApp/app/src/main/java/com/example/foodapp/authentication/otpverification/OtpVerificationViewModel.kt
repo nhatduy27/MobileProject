@@ -6,10 +6,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.foodapp.data.model.shared.otp.ApiResult
+import com.example.foodapp.data.model.shared.otp.*
 import com.example.foodapp.data.repository.OtpRepository
 import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
-import com.example.foodapp.data.model.shared.otp.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -30,7 +29,7 @@ class OtpVerificationViewModel(
     private val otpRepository: OtpRepository
 ) : ViewModel() {
 
-    private val _otpState = MutableLiveData<OtpVerificationState>(OtpVerificationState.LoadingEmail) // 👈 Ban đầu là LoadingEmail
+    private val _otpState = MutableLiveData<OtpVerificationState>(OtpVerificationState.LoadingEmail)
     val otpState: LiveData<OtpVerificationState> = _otpState
 
     private val _remainingTime = MutableLiveData(0)
@@ -41,13 +40,34 @@ class OtpVerificationViewModel(
 
     private var timerJob: kotlinx.coroutines.Job? = null
 
+    init {
+        getCurrentUserEmail()
+    }
+
+    fun getCurrentUserEmail() {
+        viewModelScope.launch {
+            _otpState.value = OtpVerificationState.LoadingEmail
+
+            userRepository.getUserEmailByUid { email ->
+                if (email != null) {
+                    _userEmail.postValue(email)
+                    // Tự động gửi OTP khi có email
+                    sendOtp(email)
+                } else {
+                    _userEmail.postValue("")
+                    _otpState.postValue(OtpVerificationState.Error("Không tìm thấy email người dùng"))
+                }
+            }
+        }
+    }
+
     fun startTimer(expiryTimeString: String? = null) {
         timerJob?.cancel()
 
         val totalSeconds = if (expiryTimeString != null) {
             calculateRemainingSeconds(expiryTimeString)
         } else {
-            5 * 60
+            5 * 60 // Mặc định 5 phút nếu không có expiry time
         }
 
         if (totalSeconds > 0) {
@@ -64,26 +84,8 @@ class OtpVerificationViewModel(
         }
     }
 
-
-
-    fun getCurrentUserEmail() {
-        viewModelScope.launch {
-            userRepository.getUserEmailByUid { email ->
-                if (email != null) {
-                    _userEmail.postValue(email)
-                    // Tự động gửi OTP khi có email
-                    sendOtp(email)
-                } else {
-                    _userEmail.postValue("")
-                    _otpState.postValue(OtpVerificationState.Error("Không tìm thấy email người dùng"))
-                }
-            }
-        }
-    }
-
     private fun calculateRemainingSeconds(expiryTimeString: String): Int {
         return try {
-            // Parse định dạng ISO 8601 từ API
             val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
             dateFormat.timeZone = java.util.TimeZone.getTimeZone("UTC")
             val expiryDate = dateFormat.parse(expiryTimeString)
@@ -93,7 +95,7 @@ class OtpVerificationViewModel(
             val seconds = TimeUnit.MILLISECONDS.toSeconds(diffInMillis).toInt()
             maxOf(0, seconds)
         } catch (e: Exception) {
-            5 * 60
+            5 * 60 // Mặc định 5 phút nếu parse lỗi
         }
     }
 
@@ -101,17 +103,19 @@ class OtpVerificationViewModel(
         timerJob?.cancel()
     }
 
-
     private fun sendOtp(email: String) {
         viewModelScope.launch {
-            // State đã là Sending rồi (được set ở hàm trên)
+            _otpState.value = OtpVerificationState.Sending
 
             when (val result = otpRepository.sendOtp(email)) {
                 is ApiResult.Success -> {
-                    // Parse và bắt đầu timer dựa trên expiry time từ API
-                    startTimer(result.data.expiresAt)
+                    // Với model mới, result.data là SimpleMessageData
+                    // Nếu API trả về expiresAt, cần điều chỉnh model
+                    // Hiện tại không có expiresAt trong SimpleMessageData
 
-                    // State 3: Chuyển về Idle (sẵn sàng nhập OTP)
+                    // Bắt đầu timer với mặc định
+                    startTimer()
+
                     _otpState.value = OtpVerificationState.Idle
                 }
                 is ApiResult.Failure -> {
@@ -140,10 +144,24 @@ class OtpVerificationViewModel(
 
             when (val result = otpRepository.verifyOtp(email, otpCode, OTPType.EMAIL_VERIFICATION)) {
                 is ApiResult.Success -> {
-                    // If we reach here, verification was successful
-                    userRepository.setUserVerified { success ->
-                        _otpState.value = OtpVerificationState.Success
-                        stopTimer()
+                    // result.data là SimpleMessageData
+                    val message = result.data.message
+
+                    // Kiểm tra nếu xác thực thành công
+                    if (message.contains("thành công", ignoreCase = true) ||
+                        message.contains("success", ignoreCase = true)) {
+
+                        // Cập nhật trạng thái verified trong Firebase
+                        userRepository.setUserVerified { success ->
+                            if (success) {
+                                _otpState.value = OtpVerificationState.Success
+                                stopTimer()
+                            } else {
+                                _otpState.value = OtpVerificationState.Error("Không thể cập nhật trạng thái xác thực")
+                            }
+                        }
+                    } else {
+                        _otpState.value = OtpVerificationState.Error(message)
                     }
                 }
                 is ApiResult.Failure -> {
@@ -158,7 +176,6 @@ class OtpVerificationViewModel(
     fun resendOtp() {
         val email = _userEmail.value
         if (!email.isNullOrEmpty()) {
-            _otpState.value = OtpVerificationState.Sending // 👈 Set state trước khi gửi
             sendOtp(email)
         } else {
             _otpState.value = OtpVerificationState.Error("Không tìm thấy email để gửi lại OTP")

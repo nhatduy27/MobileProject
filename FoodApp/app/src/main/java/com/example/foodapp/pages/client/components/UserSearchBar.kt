@@ -14,8 +14,12 @@ import androidx.compose.ui.unit.sp
 import com.example.foodapp.R
 
 @Composable
-fun UserSearchBar() {
+fun UserSearchBar(
+    onSearch: (String) -> Unit = {},
+    onClearSearch: () -> Unit = {}
+) {
     var text by remember { mutableStateOf("") }
+
     Card(
         modifier = Modifier.fillMaxWidth().padding(12.dp),
         shape = RoundedCornerShape(20.dp),
@@ -33,7 +37,11 @@ fun UserSearchBar() {
             )
             TextField(
                 value = text,
-                onValueChange = { text = it },
+                onValueChange = {
+                        newText ->
+                    text = newText
+                    onSearch(newText) // Gọi callback khi gõ
+                },
                 placeholder = { Text("Tìm món ăn, nhà hàng...", fontSize = 13.sp) },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,

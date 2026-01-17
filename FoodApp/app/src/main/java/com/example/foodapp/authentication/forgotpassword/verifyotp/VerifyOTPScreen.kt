@@ -33,15 +33,15 @@ fun ForgotPasswordOTPScreen(
     onSuccess: () -> Unit
 ) {
     val context = LocalContext.current
-    val viewModel: VeridyOTPViewModel = viewModel(
-        factory = VeridyOTPViewModel.factory(context)
+    val viewModel: VerifyOTPViewModel = viewModel( // ĐÃ SỬA TÊN
+        factory = VerifyOTPViewModel.factory(context) // ĐÃ SỬA TÊN
     )
 
     // Lấy email từ SharedPreferences
     val email = remember { getEmailFromPrefs(context) }
 
     // State observables
-    val otpState by viewModel.otpState.observeAsState(OtpVerificationState.LoadingEmail)
+    val otpState by viewModel.otpState.observeAsState(OtpVerificationState.Idle) // ĐÃ SỬA: Idle thay vì LoadingEmail
     val remainingTime by viewModel.remainingTime.observeAsState(0)
     val userEmail by viewModel.userEmail.observeAsState(null)
 
@@ -75,8 +75,7 @@ fun ForgotPasswordOTPScreen(
         ) {
             IconButton(
                 onClick = onBackClicked,
-                enabled = otpState !is OtpVerificationState.LoadingEmail &&
-                        otpState !is OtpVerificationState.Verifying &&
+                enabled = otpState !is OtpVerificationState.Verifying &&
                         otpState !is OtpVerificationState.Sending
             ) {
                 Text(
@@ -150,8 +149,7 @@ fun ForgotPasswordOTPScreen(
             onOtpTextChange = { newOtp ->
                 otpText = newOtp
             },
-            enabled = otpState !is OtpVerificationState.LoadingEmail &&
-                    otpState !is OtpVerificationState.Verifying &&
+            enabled = otpState !is OtpVerificationState.Verifying &&
                     otpState !is OtpVerificationState.Sending &&
                     remainingTime > 0,
             modifier = Modifier.padding(vertical = 16.dp)
@@ -190,7 +188,6 @@ fun ForgotPasswordOTPScreen(
                 ),
                 shape = RoundedCornerShape(28.dp),
                 enabled = otpText.length == 6 &&
-                        otpState !is OtpVerificationState.LoadingEmail &&
                         otpState !is OtpVerificationState.Verifying &&
                         otpState !is OtpVerificationState.Sending &&
                         remainingTime > 0
@@ -226,8 +223,7 @@ fun ForgotPasswordOTPScreen(
                 .fillMaxWidth()
                 .padding(top = 16.dp),
             enabled = otpState !is OtpVerificationState.Sending &&
-                    otpState !is OtpVerificationState.Verifying &&
-                    otpState !is OtpVerificationState.LoadingEmail
+                    otpState !is OtpVerificationState.Verifying
         ) {
             when (otpState) {
                 is OtpVerificationState.Sending -> {

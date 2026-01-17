@@ -1,16 +1,14 @@
 package com.example.foodapp.authentication.forgotpassword.verifyotp
 
-
 import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.foodapp.data.model.shared.otp.ApiResult
+import com.example.foodapp.data.model.shared.otp.*
 import com.example.foodapp.data.repository.OtpRepository
 import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
-import com.example.foodapp.data.model.shared.otp.*
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -19,19 +17,18 @@ import java.util.concurrent.TimeUnit
 
 sealed class OtpVerificationState {
     object Idle : OtpVerificationState()
-    object LoadingEmail : OtpVerificationState()
     object Sending : OtpVerificationState()
     object Verifying : OtpVerificationState()
     object Success : OtpVerificationState()
     data class Error(val message: String) : OtpVerificationState()
 }
 
-class VeridyOTPViewModel(
+class VerifyOTPViewModel(
     private val userRepository: UserFirebaseRepository,
     private val otpRepository: OtpRepository
 ) : ViewModel() {
 
-    private val _otpState = MutableLiveData<OtpVerificationState>(OtpVerificationState.LoadingEmail) // 👈 Ban đầu là LoadingEmail
+    private val _otpState = MutableLiveData<OtpVerificationState>(OtpVerificationState.Idle)
     val otpState: LiveData<OtpVerificationState> = _otpState
 
     private val _remainingTime = MutableLiveData(0)
@@ -42,8 +39,7 @@ class VeridyOTPViewModel(
 
     private var timerJob: kotlinx.coroutines.Job? = null
 
-
-    fun setEmail(email : String){
+    fun setEmail(email: String) {
         _userEmail.value = email
     }
 
@@ -53,7 +49,7 @@ class VeridyOTPViewModel(
         val totalSeconds = if (expiryTimeString != null) {
             calculateRemainingSeconds(expiryTimeString)
         } else {
-            5 * 60
+            5 * 60 // Mặc định 5 phút
         }
 
         if (totalSeconds > 0) {
@@ -81,7 +77,7 @@ class VeridyOTPViewModel(
             val seconds = TimeUnit.MILLISECONDS.toSeconds(diffInMillis).toInt()
             maxOf(0, seconds)
         } catch (e: Exception) {
-            5 * 60
+            5 * 60 // Mặc định 5 phút nếu parse lỗi
         }
     }
 
@@ -91,14 +87,14 @@ class VeridyOTPViewModel(
 
     fun sendOtpResetPassword(email: String) {
         viewModelScope.launch {
-            // State đã là Sending rồi (được set ở hàm trên)
+            _otpState.value = OtpVerificationState.Sending
 
             when (val result = otpRepository.sendOtpResetPassword(email)) {
                 is ApiResult.Success -> {
-                    // Parse và bắt đầu timer dựa trên expiry time từ API
-                    startTimer(result.data.expiresAt)
+                    // Với model mới, result.data là SimpleMessageData
+                    // Không có expiresAt trong SimpleMessageData, dùng mặc định
+                    startTimer() // Bắt đầu timer với mặc định
 
-                    // State 3: Chuyển về Idle (sẵn sàng nhập OTP)
                     _otpState.value = OtpVerificationState.Idle
                 }
                 is ApiResult.Failure -> {
@@ -127,10 +123,18 @@ class VeridyOTPViewModel(
 
             when (val result = otpRepository.verifyOtp(email, otpCode, OTPType.PASSWORD_RESET)) {
                 is ApiResult.Success -> {
-                    // If we reach here, verification was successful
-                    userRepository.setUserVerified { success ->
+                    // result.data là SimpleMessageData
+                    val message = result.data.message
+
+                    // Kiểm tra nếu xác thực thành công dựa trên message
+                    if (message.contains("thành công", ignoreCase = true) ||
+                        message.contains("success", ignoreCase = true) ||
+                        message.contains("xác thực", ignoreCase = true)) {
+
                         _otpState.value = OtpVerificationState.Success
                         stopTimer()
+                    } else {
+                        _otpState.value = OtpVerificationState.Error(message)
                     }
                 }
                 is ApiResult.Failure -> {
@@ -145,7 +149,6 @@ class VeridyOTPViewModel(
     fun resendOtp() {
         val email = _userEmail.value
         if (!email.isNullOrEmpty()) {
-            _otpState.value = OtpVerificationState.Sending
             sendOtpResetPassword(email)
         } else {
             _otpState.value = OtpVerificationState.Error("Không tìm thấy email để gửi lại OTP")
@@ -167,10 +170,10 @@ class VeridyOTPViewModel(
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    if (modelClass.isAssignableFrom(VeridyOTPViewModel::class.java)) {
+                    if (modelClass.isAssignableFrom(VerifyOTPViewModel::class.java)) {
                         val userRepository = UserFirebaseRepository(context)
                         val otpRepository = OtpRepository()
-                        return VeridyOTPViewModel(userRepository, otpRepository) as T
+                        return VerifyOTPViewModel(userRepository, otpRepository) as T
                     }
                     throw IllegalArgumentException("Unknown ViewModel class")
                 }

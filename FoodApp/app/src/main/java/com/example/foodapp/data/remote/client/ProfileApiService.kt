@@ -1,19 +1,36 @@
 package com.example.foodapp.data.remote.client
 
-import androidx.compose.runtime.Updater
-import com.example.foodapp.data.model.client.profile.*
+import com.example.foodapp.data.remote.client.response.profile.*
 import retrofit2.Response
-import okhttp3.ResponseBody
-import retrofit2.http.Body
-import retrofit2.http.PUT
-import retrofit2.http.GET
+import retrofit2.http.*
 
 interface ProfileApiService {
 
     @GET("me")
-    suspend fun getMe(): Response<ResponseBody>
+    suspend fun getMe(): Response<ProfileResponse>
 
     @PUT("me")
     suspend fun updateMe(@Body request: UpdateProfileRequest): Response<UpdateProfileResponse>
 
+    @POST("me/addresses")
+    suspend fun createAddress(@Body request: CreateAddressRequest): Response<CreateAddressResponse>
+
+    @GET("me/addresses")
+    suspend fun getAddresses(): Response<GetAddressesResponse>
+
+    @PUT("me/addresses/{id}")
+    suspend fun updateAddress(
+        @Path("id") addressId: String,
+        @Body request: UpdateAddressRequest
+    ): Response<UpdateAddressResponse>
+
+    @DELETE("me/addresses/{id}")
+    suspend fun deleteAddress(
+        @Path("id") addressId: String
+    ): Response<DeleteAddressResponse>
+
+    @POST("me/addresses/{id}/set-default")
+    suspend fun setDefaultAddress(
+        @Path("id") addressId: String
+    ): Response<SetDefaultAddressResponse>
 }

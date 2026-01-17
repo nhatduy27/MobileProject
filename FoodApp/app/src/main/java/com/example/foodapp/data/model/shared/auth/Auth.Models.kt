@@ -4,89 +4,58 @@ package com.example.foodapp.data.model.shared.auth
 
 import com.google.gson.annotations.SerializedName
 
-// Sealed class cho kết quả từ repository
+// ============== API RESULT ==============
+
 sealed class ApiResult<out T> {
     data class Success<out T>(val data: T) : ApiResult<T>()
     data class Failure(val exception: Exception) : ApiResult<Nothing>()
 }
 
-// ============== API RESPONSE WRAPPER ==============
+// ============== UNIVERSAL API RESPONSE ==============
 
 /**
- * Wrapper response chính
+ * Universal response cho TẤT CẢ các API endpoints
  * Format: {
  *   "success": boolean,
- *   "data": InnerResponse,
- *   "message": string,
+ *   "data": T?,
+ *   "message": string?,
  *   "timestamp": string
  * }
  */
-data class ApiResponse @JvmOverloads constructor(
+data class ApiResponse<T>(
     @SerializedName("success")
-    val success: Boolean = false,
+    val success: Boolean,
 
     @SerializedName("data")
-    val data: Any? = null,  // Changed to Any? to support different response structures
+    val data: T? = null,
 
     @SerializedName("message")
     val message: String? = null,
 
     @SerializedName("timestamp")
-    val timestamp: String? = null
+    val timestamp: String = ""
 )
 
-// ============= INNER RESPONSE (WRAPPER TRONG DATA) =============
+// ============== COMMON DATA MODELS ==============
 
 /**
- * Inner response wrapper
- * Format: {
- *   "success": boolean,
- *   "data": RegisterData,
- *   "message": string
- * }
+ * Dữ liệu trả về cho Auth APIs (Register, Login, Google Auth)
+ * Theo JSON mẫu: { "user": {...}, "customToken": "..." }
  */
-data class InnerResponse @JvmOverloads constructor(
-    @SerializedName("success")
-    val success: Boolean? = null,
-
-    @SerializedName("data")
-    val data: RegisterData? = null,  // ← RegisterData thực sự
-
-    @SerializedName("message")
-    val message: String? = null
-)
-
-// ============= REGISTER SPECIFIC MODELS =============
-
-// DTO cho yêu cầu đăng ký
-data class RegisterRequest(
-    @SerializedName("email")
-    val email: String,
-
-    @SerializedName("displayName")
-    val displayName: String,
-
-    @SerializedName("password")
-    val password: String,
-
-    @SerializedName("phone")
-    val phone: String? = null
-)
-
-// Dữ liệu user trong phản hồi đăng ký
-data class RegisterData @JvmOverloads constructor(
+data class AuthData(
     @SerializedName("user")
-    val user: UserInfo? = null,
+    val user: UserInfo,  // Dùng UserInfo vì JSON mẫu chỉ có các field cơ bản
 
     @SerializedName("customToken")
-    val customToken: String? = null
+    val customToken: String
 ) {
-    // Helper để lấy user info dễ dàng
-    fun isValid(): Boolean = user?.isValid == true
+    val isValid: Boolean get() = user.isValid && customToken.isNotBlank()
 }
 
-// Thông tin user
-data class UserInfo @JvmOverloads constructor(
+/**
+ * Thông tin user cơ bản - KHỚP với JSON mẫu bạn cung cấp
+ */
+data class UserInfo(
     @SerializedName("id")
     val id: String = "",
 
@@ -106,28 +75,19 @@ data class UserInfo @JvmOverloads constructor(
     fun isActive(): Boolean = status.equals("ACTIVE", ignoreCase = true)
 }
 
-// ============= RESET PASSWORD MODELS =============
+// ============== REQUEST MODELS ==============
 
-data class ResetPasswordRequest(
+data class RegisterRequest(
     @SerializedName("email")
     val email: String,
 
-    @SerializedName("newPassword")
-    val newPassword: String
+    @SerializedName("displayName")
+    val displayName: String,
+
+    @SerializedName("password")
+    val password: String
 )
 
-data class ResetPasswordResponse @JvmOverloads constructor(
-
-    @SerializedName("success")
-    val success: Boolean,
-
-    @SerializedName("message")
-    val message: String = ""
-)
-
-// ============= LOGIN SPECIFIC MODELS =============
-
-// DTO cho yêu cầu đăng nhập
 data class LoginRequest(
     @SerializedName("email")
     val email: String,
@@ -135,62 +95,6 @@ data class LoginRequest(
     @SerializedName("password")
     val password: String
 )
-
-// Dữ liệu từ phản hồi đăng nhập
-data class LoginResponse  @JvmOverloads constructor(
-
-    @SerializedName("success")
-    val success: Boolean? = null,
-
-    @SerializedName("user")
-    val user: UserDetail? = null,
-
-    @SerializedName("customToken")
-    val customToken: String? = null,
-
-    @SerializedName("message")
-    val message: String? = null
-) {
-    val isValid: Boolean get() = user?.isValid == true && !customToken.isNullOrBlank()
-}
-
-// Chi tiết user từ đăng nhập
-data class UserDetail @JvmOverloads constructor(
-    @SerializedName("id")
-    val id: String = "",
-
-    @SerializedName("email")
-    val email: String = "",
-
-    @SerializedName("displayName")
-    val displayName: String? = null,
-
-    @SerializedName("phone")
-    val phone: String? = null,
-
-    @SerializedName("photoUrl")
-    val photoUrl: String? = null,
-
-    @SerializedName("role")
-    val role: String = "",
-
-    @SerializedName("status")
-    val status: String = "",
-
-    @SerializedName("emailVerified")
-    val emailVerified: Boolean = false,
-
-    @SerializedName("createdAt")
-    val createdAt: String? = null
-) {
-    val isValid: Boolean get() = id.isNotBlank() && email.isNotBlank()
-    val isActive: Boolean get() = status.equals("ACTIVE", ignoreCase = true)
-    val isBanned: Boolean get() = status.equals("BANNED", ignoreCase = true)
-
-
-    fun getDisplayNameOrEmail(): String = displayName ?: email.split("@").first()
-}
-
 
 data class GoogleAuthRequest(
     @SerializedName("idToken")
@@ -200,59 +104,14 @@ data class GoogleAuthRequest(
     val role: String? = null
 )
 
-// Dữ liệu từ phản hồi đăng nhập Google
-data class GoogleAuthResponse @JvmOverloads constructor(
-    @SerializedName("success")
-    val success: Boolean? = null,
-
-    @SerializedName("user")
-    val user: GoogleUserDetail? = null,
-
-    @SerializedName("isNewUser")
-    val isNewUser: Boolean = false,
-
-    @SerializedName("message")
-    val message: String? = null
-)
-
-// Chi tiết user từ Google Sign-In
-data class GoogleUserDetail @JvmOverloads constructor(
-    @SerializedName("id")
-    val id: String = "",
-
+data class ResetPasswordRequest(
     @SerializedName("email")
-    val email: String = "",
+    val email: String,
 
-    @SerializedName("displayName")
-    val displayName: String? = null,
-
-    @SerializedName("photoUrl")
-    val photoUrl: String? = null,
-
-    @SerializedName("role")
-    val role: String = "",
-
-    @SerializedName("status")
-    val status: String = "",
-
-    @SerializedName("emailVerified")
-    val emailVerified: Boolean = false,
-
-    @SerializedName("provider")
-    val provider: String = "google"
-){
-    // THÊM DÒNG NÀY
-    val isValid: Boolean get() = id.isNotBlank() && email.isNotBlank()
-}
-
-
-// Request cho logout
-data class LogoutRequest(
-    @SerializedName("fcmToken")
-    val fcmToken: String? = null
+    @SerializedName("newPassword")
+    val newPassword: String
 )
 
-// Request cho thay đổi mật khẩu
 data class ChangePasswordRequest(
     @SerializedName("oldPassword")
     val oldPassword: String,
@@ -261,13 +120,31 @@ data class ChangePasswordRequest(
     val newPassword: String
 )
 
-// Response cho thay đổi mật khẩu
-data class ChangePasswordResponse @JvmOverloads constructor(
+data class LogoutRequest(
+    @SerializedName("fcmToken")
+    val fcmToken: String? = null
+)
+
+// ============== SIMPLE RESPONSE MODELS ==============
+
+/**
+ * Dùng cho các API chỉ trả về success + message
+ * VD: Reset password, Change password, Delete account
+ */
+data class SimpleResponse(
     @SerializedName("success")
-    val success: Boolean? = null,
+    val success: Boolean = false,
 
     @SerializedName("message")
     val message: String? = null
 )
 
+// ============== TYPE ALIASES FOR CLARITY ==============
 
+// Giúp code dễ đọc hơn
+typealias RegisterResponse = ApiResponse<AuthData>
+typealias LoginResponse = ApiResponse<AuthData>
+typealias GoogleAuthResponse = ApiResponse<AuthData>
+typealias ResetPasswordResponse = SimpleResponse
+typealias ChangePasswordResponse = SimpleResponse
+typealias DeleteAccountResponse = SimpleResponse

@@ -16,7 +16,6 @@ data class DeliveryAddress(
     @SerializedName("isDefault")
     val isDefault: Boolean = false,
 
-    // Thêm các trường cần thiết cho app
     var clientId: String = "",
     var name: String = "",
     var phone: String = "",

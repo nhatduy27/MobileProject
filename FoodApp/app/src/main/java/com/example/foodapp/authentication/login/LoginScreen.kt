@@ -1,5 +1,6 @@
 package com.example.foodapp.authentication.login
 
+import android.util.Patterns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -58,7 +59,6 @@ fun LoginScreen(
     // Observe ViewModel states
     val logInState by viewModel.logInState.collectAsStateWithLifecycle()
     val googleLogInState by viewModel.googleLogInState.collectAsStateWithLifecycle()
-    val existAccountState by viewModel.existAccountState.collectAsStateWithLifecycle()
 
     // Google Sign-In Launcher
     val googleSignInLauncher = rememberLauncherForActivityResult(
@@ -69,22 +69,23 @@ fun LoginScreen(
     }
 
     // Handle successful login and navigate
-    LaunchedEffect(existAccountState) {
-        if (existAccountState == true) {
-            when {
-                logInState is LogInState.Success -> {
-                    val userDetail = (logInState as LogInState.Success).user
-                    userDetail?.let {
-                        onLoginSuccess(it.role)
-                    }
-                }
-                googleLogInState is GoogleLogInState.Success -> {
-                    val userId = (googleLogInState as GoogleLogInState.Success).userId
-                    viewModel.getUserRole(userId) { role ->
-                        onLoginSuccess(role ?: "CUSTOMER")
-                    }
-                }
+    LaunchedEffect(logInState, googleLogInState) {
+        when (logInState) {
+            is LogInState.Success -> {
+                val successState = logInState as LogInState.Success
+                // Lấy role từ success state (đã có trong data class)
+                onLoginSuccess(successState.role)
             }
+            else -> {}
+        }
+
+        when (googleLogInState) {
+            is GoogleLogInState.Success -> {
+                val successState = googleLogInState as GoogleLogInState.Success
+                // Lấy role từ success state (đã có trong data class)
+                onLoginSuccess(successState.role)
+            }
+            else -> {}
         }
     }
 
@@ -283,7 +284,7 @@ fun LoginContent(
                 // Local validation before calling ViewModel
                 localValidationError = when {
                     email.isBlank() -> "Vui lòng nhập email"
-                    !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> "Email không hợp lệ"
+                    !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> "Email không hợp lệ"
                     password.isBlank() -> "Vui lòng nhập mật khẩu"
                     password.length < 6 -> "Mật khẩu phải có ít nhất 6 ký tự"
                     else -> null
@@ -397,16 +398,21 @@ fun LoginContent(
                 androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFDDDDDD))
             }
         ) {
-            if (googleLogInState is GoogleLogInState.Loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Đang đăng nhập...", fontWeight = FontWeight.Bold)
-            } else {
-                // Có thể thêm icon Google ở đây
-                Text("Đăng nhập với Google", color = Color.Black, fontWeight = FontWeight.Bold)
+            when {
+                googleLogInState is GoogleLogInState.Loading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Đang đăng nhập...", fontWeight = FontWeight.Bold)
+                }
+                isGoogleLoginSuccess -> {
+                    Text("Đăng nhập thành công!", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+                else -> {
+                    Text("Đăng nhập với Google", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
             }
         }
 
