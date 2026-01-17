@@ -42,6 +42,7 @@ class ProductDetailViewModel(
     val product: LiveData<Product?> = _product
 
     // Lấy chi tiết sản phẩm
+    // ProductDetailViewModel.kt - trong hàm getProductDetail
     fun getProductDetail(productId: String) {
         if (productId.isBlank()) {
             _productDetailState.value = ProductDetailState.Error("ID sản phẩm không hợp lệ")
@@ -58,7 +59,7 @@ class ProductDetailViewModel(
                     is ApiResult.Success<*> -> {
                         val product = (result.data as? Product)
                         if (product != null) {
-                            // Kiểm tra trạng thái yêu thích sau khi lấy thông tin sản phẩm
+                            // Luôn kiểm tra trạng thái yêu thích sau khi lấy thông tin sản phẩm
                             checkIsFavorite(productId, product)
                         } else {
                             _productDetailState.value = ProductDetailState.Error("Dữ liệu sản phẩm không hợp lệ")
@@ -82,32 +83,34 @@ class ProductDetailViewModel(
     private fun checkIsFavorite(productId: String, product: Product) {
         viewModelScope.launch {
             try {
-                // Gọi API checkIsFavorite
+                println("DEBUG: [ProductDetailViewModel] Checking favorite status for product: $productId")
+
                 val result = productRepository.checkIsFavorite(productId)
 
                 when (result) {
                     is ApiResult.Success<*> -> {
                         val isFavorite = result.data as? Boolean ?: false
+                        println("DEBUG: [ProductDetailViewModel] Favorite status for $productId: $isFavorite")
+
                         // Cập nhật sản phẩm với trạng thái yêu thích
                         val updatedProduct = product.copy(isFavorite = isFavorite)
                         _product.value = updatedProduct
                         _productDetailState.value = ProductDetailState.Success(updatedProduct)
-                        println("DEBUG: [ProductDetailViewModel] Product $productId is favorite: $isFavorite")
                     }
                     is ApiResult.Failure -> {
+                        println("DEBUG: [ProductDetailViewModel] Check favorite failed: ${result.exception.message}")
                         // Nếu lỗi, mặc định là false
                         val updatedProduct = product.copy(isFavorite = false)
                         _product.value = updatedProduct
                         _productDetailState.value = ProductDetailState.Success(updatedProduct)
-                        println("DEBUG: [ProductDetailViewModel] Check favorite failed: ${result.exception.message}")
                     }
                 }
             } catch (e: Exception) {
+                println("DEBUG: [ProductDetailViewModel] Exception in checkIsFavorite: ${e.message}")
                 // Nếu có exception, mặc định là false
                 val updatedProduct = product.copy(isFavorite = false)
                 _product.value = updatedProduct
                 _productDetailState.value = ProductDetailState.Success(updatedProduct)
-                println("DEBUG: [ProductDetailViewModel] Exception in checkIsFavorite: ${e.message}")
             }
         }
     }

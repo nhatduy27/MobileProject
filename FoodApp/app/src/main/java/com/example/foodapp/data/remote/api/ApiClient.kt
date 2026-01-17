@@ -90,6 +90,11 @@ object ApiClient {
             .build()
     }
 
+
+    fun <T> createService(serviceClass: Class<T>): T {
+        return retrofit.create(serviceClass)
+    }
+
     val otpApiService: OtpApiService by lazy { retrofit.create(OtpApiService::class.java) }
     val authApiService: AuthApiService by lazy { retrofit.create(AuthApiService::class.java) }
     val profileApiService: ProfileApiService by lazy { retrofit.create(ProfileApiService::class.java) }
