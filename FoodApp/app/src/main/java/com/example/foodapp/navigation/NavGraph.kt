@@ -88,10 +88,10 @@ fun FoodAppNavHost(
                             if (role != null) {
                                 repository.getVerifyStateByUid() { isVerified ->
                                     destination = if (isVerified) {
-                                        when (role) {
-                                            "user" -> Screen.UserHome.route
-                                            "seller" -> Screen.OwnerHome.route
-                                            "delivery" -> Screen.ShipperHome.route
+                                        when (role.uppercase()) {
+                                            "CUSTOMER" -> Screen.UserHome.route
+                                            "OWNER" -> Screen.OwnerHome.route
+                                            "SHIPPER" -> Screen.ShipperHome.route
                                             else -> Screen.UserHome.route
                                         }
                                     } else {
@@ -161,10 +161,10 @@ fun FoodAppNavHost(
         composable(Screen.RoleSelection.route) {
             RoleSelectionScreen(
                 onRoleSaved = { role ->
-                    val dest = when (role) {
-                        "user" -> Screen.UserHome.route
-                        "seller" -> Screen.OwnerHome.route
-                        "delivery" -> Screen.ShipperHome.route
+                    val dest = when (role.uppercase()) {
+                        "CUSTOMER" -> Screen.UserHome.route
+                        "OWNER" -> Screen.OwnerHome.route
+                        "SHIPPER" -> Screen.ShipperHome.route
                         else -> Screen.UserHome.route
                     }
                     navController.navigate(dest) {
@@ -181,10 +181,10 @@ fun FoodAppNavHost(
                     if (userId != null) {
                         repository.getVerifyStateByUid() { isVerified ->
                             if (isVerified) {
-                                val dest = when (role) {
-                                    "user" -> Screen.UserHome.route
-                                    "seller" -> Screen.OwnerHome.route
-                                    "delivery" -> Screen.ShipperHome.route
+                                val dest = when (role.uppercase()) {
+                                    "CUSTOMER" -> Screen.UserHome.route
+                                    "OWNER" -> Screen.OwnerHome.route
+                                    "SHIPPER" -> Screen.ShipperHome.route
                                     else -> Screen.UserHome.route
                                 }
                                 navController.navigate(dest) {
