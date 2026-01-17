@@ -40,7 +40,7 @@ data class ApiResponse<T>(
 
 /**
  * Dữ liệu trả về cho Auth APIs (Register, Login, Google Auth)
- * Theo JSON mẫu: { "user": {...}, "customToken": "..." }
+ * Theo JSON mẫu: { "user": {...}, "customToken": "..." } mà backend đã làm
  */
 data class AuthData(
     @SerializedName("user")
