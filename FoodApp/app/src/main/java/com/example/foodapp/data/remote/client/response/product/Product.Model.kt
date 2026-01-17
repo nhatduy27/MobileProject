@@ -11,14 +11,13 @@ sealed class ApiResult<out T> {
 
 /**
  * Response cho API check favorite status
- * Format: {
+ * Format thực tế từ API (dựa vào log):
+ * {
  *   "success": true,
  *   "data": {
- *     "success": true,
- *     "data": {
- *       "isFavorited": true
- *     }
- *   }
+ *     "isFavorited": true      <-- TRỰC TIẾP, không có lớp wrapper bên trong
+ *   },
+ *   "timestamp": "2026-01-17T07:20:00.410Z"
  * }
  */
 data class CheckFavoriteResponse @JvmOverloads constructor(
@@ -26,7 +25,7 @@ data class CheckFavoriteResponse @JvmOverloads constructor(
     val success: Boolean = false,
 
     @SerializedName("data")
-    val data: CheckFavoriteDataWrapper? = null,
+    val data: CheckFavoriteData? = null, // <-- CHỈNH: Data trực tiếp, không phải wrapper
 
     @SerializedName("message")
     val message: String? = null,
@@ -34,31 +33,20 @@ data class CheckFavoriteResponse @JvmOverloads constructor(
     @SerializedName("timestamp")
     val timestamp: String? = null
 ) {
-    // Tính toán isFavorited từ nested structure
+    // Tính toán isFavorited đơn giản
     val isFavorited: Boolean
-        get() = data?.success == true && data.data?.isFavorited == true
+        get() = data?.isFavorited == true
 
-    val isValid: Boolean get() = success && data != null && data.success && data.data != null
+    val isValid: Boolean get() = success && data != null
 }
 
 /**
- * Wrapper cho data object đầu tiên
- */
-data class CheckFavoriteDataWrapper @JvmOverloads constructor(
-    @SerializedName("success")
-    val success: Boolean = false,
-
-    @SerializedName("data")
-    val data: CheckFavoriteActualData? = null
-)
-
-/**
- * Actual data chứa isFavorited
+ * Data chứa isFavorited (trực tiếp)
  * Format: {
  *   "isFavorited": boolean
  * }
  */
-data class CheckFavoriteActualData @JvmOverloads constructor(
+data class CheckFavoriteData @JvmOverloads constructor(
     @SerializedName("isFavorited")
     val isFavorited: Boolean = false
 )
@@ -615,4 +603,24 @@ fun FavoriteProductsApiResponse.getProductIds(): List<String> {
 // Extension để kiểm tra sản phẩm có trong danh sách yêu thích từ wrapper response
 fun FavoriteProductsApiResponse.isProductFavorite(productId: String): Boolean {
     return data?.containsProduct(productId) ?: false
+}
+
+// ============== NEW EXTENSIONS FOR CHECK FAVORITE ==============
+
+// Extension để parse check favorite response
+fun CheckFavoriteResponse.toApiResult(): ApiResult<Boolean> {
+    return if (success && data != null) {
+        ApiResult.Success(data.isFavorited)
+    } else {
+        ApiResult.Failure(Exception(message ?: "Check favorite failed"))
+    }
+}
+
+// Extension để get boolean directly
+fun CheckFavoriteResponse.getIsFavorited(): Boolean = data?.isFavorited ?: false
+
+// Extension cho repository để parse response đúng
+fun CheckFavoriteResponse.parseToBoolean(): Boolean {
+    println("DEBUG: [CheckFavoriteResponse] Parsing: success=$success, data=$data, isFavorited=${data?.isFavorited}")
+    return data?.isFavorited ?: false
 }

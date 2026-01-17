@@ -1,8 +1,28 @@
 package com.example.foodapp.data.remote.shared
 
 import com.example.foodapp.data.model.shared.auth.*
+import com.google.gson.annotations.SerializedName
 import retrofit2.Response
 import retrofit2.http.*
+
+data class SetRoleRequest(
+    @SerializedName("role")
+    val role: String
+)
+
+/**
+ * Response từ set role API
+ */
+data class SetRoleResponse(
+    @SerializedName("success")
+    val success: Boolean,
+
+    @SerializedName("message")
+    val message: String,
+
+    @SerializedName("role")
+    val role: String
+)
 
 interface AuthApiService {
     // REGISTER - Trả về ApiResponse<AuthData>
@@ -55,4 +75,7 @@ interface AuthApiService {
     suspend fun deleteAccount(
         @Header("Authorization") token: String
     ): Response<SimpleResponse>
+
+    @PUT("auth/set-role")
+    suspend fun setRole(@Body request: SetRoleRequest): Response<SetRoleResponse>
 }
