@@ -180,6 +180,16 @@ export class CartService {
     return { groups };
   }
 
+  async getCartGroupByShop(
+    customerId: string,
+    shopId: string,
+  ): Promise<{ group: CartGroupDto | null }> {
+    // Reuse existing grouped logic to avoid duplication
+    const grouped = await this.getCartGrouped(customerId);
+    const group = grouped.groups.find((g) => g.shopId === shopId) || null;
+    return { group };
+  }
+
   async updateCartItem(
     customerId: string,
     productId: string,

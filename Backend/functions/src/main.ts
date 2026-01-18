@@ -57,7 +57,28 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  SwaggerModule.setup('api/docs', app, document, {
+    swaggerOptions: {
+      operationsSorter: (a: any, b: any) => {
+        const rank = new Map<string, number>([
+          ['get /api/cart', 1],
+          ['get /api/cart/shops/{shopId}', 2],
+          ['post /api/cart/items', 3],
+          ['put /api/cart/items/{productId}', 4],
+          ['delete /api/cart/items/{productId}', 5],
+          ['delete /api/cart/shops/{shopId}', 6],
+          ['delete /api/cart', 7],
+        ]);
+
+        const ka = `${a.get('method')} ${a.get('path')}`.toLowerCase();
+        const kb = `${b.get('method')} ${b.get('path')}`.toLowerCase();
+
+        const ra = rank.get(ka) ?? 999;
+        const rb = rank.get(kb) ?? 999;
+        return ra - rb;
+      },
+    },
+  });
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

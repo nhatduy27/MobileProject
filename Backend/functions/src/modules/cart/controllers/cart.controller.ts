@@ -143,6 +143,105 @@ export class CartController {
   }
 
   /**
+   * GET /cart/shops/:shopId
+   * Get cart group detail by shop
+   *
+   * New endpoint
+   */
+  @Get('shops/:shopId')
+  @ApiOperation({
+    summary: 'Get cart group detail by shop',
+    description:
+      'Fetches a single cart group for the specified shop. Returns { group: null } if there are no items for that shop.',
+  })
+  @ApiParam({
+    name: 'shopId',
+    required: true,
+    description: 'Shop ID to fetch cart group for',
+    example: 'shop_123',
+  })
+  @ApiOkResponse({
+    description: 'Cart group detail for a specific shop',
+    schema: {
+      oneOf: [
+        {
+          description: 'Group found',
+          example: {
+            success: true,
+            data: {
+              group: {
+                shopId: 'shop_123',
+                shopName: 'Quán Phở Việt',
+                isOpen: true,
+                shipFee: 0,
+                items: [
+                  {
+                    productId: 'prod_abc',
+                    shopId: 'shop_123',
+                    productName: 'Cơm sườn nướng',
+                    productImage: 'https://...',
+                    quantity: 2,
+                    price: 35000,
+                    subtotal: 70000,
+                  },
+                ],
+                subtotal: 70000,
+              },
+            },
+            timestamp: '2026-01-18T00:00:00.000Z',
+          },
+        },
+        {
+          description: 'Group not found (no items for shop)',
+          example: {
+            success: true,
+            data: {
+              group: null,
+            },
+            timestamp: '2026-01-18T00:00:00.000Z',
+          },
+        },
+      ],
+    },
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized - Invalid or missing authentication token',
+    schema: {
+      example: {
+        success: false,
+        errorCode: 'CART_401',
+        message: 'Unauthorized',
+        timestamp: '2026-01-18T00:00:00.000Z',
+      },
+    },
+  })
+  @ApiForbiddenResponse({
+    description: 'Forbidden - User does not have CUSTOMER role',
+    schema: {
+      example: {
+        success: false,
+        errorCode: 'CART_403',
+        message: 'Forbidden - CUSTOMER role required',
+        timestamp: '2026-01-18T00:00:00.000Z',
+      },
+    },
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'Internal server error',
+    schema: {
+      example: {
+        success: false,
+        errorCode: 'CART_500',
+        message: 'Internal server error',
+        timestamp: '2026-01-18T00:00:00.000Z',
+      },
+    },
+  })
+  async getShopGroup(@Req() req: any, @Param('shopId') shopId: string) {
+    return this.cartService.getCartGroupByShop(req.user.uid, shopId);
+  }
+
+  /**
    * POST /cart/items
    * Add product to cart
    *
@@ -151,7 +250,7 @@ export class CartController {
   @Post('items')
   @ApiOperation({ 
     summary: 'Add product to cart',
-    description: 'Adds a product to the cart. If product already exists, quantity is overwritten (not incremented). Returns cart id and grouped items.'
+    description: 'Adds a product to the cart. If product already exists, quantity is incremented. Returns cart id and grouped items.'
   })
   @ApiCreatedResponse({
     description: 'Product added to cart successfully',
@@ -483,6 +582,7 @@ export class CartController {
   async clearCart(@Req() req: any) {
     await this.cartService.clearCart(req.user.uid);
   }
+
 
   /**
    * DELETE /cart/shops/:shopId

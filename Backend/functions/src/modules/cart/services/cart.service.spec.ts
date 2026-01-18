@@ -735,4 +735,123 @@ describe('CartService - Add to Cart Increment Logic', () => {
       expect(updatedCart.items.map(i => i.productId)).toEqual(['prod_2', 'prod_3']);
     });
   });
+
+  describe('getCartGroupByShop - Group Detail', () => {
+    it('should return group for shop with items', async () => {
+      const customerId = 'customer_123';
+
+      const cart: CartEntity = {
+        customerId,
+        items: [
+          {
+            productId: 'prod_1',
+            shopId: 'shop_456',
+            productName: 'Product A',
+            productImage: '',
+            quantity: 2,
+            priceAtAdd: 50000,
+            addedAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+          },
+          {
+            productId: 'prod_2',
+            shopId: 'shop_789',
+            productName: 'Product B',
+            productImage: '',
+            quantity: 1,
+            priceAtAdd: 30000,
+            addedAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+          },
+        ],
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      };
+
+      cartRepo.findByCustomerId.mockResolvedValue(cart);
+      shopsRepo.findById.mockImplementation((id) => {
+        if (id === 'shop_456') return Promise.resolve(mockShop);
+        if (id === 'shop_789') return Promise.resolve({ ...mockShop, id: 'shop_789', name: 'Different Shop' });
+        return Promise.resolve(null);
+      });
+
+      const result = await service.getCartGroupByShop(customerId, 'shop_456');
+      expect(result.group).not.toBeNull();
+      expect(result.group!.shopId).toBe('shop_456');
+      expect(result.group!.items).toHaveLength(1);
+      expect(result.group!.items[0].productId).toBe('prod_1');
+      expect(result.group!.subtotal).toBe(100000); // 2 * 50000
+    });
+
+    it('should return group null when no items for that shop', async () => {
+      const customerId = 'customer_123';
+
+      const cart: CartEntity = {
+        customerId,
+        items: [
+          {
+            productId: 'prod_2',
+            shopId: 'shop_789',
+            productName: 'Product B',
+            productImage: '',
+            quantity: 1,
+            priceAtAdd: 30000,
+            addedAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+          },
+        ],
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      };
+
+      cartRepo.findByCustomerId.mockResolvedValue(cart);
+      shopsRepo.findById.mockResolvedValue({ ...mockShop, id: 'shop_789', name: 'Different Shop' });
+
+      const result = await service.getCartGroupByShop(customerId, 'shop_456');
+      expect(result.group).toBeNull();
+    });
+
+    it('should not include items from other shops', async () => {
+      const customerId = 'customer_123';
+
+      const cart: CartEntity = {
+        customerId,
+        items: [
+          {
+            productId: 'prod_A',
+            shopId: 'shop_X',
+            productName: 'Product X1',
+            productImage: '',
+            quantity: 2,
+            priceAtAdd: 10000,
+            addedAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+          },
+          {
+            productId: 'prod_B',
+            shopId: 'shop_Y',
+            productName: 'Product Y1',
+            productImage: '',
+            quantity: 3,
+            priceAtAdd: 20000,
+            addedAt: Timestamp.now(),
+            updatedAt: Timestamp.now(),
+          },
+        ],
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
+      };
+
+      cartRepo.findByCustomerId.mockResolvedValue(cart);
+      shopsRepo.findById.mockImplementation((id) => {
+        if (id === 'shop_X') return Promise.resolve({ ...mockShop, id: 'shop_X', name: 'Shop X' });
+        if (id === 'shop_Y') return Promise.resolve({ ...mockShop, id: 'shop_Y', name: 'Shop Y' });
+        return Promise.resolve(null);
+      });
+
+      const result = await service.getCartGroupByShop(customerId, 'shop_X');
+      expect(result.group).not.toBeNull();
+      expect(result.group!.items.map((i) => i.productId)).toEqual(['prod_A']);
+    });
+  });
 });
