@@ -9,6 +9,7 @@ import {
   Req,
   UseGuards,
   HttpCode,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -24,9 +25,10 @@ import {
   ApiForbiddenResponse,
   ApiInternalServerErrorResponse,
   ApiParam,
+  ApiQuery,
 } from '@nestjs/swagger';
 import { CartService } from '../services';
-import { AddToCartDto, UpdateCartItemDto } from '../dto';
+import { AddToCartDto, UpdateCartItemDto, CartGroupsQueryDto } from '../dto';
 import { AuthGuard } from '../../../core/guards/auth.guard';
 import { RolesGuard } from '../../../core/guards/roles.guard';
 import { Roles } from '../../../core/decorators/roles.decorator';
@@ -61,12 +63,21 @@ export class CartController {
     summary: 'Get cart items grouped by shop',
     description: 'Returns cart items grouped by shop. Returns empty groups array if cart is empty or does not exist.'
   })
+  @ApiQuery({ name: 'page', required: false, type: Number, description: 'Page number (1-based, default 1)' })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Items per page (default 10, max 50)' })
+  @ApiQuery({ 
+    name: 'includeAll', 
+    required: false, 
+    type: Boolean, 
+    description: 'Return all groups without pagination. Query string must be exactly "true" (case-insensitive) to enable. Default: false',
+    example: false
+  })
   @ApiOkResponse({
     description: 'Cart items grouped by shop (or empty cart)',
     schema: {
       oneOf: [
         {
-          description: 'Cart with items',
+          description: 'Cart with items (default pagination)',
           example: {
             success: true,
             data: {
@@ -85,12 +96,56 @@ export class CartController {
                       quantity: 2,
                       price: 35000,
                       subtotal: 70000,
+                      addedAt: '2026-01-18T08:00:00.000Z',
+                      updatedAt: '2026-01-18T10:30:00.000Z',
                     },
                   ],
                   subtotal: 70000,
+                  lastActivityAt: '2026-01-18T10:30:00.000Z',
                 },
               ],
+              page: 1,
+              limit: 10,
+              totalGroups: 3,
+              totalPages: 1,
             },
+            timestamp: '2026-01-18T10:30:00.000Z',
+          },
+        },
+        {
+          description: 'Cart with includeAll=true (all groups, metadata shows totals)',
+          example: {
+            success: true,
+            data: {
+              groups: [
+                {
+                  shopId: 'shop_123',
+                  shopName: 'Quán Phở Việt',
+                  isOpen: true,
+                  shipFee: 0,
+                  items: [
+                    {
+                      productId: 'prod_abc',
+                      shopId: 'shop_123',
+                      productName: 'Cơm sườn nướng',
+                      productImage: 'https://...',
+                      quantity: 2,
+                      price: 35000,
+                      subtotal: 70000,
+                      addedAt: '2026-01-18T08:00:00.000Z',
+                      updatedAt: '2026-01-18T10:30:00.000Z',
+                    },
+                  ],
+                  subtotal: 70000,
+                  lastActivityAt: '2026-01-18T10:30:00.000Z',
+                },
+              ],
+              page: 1,
+              limit: 3,
+              totalGroups: 3,
+              totalPages: 1,
+            },
+            timestamp: '2026-01-18T10:30:00.000Z',
           },
         },
         {
@@ -99,7 +154,12 @@ export class CartController {
             success: true,
             data: {
               groups: [],
+              page: 1,
+              limit: 10,
+              totalGroups: 0,
+              totalPages: 0,
             },
+            timestamp: '2026-01-18T10:30:00.000Z',
           },
         },
       ],
@@ -138,8 +198,48 @@ export class CartController {
       },
     },
   })
-  async getCart(@Req() req: any) {
-    return this.cartService.getCartGrouped(req.user.uid);
+  async getCart(@Req() req: any, @Query() query: CartGroupsQueryDto) {
+    // Debug logging (enable with DEBUG_CART_QUERY=true)
+    if (process.env.DEBUG_CART_QUERY === 'true') {
+      console.log('[CART DEBUG] Raw query:', req.query);
+      console.log('[CART DEBUG] Parsed DTO:', {
+        page: query.page,
+        limit: query.limit,
+        includeAll: query.includeAll,
+        pageType: typeof query.page,
+        limitType: typeof query.limit,
+        includeAllType: typeof query.includeAll,
+      });
+    }
+
+    // Robust manual parsing to ensure correct types at runtime
+    // This handles edge cases where DTO transformation might not apply correctly
+    const includeAllRaw = req.query.includeAll as string | undefined;
+    const pageRaw = req.query.page as string | undefined;
+    const limitRaw = req.query.limit as string | undefined;
+
+    // Parse includeAll: only string "true" (case-insensitive) enables it
+    const includeAll = includeAllRaw?.toLowerCase() === 'true';
+
+    // Parse page: default 1, minimum 1
+    const pageNum = pageRaw ? parseInt(pageRaw, 10) : 1;
+    const page = Number.isFinite(pageNum) && pageNum >= 1 ? pageNum : 1;
+
+    // Parse limit: default 10, range [1, 50]
+    const limitNum = limitRaw ? parseInt(limitRaw, 10) : 10;
+    const limit = Number.isFinite(limitNum) 
+      ? Math.max(1, Math.min(50, limitNum))
+      : 10;
+
+    if (process.env.DEBUG_CART_QUERY === 'true') {
+      console.log('[CART DEBUG] Parsed values:', { page, limit, includeAll });
+    }
+
+    return this.cartService.getCartGrouped(req.user.uid, {
+      includeAll,
+      page,
+      limit,
+    });
   }
 
   /**
@@ -183,12 +283,15 @@ export class CartController {
                     quantity: 2,
                     price: 35000,
                     subtotal: 70000,
+                    addedAt: '2026-01-18T08:00:00.000Z',
+                    updatedAt: '2026-01-18T10:30:00.000Z',
                   },
                 ],
                 subtotal: 70000,
+                lastActivityAt: '2026-01-18T10:30:00.000Z',
               },
             },
-            timestamp: '2026-01-18T00:00:00.000Z',
+            timestamp: '2026-01-18T10:30:00.000Z',
           },
         },
         {
@@ -198,7 +301,7 @@ export class CartController {
             data: {
               group: null,
             },
-            timestamp: '2026-01-18T00:00:00.000Z',
+            timestamp: '2026-01-18T10:30:00.000Z',
           },
         },
       ],
@@ -274,12 +377,16 @@ export class CartController {
                   quantity: 2,
                   price: 35000,
                   subtotal: 70000,
+                  addedAt: '2026-01-18T08:00:00.000Z',
+                  updatedAt: '2026-01-18T10:30:00.000Z',
                 },
               ],
               subtotal: 70000,
+              lastActivityAt: '2026-01-18T10:30:00.000Z',
             },
           ],
         },
+        timestamp: '2026-01-18T10:30:00.000Z',
       },
     },
   })
@@ -391,12 +498,16 @@ export class CartController {
                   quantity: 3,
                   price: 35000,
                   subtotal: 105000,
+                  addedAt: '2026-01-18T08:00:00.000Z',
+                  updatedAt: '2026-01-18T10:35:00.000Z',
                 },
               ],
               subtotal: 105000,
+              lastActivityAt: '2026-01-18T10:35:00.000Z',
             },
           ],
         },
+        timestamp: '2026-01-18T10:35:00.000Z',
       },
     },
   })

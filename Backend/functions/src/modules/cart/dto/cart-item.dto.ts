@@ -21,4 +21,10 @@ export class CartItemDto {
 
   @ApiProperty({ example: 70000, description: 'price * quantity' })
   subtotal: number;
+
+  @ApiProperty({ example: '2026-01-18T08:00:00.000Z', description: 'When item was added to cart' })
+  addedAt: string;
+
+  @ApiProperty({ example: '2026-01-18T10:30:00.000Z', description: 'When item was last updated' })
+  updatedAt: string;
 }

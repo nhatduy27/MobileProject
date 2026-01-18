@@ -4,7 +4,7 @@ import { CartService } from './cart.service';
 import { ICartRepository, CART_REPOSITORY } from '../interfaces';
 import { IProductsRepository } from '../../products/interfaces';
 import { IShopsRepository } from '../../shops/interfaces';
-import { AddToCartDto } from '../dto';
+import { AddToCartDto, CartGroupDto } from '../dto';
 import { CartEntity } from '../entities';
 import { Timestamp } from 'firebase-admin/firestore';
 import { ShopStatus, SubscriptionStatus } from '../../shops/entities/shop.entity';
@@ -853,5 +853,437 @@ describe('CartService - Add to Cart Increment Logic', () => {
       expect(result.group).not.toBeNull();
       expect(result.group!.items.map((i) => i.productId)).toEqual(['prod_A']);
     });
+  });
+});
+
+describe('CartService - getCartGrouped pagination and ordering', () => {
+  let cartRepo: jest.Mocked<ICartRepository>;
+  let shopsRepo: jest.Mocked<IShopsRepository>;
+  let service: CartService;
+
+  const ts = (millis: number) => Timestamp.fromMillis(millis);
+
+  beforeEach(async () => {
+    const mockCartRepo = {
+      findByCustomerId: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    };
+
+    const mockShopsRepo = {
+      findById: jest.fn(),
+      findByOwnerId: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      toggleStatus: jest.fn(),
+      findAll: jest.fn(),
+      updateStats: jest.fn(),
+    };
+
+    const module: TestingModule = await Test.createTestingModule({
+      providers: [
+        CartService,
+        { provide: CART_REPOSITORY, useValue: mockCartRepo },
+        { provide: 'PRODUCTS_REPOSITORY', useValue: { findById: jest.fn() } },
+        { provide: 'SHOPS_REPOSITORY', useValue: mockShopsRepo },
+      ],
+    }).compile();
+
+    service = module.get<CartService>(CartService);
+    cartRepo = module.get(CART_REPOSITORY);
+    shopsRepo = module.get('SHOPS_REPOSITORY');
+
+    shopsRepo.findById.mockImplementation(async (id: string) => ({
+      id,
+      name: id,
+      isOpen: true,
+      status: ShopStatus.OPEN,
+    } as any));
+  });
+
+  it('orders groups by lastUpdated desc', async () => {
+    cartRepo.findByCustomerId.mockResolvedValue({
+      customerId: 'c1',
+      items: [
+        {
+          productId: 'p1',
+          shopId: 'shopA',
+          productName: 'A1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(1000),
+          updatedAt: ts(5000),
+        },
+        {
+          productId: 'p2',
+          shopId: 'shopB',
+          productName: 'B1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(2000),
+          updatedAt: ts(3000),
+        },
+      ],
+      createdAt: ts(0),
+      updatedAt: ts(0),
+    } as any);
+
+    const result = await service.getCartGrouped('c1');
+    expect(result.groups.map((g: CartGroupDto) => g.shopId)).toEqual(['shopA', 'shopB']);
+  });
+
+  it('returns no pagination meta when called without pagination params', async () => {
+    cartRepo.findByCustomerId.mockResolvedValue({
+      customerId: 'c1',
+      items: [
+        {
+          productId: 'p1',
+          shopId: 'shopA',
+          productName: 'A1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(1000),
+          updatedAt: ts(5000),
+        },
+      ],
+      createdAt: ts(0),
+      updatedAt: ts(0),
+    } as any);
+
+    const result = await service.getCartGrouped('c1');
+
+    // NEW BEHAVIOR: Always returns pagination metadata
+    expect(result.groups).toHaveLength(1);
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(10);
+    expect(result.totalGroups).toBe(1);
+    expect(result.totalPages).toBe(1);
+  });
+
+  it('paginates groups when page/limit provided', async () => {
+    cartRepo.findByCustomerId.mockResolvedValue({
+      customerId: 'c1',
+      items: [
+        {
+          productId: 'p1',
+          shopId: 'shopA',
+          productName: 'A1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(1000),
+          updatedAt: ts(5000),
+        },
+        {
+          productId: 'p2',
+          shopId: 'shopB',
+          productName: 'B1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(2000),
+          updatedAt: ts(3000),
+        },
+      ],
+      createdAt: ts(0),
+      updatedAt: ts(0),
+    } as any);
+
+    const result = await service.getCartGrouped('c1', {
+      page: 1,
+      limit: 1,
+    });
+
+    expect(result.groups).toHaveLength(1);
+    expect(result.groups[0].shopId).toBe('shopA');
+    expect(result.totalGroups).toBe(2);
+    expect(result.totalPages).toBe(2);
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(1);
+  });
+
+  it('returns empty page when page exceeds totalPages', async () => {
+    cartRepo.findByCustomerId.mockResolvedValue({
+      customerId: 'c1',
+      items: [
+        {
+          productId: 'p1',
+          shopId: 'shopA',
+          productName: 'A1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(1000),
+          updatedAt: ts(5000),
+        },
+      ],
+      createdAt: ts(0),
+      updatedAt: ts(0),
+    } as any);
+
+    const result = await service.getCartGrouped('c1', {
+      page: 3,
+      limit: 1,
+    });
+
+    expect(result.groups).toHaveLength(0);
+    expect(result.totalGroups).toBe(1);
+    expect(result.totalPages).toBe(1);
+    expect(result.page).toBe(3);
+    expect(result.limit).toBe(1);
+  });
+
+  it('bypasses pagination when includeAll is true', async () => {
+    cartRepo.findByCustomerId.mockResolvedValue({
+      customerId: 'c1',
+      items: [
+        {
+          productId: 'p1',
+          shopId: 'shopA',
+          productName: 'A1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(1000),
+          updatedAt: ts(5000),
+        },
+        {
+          productId: 'p2',
+          shopId: 'shopB',
+          productName: 'B1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(2000),
+          updatedAt: ts(3000),
+        },
+      ],
+      createdAt: ts(0),
+      updatedAt: ts(0),
+    } as any);
+
+    const result = await service.getCartGrouped('c1', {
+      includeAll: true,
+      page: 1,
+      limit: 1,
+    });
+
+    // NEW BEHAVIOR: includeAll=true returns all groups but still includes metadata
+    expect(result.groups).toHaveLength(2);
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(2); // limit equals totalGroups when includeAll=true
+    expect(result.totalGroups).toBe(2);
+    expect(result.totalPages).toBe(1);
+  });
+
+  it('paginates correctly when includeAll is explicitly false', async () => {
+    cartRepo.findByCustomerId.mockResolvedValue({
+      customerId: 'c1',
+      items: [
+        {
+          productId: 'p1',
+          shopId: 'shopA',
+          productName: 'A1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(3000),
+          updatedAt: ts(3000),
+        },
+        {
+          productId: 'p2',
+          shopId: 'shopB',
+          productName: 'B1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(2000),
+          updatedAt: ts(2000),
+        },
+        {
+          productId: 'p3',
+          shopId: 'shopC',
+          productName: 'C1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(1000),
+          updatedAt: ts(1000),
+        },
+      ],
+      createdAt: ts(0),
+      updatedAt: ts(0),
+    } as any);
+
+    const result = await service.getCartGrouped('c1', {
+      includeAll: false,
+      page: 2,
+      limit: 1,
+    });
+
+    // Should return second group (shopB)
+    expect(result.groups).toHaveLength(1);
+    expect(result.groups[0].shopId).toBe('shopB');
+    expect(result.page).toBe(2);
+    expect(result.limit).toBe(1);
+    expect(result.totalGroups).toBe(3);
+    expect(result.totalPages).toBe(3);
+  });
+
+  it('uses default pagination when no params provided', async () => {
+    const items = Array.from({ length: 25 }, (_, i) => ({
+      productId: `p${i}`,
+      shopId: `shop${i}`,
+      productName: `Product ${i}`,
+      productImage: '',
+      quantity: 1,
+      priceAtAdd: 1000,
+      addedAt: ts(1000 + i),
+      updatedAt: ts(1000 + i),
+    }));
+
+    cartRepo.findByCustomerId.mockResolvedValue({
+      customerId: 'c1',
+      items,
+      createdAt: ts(0),
+      updatedAt: ts(0),
+    } as any);
+
+    const result = await service.getCartGrouped('c1');
+
+    // Should use defaults: page=1, limit=10
+    expect(result.groups).toHaveLength(10);
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(10);
+    expect(result.totalGroups).toBe(25);
+    expect(result.totalPages).toBe(3);
+  });
+
+  it('returns meta for empty cart when pagination requested', async () => {
+    cartRepo.findByCustomerId.mockResolvedValue({
+      customerId: 'c1',
+      items: [],
+      createdAt: ts(0),
+      updatedAt: ts(0),
+    } as any);
+
+    const result = await service.getCartGrouped('c1', {
+      page: 1,
+      limit: 10,
+    });
+
+    expect(result.groups).toHaveLength(0);
+    expect(result.totalGroups).toBe(0);
+    expect(result.totalPages).toBe(0);
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(10);
+  });
+
+  it('returns flat structure without nested wrappers', async () => {
+    cartRepo.findByCustomerId.mockResolvedValue({
+      customerId: 'c1',
+      items: [
+        {
+          productId: 'p1',
+          shopId: 'shopA',
+          productName: 'A1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(1000),
+          updatedAt: ts(5000),
+        },
+      ],
+      createdAt: ts(0),
+      updatedAt: ts(0),
+    } as any);
+
+    const result = await service.getCartGrouped('c1');
+
+    // Should have groups at root level, no nested success/data/timestamp
+    expect(result).toHaveProperty('groups');
+    expect(result.groups).toBeInstanceOf(Array);
+    expect(result).not.toHaveProperty('success');
+    expect(result).not.toHaveProperty('data');
+    expect(result).not.toHaveProperty('timestamp');
+  });
+
+  it('includes lastActivityAt and item timestamps in groups', async () => {
+    cartRepo.findByCustomerId.mockResolvedValue({
+      customerId: 'c1',
+      items: [
+        {
+          productId: 'p1',
+          shopId: 'shopA',
+          productName: 'A1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(1000),
+          updatedAt: ts(5000),
+        },
+      ],
+      createdAt: ts(0),
+      updatedAt: ts(0),
+    } as any);
+
+    const result = await service.getCartGrouped('c1');
+
+    // Verify group has lastActivityAt
+    expect(result.groups[0]).toHaveProperty('lastActivityAt');
+    expect(result.groups[0].lastActivityAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+
+    // Verify items have timestamps
+    expect(result.groups[0].items[0]).toHaveProperty('addedAt');
+    expect(result.groups[0].items[0]).toHaveProperty('updatedAt');
+    expect(result.groups[0].items[0].addedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+    expect(result.groups[0].items[0].updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
+  });
+
+  it('handles boolean false for includeAll correctly', async () => {
+    cartRepo.findByCustomerId.mockResolvedValue({
+      customerId: 'c1',
+      items: [
+        {
+          productId: 'p1',
+          shopId: 'shopA',
+          productName: 'A1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(1000),
+          updatedAt: ts(5000),
+        },
+        {
+          productId: 'p2',
+          shopId: 'shopB',
+          productName: 'B1',
+          productImage: '',
+          quantity: 1,
+          priceAtAdd: 1000,
+          addedAt: ts(2000),
+          updatedAt: ts(3000),
+        },
+      ],
+      createdAt: ts(0),
+      updatedAt: ts(0),
+    } as any);
+
+    // Explicitly pass includeAll: false (should paginate, not return all)
+    const result = await service.getCartGrouped('c1', {
+      includeAll: false,
+      page: 1,
+      limit: 1,
+    });
+
+    // With limit=1 and includeAll=false, should return only 1 group
+    expect(result.groups).toHaveLength(1);
+    expect(result.totalGroups).toBe(2);
+    expect(result.page).toBe(1);
+    expect(result.limit).toBe(1);
   });
 });

@@ -3,8 +3,26 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { ICartRepository, CART_REPOSITORY } from '../interfaces';
 import { IProductsRepository } from '../../products/interfaces';
 import { IShopsRepository } from '../../shops/interfaces';
-import { AddToCartDto, UpdateCartItemDto, CartGroupDto, CartItemDto } from '../dto';
+import {
+  AddToCartDto,
+  UpdateCartItemDto,
+  CartGroupDto,
+  CartItemDto,
+  CartGroupsQueryDto,
+} from '../dto';
 import { CartItem } from '../entities';
+
+export interface CartGroupsOptions extends CartGroupsQueryDto {
+  // No additional flags needed - defaults are handled in service
+}
+
+export interface CartGroupsResult {
+  groups: CartGroupDto[];
+  page: number;
+  limit: number;
+  totalGroups: number;
+  totalPages: number;
+}
 
 @Injectable()
 export class CartService {
@@ -118,11 +136,23 @@ export class CartService {
 
   async getCartGrouped(
     customerId: string,
-  ): Promise<{ groups: CartGroupDto[] }> {
+    options?: CartGroupsOptions,
+  ): Promise<CartGroupsResult> {
+    const includeAll = options?.includeAll ?? false;
+    const page = options?.page ?? 1;
+    const limit = options?.limit ?? 10;
+
     // 1. Get cart
     const cart = await this.cartRepo.findByCustomerId(customerId);
     if (!cart || cart.items.length === 0) {
-      return { groups: [] };
+      // Always return metadata for consistency
+      return {
+        groups: [],
+        page,
+        limit,
+        totalGroups: 0,
+        totalPages: 0,
+      };
     }
 
     // 2. Group items by shopId
@@ -149,11 +179,23 @@ export class CartService {
       }
     });
 
-    // 5. Build groups
-    const groups: CartGroupDto[] = [];
+    // 5. Build groups with timestamps for ordering
+    const groupsWithMeta: Array<{ group: CartGroupDto; lastUpdated: number }> = [];
+
+    const toMillis = (value: any): number => {
+      if (!value) return 0;
+      if (value instanceof Timestamp) return value.toMillis();
+      if (typeof value === 'object' && typeof value.toDate === 'function') {
+        return value.toDate().getTime();
+      }
+      if (value instanceof Date) return value.getTime();
+      const parsed = new Date(value).getTime();
+      return Number.isNaN(parsed) ? 0 : parsed;
+    };
+
     for (const [shopId, items] of itemsByShop.entries()) {
       const shop = shopMap.get(shopId);
-      if (!shop) continue; // Skip if shop not found
+      if (!shop) continue;
 
       const cartItems: CartItemDto[] = items.map((item) => ({
         productId: item.productId,
@@ -161,31 +203,76 @@ export class CartService {
         productName: item.productName,
         productImage: item.productImage,
         quantity: item.quantity,
-        price: item.priceAtAdd, // Map priceAtAdd to price
+        price: item.priceAtAdd,
         subtotal: item.priceAtAdd * item.quantity,
+        addedAt: new Date(toMillis(item.addedAt)).toISOString(),
+        updatedAt: new Date(toMillis(item.updatedAt)).toISOString(),
       }));
 
       const subtotal = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
+      const lastUpdated = Math.max(
+        ...items.map((item) =>
+          Math.max(toMillis(item.updatedAt), toMillis(item.addedAt)),
+        ),
+      );
 
-      groups.push({
-        shopId,
-        shopName: shop.name,
-        isOpen: shop.isOpen && shop.status === 'OPEN',
-        shipFee: 0, // Cart doesn't calculate shipFee, Order stage does
-        items: cartItems,
-        subtotal,
+      groupsWithMeta.push({
+        group: {
+          shopId,
+          shopName: shop.name,
+          isOpen: shop.isOpen && shop.status === 'OPEN',
+          shipFee: 0,
+          items: cartItems,
+          subtotal,
+          lastActivityAt: new Date(lastUpdated).toISOString(),
+        },
+        lastUpdated,
       });
     }
 
-    return { groups };
+    // 6. Stable ordering: lastUpdated desc, fallback shopName asc
+    groupsWithMeta.sort((a, b) => {
+      if (a.lastUpdated !== b.lastUpdated) {
+        return b.lastUpdated - a.lastUpdated;
+      }
+      return a.group.shopName.localeCompare(b.group.shopName);
+    });
+
+    const orderedGroups = groupsWithMeta.map((entry) => entry.group);
+    const totalGroups = orderedGroups.length;
+
+    // 7. Calculate pagination metadata
+    const offset = (page - 1) * limit;
+    const totalPages = totalGroups === 0 ? 0 : Math.ceil(totalGroups / limit);
+
+    // If includeAll=true, return all groups but still include metadata
+    if (includeAll) {
+      return {
+        groups: orderedGroups,
+        page: 1,
+        limit: totalGroups || 10,
+        totalGroups,
+        totalPages: totalGroups > 0 ? 1 : 0,
+      };
+    }
+
+    // Normal pagination: slice groups
+    const pagedGroups = page > totalPages && totalPages > 0 ? [] : orderedGroups.slice(offset, offset + limit);
+
+    return {
+      groups: pagedGroups,
+      page,
+      limit,
+      totalGroups,
+      totalPages,
+    };
   }
 
   async getCartGroupByShop(
     customerId: string,
     shopId: string,
   ): Promise<{ group: CartGroupDto | null }> {
-    // Reuse existing grouped logic to avoid duplication
-    const grouped = await this.getCartGrouped(customerId);
+    const grouped = await this.getCartGrouped(customerId, { includeAll: true });
     const group = grouped.groups.find((g) => g.shopId === shopId) || null;
     return { group };
   }
