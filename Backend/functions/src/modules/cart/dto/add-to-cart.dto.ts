@@ -12,7 +12,7 @@ export class AddToCartDto {
   productId: string;
 
   @ApiProperty({ 
-    description: 'Quantity to add (overwrites existing quantity if product already in cart)',
+    description: 'Quantity to add (increments existing quantity if product already in cart)',
     example: 2, 
     minimum: 1, 
     maximum: 999,

@@ -15,6 +15,9 @@
     "logs": "firebase functions:log",
     "lint": "eslint \"src/**/*.ts\" --fix",
     "format": "prettier --write \"src/**/*.ts\"",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
     "seed:categories": "ts-node scripts/seed-categories.ts",
     "admin:create": "ts-node scripts/create-admin.ts",
     "admin:set-role": "ts-node scripts/set-admin-role.ts"
@@ -40,7 +43,9 @@
     "swagger-ui-express": "^5.0.0"
   },
   "devDependencies": {
+    "@nestjs/testing": "^11.1.11",
     "@types/express": "^4.17.21",
+    "@types/jest": "^29.5.14",
     "@types/multer": "^2.0.0",
     "@types/node": "^18.19.130",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
@@ -48,7 +53,9 @@
     "eslint": "^8.0.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
+    "jest": "^29.7.0",
     "prettier": "^3.0.0",
+    "ts-jest": "^29.2.6",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
   },

@@ -30,7 +30,6 @@ import { AddToCartDto, UpdateCartItemDto } from '../dto';
 import { AuthGuard } from '../../../core/guards/auth.guard';
 import { RolesGuard } from '../../../core/guards/roles.guard';
 import { Roles } from '../../../core/decorators/roles.decorator';
-import { Public } from '../../../core/decorators/public.decorator';
 import { UserRole } from '../../../core/interfaces/user.interface';
 
 /**
@@ -46,8 +45,6 @@ import { UserRole } from '../../../core/interfaces/user.interface';
 @ApiTags('Cart')
 @Controller('cart')
 @ApiBearerAuth('firebase-auth')
-// ⚠️ TODO: XÓA @Public() TRƯỚC KHI DEPLOY! Chỉ dùng để test Swagger vì customToken không thể dùng làm idToken
-@Public() // 🔓 TEMPORARY: For testing only - Remove before production!
 @UseGuards(AuthGuard, RolesGuard)
 @Roles(UserRole.CUSTOMER)
 export class CartController {

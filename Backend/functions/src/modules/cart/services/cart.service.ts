@@ -68,12 +68,25 @@ export class CartService {
       (item) => item.productId === dto.productId,
     );
 
+    // 5a. Calculate quantity: INCREMENT if exists, otherwise use request quantity
+    const existingQuantity = existingItemIndex >= 0 ? cart.items[existingItemIndex].quantity : 0;
+    const newQuantity = existingQuantity + dto.quantity;
+
+    // 5b. Validate total quantity doesn't exceed maximum
+    if (newQuantity > 999) {
+      throw new ConflictException({
+        code: 'CART_006',
+        message: `Tổng số lượng không được vượt quá 999 (hiện tại: ${existingQuantity}, thêm: ${dto.quantity})`,
+        statusCode: 409,
+      });
+    }
+
     const newItem: CartItem = {
       productId: dto.productId,
       shopId: product.shopId,
       productName: product.name,
       productImage: product.imageUrl || '',
-      quantity: dto.quantity, // OVERWRITE, not increment
+      quantity: newQuantity, // ✅ INCREMENT: adds to existing quantity if item already in cart
       priceAtAdd: product.price,
       addedAt: existingItemIndex >= 0 ? cart.items[existingItemIndex].addedAt : Timestamp.now(),
       updatedAt: Timestamp.now(),
