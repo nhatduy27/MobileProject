@@ -16,6 +16,6 @@ import { CategoriesModule } from '../categories/categories.module';
       useClass: FirestoreProductsRepository,
     },
   ],
-  exports: [ProductsService],
+  exports: [ProductsService, 'PRODUCTS_REPOSITORY'],
 })
 export class ProductsModule {}

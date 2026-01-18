@@ -3,6 +3,7 @@ import { Firestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { IProductsRepository } from '../interfaces';
 import { ProductEntity } from '../entities';
 import { ProductFilterDto, ProductSortOption } from '../dto';
+import { ShopStatus } from '../../shops/entities/shop.entity';
 
 @Injectable()
 export class FirestoreProductsRepository implements IProductsRepository {
@@ -101,9 +102,9 @@ export class FirestoreProductsRepository implements IProductsRepository {
       );
     }
 
+    // Total after filters, before pagination
     const total = products.length;
 
-    // Sort
     this.sortProducts(products, filters.sort || ProductSortOption.NEWEST);
 
     // Pagination
@@ -153,6 +154,25 @@ export class FirestoreProductsRepository implements IProductsRepository {
     if (filters.maxPrice !== undefined) {
       products = products.filter((p) => p.price <= filters.maxPrice!);
     }
+
+    // Filter out products from closed shops
+    const shopIds = Array.from(new Set(products.map((p) => p.shopId)));
+    const shopDocs = await Promise.all(
+      shopIds.map((id) => this.firestore.collection('shops').doc(id).get()),
+    );
+
+    const shopStatusMap = new Map<string, { isOpen: boolean; status?: string }>();
+    shopDocs.forEach((doc) => {
+      if (!doc.exists) return;
+      const data = doc.data();
+      if (!data) return;
+      shopStatusMap.set(doc.id, { isOpen: !!data.isOpen, status: data.status });
+    });
+
+    products = products.filter((p) => {
+      const shop = shopStatusMap.get(p.shopId);
+      return shop?.isOpen && shop.status === ShopStatus.OPEN;
+    });
 
     const total = products.length;
 
