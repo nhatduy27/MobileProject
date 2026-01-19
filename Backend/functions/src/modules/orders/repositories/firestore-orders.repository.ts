@@ -248,7 +248,8 @@ export class FirestoreOrdersRepository implements IOrdersRepository {
       }
 
       // 3. Read shipper to verify availability
-      const shipperRef = this.firestore.collection('shippers').doc(shipperId);
+      // FIX: Read from 'users' collection (not 'shippers'), shipper profile stored in users/{uid}.shipperInfo
+      const shipperRef = this.firestore.collection('users').doc(shipperId);
       const shipperSnap = await transaction.get(shipperRef);
 
       if (!shipperSnap.exists) {
@@ -266,28 +267,27 @@ export class FirestoreOrdersRepository implements IOrdersRepository {
       // PHASE B: WRITES ONLY (all reads completed)
       // ====================================================================
 
-      // 5. Update order: set shipperId, transition to SHIPPING
+      // 5. Update order: set shipperId only
+      // OPTION-1-FIX: Do NOT change status (still READY)
+      // Status will be changed later when shipper marks as shipping
       const now = Timestamp.now();
       transaction.update(orderRef, {
         shipperId,
-        status: 'SHIPPING',
-        shippingAt: now,
+        // FIX: Status stays READY (do not transition to SHIPPING here)
         updatedAt: now,
       });
 
-      // 6. Update shipper: set status to BUSY
-      transaction.update(shipperRef, {
-        'shipperInfo.status': 'BUSY',
-        updatedAt: now,
-      });
+      // 6. Do NOT update shipper status to BUSY here
+      // Shipper should mark as shipping first, THEN set status to BUSY
+      // This allows shipper to view order after accept but before shipping
 
       // 7. Return updated order data
       return {
         ...order,
         id: orderId,
         shipperId,
-        status: 'SHIPPING',
-        shippingAt: now,
+        // FIX: Status stays READY (not SHIPPING)
+        status: order.status, // Keep original status (READY)
         updatedAt: now,
       };
     });

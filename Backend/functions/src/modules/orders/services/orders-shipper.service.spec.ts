@@ -10,6 +10,7 @@ import { OrderStateMachineService } from './order-state-machine.service';
 import { IOrdersRepository, ORDERS_REPOSITORY } from '../interfaces';
 import { CartService } from '../../cart/services';
 import { ConfigService } from '../../../core/config/config.service';
+import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { USERS_REPOSITORY } from '../../users/interfaces';
 import { OrderStatus, PaymentStatus, OrderEntity } from '../entities';
 import { Timestamp } from 'firebase-admin/firestore';
@@ -26,6 +27,7 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
     customerId: 'customer_1',
     shopId: 'shop_1',
     shopName: 'Test Shop',
+    shipperId: null,
     items: [
       {
         productId: 'prod_1',
@@ -110,6 +112,13 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: FirebaseService,
+          useValue: {
+            firestore: { collection: jest.fn(), batch: jest.fn() },
+            auth: { verifyIdToken: jest.fn() },
+          },
         },
       ],
     }).compile();
@@ -484,14 +493,14 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
         {
           ...mockOrder,
           status: 'READY' as OrderStatus,
-          shipperId: undefined,
+          shipperId: null,
           shopId,
           id: 'order_ready_1',
         },
         {
           ...mockOrder,
           status: 'READY' as OrderStatus,
-          shipperId: undefined,
+          shipperId: null,
           shopId,
           id: 'order_ready_2',
         },
@@ -572,7 +581,7 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
         {
           ...mockOrder,
           status: 'READY' as OrderStatus,
-          shipperId: undefined,
+          shipperId: null,
           shopId,
           id: 'order_ready_1',
         },
@@ -622,14 +631,14 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
         {
           ...mockOrder,
           status: 'READY' as OrderStatus,
-          shipperId: undefined,
+          shipperId: null,
           shopId,
           id: 'order_ready_1',
         },
         {
           ...mockOrder,
           status: 'READY' as OrderStatus,
-          shipperId: undefined,
+          shipperId: null,
           shopId,
           id: 'order_ready_2',
         },

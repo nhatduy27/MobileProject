@@ -9,6 +9,7 @@ import { OrdersService } from './orders.service';
 import { OrderStateMachineService } from './order-state-machine.service';
 import { CartService } from '../../cart/services';
 import { ConfigService } from '../../../core/config/config.service';
+import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { USERS_REPOSITORY } from '../../users/interfaces';
 import {
   OrderEntity,
@@ -29,6 +30,7 @@ describe('OrdersService - Owner Flow', () => {
     customerId: 'customer_1',
     shopId: 'shop_1',
     shopName: 'Test Shop',
+    shipperId: null,
     items: [
       {
         productId: 'prod_1',
@@ -128,6 +130,13 @@ describe('OrdersService - Owner Flow', () => {
         {
           provide: ConfigService,
           useValue: mockConfigService,
+        },
+        {
+          provide: FirebaseService,
+          useValue: {
+            firestore: { collection: jest.fn(), batch: jest.fn() },
+            auth: { verifyIdToken: jest.fn() },
+          },
         },
       ],
     }).compile();

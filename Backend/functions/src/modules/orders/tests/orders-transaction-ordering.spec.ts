@@ -44,6 +44,11 @@ describe('Orders - Firestore Transaction Ordering', () => {
       enableFirestorePaginationFallback: false,
     };
 
+    const mockFirebaseService = {
+      firestore: { collection: jest.fn(), batch: jest.fn() },
+      auth: { verifyIdToken: jest.fn() },
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrdersService,
@@ -59,6 +64,7 @@ describe('Orders - Firestore Transaction Ordering', () => {
           provide: OrderStateMachineService,
           useValue: { validateTransition: jest.fn() },
         },
+        { provide: FirebaseService, useValue: mockFirebaseService },
       ],
     }).compile();
 
@@ -119,6 +125,7 @@ describe('Orders - Firestore Transaction Ordering', () => {
         status: OrderStatus.PENDING,
         paymentStatus: PaymentStatus.UNPAID,
         paymentMethod: 'COD',
+        shipperId: null,
         deliveryAddress: {
           label: 'KTX B5',
           fullAddress: 'KTX Khu B - Tòa B5',

@@ -206,6 +206,11 @@ export class ShippersService {
       });
 
       // Update user: change role to SHIPPER + shipperInfo
+      // SHIPPER-DATA-BUG-FIX: Set status to AVAILABLE (not ACTIVE) to match accept-order expectations
+      // Status Semantics (FINAL):
+      //   - AVAILABLE = Online and ready to accept orders (default after approval)
+      //   - BUSY = Currently on delivery
+      //   - OFFLINE = Not working / offline
       transaction.update(userRef, {
         role: 'SHIPPER',
         shipperInfo: {
@@ -213,8 +218,8 @@ export class ShippersService {
           shopName: app.shopName,
           vehicleType: app.vehicleType,
           vehicleNumber: app.vehicleNumber,
-          status: 'ACTIVE',
-          isOnline: false,
+          status: 'AVAILABLE',  // FIX: Changed from ACTIVE to AVAILABLE
+          isOnline: false,  // Default: offline until shipper goes online
           rating: 5.0,
           totalDeliveries: 0,
           currentOrders: [],

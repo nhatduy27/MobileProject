@@ -17,6 +17,7 @@ import { ShipperStatus } from '../../shippers/entities/shipper.entity';
 import { IAddressesRepository, ADDRESSES_REPOSITORY } from '../../users/interfaces';
 import { IUsersRepository, USERS_REPOSITORY } from '../../users/interfaces';
 import { ConfigService } from '../../../core/config/config.service';
+import { FirebaseService } from '../../../core/firebase/firebase.service';
 import {
   OrderEntity,
   OrderStatus,
@@ -55,6 +56,7 @@ export class OrdersService {
     private readonly usersRepo: IUsersRepository,
     private readonly stateMachine: OrderStateMachineService,
     private readonly configService: ConfigService,
+    private readonly firebaseService: FirebaseService,
   ) {}
 
   /**
@@ -321,6 +323,7 @@ export class OrdersService {
       paymentMethod: dto.paymentMethod,
       deliveryAddress: normalizedAddress, // Use normalized address (no undefined values)
       deliveryNote: dto.deliveryNote,
+      shipperId: null, // FIX-001: Explicitly set to null (unassigned). Required for shipper available orders query.
     };
 
     // 8. CRITICAL: Use Firestore transaction
@@ -941,12 +944,12 @@ export class OrdersService {
    * ORDER-013: Accept order for delivery (shipper)
    * PHASE 2
    * 
+   * OPTION-1-FIX: Accept order chỉ set shipperId, KHÔNG thay đổi status
+   * Status vẫn là READY sau accept, sẽ chuyển READY → SHIPPING ở markShipping()
+   * 
    * CRITICAL: Uses Firestore transaction to atomically:
    * 1. Verify order is still READY with shipperId=null (prevents race condition: two shippers accepting same order)
-   * 2. Set shipperId and transition to SHIPPING
-   * 3. Update shipper status to BUSY
-   * 
-   * All validation happens in service layer BEFORE transaction
+   * 2. Set shipperId only (do NOT change status)
    */
   async acceptOrder(
     shipperId: string,
@@ -993,19 +996,57 @@ export class OrdersService {
       });
     }
 
-    if (shipper.shipperInfo?.status !== ShipperStatus.AVAILABLE) {
-      throw new ConflictException({
-        code: 'ORDER_018',
-        message: 'Shipper is not available',
-        statusCode: 409,
+    // ===== CONDITION 5: Check shipper has shipperInfo (defensive check) =====
+    // If shipper profile is missing, return 400 (not 500)
+    if (!shipper.shipperInfo) {
+      throw new BadRequestException({
+        code: 'ORDER_019',
+        message: `Shipper profile incomplete. Shipper account exists but missing required shipperInfo fields. Contact shop owner to ensure shipper was properly approved.`,
+        statusCode: 400,
+        details: {
+          shipperId,
+          hasShipperInfo: false,
+          guidance: 'Ensure shop owner approved this shipper application before attempting to accept orders.',
+        },
       });
     }
 
-    // 5. Validate state transition (READY -> SHIPPING)
-    await this.stateMachine.validateTransition(
-      order.status,
-      OrderStatus.SHIPPING,
-    );
+    // DEBUG: Log shipper data for troubleshooting shipper availability issues
+    console.log('[AcceptOrder-DEBUG] Shipper availability check:', {
+      shipperId,
+      hasShipperInfo: !!shipper.shipperInfo,
+      shipperStatus: shipper.shipperInfo?.status,
+      expectedStatus: ShipperStatus.AVAILABLE,
+      shipperInfoKeys: shipper.shipperInfo ? Object.keys(shipper.shipperInfo) : 'N/A',
+      timestamp: new Date().toISOString(),
+    });
+
+    // ===== CONDITION 6: Check shipper status is AVAILABLE =====
+    // Shipper must be in AVAILABLE status to accept orders
+    // Status Semantics (FINAL):
+    //   - ACTIVE = Employed, but offline (legacy, should transition to AVAILABLE before shift)
+    //   - AVAILABLE = Online and ready to accept orders
+    //   - BUSY = Currently on delivery
+    //   - OFFLINE = Not working
+    // For now, accept both ACTIVE and AVAILABLE to support transition period
+    const validStatuses = [ShipperStatus.AVAILABLE, 'ACTIVE']; // Support both during transition
+    if (!shipper.shipperInfo.status || !validStatuses.includes(shipper.shipperInfo.status)) {
+      throw new ConflictException({
+        code: 'ORDER_018',
+        message: `Shipper is not available (status: ${shipper.shipperInfo.status}). Shipper must be in AVAILABLE or ACTIVE status to accept orders.`,
+        statusCode: 409,
+        details: {
+          shipperId,
+          currentStatus: shipper.shipperInfo.status,
+          validStatuses,
+          guidance: 'Ensure shipper goes online (status AVAILABLE or ACTIVE) before trying to accept orders.',
+        },
+      });
+    }
+
+    // 5. Do NOT validate state transition here anymore
+    // OPTION-1-FIX: Status validation removed (accept doesn't change status)
+    // Status check happens in markShipping() when actually shipping
 
     // 6. CRITICAL: Use Firestore transaction to atomically accept order
     // This prevents race condition where two shippers accept same order
@@ -1020,9 +1061,11 @@ export class OrdersService {
   }
 
   /**
-   * ORDER-014: Mark order as shipping (shipper picked up)
-   * PHASE 2 - Note: This is redundant with accept in current flow
-   * Keeping for API completeness if we later split READY->ASSIGNED->SHIPPING
+   * ORDER-014: Mark order as shipping (shipper picked up and started delivery)
+   * PHASE 2
+   * 
+   * OPTION-1-FIX: Accept chỉ set shipperId (status vẫn READY)
+   * markShipping sẽ thực hiện chuyển READY → SHIPPING
    */
   async markShipping(
     shipperId: string,
@@ -1047,22 +1090,30 @@ export class OrdersService {
       });
     }
 
-    // 3. Validate state (should be SHIPPING already after accept)
-    if (order.status !== OrderStatus.SHIPPING) {
+    // 3. Validate state (should be READY after accept, not yet SHIPPING)
+    // OPTION-1-FIX: After accept, order stays READY. Shipping will change it to SHIPPING.
+    if (order.status !== OrderStatus.READY) {
       throw new ConflictException({
         code: 'ORDER_011',
-        message: `Order must be SHIPPING, current status: ${order.status}`,
+        message: `Order must be READY (accepted but not yet shipped), current status: ${order.status}`,
         statusCode: 409,
       });
     }
 
-    // 4. Update shippingAt timestamp if not set
-    if (!order.shippingAt) {
-      await this.ordersRepo.update(orderId, {
-        shippingAt: Timestamp.now(),
-        updatedAt: Timestamp.now(),
-      });
-    }
+    // 4. Validate state transition (READY -> SHIPPING)
+    await this.stateMachine.validateTransition(
+      order.status,
+      OrderStatus.SHIPPING,
+    );
+
+    // 5. Update order: transition to SHIPPING and set shippingAt timestamp
+    // OPTION-1-FIX: This is where READY → SHIPPING happens (not in accept)
+    const now = Timestamp.now();
+    await this.ordersRepo.update(orderId, {
+      status: OrderStatus.SHIPPING,
+      shippingAt: now,
+      updatedAt: now,
+    });
 
     return this.ordersRepo.findById(orderId) as Promise<OrderEntity>;
   }
@@ -1219,13 +1270,35 @@ export class OrdersService {
     const validPage = Math.max(page || 1, 1);
     const validLimit = Math.min(limit || 10, 50);
 
-    // Get total count of available orders
+    // Get total count of available orders (where shipperId === null)
     const total = await this.ordersRepo.count({
       status: OrderStatus.READY,
       shipperId: null,
       shopId,
     });
     const totalPages = Math.ceil(total / validLimit);
+
+    // DEFENSIVE: If zero results but READY orders exist, log warning
+    // This indicates some orders may lack shipperId field (pre-fix orders)
+    if (total === 0) {
+      try {
+        const readyCount = await this.ordersRepo.count({
+          status: OrderStatus.READY,
+          shopId,
+        });
+
+        if (readyCount > 0) {
+          console.warn(
+            `[ShipperAvailable] Mismatch: shopId=${shopId} has ${readyCount} READY ` +
+            `orders but 0 visible to shipper. Some orders may lack shipperId field. ` +
+            `Consider running OrdersBackfillService.backfillShipperIdNull() to fix.`,
+          );
+        }
+      } catch (err) {
+        // Defensive check failed; continue without logging
+        console.warn('[ShipperAvailable] Could not validate order visibility:', err);
+      }
+    }
 
     // Build query for available orders
     let query = this.ordersRepo
@@ -1555,5 +1628,115 @@ export class OrdersService {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substr(2, 6).toUpperCase();
     return `ORD-${timestamp}-${random}`;
+  }
+
+  /**
+   * Backfill shipperId: null for orders missing this field
+   *
+   * Why needed:
+   * - Orders created before this fix may lack shipperId field entirely
+   * - Firestore query .where('shipperId', '==', null) doesn't match missing fields
+   * - Only matches documents where field explicitly exists with value null
+   *
+   * Solution: Scans orders, identifies those without shipperId, updates to null
+   * Safe: Batch operations, idempotent (can run multiple times)
+   */
+  async backfillShipperIdNull(): Promise<{
+    scanned: number;
+    updated: number;
+    skipped: number;
+    errors: Array<{ docId: string; error: string }>;
+  }> {
+    const db = this.firebaseService.firestore;
+    const result = {
+      scanned: 0,
+      updated: 0,
+      skipped: 0,
+      errors: [] as Array<{ docId: string; error: string }>,
+    };
+
+    try {
+      console.log('[BackfillShipperIdNull] Starting scan...');
+
+      // Get all orders
+      const snapshot = await db.collection('orders').get();
+
+      console.log(`[BackfillShipperIdNull] Found ${snapshot.size} total orders`);
+
+      const docsToUpdate: Array<{ id: string; data: any }> = [];
+
+      // Identify orders missing shipperId field
+      snapshot.forEach((doc: any) => {
+        result.scanned++;
+        const data = doc.data();
+
+        // Check if order needs backfill
+        // Only backfill READY, PENDING, CONFIRMED, PREPARING orders
+        const statusesToBackfill = [
+          OrderStatus.READY,
+          OrderStatus.PENDING,
+          OrderStatus.CONFIRMED,
+          OrderStatus.PREPARING,
+        ];
+
+        if (
+          statusesToBackfill.includes(data.status) &&
+          !('shipperId' in data)
+        ) {
+          docsToUpdate.push({
+            id: doc.id,
+            data,
+          });
+        }
+      });
+
+      console.log(
+        `[BackfillShipperIdNull] Found ${docsToUpdate.length} orders missing shipperId`,
+      );
+
+      // Batch update in groups of 100 (Firestore safe limit)
+      const batchSize = 100;
+      for (let i = 0; i < docsToUpdate.length; i += batchSize) {
+        const batch = docsToUpdate.slice(i, i + batchSize);
+        const writeBatch = db.batch();
+
+        batch.forEach(({ id }) => {
+          const docRef = db.collection('orders').doc(id);
+          writeBatch.update(docRef, { shipperId: null });
+          result.updated++;
+        });
+
+        try {
+          await writeBatch.commit();
+          console.log(
+            `[BackfillShipperIdNull] Batch ${Math.floor(i / batchSize) + 1}: ` +
+            `Updated ${batch.length} orders`,
+          );
+        } catch (err) {
+          const error = err instanceof Error ? err.message : String(err);
+          result.errors.push({
+            docId: `batch_${Math.floor(i / batchSize) + 1}`,
+            error,
+          });
+        }
+      }
+
+      result.skipped = result.scanned - result.updated;
+
+      console.log(
+        `[BackfillShipperIdNull] Complete! ` +
+        `Scanned: ${result.scanned}, Updated: ${result.updated}, Skipped: ${result.skipped}`,
+      );
+
+      return result;
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      console.error('[BackfillShipperIdNull] Fatal error:', errorMsg);
+      result.errors.push({
+        docId: 'batch_operation',
+        error: errorMsg,
+      });
+      throw error;
+    }
   }
 }

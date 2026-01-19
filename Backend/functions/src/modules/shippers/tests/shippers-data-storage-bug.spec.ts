@@ -166,7 +166,7 @@ describe('ShippersService - Data Storage Bug Prevention (SHIPPER-DATA-BUG-FIX)',
           shopName: mockShipperApp.shopName,
           vehicleType: mockShipperApp.vehicleType,
           vehicleNumber: mockShipperApp.vehicleNumber,
-          status: 'ACTIVE',
+          status: 'AVAILABLE',  // FIX: Changed from ACTIVE to AVAILABLE
         },
       });
     });

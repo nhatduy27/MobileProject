@@ -9,6 +9,7 @@ import {
   UseGuards,
   Query,
   HttpCode,
+  ForbiddenException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -318,5 +319,56 @@ export class OrdersController {
       orderId,
       dto.reason,
     );
+  }
+
+  /**
+   * ADMIN ONLY: Backfill shipperId null for pre-fix orders
+   *
+   * Problem: Orders created before the fix may lack shipperId field.
+   * Firestore query .where('shipperId', '==', null) won't match documents
+   * where the field is missing entirely.
+   *
+   * Solution: This endpoint scans orders and adds shipperId: null to those
+   * missing this field, making them visible to shippers.
+   *
+   * Safe: Idempotent (can run multiple times)
+   */
+  @Post('admin/backfill-shipperId-null')
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @HttpCode(200)
+  @ApiTags('Orders - Admin')
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Backfill shipperId field for existing orders',
+    description:
+      'Scans READY/PENDING/CONFIRMED/PREPARING orders and adds shipperId: null to those missing the field. ' +
+      'Required after deploy to fix orders created before this update. Admin-only endpoint.',
+  })
+  @ApiOkResponse({
+    description: 'Backfill completed',
+    schema: {
+      example: {
+        scanned: 250,
+        updated: 45,
+        skipped: 205,
+        errors: [],
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
+  @ApiForbiddenResponse({ description: 'Must be ADMIN role' })
+  async backfillShipperIdNull(@Req() req: any): Promise<any> {
+    // Verify admin role
+    if (req.user?.role !== UserRole.ADMIN) {
+      throw new ForbiddenException('This endpoint is for admins only');
+    }
+
+    console.log(
+      `[Backfill] Started by admin: ${req.user?.email || req.user?.uid}`,
+    );
+
+    // Call backfill service (injected in orders.service)
+    return await this.ordersService.backfillShipperIdNull();
   }
 }

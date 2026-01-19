@@ -43,6 +43,11 @@ describe('OrdersService - Address Resolution', () => {
       enableFirestorePaginationFallback: false,
     };
 
+    const mockFirebaseService = {
+      firestore: { collection: jest.fn(), batch: jest.fn() },
+      auth: { verifyIdToken: jest.fn() },
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrdersService,
@@ -55,6 +60,7 @@ describe('OrdersService - Address Resolution', () => {
         { provide: USERS_REPOSITORY, useValue: { findById: jest.fn() } },
         { provide: OrderStateMachineService, useValue: mockStateMachine },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: FirebaseService, useValue: mockFirebaseService },
       ],
     }).compile();
 

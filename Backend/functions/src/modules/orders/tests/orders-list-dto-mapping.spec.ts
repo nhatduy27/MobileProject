@@ -32,6 +32,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
     const mockConfigService = {
       enableFirestorePaginationFallback: false,
     };
+    const mockFirebaseService = {
+      firestore: { collection: jest.fn(), batch: jest.fn() },
+      auth: { verifyIdToken: jest.fn() },
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -42,9 +46,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
         { provide: 'SHOPS_REPOSITORY', useValue: mockShopsRepo },
         { provide: 'IShippersRepository', useValue: mockShippersRepo },
         { provide: ADDRESSES_REPOSITORY, useValue: mockAddressesRepo },
-        { provide: USERS_REPOSITORY, useValue: mockUsersRepo },
+        { provide: USERS_REPOSITORY, useValue: { findById: jest.fn() } },
         { provide: OrderStateMachineService, useValue: mockStateMachine },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: FirebaseService, useValue: mockFirebaseService },
       ],
     }).compile();
 

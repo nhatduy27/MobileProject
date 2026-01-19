@@ -41,7 +41,7 @@ export class OrderEntity {
   customer?: CustomerSnapshot; // Alias for customerSnapshot (used in detail responses)
   shopId: string;
   shopName: string;
-  shipperId?: string;
+  shipperId: string | null; // FIX-002: Explicitly allow null to indicate unassigned orders (required for shipper available query)
   shipperSnapshot?: ShipperSnapshot; // Snapshot when shipper is assigned (for OWNER list display)
   shipper?: ShipperSnapshot; // Alias for shipperSnapshot (used in detail responses)
 
