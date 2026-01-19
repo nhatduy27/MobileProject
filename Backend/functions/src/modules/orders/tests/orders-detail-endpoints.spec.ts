@@ -26,11 +26,11 @@ describe('Orders Detail Endpoints', () => {
   let shipperController: OrdersShipperController;
   let ordersService: jest.Mocked<OrdersService>;
 
-  const mockOrderEntity: OrderEntity = {
+  const mockOrderEntity = {
     id: 'order_abc123def456',
     orderNumber: 'ORD-1705591320000-A2B3C4',
     customerId: 'user_cust_001',
-    customerSnapshot: {
+    customer: {
       id: 'user_cust_001',
       displayName: 'Nguyễn Văn A',
       phone: '0901234567',
@@ -38,6 +38,11 @@ describe('Orders Detail Endpoints', () => {
     shopId: 'shop_123',
     shopName: 'Cơm Tấm Sườn',
     shipperId: 'shipper_456',
+    shipper: {
+      id: 'shipper_456',
+      displayName: 'Trần Minh Đạt',
+      phone: '0987654321',
+    },
     items: [
       {
         productId: 'prod_123',
@@ -75,7 +80,7 @@ describe('Orders Detail Endpoints', () => {
     preparingAt: Timestamp.fromDate(new Date('2026-01-19T10:15:00.000Z')),
     readyAt: Timestamp.fromDate(new Date('2026-01-19T10:25:00.000Z')),
     shippingAt: Timestamp.fromDate(new Date('2026-01-19T10:30:00.000Z')),
-  };
+  } as OrderEntity;
 
   beforeEach(async () => {
     const mockOrdersService = {
@@ -107,7 +112,7 @@ describe('Orders Detail Endpoints', () => {
     const mockRequest = { user: { uid: 'owner_123', role: 'OWNER' } };
 
     it('should return full order detail for owner', async () => {
-      ordersService.getShopOrderDetail.mockResolvedValue(mockOrderEntity);
+      ordersService.getShopOrderDetail.mockResolvedValue(mockOrderEntity as any);
 
       const result = await ownerController.getShopOrderDetail(
         mockRequest,
@@ -150,7 +155,7 @@ describe('Orders Detail Endpoints', () => {
     });
 
     it('should include all order fields (full detail)', async () => {
-      ordersService.getShopOrderDetail.mockResolvedValue(mockOrderEntity);
+      ordersService.getShopOrderDetail.mockResolvedValue(mockOrderEntity as any);
 
       const result = await ownerController.getShopOrderDetail(
         mockRequest,
@@ -183,7 +188,7 @@ describe('Orders Detail Endpoints', () => {
     });
 
     it('should NOT double wrap response', async () => {
-      ordersService.getShopOrderDetail.mockResolvedValue(mockOrderEntity);
+      ordersService.getShopOrderDetail.mockResolvedValue(mockOrderEntity as any);
 
       const result = await ownerController.getShopOrderDetail(
         mockRequest,
@@ -204,7 +209,7 @@ describe('Orders Detail Endpoints', () => {
     const mockRequest = { user: { uid: 'shipper_456', role: 'SHIPPER' } };
 
     it('should return full order detail for assigned shipper', async () => {
-      ordersService.getShipperOrderDetail.mockResolvedValue(mockOrderEntity);
+      ordersService.getShipperOrderDetail.mockResolvedValue(mockOrderEntity as any);
 
       const result = await shipperController.getShipperOrderDetail(
         mockRequest,
@@ -247,13 +252,13 @@ describe('Orders Detail Endpoints', () => {
     });
 
     it('should allow access to READY unassigned orders (preview before accept)', async () => {
-      const readyOrder: OrderEntity = {
+      const readyOrder = {
         ...mockOrderEntity,
         status: OrderStatus.READY,
         shipperId: undefined, // Unassigned
       };
 
-      ordersService.getShipperOrderDetail.mockResolvedValue(readyOrder);
+      ordersService.getShipperOrderDetail.mockResolvedValue(readyOrder as any);
 
       const result = await shipperController.getShipperOrderDetail(
         mockRequest,
@@ -265,7 +270,7 @@ describe('Orders Detail Endpoints', () => {
     });
 
     it('should include customer contact info for delivery', async () => {
-      ordersService.getShipperOrderDetail.mockResolvedValue(mockOrderEntity);
+      ordersService.getShipperOrderDetail.mockResolvedValue(mockOrderEntity as any);
 
       const result = await shipperController.getShipperOrderDetail(
         mockRequest,
@@ -274,13 +279,13 @@ describe('Orders Detail Endpoints', () => {
 
       // Shipper needs customer contact for delivery - now via customer field
       expect(result.customer).toBeDefined();
-      expect(result.customer.phone).toBe('0901234567');
+      expect(result.customer?.phone).toBe('0901234567');
       expect(result.deliveryAddress).toBeDefined();
       expect(result.deliveryAddress.fullAddress).toContain('268 Lý Thường Kiệt');
     });
 
     it('should NOT double wrap response', async () => {
-      ordersService.getShipperOrderDetail.mockResolvedValue(mockOrderEntity);
+      ordersService.getShipperOrderDetail.mockResolvedValue(mockOrderEntity as any);
 
       const result = await shipperController.getShipperOrderDetail(
         mockRequest,
@@ -298,7 +303,7 @@ describe('Orders Detail Endpoints', () => {
 
   describe('Response Structure Validation', () => {
     it('owner detail response should match OwnerOrderDetailDto shape', async () => {
-      ordersService.getShopOrderDetail.mockResolvedValue(mockOrderEntity);
+      ordersService.getShopOrderDetail.mockResolvedValue(mockOrderEntity as any);
 
       const result = await ownerController.getShopOrderDetail(
         { user: { uid: 'owner_123' } },
@@ -336,7 +341,7 @@ describe('Orders Detail Endpoints', () => {
     });
 
     it('shipper detail response should include customer contact field', async () => {
-      ordersService.getShipperOrderDetail.mockResolvedValue(mockOrderEntity);
+      ordersService.getShipperOrderDetail.mockResolvedValue(mockOrderEntity as any);
 
       const result = await shipperController.getShipperOrderDetail(
         { user: { uid: 'shipper_456' } },
@@ -358,7 +363,7 @@ describe('Orders Detail Endpoints', () => {
 
   describe('Global Interceptor Behavior', () => {
     it('controller returns OwnerOrderDetailDto for global interceptor to wrap', async () => {
-      ordersService.getShopOrderDetail.mockResolvedValue(mockOrderEntity);
+      ordersService.getShopOrderDetail.mockResolvedValue(mockOrderEntity as any);
 
       const result = await ownerController.getShopOrderDetail(
         { user: { uid: 'owner_123' } },

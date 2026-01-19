@@ -134,6 +134,64 @@ export class OrdersService {
   }
 
   /**
+   * Helper: Resolve shipper's shop ID from users collection
+   * This matches the data source used by owner list endpoint (GET /owner/shippers)
+   * Reads from users/{uid}.shipperInfo.shopId (authoritative source)
+   * 
+   * SHIPPER-DATA-BUG-FIX: Validates role and provides helpful error messages
+   * if shipperInfo is missing or in wrong document
+   * 
+   * @param shipperId - Shipper user ID
+   * @returns shopId - The shop ID the shipper is assigned to
+   * @throws NotFoundException - Shipper not found
+   * @throws BadRequestException - Role mismatch or not assigned to shop
+   */
+  private async resolveShipperShopId(shipperId: string): Promise<string> {
+    // Read from users collection (same as owner list endpoint)
+    const shipper = await this.usersRepo.findById(shipperId);
+    if (!shipper) {
+      throw new NotFoundException({
+        code: 'SHIPPER_NOT_FOUND',
+        message: 'Shipper not found',
+        statusCode: 404,
+      });
+    }
+
+    // SHIPPER-DATA-BUG-FIX: Validate role is SHIPPER (if available)
+    // Catches cases where shipperInfo might be in owner doc or role is wrong
+    // Only validate if role field exists (some mocks/legacy data may not have it)
+    if (shipper.role && shipper.role !== 'SHIPPER') {
+      throw new BadRequestException({
+        code: 'SHIPPER_ROLE_MISMATCH',
+        message: `Account has role '${shipper.role}' but SHIPPER role is required for order endpoints`,
+        statusCode: 400,
+        details: {
+          receivedRole: shipper.role,
+          expectedRole: 'SHIPPER',
+        },
+      });
+    }
+
+    // Get shopId from shipperInfo (authoritative source)
+    // shipperInfo MUST be in the SHIPPER user's document, not owner's document
+    const shopId = shipper.shipperInfo?.shopId;
+    if (!shopId) {
+      throw new BadRequestException({
+        code: 'SHIPPER_NOT_ASSIGNED',
+        message: 'Shipper has not been assigned to a shop. Wait for owner to approve your application or check if assignment failed.',
+        statusCode: 400,
+        details: {
+          shipperId,
+          hasShipperInfo: !!shipper.shipperInfo,
+          shipperInfoKeys: shipper.shipperInfo ? Object.keys(shipper.shipperInfo) : [],
+        },
+      });
+    }
+
+    return shopId;
+  }
+
+  /**
    * ORDER-002: Create a new order from cart
    * CRITICAL: Uses Firestore transaction to atomically create order and clear cart
    * All validation happens in service layer BEFORE transaction
@@ -882,11 +940,21 @@ export class OrdersService {
   /**
    * ORDER-013: Accept order for delivery (shipper)
    * PHASE 2
+   * 
+   * CRITICAL: Uses Firestore transaction to atomically:
+   * 1. Verify order is still READY with shipperId=null (prevents race condition: two shippers accepting same order)
+   * 2. Set shipperId and transition to SHIPPING
+   * 3. Update shipper status to BUSY
+   * 
+   * All validation happens in service layer BEFORE transaction
    */
   async acceptOrder(
     shipperId: string,
     orderId: string,
   ): Promise<OrderEntity> {
+    // SERVICE LAYER VALIDATION (all pre-transaction checks)
+    // This ensures state is confirmed before atomic transaction
+
     // 1. Get order
     const order = await this.ordersRepo.findById(orderId);
     if (!order) {
@@ -939,25 +1007,16 @@ export class OrdersService {
       OrderStatus.SHIPPING,
     );
 
-    // 6. Update order: assign shipper and move to SHIPPING
-    await this.ordersRepo.update(orderId, {
+    // 6. CRITICAL: Use Firestore transaction to atomically accept order
+    // This prevents race condition where two shippers accept same order
+    const updatedOrder = await this.ordersRepo.acceptOrderAtomically(
+      orderId,
       shipperId,
-      status: OrderStatus.SHIPPING,
-      shippingAt: Timestamp.now(),
-      updatedAt: Timestamp.now(),
-    });
-
-    // 7. Update shipper status to BUSY
-    await this.shippersRepo.update(shipperId, {
-      shipperInfo: {
-        ...shipper.shipperInfo,
-        status: ShipperStatus.BUSY,
-      },
-    });
+    );
 
     console.log(`✓ Order ${order.orderNumber} accepted by shipper: ${shipperId}`);
 
-    return this.ordersRepo.findById(orderId) as Promise<OrderEntity>;
+    return updatedOrder;
   }
 
   /**
@@ -1092,6 +1151,10 @@ export class OrdersService {
   ): Promise<PaginatedOrdersDto> {
     const { status, page = 1, limit = 10 } = filter;
 
+    // Validate shipper has a shop (authorization check)
+    // Uses same data source as owner list endpoint for consistency
+    await this.resolveShipperShopId(shipperId);
+
     // Validate pagination params
     const validPage = Math.max(page || 1, 1);
     const validLimit = Math.min(limit || 10, 50);
@@ -1121,6 +1184,65 @@ export class OrdersService {
     const orders = await this.ordersRepo.findMany(query);
 
     // Resolve shippers and customers for shipper list (both might need resolution for consistent DTO)
+    const shipperMap = await this.resolveShippersForOrders(orders);
+    const customerMap = await this.resolveCustomersForOrders(orders);
+
+    return {
+      orders: orders.map(order => this.mapToListDto(order, shipperMap, customerMap)),
+      page: validPage,
+      limit: validLimit,
+      total,
+      totalPages,
+    };
+  }
+
+  /**
+   * GET AVAILABLE ORDERS FOR SHIPPER
+   * GET /api/orders/shipper/available
+   * 
+   * Returns READY orders that are unassigned (shipperId=null) and belong to the shipper's shop
+   * This allows shippers to discover available orders to accept/pickup
+   * 
+   * Authorization: SHIPPER role required
+   * Query scope: Only READY orders with shipperId=null within shipper's shop
+   */
+  async getShipperOrdersAvailable(
+    shipperId: string,
+    filter: OrderFilterDto,
+  ): Promise<PaginatedOrdersDto> {
+    const { page = 1, limit = 10 } = filter;
+
+    // Resolve shopId using same data source as owner list endpoint
+    const shopId = await this.resolveShipperShopId(shipperId);
+
+    // Validate pagination params
+    const validPage = Math.max(page || 1, 1);
+    const validLimit = Math.min(limit || 10, 50);
+
+    // Get total count of available orders
+    const total = await this.ordersRepo.count({
+      status: OrderStatus.READY,
+      shipperId: null,
+      shopId,
+    });
+    const totalPages = Math.ceil(total / validLimit);
+
+    // Build query for available orders
+    let query = this.ordersRepo
+      .query()
+      .where('status', '==', OrderStatus.READY)
+      .where('shipperId', '==', null)
+      .where('shopId', '==', shopId)
+      .orderBy('createdAt', 'desc');
+
+    // Use offset + limit for pagination
+    const skipCount = (validPage - 1) * validLimit;
+    query = query.offset(skipCount).limit(validLimit);
+
+    // Execute query
+    const orders = await this.ordersRepo.findMany(query);
+
+    // Resolve shippers and customers for list DTO
     const shipperMap = await this.resolveShippersForOrders(orders);
     const customerMap = await this.resolveCustomersForOrders(orders);
 

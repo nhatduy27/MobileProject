@@ -20,6 +20,10 @@ export interface IOrdersRepository {
     shopId: string,
     orderData: OrderEntity
   ): Promise<OrderEntity>;
+  acceptOrderAtomically(
+    orderId: string,
+    shipperId: string
+  ): Promise<OrderEntity>;
 }
 
 export const ORDERS_REPOSITORY = 'ORDERS_REPOSITORY';

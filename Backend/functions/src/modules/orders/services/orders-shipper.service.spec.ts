@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ConflictException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { OrderStateMachineService } from './order-state-machine.service';
@@ -17,6 +18,7 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
   let service: OrdersService;
   let ordersRepo: jest.Mocked<IOrdersRepository>;
   let shippersRepo: any;
+  let usersRepo: any;
 
   const mockOrder: OrderEntity = {
     id: 'order_123',
@@ -57,6 +59,7 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
       query: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
+      acceptOrderAtomically: jest.fn(),
     };
 
     const mockShippersRepository = {
@@ -114,34 +117,39 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
     service = module.get<OrdersService>(OrdersService);
     ordersRepo = module.get(ORDERS_REPOSITORY);
     shippersRepo = module.get('IShippersRepository');
+    usersRepo = module.get(USERS_REPOSITORY);
   });
 
   describe('acceptOrder (ORDER-013)', () => {
-    it('should accept order from READY and assign shipper', async () => {
+    it('should accept order from READY and assign shipper using atomic transaction', async () => {
       const shipperId = 'shipper_1';
-      ordersRepo.findById.mockResolvedValueOnce(mockOrder);
-      shippersRepo.findById.mockResolvedValueOnce({
+      const mockShipper = {
         id: shipperId,
         shipperInfo: { status: 'AVAILABLE' },
-      });
-      ordersRepo.update.mockResolvedValueOnce(undefined);
-      shippersRepo.update.mockResolvedValueOnce(undefined);
-      ordersRepo.findById.mockResolvedValueOnce({
+      };
+      const updatedOrder = {
         ...mockOrder,
         shipperId,
         status: OrderStatus.SHIPPING,
-      });
+      };
+
+      ordersRepo.findById.mockResolvedValueOnce(mockOrder);
+      shippersRepo.findById.mockResolvedValueOnce(mockShipper);
+      ordersRepo.acceptOrderAtomically.mockResolvedValueOnce(updatedOrder);
 
       const result = await service.acceptOrder(shipperId, 'order_123');
 
+      // Verify validation checks were performed
       expect(ordersRepo.findById).toHaveBeenCalledWith('order_123');
-      expect(ordersRepo.update).toHaveBeenCalledWith(
+      expect(shippersRepo.findById).toHaveBeenCalledWith(shipperId);
+      
+      // Verify atomic transaction was called (not separate update calls)
+      expect(ordersRepo.acceptOrderAtomically).toHaveBeenCalledWith(
         'order_123',
-        expect.objectContaining({
-          shipperId,
-          status: OrderStatus.SHIPPING,
-        }),
+        shipperId,
       );
+      
+      // Verify result
       expect(result.shipperId).toBe(shipperId);
       expect(result.status).toBe(OrderStatus.SHIPPING);
     });
@@ -305,6 +313,12 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
   describe('getShipperOrders (ORDER-016)', () => {
     it('should return orders assigned to shipper', async () => {
       const shipperId = 'shipper_1';
+      const shopId = 'shop_123';
+      const mockUser = {
+        id: shipperId,
+        displayName: 'Shipper A',
+        shipperInfo: { shopId },
+      };
       const mockOrders = [
         { ...mockOrder, shipperId, id: 'order_1' },
         { ...mockOrder, shipperId, id: 'order_2' },
@@ -317,6 +331,7 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
         offset: jest.fn().mockReturnThis(),
       };
 
+      usersRepo.findById.mockResolvedValueOnce(mockUser);
       ordersRepo.count.mockResolvedValueOnce(2);
       ordersRepo.query.mockReturnValue(mockQuery as any);
       ordersRepo.findMany.mockResolvedValueOnce(mockOrders);
@@ -332,6 +347,12 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
 
     it('should support status filtering', async () => {
       const shipperId = 'shipper_1';
+      const shopId = 'shop_123';
+      const mockUser = {
+        id: shipperId,
+        displayName: 'Shipper A',
+        shipperInfo: { shopId },
+      };
       const mockQuery = {
         where: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
@@ -339,6 +360,7 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
         offset: jest.fn().mockReturnThis(),
       };
 
+      usersRepo.findById.mockResolvedValueOnce(mockUser);
       ordersRepo.count.mockResolvedValueOnce(0);
       ordersRepo.query.mockReturnValue(mockQuery as any);
       ordersRepo.findMany.mockResolvedValueOnce([]);
@@ -354,6 +376,12 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
 
     it('should support page-based pagination', async () => {
       const shipperId = 'shipper_1';
+      const shopId = 'shop_123';
+      const mockUser = {
+        id: shipperId,
+        displayName: 'Shipper A',
+        shipperInfo: { shopId },
+      };
       const mockQuery = {
         where: jest.fn().mockReturnThis(),
         orderBy: jest.fn().mockReturnThis(),
@@ -361,16 +389,23 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
         offset: jest.fn().mockReturnThis(),
       };
 
-      ordersRepo.count.mockResolvedValueOnce(0);
+      usersRepo.findById.mockResolvedValueOnce(mockUser);
+      ordersRepo.count.mockResolvedValueOnce(50);
       ordersRepo.query.mockReturnValue(mockQuery as any);
       ordersRepo.findMany.mockResolvedValueOnce([]);
 
-      await service.getShipperOrders(shipperId, {
+      const result = await service.getShipperOrders(shipperId, {
         page: 2,
         limit: 10,
       });
 
-      expect(mockQuery.where).toHaveBeenCalledWith('shipperId', '==', shipperId);
+      expect(result.page).toBe(2);
+      expect(result.limit).toBe(10);
+      expect(result.total).toBe(50);
+      expect(result.totalPages).toBe(5);
+      // (2-1)*10 = 10
+      expect(mockQuery.offset).toHaveBeenCalledWith(10);
+      expect(mockQuery.limit).toHaveBeenCalledWith(10);
     });
   });
 
@@ -426,6 +461,213 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
       await expect(
         service.getShipperOrders(shipperId, { limit: 10 })
       ).rejects.toBeDefined();
+    });
+  });
+
+  describe('getShipperOrdersAvailable (ORDER-016 EXTENSION - Available Orders)', () => {
+    it('should return READY unassigned orders for shipper shop (reads from users collection)', async () => {
+      const shipperId = 'shipper_1';
+      const shopId = 'shop_123';
+      
+      // Mock user/shipper with shipperInfo.shopId (from users collection)
+      const mockUser = {
+        id: shipperId,
+        displayName: 'Shipper A',
+        phone: '0901234567',
+        shipperInfo: {
+          shopId,
+          status: 'AVAILABLE',
+        },
+      };
+
+      const mockOrders = [
+        {
+          ...mockOrder,
+          status: 'READY' as OrderStatus,
+          shipperId: undefined,
+          shopId,
+          id: 'order_ready_1',
+        },
+        {
+          ...mockOrder,
+          status: 'READY' as OrderStatus,
+          shipperId: undefined,
+          shopId,
+          id: 'order_ready_2',
+        },
+      ];
+
+      const mockQuery = {
+        where: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        offset: jest.fn().mockReturnThis(),
+      };
+
+      // Mock: Read from users collection (same as owner list endpoint)
+      usersRepo.findById.mockResolvedValueOnce(mockUser);
+      ordersRepo.count.mockResolvedValueOnce(2);
+      ordersRepo.query.mockReturnValue(mockQuery as any);
+      ordersRepo.findMany.mockResolvedValueOnce(mockOrders);
+
+      const result = await service.getShipperOrdersAvailable(shipperId, {
+        limit: 10,
+      });
+
+      expect(result.orders).toHaveLength(2);
+      expect(result.total).toBe(2);
+      // Verify the query filters
+      expect(mockQuery.where).toHaveBeenCalledWith('status', '==', 'READY');
+      expect(mockQuery.where).toHaveBeenCalledWith('shipperId', '==', null);
+      expect(mockQuery.where).toHaveBeenCalledWith('shopId', '==', shopId);
+      expect(mockQuery.orderBy).toHaveBeenCalledWith('createdAt', 'desc');
+    });
+
+    it('should throw BadRequestException if shipper missing shopId (not assigned to shop)', async () => {
+      const shipperId = 'shipper_1';
+      
+      // Mock user without shipperInfo.shopId
+      const mockUserNoShop = {
+        id: shipperId,
+        displayName: 'Shipper A',
+        phone: '0901234567',
+        shipperInfo: {
+          // shopId is missing/null
+          status: 'AVAILABLE',
+        },
+      };
+
+      usersRepo.findById.mockResolvedValueOnce(mockUserNoShop);
+
+      await expect(
+        service.getShipperOrdersAvailable(shipperId, { limit: 10 })
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException if shipper not found', async () => {
+      const shipperId = 'shipper_invalid';
+
+      usersRepo.findById.mockResolvedValueOnce(null);
+
+      await expect(
+        service.getShipperOrdersAvailable(shipperId, { limit: 10 })
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should support pagination correctly', async () => {
+      const shipperId = 'shipper_1';
+      const shopId = 'shop_123';
+      
+      const mockUser = {
+        id: shipperId,
+        displayName: 'Shipper A',
+        phone: '0901234567',
+        shipperInfo: {
+          shopId,
+          status: 'AVAILABLE',
+        },
+      };
+
+      const mockOrders = [
+        {
+          ...mockOrder,
+          status: 'READY' as OrderStatus,
+          shipperId: undefined,
+          shopId,
+          id: 'order_ready_1',
+        },
+      ];
+
+      const mockQuery = {
+        where: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        offset: jest.fn().mockReturnThis(),
+      };
+
+      usersRepo.findById.mockResolvedValueOnce(mockUser);
+      ordersRepo.count.mockResolvedValueOnce(5); // Total 5 available orders
+      ordersRepo.query.mockReturnValue(mockQuery as any);
+      ordersRepo.findMany.mockResolvedValueOnce(mockOrders);
+
+      const result = await service.getShipperOrdersAvailable(shipperId, {
+        page: 2,
+        limit: 1,
+      });
+
+      expect(result.total).toBe(5);
+      expect(result.totalPages).toBe(5);
+      expect(result.page).toBe(2);
+      expect(result.limit).toBe(1);
+      // Verify offset calculation: (2-1) * 1 = 1
+      expect(mockQuery.offset).toHaveBeenCalledWith(1);
+      expect(mockQuery.limit).toHaveBeenCalledWith(1);
+    });
+
+    it('REGRESSION: should return matching total and orders count (null filter bug fix)', async () => {
+      const shipperId = 'shipper_1';
+      const shopId = 'shop_123';
+      
+      const mockUser = {
+        id: shipperId,
+        displayName: 'Shipper A',
+        phone: '0901234567',
+        shipperInfo: {
+          shopId,
+          status: 'AVAILABLE',
+        },
+      };
+
+      const mockOrders = [
+        {
+          ...mockOrder,
+          status: 'READY' as OrderStatus,
+          shipperId: undefined,
+          shopId,
+          id: 'order_ready_1',
+        },
+        {
+          ...mockOrder,
+          status: 'READY' as OrderStatus,
+          shipperId: undefined,
+          shopId,
+          id: 'order_ready_2',
+        },
+      ];
+
+      const mockQuery = {
+        where: jest.fn().mockReturnThis(),
+        orderBy: jest.fn().mockReturnThis(),
+        limit: jest.fn().mockReturnThis(),
+        offset: jest.fn().mockReturnThis(),
+      };
+
+      usersRepo.findById.mockResolvedValueOnce(mockUser);
+      // CRITICAL: count() must include the shipperId:null filter
+      // Before fix: count() would skip null values, returning higher count than fetch
+      // After fix: count() includes null values, matching the fetch query filters
+      ordersRepo.count.mockResolvedValueOnce(2);
+      ordersRepo.query.mockReturnValue(mockQuery as any);
+      ordersRepo.findMany.mockResolvedValueOnce(mockOrders);
+
+      const result = await service.getShipperOrdersAvailable(shipperId, {
+        limit: 10,
+      });
+
+      // VERIFY FIX: total and orders.length must match
+      expect(result.total).toBe(2);
+      expect(result.orders).toHaveLength(2);  // ← Bug was: total=2 but orders=0
+      expect(result.totalPages).toBe(1);
+
+      // VERIFY: ordersRepo.count was called with null value for shipperId filter
+      expect(ordersRepo.count).toHaveBeenCalledWith({
+        status: OrderStatus.READY,
+        shipperId: null,  // ← Must include null (not skip it)
+        shopId,
+      });
+
+      // VERIFY: query filters include shipperId:null
+      expect(mockQuery.where).toHaveBeenCalledWith('shipperId', '==', null);
     });
   });
 });

@@ -11,6 +11,7 @@ import { IShippersRepository } from './repositories/shippers-repository.interfac
 import { UsersService } from '../users/users.service';
 import { ShopsService } from '../shops/services/shops.service';
 import { StorageService } from '../../shared/services/storage.service';
+import { FirebaseService } from '../../core/firebase/firebase.service';
 import { ApplyShipperDto } from './dto/apply-shipper.dto';
 import { RejectApplicationDto } from './dto/reject-application.dto';
 import { ShipperApplicationEntity, ApplicationStatus } from './entities/shipper-application.entity';
@@ -24,6 +25,7 @@ export class ShippersService {
     private readonly usersService: UsersService,
     private readonly shopsService: ShopsService,
     private readonly storageService: StorageService,
+    private readonly firebaseService: FirebaseService,
     @Inject('FIRESTORE')
     private readonly firestore: Firestore,
   ) {}
@@ -172,6 +174,14 @@ export class ShippersService {
       throw new NotFoundException('Không tìm thấy đơn xin làm shipper');
     }
 
+    // SHIPPER-DATA-BUG-FIX: Validate app.userId !== ownerId
+    // Sanity check to prevent shipperInfo being written to owner's document
+    if (app.userId === ownerId) {
+      throw new BadRequestException(
+        'SHIPPER_BUG: Chủ shop không thể là shipper cho chính shop của mình. Vui lòng dùng tài khoản shipper khác.'
+      );
+    }
+
     // Validate ownership
     if (app.shopId !== shop.id) {
       throw new ForbiddenException('Bạn không có quyền duyệt đơn này');
@@ -182,10 +192,11 @@ export class ShippersService {
       throw new ConflictException('Đơn đã được xử lý rồi');
     }
 
-    // Transaction: Update application + Update user
+    // Transaction: Update application + Update user (Firestore only)
+    // SHIPPER-DATA-BUG-FIX: Verify we're writing to shipper's document (app.userId), not owner's
     await this.firestore.runTransaction(async (transaction) => {
       const appRef = this.firestore.collection('shipperApplications').doc(applicationId);
-      const userRef = this.firestore.collection('users').doc(app.userId);
+      const userRef = this.firestore.collection('users').doc(app.userId);  // ✓ Correct: shipper's document
 
       // Update application
       transaction.update(appRef, {
@@ -212,6 +223,23 @@ export class ShippersService {
         updatedAt: FieldValue.serverTimestamp(),
       });
     });
+
+    // CRITICAL: Update Firebase Custom Claims to keep authorization in sync
+    // AuthGuard and RolesGuard check custom claims, so claims must be updated
+    // after Firestore transaction succeeds
+    try {
+      await this.firebaseService.auth.setCustomUserClaims(app.userId, {
+        role: 'SHIPPER',
+      });
+    } catch (error) {
+      // If claims update fails, log error and throw
+      // The Firestore update succeeded but claims are out of sync
+      // User will see new role in GET /me but 403 on SHIPPER endpoints
+      // until they re-login (which will read updated claims)
+      const errorMsg = `Failed to sync Firebase custom claims for shipper ${app.userId} after approval. Claims will be inconsistent until user re-login.`;
+      console.error(errorMsg, error);
+      throw new Error(errorMsg);
+    }
 
     // TODO: Notify user
     // await this.notificationService.sendToUser(app.userId, { ... });
@@ -295,12 +323,26 @@ export class ShippersService {
     //   throw new ConflictException('SHIPPER_003: Shipper đang có đơn chưa hoàn thành');
     // }
 
-    // Remove SHIPPER role and clear shipperInfo
+    // Remove SHIPPER role and clear shipperInfo (update both sources)
     const userRef = this.firestore.collection('users').doc(shipperId);
     await userRef.update({
       role: 'CUSTOMER', // Change back to CUSTOMER
       shipperInfo: FieldValue.delete(),
       updatedAt: FieldValue.serverTimestamp(),
     });
+
+    // CRITICAL: Update Firebase Custom Claims to keep authorization in sync
+    // Must update claims when role changes, even when removing shipper role
+    try {
+      await this.firebaseService.auth.setCustomUserClaims(shipperId, {
+        role: 'CUSTOMER',
+      });
+    } catch (error) {
+      // If claims update fails, log error and throw
+      // Firestore updated but claims are out of sync
+      const errorMsg = `Failed to sync Firebase custom claims for shipper ${shipperId} removal. Claims will be inconsistent until user re-login.`;
+      console.error(errorMsg, error);
+      throw new Error(errorMsg);
+    }
   }
 }

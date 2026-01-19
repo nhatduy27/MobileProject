@@ -38,10 +38,12 @@ export class OrderEntity {
   // Relations
   customerId: string;
   customerSnapshot?: CustomerSnapshot; // Snapshot at order creation (for OWNER list display)
+  customer?: CustomerSnapshot; // Alias for customerSnapshot (used in detail responses)
   shopId: string;
   shopName: string;
   shipperId?: string;
   shipperSnapshot?: ShipperSnapshot; // Snapshot when shipper is assigned (for OWNER list display)
+  shipper?: ShipperSnapshot; // Alias for shipperSnapshot (used in detail responses)
 
   // Items (locked from cart)
   items: OrderItem[];

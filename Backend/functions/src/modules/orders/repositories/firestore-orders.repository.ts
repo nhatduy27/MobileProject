@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Firestore, FieldValue } from 'firebase-admin/firestore';
+import { Firestore, FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { IOrdersRepository } from '../interfaces';
 import { OrderEntity, OrderStatus, PaymentStatus } from '../entities';
 import { FirestoreErrorHandler } from '../../../core/filters/firestore-error.handler';
@@ -112,9 +112,11 @@ export class FirestoreOrdersRepository implements IOrdersRepository {
 
       if (where) {
         // Build query with where clauses
+        // IMPORTANT: Include null values (e.g., shipperId === null means "unassigned")
+        // Previously skipped null values, causing COUNT to return different results than FETCH
         const entries = Object.entries(where);
         for (const [key, value] of entries) {
-          if (value !== undefined && value !== null) {
+          if (value !== undefined) {  // Allow null, only skip undefined
             query = query.where(key, '==', value);
           }
         }
@@ -199,6 +201,94 @@ export class FirestoreOrdersRepository implements IOrdersRepository {
       return {
         ...orderData,
         id: orderRef.id,
+      };
+    });
+  }
+
+  /**
+   * Atomically accept order and update shipper status
+   * CRITICAL: Firestore transaction prevents race condition where two shippers accept same order
+   * 
+   * Transaction flow:
+   * 1. READ: Get current order state (verify shipperId is still null)
+   * 2. READ: Get shipper state (verify status still AVAILABLE)
+   * 3. WRITE: Update order with shipperId, status=SHIPPING, timestamps
+   * 4. WRITE: Update shipper with status=BUSY
+   */
+  async acceptOrderAtomically(
+    orderId: string,
+    shipperId: string,
+  ): Promise<any> {
+    return await this.firestore.runTransaction(async (transaction) => {
+      // ====================================================================
+      // PHASE A: READS ONLY (must happen first)
+      // ====================================================================
+
+      // 1. Read order to verify state hasn't changed
+      const orderRef = this.firestore.collection(this.ordersCollection).doc(orderId);
+      const orderSnap = await transaction.get(orderRef);
+
+      if (!orderSnap.exists) {
+        throw new Error(`Order ${orderId} not found`);
+      }
+
+      const order = orderSnap.data();
+
+      if (!order) {
+        throw new Error(`Order ${orderId} data not found`);
+      }
+
+      // 2. Verify order is still READY and unassigned (prevents race condition)
+      if (order.status !== 'READY') {
+        throw new Error(`Order is no longer READY (current: ${order.status})`);
+      }
+
+      if (order.shipperId) {
+        throw new Error(`Order already accepted by another shipper: ${order.shipperId}`);
+      }
+
+      // 3. Read shipper to verify availability
+      const shipperRef = this.firestore.collection('shippers').doc(shipperId);
+      const shipperSnap = await transaction.get(shipperRef);
+
+      if (!shipperSnap.exists) {
+        throw new Error(`Shipper ${shipperId} not found`);
+      }
+
+      const shipperData = shipperSnap.data();
+
+      // 4. Verify shipper is still AVAILABLE
+      if (shipperData?.shipperInfo?.status !== 'AVAILABLE') {
+        throw new Error(`Shipper is no longer AVAILABLE (current: ${shipperData?.shipperInfo?.status})`);
+      }
+
+      // ====================================================================
+      // PHASE B: WRITES ONLY (all reads completed)
+      // ====================================================================
+
+      // 5. Update order: set shipperId, transition to SHIPPING
+      const now = Timestamp.now();
+      transaction.update(orderRef, {
+        shipperId,
+        status: 'SHIPPING',
+        shippingAt: now,
+        updatedAt: now,
+      });
+
+      // 6. Update shipper: set status to BUSY
+      transaction.update(shipperRef, {
+        'shipperInfo.status': 'BUSY',
+        updatedAt: now,
+      });
+
+      // 7. Return updated order data
+      return {
+        ...order,
+        id: orderId,
+        shipperId,
+        status: 'SHIPPING',
+        shippingAt: now,
+        updatedAt: now,
       };
     });
   }

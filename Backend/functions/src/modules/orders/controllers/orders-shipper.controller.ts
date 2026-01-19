@@ -129,6 +129,67 @@ export class OrdersShipperController {
   }
 
   /**
+   * GET /api/orders/shipper/available
+   * Get available (unassigned READY) orders for shipper
+   *
+   * NEW: SHIPPER Available Orders endpoint
+   * Returns READY orders with shipperId=null that belong to shipper's shop
+   */
+  @Get('shipper/available')
+  @ApiOperation({
+    summary: 'Get available orders for shipper',
+    description: 'Retrieve list of unassigned READY orders available for shipper pickup within their shop scope. Returns paginated results with same structure as assigned orders endpoint.',
+  })
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    example: 1,
+    description: 'Page number (default: 1)',
+  })
+  @ApiQuery({
+    name: 'limit',
+    required: false,
+    type: Number,
+    example: 10,
+    description: 'Items per page (default: 10, max: 50)',
+  })
+  @ApiOkResponse({
+    description: 'Available orders retrieved successfully',
+    type: PaginatedOrdersResponseDto,
+  })
+  @ApiNotFoundResponse({ description: 'Shipper not found' })
+  @ApiForbiddenResponse({ description: 'User is not a SHIPPER (403 - required role missing)' })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
+  @ApiResponse({
+    status: 412,
+    description: 'Firestore index required - Click the provided URL to create the index',
+    schema: {
+      example: {
+        success: false,
+        message: 'Query requires a Firestore index. Please create the index at: https://console.firebase.google.com/firestore/indexes',
+        errorCode: 'ORDER_INDEX_REQUIRED',
+        details: {
+          firestoreMessage: 'The query requires an index. You can create it here: ...',
+          indexUrl: 'https://console.firebase.google.com/firestore/indexes',
+        },
+        timestamp: '2026-01-18T10:30:00Z',
+      },
+    },
+  })
+  async getShipperOrdersAvailable(
+    @Req() req: any,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+  ): Promise<PaginatedOrdersDto> {
+    const filter: OrderFilterDto = { page, limit };
+    return this.ordersService.getShipperOrdersAvailable(
+      req.user.uid,
+      filter,
+    );
+  }
+
+  /**
    * GET /api/orders/shipper/:id
    * Get full order detail for shipper
    *
