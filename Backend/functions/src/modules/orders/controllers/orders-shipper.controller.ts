@@ -129,6 +129,36 @@ export class OrdersShipperController {
   }
 
   /**
+   * GET /api/orders/shipper/:id
+   * Get full order detail for shipper
+   *
+   * NEW: SHIPPER Order Detail endpoint
+   */
+  @Get('shipper/:id')
+  @ApiOperation({
+    summary: 'Get shipper order detail',
+    description: 'Retrieve full order details for an order assigned to shipper or available for pickup (READY and unassigned)',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Order ID',
+    example: 'order_abc123def456',
+  })
+  @ApiOkResponse({
+    description: 'Order detail retrieved successfully',
+    type: OrderResponseDto,
+  })
+  @ApiNotFoundResponse({ description: 'Order not found' })
+  @ApiForbiddenResponse({ description: 'Order not assigned to you and not available for pickup' })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
+  async getShipperOrderDetail(
+    @Req() req: any,
+    @Param('id') orderId: string,
+  ): Promise<OrderEntity> {
+    return this.ordersService.getShipperOrderDetail(req.user.uid, orderId);
+  }
+
+  /**
    * PUT /api/orders/:id/accept
    * Accept order for delivery (shipper)
    *

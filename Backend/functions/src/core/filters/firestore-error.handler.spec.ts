@@ -20,7 +20,7 @@ describe('FirestoreErrorHandler', () => {
         expect(exception.getStatus()).toBe(HttpStatus.PRECONDITION_FAILED); // 412
         
         const response = exception.getResponse() as Record<string, unknown>;
-        expect(response.errorCode).toBe('ORDER_INDEX_REQUIRED');
+        expect(response.errorCode).toBe('FIRESTORE_INDEX_REQUIRED');
         expect((response.message as string)).toContain('Query requires a Firestore index');
         const details = response.details as Record<string, unknown>;
         expect((details.indexUrl as string)).toContain('console.firebase.google.com');
@@ -96,6 +96,39 @@ describe('FirestoreErrorHandler', () => {
         expect(new Date(response.timestamp as string)).toBeInstanceOf(Date);
       }
     });
+
+    it('should handle index building (503) vs index missing (412)', () => {
+      // Test: Index is building
+      const buildingError = {
+        code: 'FAILED_PRECONDITION',
+        message: 'The query requires an index. That index is currently building and cannot be used yet.',
+      };
+
+      try {
+        FirestoreErrorHandler.handle(buildingError);
+      } catch (thrown: unknown) {
+        const exception = thrown as HttpException;
+        expect(exception.getStatus()).toBe(HttpStatus.SERVICE_UNAVAILABLE); // 503
+        const response = exception.getResponse() as Record<string, unknown>;
+        expect(response.errorCode).toBe('FIRESTORE_INDEX_BUILDING');
+        expect((response.message as string)).toContain('index is building');
+      }
+
+      // Test: Index is missing
+      const missingError = {
+        code: 'FAILED_PRECONDITION',
+        message: 'The query requires an index. You can create it here: https://console.firebase.google.com/firestore/indexes',
+      };
+
+      try {
+        FirestoreErrorHandler.handle(missingError);
+      } catch (thrown: unknown) {
+        const exception = thrown as HttpException;
+        expect(exception.getStatus()).toBe(HttpStatus.PRECONDITION_FAILED); // 412
+        const response = exception.getResponse() as Record<string, unknown>;
+        expect(response.errorCode).toBe('FIRESTORE_INDEX_REQUIRED');
+      }
+    });
   });
 
   describe('handle - other Firestore errors', () => {
@@ -161,18 +194,38 @@ describe('FirestoreErrorHandler', () => {
   });
 
   describe('handle - non-Firestore errors', () => {
-    it('should re-throw non-Firestore errors', () => {
-      const error = new Error('Generic error');
+    it('should re-throw non-Firestore errors when they are HttpExceptions', () => {
+      const httpError = new HttpException('Not Found', HttpStatus.NOT_FOUND);
 
-      expect(() => FirestoreErrorHandler.handle(error)).toThrow(
-        'Generic error'
-      );
+      expect(() => FirestoreErrorHandler.handle(httpError)).toThrow(httpError);
     });
 
-    it('should re-throw errors without code property', () => {
+    it('should wrap non-Firestore errors in generic 500 HttpException', () => {
+      const error = new Error('Generic error');
+
+      try {
+        FirestoreErrorHandler.handle(error);
+      } catch (thrown: unknown) {
+        const exception = thrown as HttpException;
+        expect(exception.getStatus()).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+        const response = exception.getResponse();
+        expect(typeof response).toBe('object');
+        if (typeof response === 'object') {
+          expect((response as any).success).toBe(false);
+          expect((response as any).errorCode).toBe('INTERNAL_ERROR');
+        }
+      }
+    });
+
+    it('should wrap errors without code property in generic 500 HttpException', () => {
       const error = new Error('Error without code');
 
-      expect(() => FirestoreErrorHandler.handle(error)).toThrow(error);
+      try {
+        FirestoreErrorHandler.handle(error);
+      } catch (thrown: unknown) {
+        const exception = thrown as HttpException;
+        expect(exception.getStatus()).toBe(HttpStatus.INTERNAL_SERVER_ERROR);
+      }
     });
   });
 });

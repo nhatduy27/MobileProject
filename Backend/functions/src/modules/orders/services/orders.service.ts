@@ -5,6 +5,7 @@ import {
   ConflictException,
   ForbiddenException,
   BadRequestException,
+  Logger,
 } from '@nestjs/common';
 import { Timestamp } from 'firebase-admin/firestore';
 import { IOrdersRepository, ORDERS_REPOSITORY } from '../interfaces';
@@ -14,6 +15,8 @@ import { IShopsRepository } from '../../shops/interfaces';
 import { IShippersRepository } from '../../shippers/repositories/shippers-repository.interface';
 import { ShipperStatus } from '../../shippers/entities/shipper.entity';
 import { IAddressesRepository, ADDRESSES_REPOSITORY } from '../../users/interfaces';
+import { IUsersRepository, USERS_REPOSITORY } from '../../users/interfaces';
+import { ConfigService } from '../../../core/config/config.service';
 import {
   OrderEntity,
   OrderStatus,
@@ -25,6 +28,7 @@ import {
   OrderFilterDto,
   OrderListItemDto,
   PaginatedOrdersDto,
+  OwnerOrderDetailDto,
 } from '../dto';
 import { OrderStateMachineService } from './order-state-machine.service';
 import { normalizeDeliveryAddress } from '../utils/address.normalizer';
@@ -33,6 +37,8 @@ import { toIsoString } from '../utils/timestamp.serializer';
 
 @Injectable()
 export class OrdersService {
+  private readonly logger = new Logger(OrdersService.name);
+
   constructor(
     @Inject(ORDERS_REPOSITORY)
     private readonly ordersRepo: IOrdersRepository,
@@ -45,7 +51,10 @@ export class OrdersService {
     private readonly shippersRepo: IShippersRepository,
     @Inject(ADDRESSES_REPOSITORY)
     private readonly addressesRepo: IAddressesRepository,
+    @Inject(USERS_REPOSITORY)
+    private readonly usersRepo: IUsersRepository,
     private readonly stateMachine: OrderStateMachineService,
+    private readonly configService: ConfigService,
   ) {}
 
   /**
@@ -212,6 +221,22 @@ export class OrdersService {
     // (e.g., street/ward/district/city when using new KTX format)
     const normalizedAddress = normalizeDeliveryAddress(resolvedAddress);
 
+    // 6.7. Fetch customer snapshot for OWNER list display (avoid N+1 queries later)
+    let customerSnapshot;
+    try {
+      const customer = await this.usersRepo.findById(customerId);
+      if (customer) {
+        customerSnapshot = {
+          id: customer.id,
+          displayName: customer.displayName,
+          phone: customer.phone,
+        };
+      }
+    } catch (error) {
+      this.logger.warn(`Failed to fetch customer snapshot for order: ${error}`);
+      // Non-critical: proceed without snapshot
+    }
+
     // 7. Create order entity
     // PRICING LOCK: All item prices are taken from cart snapshot (price field).
     // Product price changes after add-to-cart do NOT affect the order.
@@ -219,6 +244,7 @@ export class OrdersService {
     const orderEntity: OrderEntity = {
       orderNumber,
       customerId,
+      customerSnapshot, // Add customer snapshot for OWNER list
       shopId: dto.shopId,
       shopName: shop.name,
       items: shopGroup.items.map((item) => ({
@@ -287,8 +313,15 @@ export class OrdersService {
     // Execute query
     const orders = await this.ordersRepo.findMany(query);
 
+    // Customer endpoint doesn't need shipper resolution (customer doesn't need to see shipper details)
+    // But we keep the signature consistent - pass empty map
+    const emptyShipperMap = new Map();
+
+    // Resolve customers for legacy orders missing customerSnapshot
+    const customerMap = await this.resolveCustomersForOrders(orders);
+
     return {
-      orders: orders.map(this.mapToListDto),
+      orders: orders.map(order => this.mapToListDto(order, emptyShipperMap, customerMap)),
       page: validPage,
       limit: validLimit,
       total,
@@ -589,6 +622,14 @@ export class OrdersService {
 
   /**
    * ORDER-010: Get shop orders with page-based pagination
+   * 
+   * ⚠️ FIRESTORE INDEX REQUIREMENTS:
+   * - Composite index: shopId ASC + createdAt DESC
+   * - Composite index (with filter): shopId ASC + status ASC + createdAt DESC
+   * 
+   * DEV FALLBACK MODE:
+   * Set ENABLE_FIRESTORE_PAGINATION_FALLBACK=true in .env to use in-memory pagination
+   * when indexes are building. Not recommended for production.
    */
   async getShopOrders(
     ownerId: string,
@@ -611,37 +652,231 @@ export class OrdersService {
     const validPage = Math.max(page || 1, 1);
     const validLimit = Math.min(limit || 20, 50);
 
-    // Get total count using count() - efficient Firestore operation
-    const total = await this.ordersRepo.count({
-      shopId,
-      ...(status && { status }),
-    });
-    const totalPages = Math.ceil(total / validLimit);
+    try {
+      // Get total count using count() - efficient Firestore operation
+      const total = await this.ordersRepo.count({
+        shopId,
+        ...(status && { status }),
+      });
+      const totalPages = Math.ceil(total / validLimit);
 
-    // 3. Build query for data (no fetch-all, use offset properly)
+      // 3. Build query for data (no fetch-all, use offset properly)
+      let query = this.ordersRepo
+        .query()
+        .where('shopId', '==', shopId)
+        .orderBy('createdAt', 'desc');
+
+      if (status) {
+        query = query.where('status', '==', status);
+      }
+
+      // Use offset + limit correctly (no over-fetch, no slice)
+      const skipCount = (validPage - 1) * validLimit;
+      query = query.offset(skipCount).limit(validLimit);
+
+      // 4. Execute query
+      const orders = await this.ordersRepo.findMany(query);
+
+      // DEBUG: Log order structure for verification (only if DEBUG_ORDERS=true)
+      if (process.env.DEBUG_ORDERS === 'true' && orders.length > 0) {
+        this.logger.debug('[OWNER LIST] First order doc keys:', Object.keys(orders[0]));
+        this.logger.debug('[OWNER LIST] customerSnapshot exists?', !!orders[0].customerSnapshot);
+        if (orders[0].customerSnapshot) {
+          this.logger.debug('[OWNER LIST] customerSnapshot:', orders[0].customerSnapshot);
+        }
+      }
+
+      // 5. Resolve shippers for orders missing shipperSnapshot
+      const shipperMap = await this.resolveShippersForOrders(orders);
+
+      // 6. Resolve customers for legacy orders missing customerSnapshot
+      const customerMap = await this.resolveCustomersForOrders(orders);
+
+      return {
+        orders: orders.map(order => this.mapToListDto(order, shipperMap, customerMap)),
+        page: validPage,
+        limit: validLimit,
+        total,
+        totalPages,
+      };
+    } catch (error: any) {
+      // Check if this is a FAILED_PRECONDITION error (missing/building index)
+      const isIndexError = 
+        error?.code === 'FAILED_PRECONDITION' || 
+        error?.code === 9 || // Firestore numeric code
+        (error?.message && error.message.includes('requires an index'));
+
+      // If fallback mode is enabled, use in-memory pagination
+      if (isIndexError && this.configService.enableFirestorePaginationFallback) {
+        this.logger.warn(
+          `[FALLBACK MODE] Using in-memory pagination for shop ${shopId} due to missing/building Firestore index. ` +
+          `This is a development workaround and NOT recommended for production.`
+        );
+
+        return this.getShopOrdersFallback(shopId, status, validPage, validLimit);
+      }
+
+      // Otherwise, let the error propagate to FirestoreErrorHandler
+      throw error;
+    }
+  }
+
+  /**
+   * FALLBACK: Get shop orders using in-memory pagination
+   * 
+   * WARNING: This method is only for development when Firestore indexes are building.
+   * - Fetches up to 200 orders without orderBy (avoids composite index requirement)
+   * - Sorts in memory by createdAt
+   * - Applies pagination in memory
+   * - Does NOT scale well with large datasets
+   * - Total count is approximate (limited to fetched subset)
+   * 
+   * DO NOT USE IN PRODUCTION
+   */
+  private async getShopOrdersFallback(
+    shopId: string,
+    status: string | undefined,
+    page: number,
+    limit: number,
+  ): Promise<PaginatedOrdersDto> {
+    // Fetch orders by shopId only (no composite index required)
+    // Use a safe upper bound to avoid fetching too much data
+    const FETCH_LIMIT = 200;
+
     let query = this.ordersRepo
       .query()
       .where('shopId', '==', shopId)
-      .orderBy('createdAt', 'desc');
+      .limit(FETCH_LIMIT);
 
+    const allOrders = await this.ordersRepo.findMany(query);
+
+    // Filter by status in memory if provided
+    let filteredOrders = allOrders;
     if (status) {
-      query = query.where('status', '==', status);
+      filteredOrders = allOrders.filter(order => order.status === status);
     }
 
-    // Use offset + limit correctly (no over-fetch, no slice)
-    const skipCount = (validPage - 1) * validLimit;
-    query = query.offset(skipCount).limit(validLimit);
+    // Sort by createdAt DESC in memory
+    // Handle Firestore Timestamp safely
+    filteredOrders.sort((a, b) => {
+      const timeA = this.getTimestampMillis(a.createdAt);
+      const timeB = this.getTimestampMillis(b.createdAt);
+      return timeB - timeA; // DESC
+    });
 
-    // 4. Execute query
-    const orders = await this.ordersRepo.findMany(query);
+    // Apply pagination in memory
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
+    // Compute totals (approximate if we hit fetch limit)
+    const total = filteredOrders.length;
+    const totalPages = Math.ceil(total / limit);
+
+    // Log warning if we might be missing data
+    if (allOrders.length >= FETCH_LIMIT) {
+      this.logger.warn(
+        `[FALLBACK MODE] Fetched ${FETCH_LIMIT} orders. Actual total may be higher. ` +
+        `Pagination totals are approximate.`
+      );
+    }
+
+    // DEBUG: Log order structure for verification (only if DEBUG_ORDERS=true)
+    if (process.env.DEBUG_ORDERS === 'true' && paginatedOrders.length > 0) {
+      this.logger.debug('[OWNER LIST FALLBACK] First order doc keys:', Object.keys(paginatedOrders[0]));
+      this.logger.debug('[OWNER LIST FALLBACK] customerSnapshot exists?', !!paginatedOrders[0].customerSnapshot);
+      if (paginatedOrders[0].customerSnapshot) {
+        this.logger.debug('[OWNER LIST FALLBACK] customerSnapshot:', paginatedOrders[0].customerSnapshot);
+      }
+    }
+
+    // Resolve shippers for orders missing shipperSnapshot
+    const shipperMap = await this.resolveShippersForOrders(paginatedOrders);
+
+    // Resolve customers for legacy orders missing customerSnapshot
+    const customerMap = await this.resolveCustomersForOrders(paginatedOrders);
 
     return {
-      orders: orders.map(this.mapToListDto),
-      page: validPage,
-      limit: validLimit,
+      orders: paginatedOrders.map(order => this.mapToListDto(order, shipperMap, customerMap)),
+      page,
+      limit,
       total,
       totalPages,
     };
+  }
+
+  /**
+   * Helper: Get timestamp in milliseconds for sorting
+   * Handles Firestore Timestamp, Date, and fallback to 0
+   */
+  private getTimestampMillis(timestamp: any): number {
+    if (!timestamp) return 0;
+    
+    // Firestore Timestamp
+    if (timestamp instanceof Timestamp) {
+      return timestamp.toMillis();
+    }
+    
+    // Date object
+    if (timestamp instanceof Date) {
+      return timestamp.getTime();
+    }
+    
+    // Timestamp-like object with _seconds
+    if (typeof timestamp === 'object' && typeof timestamp._seconds === 'number') {
+      return timestamp._seconds * 1000 + Math.floor((timestamp._nanoseconds || 0) / 1000000);
+    }
+    
+    // String (ISO format)
+    if (typeof timestamp === 'string') {
+      return new Date(timestamp).getTime();
+    }
+    
+    return 0;
+  }
+
+  /**
+   * OWNER ORDER DETAIL: Get full order detail for shop owner
+   * GET /api/orders/shop/:id
+   * 
+   * Authorization: OWNER role required
+   * Validates that order belongs to owner's shop
+   */
+  async getShopOrderDetail(
+    ownerId: string,
+    orderId: string,
+  ): Promise<OwnerOrderDetailDto> {
+    // 1. Get order
+    const order = await this.ordersRepo.findById(orderId);
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_NOT_FOUND',
+        message: 'Order not found',
+        statusCode: 404,
+      });
+    }
+
+    // 2. Get shop owned by this owner
+    const shop = await this.shopsRepo.findById(order.shopId);
+    if (!shop) {
+      throw new NotFoundException({
+        code: 'SHOP_NOT_FOUND',
+        message: 'Shop not found',
+        statusCode: 404,
+      });
+    }
+
+    // 3. Verify ownership
+    if (shop.ownerId !== ownerId) {
+      throw new ForbiddenException({
+        code: 'ORDER_ACCESS_DENIED',
+        message: 'You do not have permission to view this order',
+        statusCode: 403,
+      });
+    }
+
+    // 4. Map to detail DTO for consistent response format
+    return this.mapToOwnerDetailDto(order);
   }
 
   /**
@@ -885,8 +1120,12 @@ export class OrdersService {
     // Execute query
     const orders = await this.ordersRepo.findMany(query);
 
+    // Resolve shippers and customers for shipper list (both might need resolution for consistent DTO)
+    const shipperMap = await this.resolveShippersForOrders(orders);
+    const customerMap = await this.resolveCustomersForOrders(orders);
+
     return {
-      orders: orders.map(this.mapToListDto),
+      orders: orders.map(order => this.mapToListDto(order, shipperMap, customerMap)),
       page: validPage,
       limit: validLimit,
       total,
@@ -894,7 +1133,270 @@ export class OrdersService {
     };
   }
 
-  private mapToListDto(order: OrderEntity): OrderListItemDto {
+  /**
+   * SHIPPER ORDER DETAIL: Get full order detail for shipper
+   * GET /api/orders/shipper/:id
+   * 
+   * Authorization: SHIPPER role required
+   * Allows access if:
+   * - Order is assigned to this shipper (order.shipperId === shipperId), OR
+   * - Order is READY and unassigned (shipperId is null) - allows preview before accepting
+   */
+  async getShipperOrderDetail(
+    shipperId: string,
+    orderId: string,
+  ): Promise<OrderEntity> {
+    // 1. Get order
+    const order = await this.ordersRepo.findById(orderId);
+    if (!order) {
+      throw new NotFoundException({
+        code: 'ORDER_NOT_FOUND',
+        message: 'Order not found',
+        statusCode: 404,
+      });
+    }
+
+    // 2. Check authorization
+    const isAssignedToShipper = order.shipperId === shipperId;
+    const isReadyAndUnassigned = order.status === OrderStatus.READY && !order.shipperId;
+
+    if (!isAssignedToShipper && !isReadyAndUnassigned) {
+      throw new ForbiddenException({
+        code: 'ORDER_ACCESS_DENIED',
+        message: 'You do not have permission to view this order',
+        statusCode: 403,
+      });
+    }
+
+    return order;
+  }
+
+  /**
+   * Batch resolve customers for legacy orders that have customerId but missing customerSnapshot
+   * Prevents N+1 queries by fetching all unique customer users in one batch
+   */
+  private async resolveCustomersForOrders(
+    orders: OrderEntity[],
+  ): Promise<Map<string, { id: string; displayName?: string; phone?: string }>> {
+    const customerMap = new Map<string, { id: string; displayName?: string; phone?: string }>();
+
+    // Collect unique customer IDs that need resolution
+    const customerIdsToResolve = new Set<string>();
+    for (const order of orders) {
+      if (order.customerId && !order.customerSnapshot) {
+        customerIdsToResolve.add(order.customerId);
+      }
+    }
+
+    // If no customers to resolve, return empty map
+    if (customerIdsToResolve.size === 0) {
+      return customerMap;
+    }
+
+    // Batch fetch customer users
+    try {
+      const customerIds = Array.from(customerIdsToResolve);
+      const customerUsers = await Promise.all(
+        customerIds.map(id => this.usersRepo.findById(id).catch(() => null))
+      );
+
+      // Build map of customer data
+      customerUsers.forEach((user, index) => {
+        if (user) {
+          customerMap.set(customerIds[index], {
+            id: user.id || customerIds[index],
+            displayName: user.displayName,
+            phone: user.phone,
+          });
+        }
+      });
+    } catch (error: any) {
+      this.logger.warn(`Failed to resolve customers: ${error?.message || 'Unknown error'}`);
+      // Return empty map on error - orders will still have customer data from snapshot if available
+    }
+
+    return customerMap;
+  }
+
+  /**
+   * Batch resolve shippers for orders that have shipperId but missing shipperSnapshot
+   * Prevents N+1 queries by fetching all unique shipper users in one batch
+   */
+  private async resolveShippersForOrders(
+    orders: OrderEntity[],
+  ): Promise<Map<string, { id: string; displayName?: string; phone?: string }>> {
+    const shipperMap = new Map<string, { id: string; displayName?: string; phone?: string }>();
+
+    // Collect unique shipper IDs that need resolution
+    const shipperIdsToResolve = new Set<string>();
+    for (const order of orders) {
+      if (order.shipperId && !order.shipperSnapshot) {
+        shipperIdsToResolve.add(order.shipperId);
+      }
+    }
+
+    // If no shippers to resolve, return empty map
+    if (shipperIdsToResolve.size === 0) {
+      return shipperMap;
+    }
+
+    // Batch fetch shipper users
+    try {
+      const shipperIds = Array.from(shipperIdsToResolve);
+      const shipperUsers = await Promise.all(
+        shipperIds.map(id => this.usersRepo.findById(id).catch(() => null))
+      );
+
+      // Build map of shipper data
+      shipperUsers.forEach((user, index) => {
+        if (user) {
+          shipperMap.set(shipperIds[index], {
+            id: user.id || shipperIds[index],
+            displayName: user.displayName,
+            phone: user.phone,
+          });
+        }
+      });
+    } catch (error: any) {
+      this.logger.warn(`Failed to resolve shippers: ${error?.message || 'Unknown error'}`);
+      // Return empty map on error - orders will still have shipperId but no shipper object
+    }
+
+    return shipperMap;
+  }
+
+  /**
+   * Map OrderEntity to OwnerOrderDetailDto
+   * Used for OWNER detail endpoint GET /api/orders/shop/{id}
+   * 
+   * Ensures consistency with list response:
+   * - customer field (not customerSnapshot) with phone always present
+   * - shipperId field included (null or string)
+   * - shipper object only when shipperId != null
+   */
+  private async mapToOwnerDetailDto(order: OrderEntity): Promise<OwnerOrderDetailDto> {
+    // Build customer object from snapshot (always present at order creation)
+    let customer: any = null;
+    if (order.customerSnapshot) {
+      customer = {
+        id: order.customerSnapshot.id,
+        displayName: order.customerSnapshot.displayName,
+        phone: order.customerSnapshot.phone ?? null, // Ensure phone always present
+      };
+    } else {
+      // Fallback: shouldn't happen as customerSnapshot is set at creation
+      customer = {
+        id: order.customerId,
+        displayName: undefined,
+        phone: null,
+      };
+    }
+
+    // Build shipper object if shipper is assigned
+    let shipper: any = undefined;
+    if (order.shipperId) {
+      if (order.shipperSnapshot) {
+        shipper = {
+          id: order.shipperSnapshot.id,
+          displayName: order.shipperSnapshot.displayName,
+          phone: order.shipperSnapshot.phone ?? null,
+        };
+      } else {
+        // Fetch shipper if snapshot missing (single read is acceptable for detail)
+        try {
+          const shipperUser = await this.usersRepo.findById(order.shipperId);
+          if (shipperUser) {
+            shipper = {
+              id: shipperUser.id || order.shipperId,
+              displayName: shipperUser.displayName,
+              phone: shipperUser.phone ?? null,
+            };
+          }
+        } catch (error: any) {
+          this.logger.warn(`Failed to fetch shipper ${order.shipperId}: ${error?.message}`);
+          // Leave shipper undefined if fetch fails
+        }
+      }
+    }
+
+    return {
+      id: order.id!,
+      orderNumber: order.orderNumber,
+      shopId: order.shopId,
+      shopName: order.shopName,
+      shipperId: order.shipperId ?? null,
+      items: order.items.map(item => ({
+        productId: item.productId,
+        productName: item.productName,
+        quantity: item.quantity,
+        price: item.price,
+        subtotal: item.subtotal,
+      })),
+      subtotal: order.subtotal,
+      shipFee: order.shipFee,
+      discount: order.discount,
+      total: order.total,
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      paymentMethod: order.paymentMethod,
+      customer,
+      shipper,
+      deliveryAddress: order.deliveryAddress ? {
+        label: order.deliveryAddress.label,
+        fullAddress: order.deliveryAddress.fullAddress,
+        building: order.deliveryAddress.building,
+        room: order.deliveryAddress.room,
+        note: order.deliveryAddress.note,
+      } : {
+        label: '',
+        fullAddress: '',
+      },
+      deliveryNote: order.deliveryNote,
+      createdAt: toIsoString(order.createdAt),
+      updatedAt: toIsoString(order.updatedAt),
+      confirmedAt: toIsoString(order.confirmedAt),
+      preparingAt: toIsoString(order.preparingAt),
+      readyAt: toIsoString(order.readyAt),
+      shippingAt: toIsoString(order.shippingAt),
+      deliveredAt: toIsoString(order.deliveredAt),
+      cancelledAt: toIsoString(order.cancelledAt),
+      cancelReason: order.cancelReason,
+      cancelledBy: order.cancelledBy,
+      reviewId: order.reviewId,
+      reviewedAt: toIsoString(order.reviewedAt),
+      paidOut: order.paidOut,
+      paidOutAt: toIsoString(order.paidOutAt),
+    };
+  }
+
+  private mapToListDto(
+    order: OrderEntity,
+    shipperMap?: Map<string, { id: string; displayName?: string; phone?: string }>,
+    customerMap?: Map<string, { id: string; displayName?: string; phone?: string }>,
+  ): OrderListItemDto {
+    const MAX_PREVIEW_ITEMS = 3;
+    
+    // Create items preview (max 3 items)
+    const itemsPreview = order.items.slice(0, MAX_PREVIEW_ITEMS).map(item => ({
+      productId: item.productId,
+      productName: item.productName,
+      quantity: item.quantity,
+      price: item.price,
+      subtotal: item.subtotal,
+    }));
+
+    // Resolve customer: priority 1) snapshot, 2) resolved from map
+    let customerData;
+    if (order.customerSnapshot) {
+      customerData = {
+        id: order.customerSnapshot.id,
+        displayName: order.customerSnapshot.displayName,
+        phone: order.customerSnapshot.phone,
+      };
+    } else if (order.customerId && customerMap?.has(order.customerId)) {
+      customerData = customerMap.get(order.customerId);
+    }
+
     return {
       id: order.id!,
       orderNumber: order.orderNumber,
@@ -905,6 +1407,25 @@ export class OrdersService {
       total: order.total,
       itemCount: order.items.length,
       createdAt: toIsoString(order.createdAt),
+      itemsPreview,
+      itemsPreviewCount: itemsPreview.length,
+      customer: customerData,
+      paymentMethod: order.paymentMethod,
+      deliveryAddress: order.deliveryAddress ? {
+        label: order.deliveryAddress.label,
+        fullAddress: order.deliveryAddress.fullAddress,
+        building: order.deliveryAddress.building,
+        room: order.deliveryAddress.room,
+      } : undefined,
+      shipperId: order.shipperId ?? null,
+      shipper: order.shipperSnapshot ? {
+        id: order.shipperSnapshot.id,
+        displayName: order.shipperSnapshot.displayName,
+        phone: order.shipperSnapshot.phone,
+      } : (order.shipperId && shipperMap?.has(order.shipperId) 
+          ? shipperMap.get(order.shipperId)! 
+          : undefined),
+      updatedAt: toIsoString(order.updatedAt),
     };
   }
 

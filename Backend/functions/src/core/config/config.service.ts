@@ -86,6 +86,18 @@ export class ConfigService {
   }
 
   // ============================================
+  // Firestore Pagination Fallback (Dev Only)
+  // ============================================
+
+  /**
+   * Enable fallback pagination when Firestore indexes are building
+   * WARNING: Use for development only. Performance degrades with large datasets.
+   */
+  get enableFirestorePaginationFallback(): boolean {
+    return this.get('ENABLE_FIRESTORE_PAGINATION_FALLBACK', 'false').toLowerCase() === 'true';
+  }
+
+  // ============================================
   // Firebase Config
   // ============================================
 

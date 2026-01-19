@@ -4,8 +4,9 @@ import { IOrdersRepository, ORDERS_REPOSITORY } from '../interfaces';
 import { CartService } from '../../cart/services';
 import { IProductsRepository } from '../../products/interfaces';
 import { IShopsRepository } from '../../shops/interfaces';
-import { IAddressesRepository, ADDRESSES_REPOSITORY } from '../../users/interfaces';
+import { IAddressesRepository, ADDRESSES_REPOSITORY, USERS_REPOSITORY } from '../../users/interfaces';
 import { OrderStateMachineService } from '../services/order-state-machine.service';
+import { ConfigService } from '../../../core/config/config.service';
 import { CreateOrderDto } from '../dto';
 import { OrderEntity, OrderStatus, PaymentStatus } from '../entities';
 
@@ -39,6 +40,10 @@ describe('Orders - Firestore Transaction Ordering', () => {
       findById: jest.fn(),
     };
 
+    const mockConfigService = {
+      enableFirestorePaginationFallback: false,
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrdersService,
@@ -48,6 +53,8 @@ describe('Orders - Firestore Transaction Ordering', () => {
         { provide: 'SHOPS_REPOSITORY', useValue: mockShopsRepo },
         { provide: 'IShippersRepository', useValue: { findByShopId: jest.fn() } },
         { provide: ADDRESSES_REPOSITORY, useValue: mockAddressesRepo },
+        { provide: USERS_REPOSITORY, useValue: { findById: jest.fn() } },
+        { provide: ConfigService, useValue: mockConfigService },
         {
           provide: OrderStateMachineService,
           useValue: { validateTransition: jest.fn() },

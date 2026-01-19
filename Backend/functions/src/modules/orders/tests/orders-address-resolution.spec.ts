@@ -3,8 +3,9 @@ import { NotFoundException, ForbiddenException, BadRequestException } from '@nes
 import { OrdersService } from '../services/orders.service';
 import { ORDERS_REPOSITORY } from '../interfaces';
 import { CartService } from '../../cart/services';
-import { ADDRESSES_REPOSITORY } from '../../users/interfaces';
+import { ADDRESSES_REPOSITORY, USERS_REPOSITORY } from '../../users/interfaces';
 import { OrderStateMachineService } from '../services/order-state-machine.service';
+import { ConfigService } from '../../../core/config/config.service';
 
 describe('OrdersService - Address Resolution', () => {
   let service: OrdersService;
@@ -38,6 +39,10 @@ describe('OrdersService - Address Resolution', () => {
     const mockShippersRepo = {};
     const mockStateMachine = {};
 
+    const mockConfigService = {
+      enableFirestorePaginationFallback: false,
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrdersService,
@@ -47,7 +52,9 @@ describe('OrdersService - Address Resolution', () => {
         { provide: 'SHOPS_REPOSITORY', useValue: mockShopsRepo },
         { provide: 'IShippersRepository', useValue: mockShippersRepo },
         { provide: ADDRESSES_REPOSITORY, useValue: mockAddressesRepo },
+        { provide: USERS_REPOSITORY, useValue: { findById: jest.fn() } },
         { provide: OrderStateMachineService, useValue: mockStateMachine },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 

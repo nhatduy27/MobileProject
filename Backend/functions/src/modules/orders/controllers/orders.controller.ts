@@ -9,7 +9,6 @@ import {
   UseGuards,
   Query,
   HttpCode,
-  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -40,7 +39,6 @@ import { AuthGuard } from '../../../core/guards/auth.guard';
 import { RolesGuard } from '../../../core/guards/roles.guard';
 import { Roles } from '../../../core/decorators/roles.decorator';
 import { UserRole } from '../../../core/interfaces/user.interface';
-import { ResponseWrapperInterceptor } from '../interceptors';
 
 /**
  * Orders Controller - Customer Endpoints
@@ -57,7 +55,6 @@ import { ResponseWrapperInterceptor } from '../interceptors';
 @ApiBearerAuth('firebase-auth')
 @UseGuards(AuthGuard, RolesGuard)
 @Roles(UserRole.CUSTOMER)
-@UseInterceptors(ResponseWrapperInterceptor)
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 

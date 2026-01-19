@@ -219,9 +219,11 @@ export class FirestoreOrdersRepository implements IOrdersRepository {
       id: doc.id,
       orderNumber: data.orderNumber,
       customerId: data.customerId,
+      customerSnapshot: data.customerSnapshot, // Read customer snapshot for OWNER list
       shopId: data.shopId,
       shopName: data.shopName,
       shipperId: data.shipperId,
+      shipperSnapshot: data.shipperSnapshot, // Read shipper snapshot for OWNER list
       items: data.items || [],
       subtotal: data.subtotal,
       shipFee: data.shipFee,

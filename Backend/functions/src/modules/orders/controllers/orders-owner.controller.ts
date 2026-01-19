@@ -29,6 +29,7 @@ import {
   OrderResponseDto,
   PaginatedOrdersResponseDto,
   CancelOrderDto,
+  OwnerOrderDetailDto,
 } from '../dto';
 import { OrderEntity } from '../entities';
 import { AuthGuard } from '../../../core/guards/auth.guard';
@@ -110,6 +111,36 @@ export class OrdersOwnerController {
   ): Promise<PaginatedOrdersDto> {
     const filter: OrderFilterDto = { status, page, limit };
     return this.ordersService.getShopOrders(req.user.uid, filter);
+  }
+
+  /**
+   * GET /api/orders/shop/:id
+   * Get full order detail for shop owner
+   *
+   * NEW: OWNER Order Detail endpoint
+   */
+  @Get('shop/:id')
+  @ApiOperation({
+    summary: 'Get shop order detail',
+    description: 'Retrieve full order details for an order that belongs to owner\'s shop',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'Order ID',
+    example: 'order_abc123def456',
+  })
+  @ApiOkResponse({
+    description: 'Order detail retrieved successfully',
+    type: OwnerOrderDetailDto,
+  })
+  @ApiNotFoundResponse({ description: 'Order not found or shop not found' })
+  @ApiForbiddenResponse({ description: 'Order does not belong to your shop' })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
+  async getShopOrderDetail(
+    @Req() req: any,
+    @Param('id') orderId: string,
+  ): Promise<OwnerOrderDetailDto> {
+    return this.ordersService.getShopOrderDetail(req.user.uid, orderId);
   }
 
   /**

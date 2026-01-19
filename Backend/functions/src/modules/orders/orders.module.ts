@@ -7,10 +7,12 @@ import { ShopsModule } from '../shops/shops.module';
 import { CartModule } from '../cart/cart.module';
 import { ShippersModule } from '../shippers/shippers.module';
 import { UsersModule } from '../users/users.module';
+import { ConfigModule } from '../../core/config/config.module';
 import { ORDERS_REPOSITORY } from './interfaces';
 
 @Module({
   imports: [
+    ConfigModule,
     ProductsModule,
     ShopsModule,
     CartModule,

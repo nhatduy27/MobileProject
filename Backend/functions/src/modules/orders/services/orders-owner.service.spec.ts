@@ -8,6 +8,8 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { OrdersService } from './orders.service';
 import { OrderStateMachineService } from './order-state-machine.service';
 import { CartService } from '../../cart/services';
+import { ConfigService } from '../../../core/config/config.service';
+import { USERS_REPOSITORY } from '../../users/interfaces';
 import {
   OrderEntity,
   OrderStatus,
@@ -87,6 +89,10 @@ describe('OrdersService - Owner Flow', () => {
       findById: jest.fn(),
     };
 
+    const mockConfigService = {
+      enableFirestorePaginationFallback: false,
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrdersService,
@@ -114,6 +120,14 @@ describe('OrdersService - Owner Flow', () => {
         {
           provide: 'IAddressesRepository',
           useValue: mockAddressesRepository,
+        },
+        {
+          provide: USERS_REPOSITORY,
+          useValue: { findById: jest.fn() },
+        },
+        {
+          provide: ConfigService,
+          useValue: mockConfigService,
         },
       ],
     }).compile();

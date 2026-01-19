@@ -2,6 +2,18 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { OrderItem } from './order-item.entity';
 import { DeliveryAddress } from './delivery-address.entity';
 
+export interface CustomerSnapshot {
+  id: string;
+  displayName?: string;
+  phone?: string;
+}
+
+export interface ShipperSnapshot {
+  id: string;
+  displayName?: string;
+  phone?: string;
+}
+
 export enum OrderStatus {
   PENDING = 'PENDING',
   CONFIRMED = 'CONFIRMED',
@@ -25,9 +37,11 @@ export class OrderEntity {
 
   // Relations
   customerId: string;
+  customerSnapshot?: CustomerSnapshot; // Snapshot at order creation (for OWNER list display)
   shopId: string;
   shopName: string;
   shipperId?: string;
+  shipperSnapshot?: ShipperSnapshot; // Snapshot when shipper is assigned (for OWNER list display)
 
   // Items (locked from cart)
   items: OrderItem[];
