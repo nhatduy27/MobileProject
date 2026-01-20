@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
 import java.io.IOException
+import com.example.foodapp.data.remote.api.ApiClient
 import com.example.foodapp.data.remote.client.ProductApiService
 import com.example.foodapp.data.remote.client.response.product.ProductFilterDto
 import com.example.foodapp.data.model.shared.product.Product
@@ -14,9 +15,9 @@ import com.example.foodapp.data.remote.client.response.product.FavoriteQueryPara
 import com.example.foodapp.data.remote.client.response.product.CheckFavoriteResponse
 import javax.inject.Inject
 
-class ProductRepository @Inject constructor(
-    private val productService: ProductApiService
-) {
+class ProductRepository {
+
+    private val productService = ApiClient.productApiService
 
     suspend fun getProducts(filters: ProductFilterDto = ProductFilterDto()): ApiResult<List<Product>> {
         return withContext(Dispatchers.IO) {

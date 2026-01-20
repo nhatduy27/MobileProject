@@ -20,40 +20,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-// ============= STATE CLASSES =============
-
-sealed class LogInState {
-    object Idle : LogInState()
-    object Loading : LogInState()
-    data class Success(
-        val userId: String,
-        val email: String,
-        val displayName: String,
-        val role: String
-    ) : LogInState()
-    data class Error(val message: String, val code: String? = null) : LogInState()
-}
-
-sealed class GoogleLogInState {
-    object Idle : GoogleLogInState()
-    object Loading : GoogleLogInState()
-    data class Success(
-        val userId: String,
-        val email: String,
-        val displayName: String,
-        val role: String,
-        val isNewUser: Boolean = false
-    ) : GoogleLogInState()
-    data class Error(val message: String, val code: String? = null) : GoogleLogInState()
-}
-
-sealed class ValidationResult {
-    object Success : ValidationResult()
-    data class Error(val message: String) : ValidationResult()
-}
-
-// ============= VIEWMODEL =============
-
 class LoginViewModel(
     private val repository: UserFirebaseRepository,
     private val authRepository: AuthRepository,
@@ -77,16 +43,10 @@ class LoginViewModel(
 
     // ============= GOOGLE SIGN-IN =============
 
-    /**
-     * Khởi tạo GoogleSignInClient
-     */
+
     fun initializeGoogleSignIn(client: GoogleSignInClient) {
         this.googleSignInClient = client
     }
-
-    /**
-     * Get Google Sign-In Intent để start activity
-     */
     fun getGoogleSignInIntent() = googleSignInClient?.signInIntent
 
     /**
@@ -101,7 +61,6 @@ class LoginViewModel(
                 "Không thể khởi tạo Google Sign-In",
                 "GOOGLE_INIT_ERROR"
             )
-            Log.e("LoginViewModel", "Google Sign-In init error", e)
             false
         }
     }
@@ -123,7 +82,6 @@ class LoginViewModel(
                     "Lỗi đăng nhập Google: ${e.message}",
                     "UNKNOWN_ERROR"
                 )
-                Log.e("LoginViewModel", "Google Sign-In error", e)
             }
         }
     }
@@ -138,8 +96,6 @@ class LoginViewModel(
             )
             return
         }
-
-        // Gửi token lên server
         signInWithGoogleToken(idToken)
     }
 
@@ -180,7 +136,6 @@ class LoginViewModel(
                         errorMsg.first,
                         errorMsg.second
                     )
-                    Log.e("LoginViewModel", "Google API error", result.exception)
                 }
             }
         } catch (e: Exception) {
@@ -196,7 +151,6 @@ class LoginViewModel(
             if (isSuccessful) {
                 if (!idToken.isNullOrEmpty()) {
                     authManager.saveFirebaseToken(idToken)
-                    Log.d("LoginViewModel", "✅ Đã lưu Firebase ID Token cho Google user")
                 }
 
                 // Cập nhật state
@@ -208,10 +162,6 @@ class LoginViewModel(
                 )
                 _existAccountState.value = true
 
-                Log.d("LoginViewModel", "✅ Google Sign-In thành công")
-                Log.d("LoginViewModel", "User ID: ${userInfo.id}")
-                Log.d("LoginViewModel", "Email: ${userInfo.email}")
-                Log.d("LoginViewModel", "Role: ${userInfo.role}")
             } else {
                 // Vẫn coi là thành công vì đã có user info
                 _googleLogInState.value = GoogleLogInState.Success(
@@ -221,8 +171,6 @@ class LoginViewModel(
                     role = userInfo.role
                 )
                 _existAccountState.value = true
-
-                Log.w("LoginViewModel", "⚠ Không thể sign in Firebase: $error")
             }
         }
     }
@@ -287,8 +235,6 @@ class LoginViewModel(
 
             _googleLogInState.value = GoogleLogInState.Idle
             _existAccountState.value = null
-
-            Log.d("LoginViewModel", "Đã đăng xuất Google")
         }
     }
 
@@ -350,7 +296,6 @@ class LoginViewModel(
                     is ApiResult.Failure -> {
                         val errorMsg = parseErrorMessage(result.exception.message)
                         _logInState.value = LogInState.Error(errorMsg, "LOGIN_FAILED")
-                        Log.e("LoginViewModel", "Login error", result.exception)
                     }
                 }
             } catch (e: Exception) {
@@ -358,7 +303,6 @@ class LoginViewModel(
                     "Lỗi hệ thống: ${e.message ?: "Vui lòng thử lại sau"}",
                     "SYSTEM_ERROR"
                 )
-                Log.e("LoginViewModel", "Login exception", e)
             }
         }
     }
@@ -368,7 +312,6 @@ class LoginViewModel(
             if (isSuccessful) {
                 if (!idToken.isNullOrEmpty()) {
                     authManager.saveFirebaseToken(idToken)
-                    Log.d("LoginViewModel", "✅ Đã lưu Firebase ID Token")
                 }
 
                 _logInState.value = LogInState.Success(
@@ -378,11 +321,6 @@ class LoginViewModel(
                     role = userInfo.role
                 )
                 _existAccountState.value = true
-
-                Log.d("LoginViewModel", "✅ Đăng nhập thành công")
-                Log.d("LoginViewModel", "User ID: ${userInfo.id}")
-                Log.d("LoginViewModel", "Email: ${userInfo.email}")
-                Log.d("LoginViewModel", "Role: ${userInfo.role}")
             } else {
                 // Vẫn coi là thành công vì đã có user info
                 _logInState.value = LogInState.Success(
@@ -393,7 +331,6 @@ class LoginViewModel(
                 )
                 _existAccountState.value = true
 
-                Log.w("LoginViewModel", "⚠ Không thể sign in Firebase: $error")
             }
         }
     }

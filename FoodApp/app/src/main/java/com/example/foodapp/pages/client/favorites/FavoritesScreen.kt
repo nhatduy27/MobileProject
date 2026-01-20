@@ -25,7 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.foodapp.pages.client.components.UserBottomNav
+import com.example.foodapp.pages.client.components.home.UserBottomNav
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,7 +98,7 @@ fun FavoritesScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            when (val state = favoritesState) { // Gán vào biến 'state' để Kotlin tự hiểu kiểu dữ liệu (Smart Cast)
+            when (val state = favoritesState) {
                 is FavoritesState.Loading -> {
                     LoadingContent()
                 }

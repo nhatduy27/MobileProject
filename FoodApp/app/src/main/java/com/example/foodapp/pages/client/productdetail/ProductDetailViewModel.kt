@@ -1,4 +1,3 @@
-// ProductDetailViewModel.kt
 package com.example.foodapp.pages.client.productdetail
 
 import android.content.Context
@@ -9,7 +8,8 @@ import com.example.foodapp.data.remote.api.ApiClient
 import com.example.foodapp.data.model.shared.product.Product
 import com.example.foodapp.data.remote.client.response.product.ApiResult
 import com.example.foodapp.data.remote.client.response.product.FavoriteResponse
-import com.example.foodapp.data.repository.client.products.*
+import com.example.foodapp.data.repository.client.products.ProductRepository
+import com.example.foodapp.data.repository.client.cart.CartRepository
 import kotlinx.coroutines.launch
 
 // State cho màn hình chi tiết sản phẩm
@@ -28,8 +28,17 @@ sealed class FavoriteState {
     data class Error(val message: String) : FavoriteState()
 }
 
+// State cho thêm vào giỏ hàng
+sealed class AddToCartState {
+    object Idle : AddToCartState()
+    object Loading : AddToCartState()
+    data class Success(val message: String) : AddToCartState()
+    data class Error(val message: String) : AddToCartState()
+}
+
 class ProductDetailViewModel(
-    private val productRepository: ProductRepository
+    private val productRepository: ProductRepository,
+    private val cartRepository: CartRepository
 ) : ViewModel() {
 
     private val _productDetailState = MutableLiveData<ProductDetailState>(ProductDetailState.Idle)
@@ -38,11 +47,40 @@ class ProductDetailViewModel(
     private val _favoriteState = MutableLiveData<FavoriteState>(FavoriteState.Idle)
     val favoriteState: LiveData<FavoriteState> = _favoriteState
 
+    private val _addToCartState = MutableLiveData<AddToCartState>(AddToCartState.Idle)
+    val addToCartState: LiveData<AddToCartState> = _addToCartState
+
     private val _product = MutableLiveData<Product?>(null)
     val product: LiveData<Product?> = _product
 
-    // Lấy chi tiết sản phẩm
-    // ProductDetailViewModel.kt - trong hàm getProductDetail
+    private val _quantity = MutableLiveData<Int>(1)
+    val quantity: LiveData<Int> = _quantity
+
+    // ============== QUANTITY FUNCTIONS ==============
+
+    fun increaseQuantity() {
+        val current = _quantity.value ?: 1
+        val maxQuantity = _product.value?.let { if (it.isAvailable) 99 else 0 } ?: 99
+        if (current < maxQuantity) {
+            _quantity.value = current + 1
+        }
+    }
+
+    fun decreaseQuantity() {
+        val current = _quantity.value ?: 1
+        if (current > 1) {
+            _quantity.value = current - 1
+        }
+    }
+
+    fun setQuantity(newQuantity: Int) {
+        val maxQuantity = _product.value?.let { if (it.isAvailable) 99 else 0 } ?: 99
+        val validQuantity = newQuantity.coerceIn(1, maxQuantity)
+        _quantity.value = validQuantity
+    }
+
+    // ============== PRODUCT DETAIL FUNCTIONS ==============
+
     fun getProductDetail(productId: String) {
         if (productId.isBlank()) {
             _productDetailState.value = ProductDetailState.Error("ID sản phẩm không hợp lệ")
@@ -50,6 +88,7 @@ class ProductDetailViewModel(
         }
 
         _productDetailState.value = ProductDetailState.Loading
+        _quantity.value = 1 // Reset quantity khi load sản phẩm mới
 
         viewModelScope.launch {
             try {
@@ -114,6 +153,8 @@ class ProductDetailViewModel(
             }
         }
     }
+
+    // ============== FAVORITE FUNCTIONS ==============
 
     // Thêm sản phẩm vào danh sách yêu thích
     fun addToFavorites(productId: String) {
@@ -287,16 +328,85 @@ class ProductDetailViewModel(
         }
     }
 
+    // ============== CART FUNCTIONS ==============
+
+    // Thêm vào giỏ hàng
+    fun addToCart() {
+        val currentProduct = _product.value
+        val currentQuantity = _quantity.value ?: 1
+
+        if (currentProduct == null) {
+            _addToCartState.value = AddToCartState.Error("Không tìm thấy thông tin sản phẩm")
+            return
+        }
+
+        if (!currentProduct.isAvailable) {
+            _addToCartState.value = AddToCartState.Error("Sản phẩm đã hết hàng")
+            return
+        }
+
+        if (_addToCartState.value == AddToCartState.Loading) {
+            return
+        }
+
+        _addToCartState.value = AddToCartState.Loading
+
+        viewModelScope.launch {
+            try {
+                val result = cartRepository.addToCart(currentProduct.id, currentQuantity)
+
+                when (result) {
+                    is com.example.foodapp.data.remote.client.response.cart.CartApiResult.Success -> {
+                        val response = result.data
+                        if (response.success) {
+                            _addToCartState.value = AddToCartState.Success("Đã thêm vào giỏ hàng")
+                        } else {
+                            _addToCartState.value = AddToCartState.Error("Không thể thêm vào giỏ hàng")
+                        }
+                    }
+                    is com.example.foodapp.data.remote.client.response.cart.CartApiResult.Failure -> {
+                        val errorMessage = result.exception.message ?: "Lỗi không xác định"
+
+                        // Xử lý các lỗi đặc biệt
+                        when {
+                            errorMessage.contains("đăng nhập", ignoreCase = true) ||
+                                    errorMessage.contains("login", ignoreCase = true) ||
+                                    errorMessage.contains("401", ignoreCase = true) -> {
+                                _addToCartState.value = AddToCartState.Error("Vui lòng đăng nhập để thêm vào giỏ hàng")
+                            }
+                            errorMessage.contains("hết hàng", ignoreCase = true) ||
+                                    errorMessage.contains("out of stock", ignoreCase = true) -> {
+                                _addToCartState.value = AddToCartState.Error("Sản phẩm đã hết hàng")
+                            }
+                            else -> {
+                                _addToCartState.value = AddToCartState.Error(errorMessage)
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                _addToCartState.value = AddToCartState.Error("Lỗi: ${e.message ?: "Không xác định"}")
+            }
+        }
+    }
+
+    // Reset state add to cart
+    fun resetAddToCartState() {
+        _addToCartState.value = AddToCartState.Idle
+    }
+
     // Reset state favorite
     fun resetFavoriteState() {
         _favoriteState.value = FavoriteState.Idle
     }
 
-    // Reset state
+    // Reset tất cả state
     fun reset() {
         _productDetailState.value = ProductDetailState.Idle
         _favoriteState.value = FavoriteState.Idle
+        _addToCartState.value = AddToCartState.Idle
         _product.value = null
+        _quantity.value = 1
     }
 
     companion object {
@@ -306,8 +416,9 @@ class ProductDetailViewModel(
         fun factory(context: Context) = viewModelFactory {
             initializer {
                 val apiService = ApiClient.productApiService
-                val productRepository = ProductRepository(apiService)
-                ProductDetailViewModel(productRepository)
+                val productRepository = ProductRepository()
+                val cartRepository = CartRepository()
+                ProductDetailViewModel(productRepository, cartRepository)
             }
         }
     }

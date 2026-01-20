@@ -32,7 +32,7 @@ import com.example.foodapp.pages.client.productdetail.UserProductDetailScreen
 import com.example.foodapp.pages.client.setting.SettingsScreen
 import com.example.foodapp.authentication.otpverification.OtpVerificationScreen
 import com.example.foodapp.authentication.signup.SignUpScreen
-import com.example.foodapp.presentation.view.user.home.UserHomeScreen
+import com.example.foodapp.pages.client.home.UserHomeScreen
 import com.example.foodapp.pages.client.cart.CartScreen
 import com.example.foodapp.pages.client.favorites.FavoritesScreen
 import com.example.foodapp.pages.client.notifications.UserNotificationsScreen

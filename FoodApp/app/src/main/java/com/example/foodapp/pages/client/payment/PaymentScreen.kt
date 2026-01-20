@@ -47,7 +47,6 @@ fun PaymentScreen(
     )
 
     LaunchedEffect(product) {
-        println("DEBUG: [PaymentScreen] Initializing ViewModel with product: ${product.name}")
         viewModel.initializeWithProduct(product)
     }
 
@@ -75,7 +74,6 @@ fun PaymentScreen(
             ) {
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Section 1: Thông tin giao hàng
                 DeliveryInfoSection(
                     deliveryAddress = "123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh",
                     onChangeAddress = { }

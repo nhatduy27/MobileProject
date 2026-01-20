@@ -7,6 +7,7 @@ import com.example.foodapp.data.remote.shared.AuthApiService
 import com.example.foodapp.data.remote.shared.OtpApiService
 import com.example.foodapp.data.remote.client.ProfileApiService
 import com.example.foodapp.data.remote.client.ProductApiService
+import com.example.foodapp.data.remote.client.CartApiService
 import  com.example.foodapp.data.remote.shared.CategoryService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -72,9 +73,9 @@ object ApiClient {
 
                 if (!token.isNullOrEmpty()) {
                     requestBuilder.addHeader("Authorization", "Bearer $token")
-                    Log.d("ApiClient", "✅ Đã thêm Authorization header")
+                    Log.d("ApiClient", "Đã thêm Authorization header")
                 } else {
-                    Log.w("ApiClient", "⚠ Không có token để thêm vào header")
+                    Log.w("ApiClient", "Không có token để thêm vào header")
                 }
 
                 chain.proceed(requestBuilder.build())
@@ -103,4 +104,6 @@ object ApiClient {
     val categoryApiService: CategoryService by lazy {
         retrofit.create(CategoryService::class.java)
     }
+
+    val cartApiService: CartApiService by lazy { retrofit.create(CartApiService::class.java) }
 }

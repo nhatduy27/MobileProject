@@ -7,46 +7,29 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
 import com.example.foodapp.data.repository.shared.AuthRepository
 import com.example.foodapp.data.repository.firebase.AuthManager
 import com.example.foodapp.data.model.shared.auth.ApiResult
 import kotlinx.coroutines.launch
 
-sealed class SignUpState {
-    object Idle : SignUpState()
-    object Loading : SignUpState()
-    object Success : SignUpState()
-    data class Error(val message: String) : SignUpState()
-}
-
-sealed class ValidationResult {
-    object Success : ValidationResult()
-    data class Error(val message: String) : ValidationResult()
-}
-
 class SignUpViewModel(
-    private val repository: UserFirebaseRepository,
     private val authRepository: AuthRepository,
     private val context: Context
 ) : ViewModel() {
 
     // Thêm AuthManager
     private val authManager = AuthManager(context)
-
     private val _signUpState = MutableLiveData<SignUpState>(SignUpState.Idle)
     val signUpState: LiveData<SignUpState> = _signUpState
 
     private val _saveUserState = MutableLiveData<Boolean?>(null)
     val saveUserState: LiveData<Boolean?> = _saveUserState
     fun registerWithEmail(displayName: String, email: String, password: String, confirmPassword: String) {
-        // Validate input
         val validationResult = validateInput(displayName, email, password, confirmPassword)
         if (validationResult is ValidationResult.Error) {
             _signUpState.value = SignUpState.Error(validationResult.message)
             return
         }
-
         viewModelScope.launch {
             _signUpState.value = SignUpState.Loading
             try {
@@ -55,7 +38,6 @@ class SignUpViewModel(
 
                 when (result) {
                     is ApiResult.Success -> {
-                        // result.data bây giờ là AuthData (không phải ApiResponse nữa)
                         val authData = result.data
 
                         // Kiểm tra nếu authData hợp lệ
@@ -79,42 +61,31 @@ class SignUpViewModel(
                                             // SỬA: Dùng AuthManager để lưu token với expiry time
                                             authManager.saveFirebaseToken(idToken)
 
-                                            Log.d("SignUpViewModel", "✅ Đăng ký & lưu token thành công")
-                                            Log.d("SignUpViewModel", "User ID: ${userInfo.id}")
-                                            Log.d("SignUpViewModel", "Email: ${userInfo.email}")
-                                            Log.d("SignUpViewModel", "Role: ${userInfo.role}")
-
                                             // Debug: In thông tin token
                                             authManager.debugTokenInfo()
 
                                             _signUpState.postValue(SignUpState.Success)
                                         } else {
-                                            Log.w("SignUpViewModel", "⚠ Firebase ID Token trống")
                                             _signUpState.postValue(SignUpState.Success) // Vẫn success vì đã có user info
                                         }
                                     } else {
-                                        Log.w("SignUpViewModel", "⚠ Không thể sign in Firebase: $error")
                                         _signUpState.postValue(SignUpState.Success) // Vẫn success vì đã có user info
                                     }
                                 }
                             } else {
-                                Log.w("SignUpViewModel", "⚠ Custom token trống từ backend")
                                 _signUpState.value = SignUpState.Success // Đã có user info từ API
                             }
                         } else {
-                            Log.e("SignUpViewModel", "❌ AuthData không hợp lệ")
                             _signUpState.value = SignUpState.Error("Dữ liệu người dùng không hợp lệ")
                         }
                     }
 
                     is ApiResult.Failure -> {
-                        Log.e("SignUpViewModel", "❌ Repository error", result.exception)
                         val errorMsg = result.exception.message ?: "Đăng ký thất bại"
                         _signUpState.value = SignUpState.Error(errorMsg)
                     }
                 }
             } catch (e: Exception) {
-                Log.e("SignUpViewModel", "❌ Exception: ${e.message}", e)
                 _signUpState.value = SignUpState.Error("Lỗi không xác định: ${e.message}")
             }
         }
@@ -143,7 +114,6 @@ class SignUpViewModel(
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     return SignUpViewModel(
-                        UserFirebaseRepository(context),
                         AuthRepository(),
                         context
                     ) as T

@@ -13,7 +13,6 @@ import kotlinx.coroutines.launch
 
 class OrdersViewModel : ViewModel() {
 
-    // ✅ SỬ DỤNG DI - Lấy repository từ RepositoryProvider
     private val repository = RepositoryProvider.getOrdersRepository()
 
     private val _uiState = MutableStateFlow(OrderUiState())

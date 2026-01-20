@@ -15,14 +15,6 @@ import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-sealed class OtpVerificationState {
-    object Idle : OtpVerificationState()
-    object LoadingEmail : OtpVerificationState()
-    object Sending : OtpVerificationState()
-    object Verifying : OtpVerificationState()
-    object Success : OtpVerificationState()
-    data class Error(val message: String) : OtpVerificationState()
-}
 
 class OtpVerificationViewModel(
     private val userRepository: UserFirebaseRepository,

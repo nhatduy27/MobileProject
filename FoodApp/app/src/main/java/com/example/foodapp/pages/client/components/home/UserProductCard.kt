@@ -1,4 +1,4 @@
-package com.example.foodapp.pages.client.components
+package com.example.foodapp.pages.client.components.home
 
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow

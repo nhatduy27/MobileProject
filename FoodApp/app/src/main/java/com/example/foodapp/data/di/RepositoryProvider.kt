@@ -58,7 +58,6 @@ object RepositoryProvider {
             MockShipperHomeRepository()
         } else {
             // TODO: Khi backend ready, uncomment dòng dưới
-            // RealShipperHomeRepository(getApiService())
             MockShipperHomeRepository()  // Tạm thời vẫn dùng Mock
         }
     }

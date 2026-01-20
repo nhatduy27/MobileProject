@@ -34,7 +34,6 @@ fun RoleSelectionScreen(
     val auth = FirebaseAuth.getInstance()
     val repository = UserFirebaseRepository(context)
 
-    // Tự động xóa lỗi sau 3 giây
     LaunchedEffect(errorMessage) {
         if (errorMessage != null) {
             delay(3000)
@@ -74,7 +73,6 @@ fun RoleSelectionScreen(
             )
         }
 
-        // Danh sách các vai trò (Không dùng Icon)
         // Role values phải khớp với backend UserRole enum: CUSTOMER, OWNER, SHIPPER
         val roles = listOf(
             Triple("CUSTOMER", "Người dùng", "Đặt món và đánh giá nhà hàng"),

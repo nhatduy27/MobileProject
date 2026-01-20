@@ -14,20 +14,6 @@ import com.example.foodapp.data.remote.client.response.product.toProductList
 import com.example.foodapp.data.repository.client.products.ProductRepository
 import kotlinx.coroutines.launch
 
-// Sealed class cho các trạng thái
-sealed class FavoritesState {
-    object Idle : FavoritesState()
-    object Loading : FavoritesState()
-    data class Success(val products: List<Product>) : FavoritesState()
-    data class Error(val message: String) : FavoritesState()
-}
-
-sealed class RemoveFavoriteState {
-    object Idle : RemoveFavoriteState()
-    object Loading : RemoveFavoriteState()
-    data class Success(val message: String) : RemoveFavoriteState()
-    data class Error(val message: String) : RemoveFavoriteState()
-}
 
 class FavoritesViewModel(
     private val productRepository: ProductRepository
@@ -177,7 +163,7 @@ class FavoritesViewModel(
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(FavoritesViewModel::class.java)) {
                 val apiService = ApiClient.productApiService
-                val productRepository = ProductRepository(apiService)
+                val productRepository = ProductRepository()
                 return FavoritesViewModel(productRepository) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")

@@ -1,24 +1,30 @@
 package com.example.foodapp.authentication.signup
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -35,11 +41,9 @@ fun SignUpScreen(
         factory = SignUpViewModel.factory(context)
     )
 
-    // Observe ViewModel states
     val signUpState by viewModel.signUpState.observeAsState(SignUpState.Idle)
     val saveUserState by viewModel.saveUserState.observeAsState(null)
 
-    // Navigate on success
     LaunchedEffect(signUpState) {
         if (signUpState is SignUpState.Success) {
             onSignUpSuccess()
@@ -52,7 +56,6 @@ fun SignUpScreen(
         }
     }
 
-    // UI Content
     SignUpContent(
         signUpState = signUpState,
         onRegisterClick = { fullName, email, password, confirmPassword ->
@@ -74,7 +77,6 @@ fun SignUpContent(
     onLoginClicked: () -> Unit,
     onBackClicked: () -> Unit
 ) {
-    // Local UI State
     var fullName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -83,240 +85,434 @@ fun SignUpContent(
     var confirmPasswordVisible by remember { mutableStateOf(false) }
     var validationError by remember { mutableStateOf<String?>(null) }
 
-    // Derived state từ ViewModel
     val isLoading = signUpState is SignUpState.Loading
     val isSuccess = signUpState is SignUpState.Success
     val serverErrorMessage = (signUpState as? SignUpState.Error)?.message
-
-    // Display error
     val displayError = validationError ?: serverErrorMessage
 
-    // Reset validation error khi input thay đổi
     LaunchedEffect(fullName, email, password, confirmPassword) {
         if (validationError != null) {
             validationError = null
         }
     }
 
-    Column(
+    // Gradient background
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White)
-            .verticalScroll(rememberScrollState())
-            .padding(24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Back Button
-        Row(modifier = Modifier.fillMaxWidth()) {
-            IconButton(
-                onClick = {
-                    onBackClicked()
-                },
-                enabled = !isLoading
-            ) {
-                Text(
-                    "←",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        Color(0xFFFFF8F0),
+                        Color(0xFFFFFFFF),
+                        Color(0xFFFFF5EB)
+                    )
                 )
-            }
-        }
-
-        // Title
-        Text(
-            "Tạo tài khoản",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(top = 20.dp)
-        )
-
-        // Error Message
-        if (displayError != null) {
-            Text(
-                text = displayError,
-                color = Color.Red,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-                    .background(Color(0x1AFF0000), RoundedCornerShape(8.dp))
-                    .padding(12.dp),
-                fontSize = 14.sp
             )
-        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(40.dp))
 
-        // TextField Colors
-        val textFieldColors = TextFieldDefaults.colors(
-            focusedContainerColor = Color(0xFFFAFAFA),
-            unfocusedContainerColor = Color(0xFFFAFAFA),
-            disabledContainerColor = Color(0xFFF0F0F0),
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent
-        )
-
-        // Input Fields
-        SignUpTextField(
-            value = fullName,
-            onValueChange = { fullName = it },
-            placeholder = "Họ và tên",
-            enabled = !isLoading,
-            colors = textFieldColors
-        )
-
-        SignUpTextField(
-            value = email,
-            onValueChange = { email = it },
-            placeholder = "Email",
-            enabled = !isLoading,
-            colors = textFieldColors,
-            keyboardType = KeyboardType.Email
-        )
-
-        SignUpTextField(
-            value = password,
-            onValueChange = { password = it },
-            placeholder = "Mật khẩu (ít nhất 6 ký tự)",
-            enabled = !isLoading,
-            isPassword = true,
-            isVisible = passwordVisible,
-            onToggleVisibility = { passwordVisible = !passwordVisible },
-            colors = textFieldColors
-        )
-
-        SignUpTextField(
-            value = confirmPassword,
-            onValueChange = { confirmPassword = it },
-            placeholder = "Xác nhận mật khẩu",
-            enabled = !isLoading,
-            isPassword = true,
-            isVisible = confirmPasswordVisible,
-            onToggleVisibility = { confirmPasswordVisible = !confirmPasswordVisible },
-            colors = textFieldColors
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Register Button
-        Button(
-            onClick = {
-                // Validate input
-                when {
-                    fullName.isBlank() -> validationError = "Vui lòng nhập họ và tên"
-                    fullName.length < 2 -> validationError = "Tên phải có ít nhất 2 ký tự"
-                    email.isBlank() -> validationError = "Vui lòng nhập email"
-                    !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
-                        validationError = "Email không hợp lệ"
-                    password.isBlank() -> validationError = "Vui lòng nhập mật khẩu"
-                    password.length < 6 -> validationError = "Mật khẩu phải có ít nhất 6 ký tự"
-                    password != confirmPassword -> validationError = "Mật khẩu xác nhận không khớp"
-                    else -> {
-                        validationError = null
-                        onRegisterClick(fullName, email, password, confirmPassword)
+            // Back Button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .clickable(enabled = !isLoading) { onBackClicked() },
+                    color = Color.White,
+                    shadowElevation = 4.dp
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Back",
+                            tint = PrimaryOrange
+                        )
                     }
                 }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (isSuccess) Color(0xFF4CAF50) else PrimaryOrange,
-                disabledContainerColor = PrimaryOrange.copy(alpha = 0.5f)
-            ),
-            shape = RoundedCornerShape(28.dp),
-            enabled = !isLoading
-        ) {
-            if (isLoading && signUpState is SignUpState.Loading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                    color = Color.White
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Đang xử lý...", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            } else if (isSuccess) {
-                Text("Thành công!", fontSize = 16.sp, fontWeight = FontWeight.Bold)
-            } else {
-                Text("Đăng ký", fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
-        }
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-        // Login Link
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Bạn đã có tài khoản? ",
-                color = Color(0xFF666666),
-                fontSize = 14.sp
-            )
-            Text(
-                text = "Đăng nhập",
-                color = PrimaryOrange,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .clickable(enabled = !isLoading) {
-                        onLoginClicked()
+            // Header Section
+            AnimatedVisibility(
+                visible = true,
+                enter = fadeIn() + slideInVertically()
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // Icon
+                    Surface(
+                        modifier = Modifier.size(80.dp),
+                        shape = CircleShape,
+                        color = PrimaryOrange.copy(alpha = 0.1f)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.PersonAdd,
+                                contentDescription = null,
+                                tint = PrimaryOrange,
+                                modifier = Modifier.size(40.dp)
+                            )
+                        }
                     }
-                    .padding(vertical = 4.dp, horizontal = 2.dp)
-            )
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    Text(
+                        text = "Tạo tài khoản mới",
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF2D2D2D)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = "Điền thông tin để bắt đầu",
+                        fontSize = 16.sp,
+                        color = Color(0xFF666666),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // Error Message
+            AnimatedVisibility(
+                visible = displayError != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color(0xFFFFEBEE)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Error,
+                            contentDescription = null,
+                            tint = Color(0xFFD32F2F),
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = displayError ?: "",
+                            color = Color(0xFFD32F2F),
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Input Fields
+            ModernSignUpTextField(
+                value = fullName,
+                onValueChange = { fullName = it },
+                label = "Họ và tên",
+                leadingIcon = Icons.Default.Person,
+                enabled = !isLoading
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ModernSignUpTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = "Email",
+                leadingIcon = Icons.Default.Email,
+                enabled = !isLoading,
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ModernSignUpTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = "Mật khẩu (ít nhất 6 ký tự)",
+                leadingIcon = Icons.Default.Lock,
+                enabled = !isLoading,
+                isPassword = true,
+                isVisible = passwordVisible,
+                onToggleVisibility = { passwordVisible = !passwordVisible },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Next
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ModernSignUpTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = "Xác nhận mật khẩu",
+                leadingIcon = Icons.Default.LockClock,
+                enabled = !isLoading,
+                isPassword = true,
+                isVisible = confirmPasswordVisible,
+                onToggleVisibility = { confirmPasswordVisible = !confirmPasswordVisible },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                )
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Password Requirements
+            if (password.isNotEmpty() && !isSuccess) {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.White.copy(alpha = 0.7f),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        Color(0xFFE0E0E0)
+                    )
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            "Yêu cầu mật khẩu:",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF666666)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        PasswordRequirement(
+                            text = "Ít nhất 6 ký tự",
+                            isMet = password.length >= 6
+                        )
+                        PasswordRequirement(
+                            text = "Mật khẩu khớp nhau",
+                            isMet = password == confirmPassword && confirmPassword.isNotEmpty()
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            // Register Button
+            Button(
+                onClick = {
+                    when {
+                        fullName.isBlank() -> validationError = "Vui lòng nhập họ và tên"
+                        fullName.length < 2 -> validationError = "Tên phải có ít nhất 2 ký tự"
+                        email.isBlank() -> validationError = "Vui lòng nhập email"
+                        !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
+                            validationError = "Email không hợp lệ"
+                        password.isBlank() -> validationError = "Vui lòng nhập mật khẩu"
+                        password.length < 6 -> validationError = "Mật khẩu phải có ít nhất 6 ký tự"
+                        password != confirmPassword -> validationError = "Mật khẩu xác nhận không khớp"
+                        else -> {
+                            validationError = null
+                            onRegisterClick(fullName, email, password, confirmPassword)
+                        }
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .shadow(
+                        elevation = if (!isLoading && !isSuccess) 8.dp else 0.dp,
+                        shape = RoundedCornerShape(28.dp)
+                    ),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isSuccess) Color(0xFF4CAF50) else PrimaryOrange,
+                    disabledContainerColor = PrimaryOrange.copy(alpha = 0.5f)
+                ),
+                shape = RoundedCornerShape(28.dp),
+                enabled = !isLoading
+            ) {
+                when {
+                    isLoading && signUpState is SignUpState.Loading -> {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                            color = Color.White
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("Đang xử lý...", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
+                    isSuccess -> {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Thành công!", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    }
+                    else -> Text("Đăng ký", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Divider
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    thickness = 1.dp,
+                    color = Color(0xFFE0E0E0)
+                )
+                Text(
+                    "hoặc",
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = Color(0xFF999999),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium
+                )
+                HorizontalDivider(
+                    modifier = Modifier.weight(1f),
+                    thickness = 1.dp,
+                    color = Color(0xFFE0E0E0)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Login Link
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Đã có tài khoản? ",
+                    color = Color(0xFF666666),
+                    fontSize = 15.sp
+                )
+                Text(
+                    text = "Đăng nhập ngay",
+                    color = PrimaryOrange,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier
+                        .clickable(enabled = !isLoading) { onLoginClicked() }
+                        .padding(4.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(40.dp))
+        }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SignUpTextField(
+fun ModernSignUpTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    placeholder: String,
+    label: String,
+    leadingIcon: androidx.compose.ui.graphics.vector.ImageVector,
     enabled: Boolean = true,
     isPassword: Boolean = false,
     isVisible: Boolean = false,
     onToggleVisibility: () -> Unit = {},
-    keyboardType: KeyboardType = KeyboardType.Text,
-    colors: TextFieldColors
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default
 ) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        enabled = enabled,
-        placeholder = { Text(placeholder, color = Color.Gray) },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 16.dp),
-        shape = RoundedCornerShape(12.dp),
-        colors = colors,
-        visualTransformation = if (isPassword && !isVisible)
-            PasswordVisualTransformation()
-        else
-            VisualTransformation.None,
-        trailingIcon = if (isPassword) {
-            {
-                IconButton(
-                    onClick = onToggleVisibility,
-                    enabled = enabled
-                ) {
-                    Icon(
-                        imageVector = if (isVisible)
-                            Icons.Default.VisibilityOff
-                        else
-                            Icons.Default.Visibility,
-                        contentDescription = if (isVisible) "Ẩn mật khẩu" else "Hiện mật khẩu",
-                        tint = if (enabled) Color.Gray else Color.LightGray
-                    )
+    val visualTransformation = if (isPassword && !isVisible) {
+        PasswordVisualTransformation()
+    } else {
+        VisualTransformation.None
+    }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.White,
+        shadowElevation = if (enabled) 2.dp else 0.dp
+    ) {
+        TextField(
+            value = value,
+            onValueChange = onValueChange,
+            enabled = enabled,
+            label = { Text(label, color = Color(0xFF999999)) },
+            leadingIcon = {
+                Icon(
+                    imageVector = leadingIcon,
+                    contentDescription = null,
+                    tint = if (value.isNotEmpty()) PrimaryOrange else Color(0xFFCCCCCC)
+                )
+            },
+            trailingIcon = if (isPassword) {
+                {
+                    IconButton(
+                        onClick = onToggleVisibility,
+                        enabled = enabled
+                    ) {
+                        Icon(
+                            imageVector = if (isVisible) Icons.Default.VisibilityOff
+                            else Icons.Default.Visibility,
+                            contentDescription = if (isVisible) "Ẩn" else "Hiện",
+                            tint = if (enabled) Color(0xFF999999) else Color(0xFFCCCCCC)
+                        )
+                    }
                 }
-            }
-        } else null,
-        singleLine = true,
-        keyboardOptions = KeyboardOptions(
-            keyboardType = keyboardType,
-            imeAction = ImeAction.Next
+            } else null,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                disabledContainerColor = Color(0xFFF5F5F5),
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+                focusedLabelColor = PrimaryOrange,
+                unfocusedLabelColor = Color(0xFF999999)
+            ),
+            visualTransformation = visualTransformation,
+            singleLine = true,
+            keyboardOptions = keyboardOptions
         )
-    )
+    }
+}
+
+@Composable
+fun PasswordRequirement(
+    text: String,
+    isMet: Boolean
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 4.dp)
+    ) {
+        Icon(
+            imageVector = if (isMet) Icons.Default.CheckCircle else Icons.Default.RadioButtonUnchecked,
+            contentDescription = null,
+            tint = if (isMet) Color(0xFF4CAF50) else Color(0xFFCCCCCC),
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = text,
+            fontSize = 13.sp,
+            color = if (isMet) Color(0xFF4CAF50) else Color(0xFF666666)
+        )
+    }
 }

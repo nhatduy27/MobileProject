@@ -311,7 +311,7 @@ class HomeViewModel(
             initializer {
                 val userRepository = UserFirebaseRepository(context)
                 val apiService = ApiClient.productApiService
-                val productRepository = ProductRepository(apiService)
+                val productRepository = ProductRepository()
                 val categoryRepository = CategoryRepository()
                 HomeViewModel(userRepository, productRepository, categoryRepository)
             }
