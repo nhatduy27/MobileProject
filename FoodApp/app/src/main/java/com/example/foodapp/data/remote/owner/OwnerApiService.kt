@@ -25,12 +25,8 @@ interface OwnerApiService {
     // @GET("api/owner/dashboard")
     // suspend fun getDashboardData(): DashboardResponse
     
-    /**
-     * Lấy danh sách đơn hàng
-     * Endpoint: GET /api/owner/orders
-     */
-    // @GET("api/owner/orders")
-    suspend fun getOrders(): OrdersResponse
+    // Orders are now handled by OrderApiService
+    
     
     /**
      * Lấy danh sách món ăn

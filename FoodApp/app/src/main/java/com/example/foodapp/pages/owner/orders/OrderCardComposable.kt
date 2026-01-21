@@ -5,14 +5,20 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.foodapp.data.model.owner.Order
+import com.example.foodapp.data.model.owner.order.ShopOrder
+import com.example.foodapp.data.model.owner.order.ShopOrderStatus
+import com.example.foodapp.data.model.owner.order.PaymentStatus
 
 @Composable
 fun OrderFilterChip(text: String, isSelected: Boolean, onClick: () -> Unit) {
@@ -24,19 +30,18 @@ fun OrderFilterChip(text: String, isSelected: Boolean, onClick: () -> Unit) {
         ),
         border = if (!isSelected) ButtonDefaults.outlinedButtonBorder else null,
         shape = RoundedCornerShape(20.dp),
-        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-        modifier = Modifier.height(40.dp)
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        modifier = Modifier.height(36.dp)
     ) {
-        Text(text = text, fontSize = 13.sp)
+        Text(text = text, fontSize = 12.sp)
     }
 }
 
 @Composable
 fun OrderStatCard(title: String, value: String, color: Color, modifier: Modifier = Modifier) {
     Card(
-        // Style đồng nhất với StatCard (Food/Customer)
-        modifier = modifier.size(width = 145.dp, height = 110.dp),
-        shape = RoundedCornerShape(24.dp),
+        modifier = modifier.size(width = 110.dp, height = 90.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = color.copy(alpha = 0.15f)
         ),
@@ -45,20 +50,21 @@ fun OrderStatCard(title: String, value: String, color: Color, modifier: Modifier
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .padding(12.dp),
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.Start
         ) {
             Text(
                 text = title,
-                fontSize = 14.sp,
+                fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
-                color = color.copy(alpha = 0.8f)
+                color = color.copy(alpha = 0.8f),
+                maxLines = 1
             )
 
             Text(
                 text = value,
-                fontSize = 30.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
                 color = color,
                 letterSpacing = (-0.5).sp
@@ -67,48 +73,217 @@ fun OrderStatCard(title: String, value: String, color: Color, modifier: Modifier
     }
 }
 
+/**
+ * Get status color
+ */
+fun getStatusColor(status: ShopOrderStatus): Color {
+    return when (status) {
+        ShopOrderStatus.PENDING -> Color(0xFFFFA500)    // Orange
+        ShopOrderStatus.CONFIRMED -> Color(0xFF2196F3)  // Blue
+        ShopOrderStatus.PREPARING -> Color(0xFF9C27B0)  // Purple
+        ShopOrderStatus.READY -> Color(0xFF4CAF50)      // Green
+        ShopOrderStatus.SHIPPING -> Color(0xFF00BCD4)   // Cyan
+        ShopOrderStatus.DELIVERED -> Color(0xFF607D8B)  // Grey
+        ShopOrderStatus.CANCELLED -> Color(0xFFF44336) // Red
+    }
+}
+
+/**
+ * Get payment status color
+ */
+fun getPaymentStatusColor(status: PaymentStatus): Color {
+    return when (status) {
+        PaymentStatus.UNPAID -> Color(0xFFF44336)      // Red
+        PaymentStatus.PROCESSING -> Color(0xFFFFA500)  // Orange
+        PaymentStatus.PAID -> Color(0xFF4CAF50)        // Green
+        PaymentStatus.REFUNDED -> Color(0xFF9E9E9E)    // Grey
+    }
+}
+
 @Composable
 fun OrderCard(
-    order: Order,
-    onClick: () -> Unit = {}
+    order: ShopOrder,
+    onClick: () -> Unit = {},
+    onActionClick: ((String) -> Unit)? = null
 ) {
+    val statusColor = getStatusColor(order.status)
+    
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp),
         onClick = onClick
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(order.id, fontSize = 16.sp)
-                // Badge trạng thái pastel giống Food/Customer
-                val statusColor = order.status.color
+            // Header: Order number + Status badge
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = order.orderNumber,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color(0xFF1A1A1A)
+                )
                 Surface(
                     color = statusColor.copy(alpha = 0.1f),
                     shape = RoundedCornerShape(50)
                 ) {
                     Text(
                         text = order.status.displayName,
-                        fontSize = 12.sp,
+                        fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
                         color = statusColor,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                     )
                 }
             }
 
-            Row(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
-                Icon(Icons.Default.LocationOn, contentDescription = null, tint = Color(0xFF757575), modifier = Modifier.size(20.dp))
-                Text("${order.customerName} - ${order.location}", fontSize = 14.sp, modifier = Modifier.padding(start = 8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Customer info
+            order.customer?.let { customer ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = Color(0xFF757575),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = customer.displayName ?: "Khách hàng",
+                        fontSize = 14.sp,
+                        color = Color(0xFF333333),
+                        fontWeight = FontWeight.Medium
+                    )
+                    customer.phone?.let { phone ->
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Icon(
+                            Icons.Default.Phone,
+                            contentDescription = null,
+                            tint = Color(0xFF757575),
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = phone,
+                            fontSize = 13.sp,
+                            color = Color(0xFF666666)
+                        )
+                    }
+                }
             }
 
-            Text(order.items, fontSize = 14.sp, modifier = Modifier.padding(top = 8.dp))
-            Divider(modifier = Modifier.padding(vertical = 12.dp), color = Color(0xFFE0E0E0))
+            // Delivery address
+            order.deliveryAddress?.let { address ->
+                Spacer(modifier = Modifier.height(6.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Icon(
+                        Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = Color(0xFF757575),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = address.getDisplayAddress(),
+                        fontSize = 13.sp,
+                        color = Color(0xFF666666),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
 
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(order.time, fontSize = 13.sp, color = Color(0xFF999999))
-                Text("${"%,d".format(order.price)}đ", fontSize = 18.sp, color = Color(0xFFFF6B35))
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Items preview
+            Text(
+                text = order.getItemsDisplayText(),
+                fontSize = 13.sp,
+                color = Color(0xFF555555),
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 18.sp
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+            HorizontalDivider(color = Color(0xFFEEEEEE))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Footer: Time, Payment status, Price
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Schedule,
+                        contentDescription = null,
+                        tint = Color(0xFF999999),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = order.getDisplayTime(),
+                        fontSize = 12.sp,
+                        color = Color(0xFF999999)
+                    )
+                    
+                    Spacer(modifier = Modifier.width(12.dp))
+                    
+                    // Payment status badge
+                    val paymentColor = getPaymentStatusColor(order.paymentStatus)
+                    Surface(
+                        color = paymentColor.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = order.paymentStatus.displayName,
+                            fontSize = 10.sp,
+                            color = paymentColor,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+
+                Text(
+                    text = "%,d₫".format(order.total),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFF6B35)
+                )
+            }
+
+            // Quick action button for pending orders
+            if (onActionClick != null && order.status == ShopOrderStatus.PENDING) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(
+                    onClick = { onActionClick(order.id) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF4CAF50)
+                    ),
+                    contentPadding = PaddingValues(vertical = 8.dp)
+                ) {
+                    Text(
+                        text = "Xác nhận đơn",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
             }
         }
     }

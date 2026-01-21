@@ -3,7 +3,6 @@ package com.example.foodapp.data.di
 import com.example.foodapp.data.repository.owner.base.*
 import com.example.foodapp.data.repository.owner.customer.MockCustomerRepository
 import com.example.foodapp.data.repository.owner.foods.MockFoodRepository
-import com.example.foodapp.data.repository.owner.orders.MockOrderRepository
 import com.example.foodapp.data.repository.owner.revenue.MockRevenueRepository
 import com.example.foodapp.data.repository.shipper.base.ShipperEarningsRepository
 import com.example.foodapp.data.repository.shipper.base.ShipperHistoryRepository
@@ -121,13 +120,11 @@ object RepositoryProvider {
     // ==================== OWNER ORDERS REPOSITORY ====================
     
     fun getOrdersRepository(): OwnerOrdersRepository {
-        return if (USE_MOCK) {
-            MockOrderRepository()
-        } else {
-            // TODO: Khi backend ready, uncomment dòng dưới
-            // RealOrderRepository(getOwnerApiService())
-            MockOrderRepository()
-        }
+        return com.example.foodapp.data.repository.owner.orders.RealOrderRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.owner.OrderApiService::class.java
+            )
+        )
     }
     
     // ==================== OWNER FOODS REPOSITORY ====================

@@ -1,36 +1,55 @@
 package com.example.foodapp.data.repository.owner.base
 
-import com.example.foodapp.data.model.owner.Order
-import kotlinx.coroutines.flow.Flow
+import com.example.foodapp.data.model.owner.order.OrderDetail
+import com.example.foodapp.data.model.owner.order.PaginatedOrders
+import com.example.foodapp.data.model.owner.order.ShopOrder
 
 /**
- * Interface cho Orders Repository của Owner.
- * Định nghĩa các phương thức mà bất kỳ implementation nào (Mock/Real) phải tuân theo.
+ * Interface for Owner Orders Repository.
+ * Defines methods for order management through backend API.
  */
 interface OwnerOrdersRepository {
     
     /**
-     * Lấy danh sách tất cả đơn hàng (sử dụng Flow để real-time update)
+     * Get paginated list of shop orders
+     * @param status Optional status filter (null = all orders)
+     * @param page Page number (1-indexed)
+     * @param limit Items per page
      */
-    fun getOrders(): Flow<List<Order>>
+    suspend fun getOrders(
+        status: String? = null,
+        page: Int = 1,
+        limit: Int = 20
+    ): Result<PaginatedOrders>
     
     /**
-     * Cập nhật trạng thái đơn hàng
+     * Get full order detail
+     * @param orderId Order ID
      */
-    fun updateOrderStatus(orderId: String, newStatus: com.example.foodapp.data.model.owner.OrderStatus)
-
-    /**
-     * Thêm đơn hàng mới
-     */
-    fun addOrder(order: com.example.foodapp.data.model.owner.Order)
-
-    /**
-     * Cập nhật đơn hàng (toàn bộ đối tượng)
-     */
-    fun updateOrder(updated: com.example.foodapp.data.model.owner.Order)
+    suspend fun getOrderDetail(orderId: String): Result<OrderDetail>
     
     /**
-     * Xóa đơn hàng
+     * Confirm a pending order (PENDING -> CONFIRMED)
+     * @param orderId Order ID
      */
-    fun deleteOrder(orderId: String)
+    suspend fun confirmOrder(orderId: String): Result<ShopOrder>
+    
+    /**
+     * Mark order as preparing (CONFIRMED -> PREPARING)
+     * @param orderId Order ID
+     */
+    suspend fun markPreparing(orderId: String): Result<ShopOrder>
+    
+    /**
+     * Mark order as ready (PREPARING -> READY)
+     * @param orderId Order ID
+     */
+    suspend fun markReady(orderId: String): Result<ShopOrder>
+    
+    /**
+     * Cancel an order with optional reason
+     * @param orderId Order ID
+     * @param reason Optional cancellation reason
+     */
+    suspend fun cancelOrder(orderId: String, reason: String? = null): Result<ShopOrder>
 }
