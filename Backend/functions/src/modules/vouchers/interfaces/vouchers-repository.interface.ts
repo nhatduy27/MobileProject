@@ -50,6 +50,13 @@ export interface IVouchersRepository {
   countUsageByUser(voucherId: string, userId: string): Promise<number>;
 
   /**
+   * Count voucher usage per user for multiple vouchers (batch)
+   * Avoids N+1 problem by chunking queries (Firestore 'in' limit)
+   * @returns Map of voucherId -> usage count for the given user
+   */
+  countUsageByUserBatch(voucherIds: string[], userId: string): Promise<Record<string, number>>;
+
+  /**
    * Get voucher usage record (deterministic ID)
    */
   getUsage(voucherId: string, userId: string, orderId: string): Promise<VoucherUsageEntity | null>;

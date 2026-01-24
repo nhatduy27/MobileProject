@@ -158,8 +158,10 @@ export class VouchersService {
   /**
    * Get available vouchers for customer
    * Route: GET /vouchers?shopId=xxx
+   * @param shopId - Shop ID to fetch vouchers for
+   * @param userId - Current user ID for per-user usage tracking (optional, for anonymous requests)
    */
-  async getAvailableVouchers(shopId: string): Promise<VoucherEntity[]> {
+  async getAvailableVouchers(shopId: string, userId?: string): Promise<any[]> {
     const now = new Date().toISOString();
 
     const allVouchers = await this.vouchersRepository.findByShopId(shopId, {
@@ -169,11 +171,27 @@ export class VouchersService {
     });
 
     // Filter valid time range + not fully used
-    return allVouchers.filter((v) => {
+    const validVouchers = allVouchers.filter((v) => {
       const isInTimeRange = v.validFrom <= now && v.validTo >= now;
       const hasUsageLeft = v.currentUsage < v.usageLimit;
       return isInTimeRange && hasUsageLeft;
     });
+
+    // If no user context, return vouchers without per-user usage info
+    if (!userId) {
+      return validVouchers;
+    }
+
+    // Batch fetch per-user usage counts (avoid N+1)
+    const voucherIds = validVouchers.map((v) => v.id);
+    const userUsageCounts = await this.vouchersRepository.countUsageByUserBatch(voucherIds, userId);
+
+    // Enrich each voucher with per-user usage information
+    return validVouchers.map((voucher) => ({
+      ...voucher,
+      myUsageCount: userUsageCounts[voucher.id] ?? 0,
+      myRemainingUses: Math.max(0, voucher.usageLimitPerUser - (userUsageCounts[voucher.id] ?? 0)),
+    }));
   }
 
   /**

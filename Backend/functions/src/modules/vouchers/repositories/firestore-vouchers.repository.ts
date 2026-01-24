@@ -146,6 +146,52 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
     return snapshot.data().count;
   }
 
+  /**
+   * Count voucher usage per user for multiple vouchers (batch)
+   * Chunking for Firestore 'in' operator limit (~10 items per query)
+   * @returns Map of voucherId -> usage count for the given user
+   */
+  async countUsageByUserBatch(voucherIds: string[], userId: string): Promise<Record<string, number>> {
+    if (voucherIds.length === 0) {
+      return {};
+    }
+
+    const result: Record<string, number> = {};
+    const chunkSize = 10; // Firestore 'in' operator limit
+
+    // Process vouchers in chunks
+    for (let i = 0; i < voucherIds.length; i += chunkSize) {
+      const chunk = voucherIds.slice(i, i + chunkSize);
+
+      // Query voucherUsages where userId == userId AND voucherId in chunk
+      const snapshot = await this.firestore
+        .collection(this.voucherUsagesCollection)
+        .where('userId', '==', userId)
+        .where('voucherId', 'in', chunk)
+        .get();
+
+      // Aggregate counts per voucherId in memory
+      const counts: Record<string, number> = {};
+      for (const doc of snapshot.docs) {
+        const data = doc.data();
+        const voucherId = data.voucherId;
+        counts[voucherId] = (counts[voucherId] ?? 0) + 1;
+      }
+
+      // Add to result map
+      Object.assign(result, counts);
+
+      // Ensure all queried vouchers are in result (even if count is 0)
+      for (const voucherId of chunk) {
+        if (!(voucherId in result)) {
+          result[voucherId] = 0;
+        }
+      }
+    }
+
+    return result;
+  }
+
   async getUsage(
     voucherId: string,
     userId: string,
