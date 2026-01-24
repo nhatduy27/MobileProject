@@ -75,14 +75,14 @@ export class OrdersController {
   @ApiBody({
     type: CreateOrderDto,
     examples: {
-      codMinimal: {
-        summary: 'Example A: COD Order with KTX address',
-        description: 'Minimal COD order with deliveryAddress snapshot',
+      codWithoutVoucher: {
+        summary: 'Example A: COD Order without voucher',
+        description: 'Basic COD order with deliveryAddress snapshot (no voucher)',
         value: {
-          shopId: 'shop_ktx_001',
+          shopId: 'nzIfau9GtqIPyWkmLyku',
           deliveryAddress: {
             label: 'KTX B5',
-            fullAddress: 'KTX Khu B - Tòa B5',
+            fullAddress: 'KTX Khu B - Tòa B5, TP.HCM',
             building: 'B5',
             room: '101',
             note: 'Gọi trước 5 phút',
@@ -90,30 +90,47 @@ export class OrdersController {
           paymentMethod: 'COD',
         },
       },
-      onlineWithVoucher: {
-        summary: 'Example B: Online Payment with voucher',
-        description: 'ZALOPAY payment with deliveryAddress snapshot and voucher code',
+      codWithVoucher: {
+        summary: 'Example B: COD Order with voucher code',
+        description: 'COD order with deliveryAddress snapshot and voucher code applied',
         value: {
-          shopId: 'shop_ktx_002',
+          shopId: 'nzIfau9GtqIPyWkmLyku',
+          deliveryAddress: {
+            label: 'KTX B5',
+            fullAddress: 'KTX Khu B - Tòa B5, TP.HCM',
+            building: 'B5',
+            room: '101',
+            note: 'Gọi trước 5 phút',
+          },
+          paymentMethod: 'COD',
+          voucherCode: 'GIAM12K',
+        },
+      },
+      onlinePaymentWithVoucher: {
+        summary: 'Example C: Online Payment (ZALOPAY) with voucher',
+        description: 'Online payment with voucher code for additional discount',
+        value: {
+          shopId: 'nzIfau9GtqIPyWkmLyku',
           deliveryAddress: {
             label: 'Phòng ký túc xá',
-            fullAddress: 'KTX Khu A - Tòa A2',
+            fullAddress: 'KTX Khu A - Tòa A2, TP.HCM',
             building: 'A2',
             room: '205',
             note: 'Để ở cổng tòa nhà',
           },
           paymentMethod: 'ZALOPAY',
-          voucherCode: 'FREESHIP10',
+          voucherCode: 'GIAM12K',
         },
       },
-      oneTimeAddress: {
-        summary: 'Example C: One-time delivery address',
-        description: 'Order with custom one-time address (e.g., guest user or different location)',
+      customAddress: {
+        summary: 'Example D: Custom one-time delivery address',
+        description: 'Order with custom delivery address (not from address book)',
         value: {
-          shopId: 'shop_ktx_003',
+          shopId: 'nzIfau9GtqIPyWkmLyku',
           deliveryAddress: {
             label: 'Nhà bạn',
-            fullAddress: 'Số 123 Lý Thường Kiệt',
+            fullAddress: 'Số 123 Lý Thường Kiệt, Phường 15, Quận 10, TP.HCM',
+            building: '123',
             note: 'Gọi trước khi đến',
           },
           paymentMethod: 'COD',

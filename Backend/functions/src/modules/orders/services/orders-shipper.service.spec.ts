@@ -9,6 +9,7 @@ import { OrdersService } from './orders.service';
 import { OrderStateMachineService } from './order-state-machine.service';
 import { IOrdersRepository, ORDERS_REPOSITORY } from '../interfaces';
 import { CartService } from '../../cart/services';
+import { VouchersService } from '../../vouchers/vouchers.service';
 import { ConfigService } from '../../../core/config/config.service';
 import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { USERS_REPOSITORY } from '../../users/interfaces';
@@ -110,6 +111,13 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
           useValue: { findById: jest.fn() },
         },
         {
+          provide: VouchersService,
+          useValue: {
+            validateVoucher: jest.fn(),
+            applyVoucherAtomic: jest.fn(),
+          },
+        },
+        {
           provide: ConfigService,
           useValue: mockConfigService,
         },
@@ -200,7 +208,7 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
       ordersRepo.findById.mockResolvedValueOnce({
         ...mockOrder,
         shipperId,
-        status: OrderStatus.SHIPPING,
+        status: OrderStatus.READY,
       });
       ordersRepo.update.mockResolvedValueOnce(undefined);
       ordersRepo.findById.mockResolvedValueOnce({
@@ -219,7 +227,7 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
       ordersRepo.findById.mockResolvedValueOnce({
         ...mockOrder,
         shipperId: 'shipper_other',
-        status: OrderStatus.SHIPPING,
+        status: OrderStatus.READY,
       });
 
       await expect(
@@ -231,7 +239,7 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
       ordersRepo.findById.mockResolvedValueOnce({
         ...mockOrder,
         shipperId: 'shipper_1',
-        status: OrderStatus.READY,
+        status: OrderStatus.SHIPPING,
       });
 
       await expect(

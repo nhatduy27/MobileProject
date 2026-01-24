@@ -132,11 +132,14 @@ export class FirestoreOrdersRepository implements IOrdersRepository {
   /**
    * Creates an order and atomically clears the cart group in a transaction
    * CRITICAL: Ensure all validation is done in service layer BEFORE calling this
+   * 
+   * @param additionalTransactionOps Optional callback for additional transaction operations (e.g., apply voucher)
    */
   async createOrderAndClearCartGroup(
     customerId: string,
     shopId: string,
     orderData: OrderEntity,
+    additionalTransactionOps?: () => Promise<void>,
   ): Promise<OrderEntity> {
     // TRANSACTION LAYER (atomic writes only)
     // Cart existence and shop-group validation happens in service layer BEFORE this is called.
@@ -176,7 +179,12 @@ export class FirestoreOrdersRepository implements IOrdersRepository {
 
       transaction.set(orderRef, newOrder);
 
-      // 3. Update cart: Remove items for this shop only
+      // 3. Execute additional transaction operations (e.g., apply voucher atomically)
+      if (additionalTransactionOps) {
+        await additionalTransactionOps();
+      }
+
+      // 4. Update cart: Remove items for this shop only
       // Cart MUST exist at this point (validated in service layer)
       if (cartSnap.exists) {
         const cart = cartSnap.data();
@@ -318,6 +326,8 @@ export class FirestoreOrdersRepository implements IOrdersRepository {
       subtotal: data.subtotal,
       shipFee: data.shipFee,
       discount: data.discount,
+      voucherCode: data.voucherCode ?? null,
+      voucherId: data.voucherId ?? null,
       total: data.total,
       status: data.status as OrderStatus,
       paymentStatus: data.paymentStatus as PaymentStatus,

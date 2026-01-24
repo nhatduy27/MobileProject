@@ -2,9 +2,11 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OrdersService } from '../services/orders.service';
 import { ORDERS_REPOSITORY } from '../interfaces';
 import { CartService } from '../../cart/services';
+import { VouchersService } from '../../vouchers/vouchers.service';
 import { ADDRESSES_REPOSITORY, USERS_REPOSITORY } from '../../users/interfaces';
 import { OrderStateMachineService } from '../services/order-state-machine.service';
 import { ConfigService } from '../../../core/config/config.service';
+import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { OrderEntity, OrderStatus, PaymentStatus } from '../entities';
 import { Timestamp } from 'firebase-admin/firestore';
 
@@ -28,6 +30,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
     const mockShippersRepo = {};
     const mockAddressesRepo = {};
     const mockUsersRepo = {};
+    const mockVouchersService = {
+      validateVoucher: jest.fn(),
+      applyVoucherAtomic: jest.fn(),
+    };
     const mockStateMachine = {};
     const mockConfigService = {
       enableFirestorePaginationFallback: false,
@@ -46,7 +52,8 @@ describe('OrdersService - Owner List DTO Mapping', () => {
         { provide: 'SHOPS_REPOSITORY', useValue: mockShopsRepo },
         { provide: 'IShippersRepository', useValue: mockShippersRepo },
         { provide: ADDRESSES_REPOSITORY, useValue: mockAddressesRepo },
-        { provide: USERS_REPOSITORY, useValue: { findById: jest.fn() } },
+        { provide: USERS_REPOSITORY, useValue: mockUsersRepo },
+        { provide: VouchersService, useValue: mockVouchersService },
         { provide: OrderStateMachineService, useValue: mockStateMachine },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: FirebaseService, useValue: mockFirebaseService },
@@ -69,6 +76,7 @@ describe('OrdersService - Owner List DTO Mapping', () => {
         },
         shopId: 'shop_123',
         shopName: 'Cơm Tấm Sườn',
+        shipperId: null,
         items: [
           {
             productId: 'prod_001',
@@ -79,9 +87,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
           },
         ],
         subtotal: 35000,
-        shipFee: 15000,
+        shipFee: 0,
+        shipperPayout: 15000,
         discount: 0,
-        total: 50000,
+        total: 35000,
         status: OrderStatus.PENDING,
         paymentStatus: PaymentStatus.UNPAID,
         paymentMethod: 'COD',
@@ -125,6 +134,7 @@ describe('OrdersService - Owner List DTO Mapping', () => {
         },
         shopId: 'shop_123',
         shopName: 'Cơm Tấm Sườn',
+        shipperId: null,
         items: [
           {
             productId: 'prod_001',
@@ -163,9 +173,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
           },
         ],
         subtotal: 163000,
-        shipFee: 15000,
+        shipFee: 0,
+        shipperPayout: 15000,
         discount: 0,
-        total: 178000,
+        total: 163000,
         status: OrderStatus.CONFIRMED,
         paymentStatus: PaymentStatus.PAID,
         paymentMethod: 'ZALOPAY',
@@ -205,6 +216,7 @@ describe('OrdersService - Owner List DTO Mapping', () => {
         // No customerSnapshot (legacy order)
         shopId: 'shop_456',
         shopName: 'Phở Bò',
+        shipperId: null,
         items: [
           {
             productId: 'prod_101',
@@ -215,9 +227,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
           },
         ],
         subtotal: 45000,
-        shipFee: 20000,
+        shipFee: 0,
+        shipperPayout: 20000,
         discount: 0,
-        total: 65000,
+        total: 45000,
         status: OrderStatus.DELIVERED,
         paymentStatus: PaymentStatus.PAID,
         paymentMethod: 'COD',
@@ -244,6 +257,7 @@ describe('OrdersService - Owner List DTO Mapping', () => {
         customerId: 'user_cust_004',
         shopId: 'shop_789',
         shopName: 'Test Shop',
+        shipperId: null,
         items: [
           {
             productId: 'prod_999',
@@ -296,9 +310,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
           },
         ],
         subtotal: 70000,
-        shipFee: 15000,
+        shipFee: 0,
+        shipperPayout: 15000,
         discount: 0,
-        total: 85000,
+        total: 70000,
         status: OrderStatus.SHIPPING,
         paymentStatus: PaymentStatus.UNPAID,
         paymentMethod: 'COD',
@@ -342,6 +357,7 @@ describe('OrdersService - Owner List DTO Mapping', () => {
         customerId: 'user_cust_006',
         shopId: 'shop_123',
         shopName: 'Test Shop',
+        shipperId: null,
         items: [
           {
             productId: 'prod_001',
@@ -405,9 +421,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
           },
         ],
         subtotal: 35000,
-        shipFee: 15000,
+        shipFee: 0,
+        shipperPayout: 15000,
         discount: 0,
-        total: 50000,
+        total: 35000,
         status: OrderStatus.SHIPPING,
         paymentStatus: PaymentStatus.PAID,
         paymentMethod: 'ZALOPAY',
@@ -455,9 +472,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
           },
         ],
         subtotal: 10000,
-        shipFee: 15000,
+        shipFee: 0,
+        shipperPayout: 15000,
         discount: 0,
-        total: 25000,
+        total: 10000,
         status: OrderStatus.SHIPPING,
         paymentStatus: PaymentStatus.UNPAID,
         paymentMethod: 'COD',
@@ -492,9 +510,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
           },
         ],
         subtotal: 10000,
-        shipFee: 15000,
+        shipFee: 0,
+        shipperPayout: 15000,
         discount: 0,
-        total: 25000,
+        total: 10000,
         status: OrderStatus.SHIPPING,
         paymentStatus: PaymentStatus.UNPAID,
         paymentMethod: 'COD',
@@ -545,9 +564,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
           },
         ],
         subtotal: 10000,
-        shipFee: 15000,
+        shipFee: 0,
+        shipperPayout: 15000,
         discount: 0,
-        total: 25000,
+        total: 10000,
         status: OrderStatus.SHIPPING,
         paymentStatus: PaymentStatus.PAID,
         paymentMethod: 'ZALOPAY',
@@ -583,7 +603,7 @@ describe('OrdersService - Owner List DTO Mapping', () => {
         customerId: 'user_cust_011',
         shopId: 'shop_123',
         shopName: 'Test Shop',
-        shipperId: undefined, // Not assigned
+        shipperId: null, // Not assigned
         items: [
           {
             productId: 'prod_001',
@@ -594,9 +614,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
           },
         ],
         subtotal: 10000,
-        shipFee: 15000,
+        shipFee: 0,
+        shipperPayout: 15000,
         discount: 0,
-        total: 25000,
+        total: 10000,
         status: OrderStatus.PENDING,
         paymentStatus: PaymentStatus.UNPAID,
         paymentMethod: 'COD',
@@ -620,6 +641,7 @@ describe('OrdersService - Owner List DTO Mapping', () => {
         // NO customerSnapshot - should use customerMap
         shopId: 'shop_123',
         shopName: 'Cơm Tấm Sườn',
+        shipperId: null,
         items: [
           {
             productId: 'prod_001',
@@ -630,9 +652,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
           },
         ],
         subtotal: 35000,
-        shipFee: 15000,
+        shipFee: 0,
+        shipperPayout: 15000,
         discount: 0,
-        total: 50000,
+        total: 35000,
         status: OrderStatus.DELIVERED,
         paymentStatus: PaymentStatus.PAID,
         paymentMethod: 'COD',
@@ -669,6 +692,7 @@ describe('OrdersService - Owner List DTO Mapping', () => {
         // NO customerSnapshot
         shopId: 'shop_123',
         shopName: 'Test Shop',
+        shipperId: null,
         items: [
           {
             productId: 'prod_001',
@@ -679,7 +703,8 @@ describe('OrdersService - Owner List DTO Mapping', () => {
           },
         ],
         subtotal: 10000,
-        shipFee: 5000,
+        shipFee: 0,
+        shipperPayout: 5000,
         discount: 0,
         total: 15000,
         status: OrderStatus.PENDING,
@@ -723,6 +748,7 @@ describe('OrdersService - Owner List DTO Mapping', () => {
         },
         shopId: 'shop_123',
         shopName: 'Test Shop',
+        shipperId: null,
         items: [
           {
             productId: 'prod_001',
@@ -733,7 +759,8 @@ describe('OrdersService - Owner List DTO Mapping', () => {
           },
         ],
         subtotal: 10000,
-        shipFee: 5000,
+        shipFee: 0,
+        shipperPayout: 5000,
         discount: 0,
         total: 15000,
         status: OrderStatus.PENDING,
@@ -785,9 +812,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
           },
         ],
         subtotal: 35000,
-        shipFee: 15000,
+        shipFee: 0,
+        shipperPayout: 15000,
         discount: 0,
-        total: 50000,
+        total: 35000,
         status: OrderStatus.SHIPPING,
         paymentStatus: PaymentStatus.PAID,
         paymentMethod: 'COD',

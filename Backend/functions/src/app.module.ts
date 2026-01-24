@@ -18,6 +18,7 @@ import { ProductsModule } from './modules/products/products.module';
 import { ShippersModule } from './modules/shippers/shippers.module';
 import { CartModule } from './modules/cart/cart.module';
 import { OrdersModule } from './modules/orders/orders.module';
+import { VouchersModule } from './modules/vouchers/vouchers.module';
 // import { PaymentsModule } from './modules/payments/payments.module';
 // import { WalletsModule } from './modules/wallets/wallets.module';
 // import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -51,6 +52,7 @@ import { OrdersModule } from './modules/orders/orders.module';
     ShippersModule,
     CartModule,
     OrdersModule,
+    VouchersModule,
     // Future EPICs
     // PaymentsModule,
     // WalletsModule,

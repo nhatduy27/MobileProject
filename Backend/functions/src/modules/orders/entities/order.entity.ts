@@ -50,8 +50,11 @@ export class OrderEntity {
 
   // Amounts
   subtotal: number;
-  shipFee: number;
+  shipFee: number;                    // Amount customer pays for shipping (FREE_SHIP model: always 0)
+  shipperPayout?: number;              // Internal amount paid to shipper (shop.shipFeePerOrder)
   discount: number;
+  voucherCode?: string | null;        // Applied voucher code (if any)
+  voucherId?: string;                 // Applied voucher ID (internal reference)
   total: number;
 
   // Status

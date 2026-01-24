@@ -18,7 +18,8 @@ export interface IOrdersRepository {
   createOrderAndClearCartGroup(
     customerId: string,
     shopId: string,
-    orderData: OrderEntity
+    orderData: OrderEntity,
+    additionalTransactionOps?: () => Promise<void>,
   ): Promise<OrderEntity>;
   acceptOrderAtomically(
     orderId: string,

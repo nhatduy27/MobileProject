@@ -50,6 +50,27 @@ export class OrderListItemDto {
   total: number;
 
   @ApiProperty({
+    description: 'Discount amount (usually from voucher)',
+    example: 10000,
+  })
+  discount: number;
+
+  @ApiProperty({
+    description: 'Voucher code applied to order (null if no voucher)',
+    example: 'SUMMER20',
+    nullable: true,
+  })
+  voucherCode?: string | null;
+
+  @ApiProperty({
+    description: 'Voucher ID (internal reference, null if no voucher)',
+    example: 'v_summer20_123',
+    nullable: true,
+    required: false,
+  })
+  voucherId?: string | null;
+
+  @ApiProperty({
     description: 'Number of items in order',
     example: 2,
   })
