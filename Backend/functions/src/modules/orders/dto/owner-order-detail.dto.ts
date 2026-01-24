@@ -58,10 +58,17 @@ export class OwnerOrderDetailDto {
   subtotal: number;
 
   @ApiProperty({
-    description: 'Shipping fee',
-    example: 15000,
+    description: 'Shipping fee paid by customer (free-ship model: always 0)',
+    example: 0,
   })
   shipFee: number;
+
+  @ApiProperty({
+    description: 'Internal amount to pay shipper (shop.shipFeePerOrder)',
+    example: 15000,
+    nullable: true,
+  })
+  shipperPayout?: number;
 
   @ApiProperty({
     description: 'Discount amount',
@@ -70,8 +77,22 @@ export class OwnerOrderDetailDto {
   discount: number;
 
   @ApiProperty({
+    description: 'Voucher code applied to order (null if no voucher)',
+    example: 'SUMMER20',
+    nullable: true,
+  })
+  voucherCode?: string | null;
+
+  @ApiProperty({
+    description: 'Voucher ID (Firestore document reference, null if no voucher)',
+    example: 'voucher_summer20_2024',
+    nullable: true,
+  })
+  voucherId?: string | null;
+
+  @ApiProperty({
     description: 'Order total',
-    example: 65000,
+    example: 50000,
   })
   total: number;
 

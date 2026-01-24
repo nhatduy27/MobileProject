@@ -16,6 +16,7 @@ import { IShippersRepository } from '../../shippers/repositories/shippers-reposi
 import { ShipperStatus } from '../../shippers/entities/shipper.entity';
 import { IAddressesRepository, ADDRESSES_REPOSITORY } from '../../users/interfaces';
 import { IUsersRepository, USERS_REPOSITORY } from '../../users/interfaces';
+import { VouchersService } from '../../vouchers/vouchers.service';
 import { ConfigService } from '../../../core/config/config.service';
 import { FirebaseService } from '../../../core/firebase/firebase.service';
 import {
@@ -54,6 +55,7 @@ export class OrdersService {
     private readonly addressesRepo: IAddressesRepository,
     @Inject(USERS_REPOSITORY)
     private readonly usersRepo: IUsersRepository,
+    private readonly vouchersService: VouchersService,
     private readonly stateMachine: OrderStateMachineService,
     private readonly configService: ConfigService,
     private readonly firebaseService: FirebaseService,
@@ -258,20 +260,38 @@ export class OrdersService {
 
     // 5. Calculate totals using cart's subtotal (already calculated)
     const subtotal = shopGroup.subtotal;
-    const shipFee = shop.shipFeePerOrder || 0;
+    
+    // FREE_SHIP MODEL: Customer pays 0, shipper gets shop fee internally
+    const shipFee = 0;                           // Customer pays nothing for shipping
+    const shipperPayout = shop.shipFeePerOrder || 0;  // Internal amount to pay shipper
 
-    // 6. Apply voucher if provided (stub for MVP)
+    // 6. Validate and preview voucher (if provided)
     let discount = 0;
+    let voucherId: string | undefined;
+    let voucherCode: string | undefined;
     if (dto.voucherCode) {
-      try {
-        // TODO: Call voucherService.validateAndApply when available
-        // discount = voucher.discountAmount;
-      } catch (e) {
-        console.warn(`Voucher ${dto.voucherCode} invalid:`, e);
+      const validationResult = await this.vouchersService.validateVoucher(customerId, {
+        code: dto.voucherCode,
+        shopId: shop.id,
+        subtotal,
+        shipFee: shipperPayout,  // Pass internal shipFee for validation logic
+      });
+
+      if (!validationResult.valid) {
+        throw new BadRequestException({
+          code: validationResult.errorCode,
+          message: validationResult.errorMessage,
+          statusCode: 400,
+        });
       }
+
+      discount = validationResult.discountAmount;
+      voucherId = validationResult.voucherId;
+      voucherCode = dto.voucherCode;
     }
 
-    const total = subtotal + shipFee - discount;
+    // Total calculation: shipFee (0) does NOT affect total in free-ship model
+    const total = subtotal - discount;
 
     // 6.5. Resolve delivery address (from addressId or snapshot)
     const resolvedAddress = await this.resolveDeliveryAddress(customerId, dto);
@@ -315,8 +335,11 @@ export class OrdersService {
         subtotal: item.subtotal,
       })),
       subtotal,
-      shipFee,
+      shipFee,              // Customer pays 0 (free-ship model)
+      shipperPayout,        // Internal: amount to pay shipper
       discount,
+      voucherCode,
+      voucherId,
       total,
       status: OrderStatus.PENDING,
       paymentStatus: PaymentStatus.UNPAID,
@@ -327,11 +350,20 @@ export class OrdersService {
     };
 
     // 8. CRITICAL: Use Firestore transaction
-    // Create order + Clear cart group atomically
+    // Apply voucher (if used) + Create order + Clear cart group atomically
     const order = await this.ordersRepo.createOrderAndClearCartGroup(
       customerId,
       dto.shopId,
       orderEntity,
+      // Apply voucher atomically if voucherId present
+      voucherId ? async () => {
+        await this.vouchersService.applyVoucherAtomic(
+          voucherId!,
+          customerId,
+          orderEntity.orderNumber, // Use orderNumber as orderId
+          discount,
+        );
+      } : undefined,
     );
 
     return order;
@@ -1530,6 +1562,8 @@ export class OrdersService {
       subtotal: order.subtotal,
       shipFee: order.shipFee,
       discount: order.discount,
+      voucherCode: order.voucherCode ?? null,
+      voucherId: order.voucherId ?? null,
       total: order.total,
       status: order.status,
       paymentStatus: order.paymentStatus,
@@ -1600,6 +1634,9 @@ export class OrdersService {
       status: order.status,
       paymentStatus: order.paymentStatus,
       total: order.total,
+      discount: order.discount ?? 0,
+      voucherCode: order.voucherCode ?? null,
+      voucherId: order.voucherId ?? null,
       itemCount: order.items.length,
       createdAt: toIsoString(order.createdAt),
       itemsPreview,

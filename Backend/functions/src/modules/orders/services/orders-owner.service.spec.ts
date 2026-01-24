@@ -8,6 +8,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { OrdersService } from './orders.service';
 import { OrderStateMachineService } from './order-state-machine.service';
 import { CartService } from '../../cart/services';
+import { VouchersService } from '../../vouchers/vouchers.service';
 import { ConfigService } from '../../../core/config/config.service';
 import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { USERS_REPOSITORY } from '../../users/interfaces';
@@ -126,6 +127,13 @@ describe('OrdersService - Owner Flow', () => {
         {
           provide: USERS_REPOSITORY,
           useValue: { findById: jest.fn() },
+        },
+        {
+          provide: VouchersService,
+          useValue: {
+            validateVoucher: jest.fn(),
+            applyVoucherAtomic: jest.fn(),
+          },
         },
         {
           provide: ConfigService,

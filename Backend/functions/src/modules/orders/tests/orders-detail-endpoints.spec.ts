@@ -60,9 +60,10 @@ describe('Orders Detail Endpoints', () => {
       },
     ],
     subtotal: 75000,
-    shipFee: 15000,
+    shipFee: 0,
+    shipperPayout: 15000,
     discount: 0,
-    total: 90000,
+    total: 75000,
     status: OrderStatus.SHIPPING,
     paymentStatus: PaymentStatus.UNPAID,
     paymentMethod: 'COD',
@@ -174,8 +175,9 @@ describe('Orders Detail Endpoints', () => {
       expect(result.items).toHaveLength(2);
       expect(result.items[0].productName).toBe('Cơm sườn bì chả');
       expect(result.subtotal).toBe(75000);
-      expect(result.shipFee).toBe(15000);
-      expect(result.total).toBe(90000);
+      expect(result.shipFee).toBe(0);
+      expect(result.shipperPayout).toBe(15000);
+      expect(result.total).toBe(75000);
       expect(result.deliveryAddress).toBeDefined();
       expect(result.deliveryAddress.label).toBe('home');
       expect(result.deliveryAddress.fullAddress).toContain('268 Lý Thường Kiệt');

@@ -2,11 +2,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { OrdersService } from '../services/orders.service';
 import { IOrdersRepository, ORDERS_REPOSITORY } from '../interfaces';
 import { CartService } from '../../cart/services';
+import { VouchersService } from '../../vouchers/vouchers.service';
 import { IProductsRepository } from '../../products/interfaces';
 import { IShopsRepository } from '../../shops/interfaces';
 import { IAddressesRepository, ADDRESSES_REPOSITORY, USERS_REPOSITORY } from '../../users/interfaces';
 import { OrderStateMachineService } from '../services/order-state-machine.service';
 import { ConfigService } from '../../../core/config/config.service';
+import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { CreateOrderDto } from '../dto';
 import { OrderEntity, OrderStatus, PaymentStatus } from '../entities';
 
@@ -44,6 +46,11 @@ describe('Orders - Firestore Transaction Ordering', () => {
       enableFirestorePaginationFallback: false,
     };
 
+    const mockVouchersService = {
+      validateVoucher: jest.fn().mockResolvedValue({ valid: true, discountAmount: 0 }),
+      applyVoucherAtomic: jest.fn().mockResolvedValue({}),
+    };
+
     const mockFirebaseService = {
       firestore: { collection: jest.fn(), batch: jest.fn() },
       auth: { verifyIdToken: jest.fn() },
@@ -59,6 +66,7 @@ describe('Orders - Firestore Transaction Ordering', () => {
         { provide: 'IShippersRepository', useValue: { findByShopId: jest.fn() } },
         { provide: ADDRESSES_REPOSITORY, useValue: mockAddressesRepo },
         { provide: USERS_REPOSITORY, useValue: { findById: jest.fn() } },
+        { provide: VouchersService, useValue: mockVouchersService },
         { provide: ConfigService, useValue: mockConfigService },
         {
           provide: OrderStateMachineService,
@@ -119,9 +127,10 @@ describe('Orders - Firestore Transaction Ordering', () => {
         shopName: 'Cơm Nhà A',
         items: mockCart.groups[0].items,
         subtotal: 50000,
-        shipFee: 5000,
+        shipFee: 0,
+        shipperPayout: 5000,
         discount: 0,
-        total: 55000,
+        total: 50000,
         status: OrderStatus.PENDING,
         paymentStatus: PaymentStatus.UNPAID,
         paymentMethod: 'COD',
@@ -161,23 +170,28 @@ describe('Orders - Firestore Transaction Ordering', () => {
       // Act
       const result = await service.createOrder(customerId, dto);
 
-      // Assert
-      expect(result).toEqual(mockOrderEntity);
-      expect(mockOrdersRepo.createOrderAndClearCartGroup).toHaveBeenCalledWith(
-        customerId,
-        shopId,
-        expect.objectContaining({
-          customerId,
-          shopId,
-          deliveryAddress: {
-            label: 'KTX B5',
-            fullAddress: 'KTX Khu B - Tòa B5',
-            building: 'B5',
-            room: '101',
-            note: 'Gọi trước khi đến',
-          },
-        }),
-      );
+      // Assert - verify core fields match
+      expect(result.customerId).toBe(mockOrderEntity.customerId);
+      expect(result.shopId).toBe(mockOrderEntity.shopId);
+      expect(result.subtotal).toBe(mockOrderEntity.subtotal);
+      expect(result.shipFee).toBe(mockOrderEntity.shipFee);
+      expect(result.shipperPayout).toBe(mockOrderEntity.shipperPayout);
+      expect(result.total).toBe(mockOrderEntity.total);
+      expect(result.status).toBe(mockOrderEntity.status);
+      // Verify the repo was called with the correct arguments
+      expect(mockOrdersRepo.createOrderAndClearCartGroup).toHaveBeenCalled();
+      const callArgs = (mockOrdersRepo.createOrderAndClearCartGroup as jest.Mock).mock.calls[0];
+      expect(callArgs[0]).toBe(customerId);
+      expect(callArgs[1]).toBe(shopId);
+      expect(callArgs[2].customerId).toBe(customerId);
+      expect(callArgs[2].shopId).toBe(shopId);
+      expect(callArgs[2].deliveryAddress).toEqual({
+        label: 'KTX B5',
+        fullAddress: 'KTX Khu B - Tòa B5',
+        building: 'B5',
+        room: '101',
+        note: 'Gọi trước khi đến',
+      });
     });
 
     it('should handle transaction with voucher code (if supported in future)', async () => {

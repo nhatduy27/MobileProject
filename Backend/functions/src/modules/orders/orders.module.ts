@@ -7,6 +7,7 @@ import { ShopsModule } from '../shops/shops.module';
 import { CartModule } from '../cart/cart.module';
 import { ShippersModule } from '../shippers/shippers.module';
 import { UsersModule } from '../users/users.module';
+import { VouchersModule } from '../vouchers/vouchers.module';
 import { ConfigModule } from '../../core/config/config.module';
 import { ORDERS_REPOSITORY } from './interfaces';
 
@@ -17,6 +18,7 @@ import { ORDERS_REPOSITORY } from './interfaces';
     ShopsModule,
     CartModule,
     UsersModule,
+    VouchersModule,
     forwardRef(() => ShippersModule),
   ],
   controllers: [OrdersOwnerController, OrdersShipperController, OrdersAdminController, OrdersController],
