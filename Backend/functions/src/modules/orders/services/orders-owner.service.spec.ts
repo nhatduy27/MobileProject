@@ -11,6 +11,7 @@ import { CartService } from '../../cart/services';
 import { VouchersService } from '../../vouchers/vouchers.service';
 import { ConfigService } from '../../../core/config/config.service';
 import { FirebaseService } from '../../../core/firebase/firebase.service';
+import { NotificationsService } from '../../notifications/services/notifications.service';
 import { USERS_REPOSITORY } from '../../users/interfaces';
 import {
   OrderEntity,
@@ -146,6 +147,13 @@ describe('OrdersService - Owner Flow', () => {
             auth: { verifyIdToken: jest.fn() },
           },
         },
+        {
+          provide: NotificationsService,
+          useValue: {
+            sendOrderNotification: jest.fn(),
+            send: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
@@ -153,6 +161,37 @@ describe('OrdersService - Owner Flow', () => {
   });
 
   describe('ownerCancelOrder (ORDER-009)', () => {
+    it('should cancel order when in PENDING status', async () => {
+      const ownerId = 'owner_1';
+      const orderId = 'order_123';
+      const reason = 'Customer requested cancellation';
+
+      const pendingOrder = { ...mockOrder, status: OrderStatus.PENDING };
+
+      ordersRepo.findById.mockResolvedValueOnce(pendingOrder);
+      shopsRepo.findById.mockResolvedValueOnce(mockShop);
+      ordersRepo.update.mockResolvedValueOnce(undefined);
+      ordersRepo.findById.mockResolvedValueOnce({
+        ...pendingOrder,
+        status: OrderStatus.CANCELLED,
+        cancelledAt: Timestamp.now(),
+        cancelledBy: 'OWNER',
+        cancelReason: reason,
+      });
+
+      const result = await service.ownerCancelOrder(ownerId, orderId, reason);
+
+      expect(result).toBeDefined();
+      expect(result!.status).toBe(OrderStatus.CANCELLED);
+      expect(result!.cancelledBy).toBe('OWNER');
+      expect(ordersRepo.update).toHaveBeenCalledWith(orderId, {
+        status: OrderStatus.CANCELLED,
+        cancelledAt: expect.any(Timestamp),
+        cancelReason: reason,
+        cancelledBy: 'OWNER',
+      });
+    });
+
     it('should cancel order when in CONFIRMED status', async () => {
       const ownerId = 'owner_1';
       const orderId = 'order_123';
@@ -173,8 +212,9 @@ describe('OrdersService - Owner Flow', () => {
 
       const result = await service.ownerCancelOrder(ownerId, orderId, reason);
 
-      expect(result.status).toBe(OrderStatus.CANCELLED);
-      expect(result.cancelledBy).toBe('OWNER');
+      expect(result).toBeDefined();
+      expect(result!.status).toBe(OrderStatus.CANCELLED);
+      expect(result!.cancelledBy).toBe('OWNER');
       expect(ordersRepo.update).toHaveBeenCalledWith(orderId, {
         status: OrderStatus.CANCELLED,
         cancelledAt: expect.any(Timestamp),
@@ -203,7 +243,8 @@ describe('OrdersService - Owner Flow', () => {
 
       const result = await service.ownerCancelOrder(ownerId, orderId, reason);
 
-      expect(result.status).toBe(OrderStatus.CANCELLED);
+      expect(result).toBeDefined();
+      expect(result!.status).toBe(OrderStatus.CANCELLED);
       expect(ordersRepo.update).toHaveBeenCalled();
     });
 
@@ -230,20 +271,6 @@ describe('OrdersService - Owner Flow', () => {
       await expect(
         service.ownerCancelOrder(ownerId, orderId),
       ).rejects.toThrow(ForbiddenException);
-    });
-
-    it('should throw ConflictException when order is in PENDING status', async () => {
-      const ownerId = 'owner_1';
-      const orderId = 'order_123';
-
-      const pendingOrder = { ...mockOrder, status: OrderStatus.PENDING };
-
-      ordersRepo.findById.mockResolvedValueOnce(pendingOrder);
-      shopsRepo.findById.mockResolvedValueOnce(mockShop);
-
-      await expect(
-        service.ownerCancelOrder(ownerId, orderId),
-      ).rejects.toThrow(ConflictException);
     });
 
     it('should throw ConflictException when order is in READY status', async () => {

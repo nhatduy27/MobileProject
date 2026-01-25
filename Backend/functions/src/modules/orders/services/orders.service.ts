@@ -776,12 +776,12 @@ export class OrdersService {
     }
 
     // 3. Validate cancellation is allowed for current status
-    // Owner can only cancel from CONFIRMED or PREPARING
-    const cancelableStatuses = [OrderStatus.CONFIRMED, OrderStatus.PREPARING];
+    // Owner can cancel from PENDING, CONFIRMED, or PREPARING
+    const cancelableStatuses = [OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.PREPARING];
     if (!cancelableStatuses.includes(order.status)) {
       throw new ConflictException({
         code: 'ORDER_013',
-        message: `Cannot cancel order - order is ${order.status}. Owner can only cancel CONFIRMED or PREPARING orders.`,
+        message: `Cannot cancel order - order is ${order.status}. Owner can only cancel PENDING, CONFIRMED or PREPARING orders.`,
         statusCode: 409,
       });
     }

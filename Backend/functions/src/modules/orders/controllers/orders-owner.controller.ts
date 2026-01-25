@@ -230,7 +230,7 @@ export class OrdersOwnerController {
   @HttpCode(200)
   @ApiOperation({
     summary: 'Cancel order (owner)',
-    description: 'Cancel an order (owner only, must be in CONFIRMED or PREPARING status)',
+    description: 'Cancel an order (owner only, must be in PENDING, CONFIRMED or PREPARING status)',
   })
   @ApiParam({
     name: 'id',
@@ -259,7 +259,7 @@ export class OrdersOwnerController {
   @ApiNotFoundResponse({ description: 'Order not found' })
   @ApiForbiddenResponse({ description: 'Not authorized to cancel this order' })
   @ApiConflictResponse({
-    description: 'Cannot cancel order in current status (must be CONFIRMED or PREPARING)',
+    description: 'Cannot cancel order in current status (must be PENDING, CONFIRMED or PREPARING)',
   })
   @ApiUnauthorizedResponse({ description: 'Not authenticated' })
   async ownerCancelOrder(
