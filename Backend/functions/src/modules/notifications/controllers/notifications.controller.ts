@@ -372,7 +372,7 @@ export class NotificationsController {
   @ApiOperation({
     summary: 'Update notification preferences',
     description:
-      'Update notification preferences. Note: transactional notifications cannot be disabled.',
+      'Update notification preferences. Note: transactional notifications cannot be disabled. Only informational and marketing fields can be modified.',
   })
   @ApiResponse({
     status: 200,
@@ -385,6 +385,19 @@ export class NotificationsController {
         informational: { type: 'boolean', example: true },
         marketing: { type: 'boolean', example: false },
         updatedAt: { type: 'string', example: '2024-01-08T10:05:00Z' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation error - transactional field cannot be modified',
+    schema: {
+      type: 'object',
+      properties: {
+        success: { type: 'boolean', example: false },
+        message: { type: 'string', example: 'property transactional should not exist' },
+        errorCode: { type: 'string', example: 'VALIDATION_ERROR' },
+        timestamp: { type: 'string', example: '2026-01-25T04:58:27.127Z' },
       },
     },
   })

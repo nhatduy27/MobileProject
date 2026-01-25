@@ -1,5 +1,13 @@
 import { Controller, Post, Get, Delete, Body, Param, Query, UseGuards, Req } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+} from '@nestjs/swagger';
 import { ShippersService } from './shippers.service';
 import { RejectApplicationDto } from './dto/reject-application.dto';
 import { ApplicationFilterDto } from './dto/application-filter.dto';
@@ -20,6 +28,8 @@ export class OwnerShippersController {
 
   @Get('applications')
   @ApiOperation({ summary: 'List Applications' })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
+  @ApiForbiddenResponse({ description: 'User is not an OWNER (403 - required role missing)' })
   @ApiQuery({
     name: 'status',
     enum: ApplicationStatus,
@@ -65,6 +75,8 @@ export class OwnerShippersController {
 
   @Post('applications/:id/approve')
   @ApiOperation({ summary: 'Approve Application' })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
+  @ApiForbiddenResponse({ description: 'User is not an OWNER (403 - required role missing)' })
   @ApiResponse({
     status: 200,
     description: 'Application approved successfully',
@@ -99,6 +111,8 @@ export class OwnerShippersController {
 
   @Post('applications/:id/reject')
   @ApiOperation({ summary: 'Reject Application' })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
+  @ApiForbiddenResponse({ description: 'User is not an OWNER (403 - required role missing)' })
   @ApiResponse({
     status: 200,
     description: 'Application rejected successfully',
@@ -128,6 +142,8 @@ export class OwnerShippersController {
 
   @Get()
   @ApiOperation({ summary: 'List Shop Shippers' })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
+  @ApiForbiddenResponse({ description: 'User is not an OWNER (403 - required role missing)' })
   @ApiResponse({
     status: 200,
     description: 'List of shippers',
@@ -165,6 +181,8 @@ export class OwnerShippersController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Remove Shipper' })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
+  @ApiForbiddenResponse({ description: 'User is not an OWNER (403 - required role missing)' })
   @ApiResponse({
     status: 200,
     description: 'Shipper removed successfully',

@@ -7,7 +7,15 @@ import {
   HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiUnauthorizedResponse,
+  ApiForbiddenResponse,
+} from '@nestjs/swagger';
+import { AuthGuard } from '../../core/guards/auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
 import { UserRole } from '../users/entities/user.entity';
@@ -20,9 +28,9 @@ import { ShippersService } from './shippers.service';
  * Shippers subscribe to per-shop topic (shop_${shopId}_shippers_active) to receive ORDER_READY broadcasts
  */
 @ApiTags('Shipper Notifications')
-@ApiBearerAuth()
+@ApiBearerAuth('firebase-auth')
 @Controller('shippers/notifications')
-@UseGuards(RolesGuard)
+@UseGuards(AuthGuard, RolesGuard)
 @Roles(UserRole.SHIPPER)
 export class ShipperNotificationsController {
   constructor(
@@ -57,6 +65,8 @@ export class ShipperNotificationsController {
       },
     },
   })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
+  @ApiForbiddenResponse({ description: 'User is not a SHIPPER (403 - required role missing)' })
   async goOnline(
     @CurrentUser('uid') shipperId: string,
   ): Promise<{ subscribedCount: number; topic: string }> {
@@ -104,6 +114,8 @@ export class ShipperNotificationsController {
       },
     },
   })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
+  @ApiForbiddenResponse({ description: 'User is not a SHIPPER (403 - required role missing)' })
   async goOffline(
     @CurrentUser('uid') shipperId: string,
   ): Promise<{ unsubscribedCount: number; topic: string }> {

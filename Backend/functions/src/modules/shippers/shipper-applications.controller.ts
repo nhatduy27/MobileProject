@@ -11,7 +11,14 @@ import {
   UploadedFiles,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiConsumes } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiConsumes,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { ShippersService } from './shippers.service';
 import { ApplyShipperDto } from './dto/apply-shipper.dto';
@@ -27,6 +34,7 @@ export class ShipperApplicationsController {
 
   @Post()
   @ApiOperation({ summary: 'Apply to be Shipper' })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
   @ApiResponse({
     status: 201,
     description: 'Application created successfully',
@@ -101,6 +109,7 @@ export class ShipperApplicationsController {
 
   @Get('me')
   @ApiOperation({ summary: 'Get My Applications' })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
   @ApiResponse({
     status: 200,
     description: 'List of my applications',
@@ -134,6 +143,7 @@ export class ShipperApplicationsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Cancel Application' })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
   @ApiResponse({
     status: 200,
     description: 'Application cancelled successfully',
