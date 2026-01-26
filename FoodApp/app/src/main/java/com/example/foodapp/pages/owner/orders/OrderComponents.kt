@@ -58,10 +58,8 @@ fun OrderDetailBottomSheet(
                 .padding(bottom = 32.dp)
         ) {
             // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     text = order.orderNumber,
@@ -69,6 +67,7 @@ fun OrderDetailBottomSheet(
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF1A1A1A)
                 )
+                Spacer(modifier = Modifier.height(8.dp))
                 Surface(
                     color = statusColor.copy(alpha = 0.1f),
                     shape = RoundedCornerShape(50)
