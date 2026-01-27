@@ -50,22 +50,48 @@ export default function Login() {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #020617 0%, #0F172A 50%, #1E293B 100%)',
         padding: '20px',
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
+      {/* Background glow effect */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '20%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: '400px',
+          height: '400px',
+          background: 'radial-gradient(circle, rgba(34, 197, 94, 0.15) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }}
+      />
+      
       <Card
         style={{
           width: '100%',
-          maxWidth: 450,
-          boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+          maxWidth: 420,
+          background: 'rgba(15, 23, 42, 0.8)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(51, 65, 85, 0.5)',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
         }}
       >
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <Title level={2} style={{ marginBottom: 8 }}>
-            🏢 KTX Delivery
+          <div style={{ 
+            fontSize: 48, 
+            marginBottom: 8,
+            color: '#22C55E',
+          }}>
+            ⬢
+          </div>
+          <Title level={2} style={{ marginBottom: 8, color: '#F8FAFC', fontFamily: "'Fira Code', monospace" }}>
+            KTX Delivery
           </Title>
-          <Text type="secondary" style={{ fontSize: 16 }}>
+          <Text style={{ fontSize: 16, color: '#94A3B8' }}>
             Admin Panel
           </Text>
         </div>
@@ -75,7 +101,11 @@ export default function Login() {
           description="Only accounts with ADMIN role can access this panel."
           type="info"
           showIcon
-          style={{ marginBottom: 24 }}
+          style={{ 
+            marginBottom: 24,
+            background: 'rgba(59, 130, 246, 0.1)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+          }}
         />
 
         <Form name="login" onFinish={onFinish} size="large" layout="vertical">
@@ -118,7 +148,7 @@ export default function Login() {
         </Form>
 
         <div style={{ textAlign: 'center', marginTop: 16 }}>
-          <Text type="secondary" style={{ fontSize: 12 }}>
+          <Text style={{ fontSize: 12, color: '#64748B' }}>
             KTX Delivery Admin Panel v1.0
           </Text>
         </div>

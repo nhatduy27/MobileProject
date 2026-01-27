@@ -27,8 +27,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setAuthToken(idToken);
 
           // Verify admin role via backend
-          const response = await api.get<{ user: User }>('/me');
-          const userData = response.data.user;
+          const response = await api.get<{ data?: User; user?: User }>('/me');
+          const userData = response.data.data || response.data.user;
+
+          if (!userData) {
+            console.error('No user data in response');
+            await signOut(auth);
+            setAuthToken(null);
+            setUser(null);
+            setLoading(false);
+            return;
+          }
 
           // Critical: Check if user is ADMIN
           if (userData.role !== 'ADMIN') {
@@ -70,8 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAuthToken(idToken);
 
       // 3. Verify admin role (call backend /me)
-      const response = await api.get<{ user: User }>('/me');
-      const userData = response.data.user;
+      const response = await api.get<{ data?: User; user?: User }>('/me');
+      const userData = response.data.data || response.data.user;
+
+      if (!userData) {
+        await signOut(auth);
+        setAuthToken(null);
+        throw new Error('Failed to get user data from server.');
+      }
 
       // 4. Check if user is admin - CRITICAL CHECK
       if (userData.role !== 'ADMIN') {
