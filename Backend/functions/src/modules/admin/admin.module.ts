@@ -8,6 +8,7 @@ import {
 } from './controllers';
 import { AdminService } from './admin.service';
 import { CategoriesModule } from '../categories';
+import { WalletsModule } from '../wallets';
 import {
   ADMIN_USERS_REPOSITORY_TOKEN,
   ADMIN_SHOPS_REPOSITORY_TOKEN,
@@ -41,11 +42,13 @@ import {
   imports: [
     // Import CategoriesModule để sử dụng CategoriesService
     CategoriesModule,
+    
+    // Import WalletsModule để process payout transfers
+    WalletsModule,
 
     // TODO: Import các modules khác khi implement các EPIC tương ứng
     // UsersModule (EPIC 03),
     // ShopsModule (EPIC 04),
-    // WalletsModule (EPIC 10),
     // OrdersModule (EPIC 07),
     // NotificationsModule (EPIC 11),
   ],

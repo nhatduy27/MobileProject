@@ -12,7 +12,7 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
 
   constructor(@Inject('FIRESTORE') private readonly firestore: Firestore) {}
 
-  async create(shopId: string, data: Partial<VoucherEntity>): Promise<VoucherEntity> {
+  async create(shopId: string | null, data: Partial<VoucherEntity>): Promise<VoucherEntity> {
     const voucherRef = this.firestore.collection(this.vouchersCollection).doc();
     const now = Timestamp.now();
 
@@ -30,7 +30,7 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
       validFrom: data.validFrom!,
       validTo: data.validTo!,
       isActive: true,
-      ownerType: OwnerType.SHOP,
+      ownerType: shopId ? OwnerType.SHOP : OwnerType.ADMIN,
       name: data.name,
       description: data.description,
       isDeleted: false,
@@ -55,7 +55,7 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
     return { id: doc.id, ...doc.data() } as VoucherEntity;
   }
 
-  async findByShopAndCode(shopId: string, code: string): Promise<VoucherEntity | null> {
+  async findByShopAndCode(shopId: string | null, code: string): Promise<VoucherEntity | null> {
     const snapshot = await this.firestore
       .collection(this.vouchersCollection)
       .where('shopId', '==', shopId)
@@ -93,6 +93,37 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
     const orderBy = filters?.orderBy ?? 'createdAt';
     const orderDir = filters?.orderDir ?? 'desc';
     query = query.orderBy(orderBy, orderDir);
+
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
+    }
+
+    const snapshot = await query.get();
+    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }) as VoucherEntity);
+  }
+
+  async findAll(filters?: {
+    shopId?: string;
+    isActive?: boolean;
+    limit?: number;
+    orderBy?: 'createdAt' | 'validTo';
+    orderDir?: 'asc' | 'desc';
+  }): Promise<VoucherEntity[]> {
+    let query: FirebaseFirestore.Query = this.firestore
+      .collection(this.vouchersCollection)
+      .where('isDeleted', '==', false);
+
+    // Filter by shopId if provided (can be null for platform vouchers)
+    if (filters?.shopId !== undefined) {
+      query = query.where('shopId', '==', filters.shopId);
+    }
+
+    if (filters?.isActive !== undefined) {
+      query = query.where('isActive', '==', filters.isActive);
+    }
+
+    // Skip orderBy to avoid Firestore index requirements
+    // Results will be unordered but functional
 
     if (filters?.limit) {
       query = query.limit(filters.limit);

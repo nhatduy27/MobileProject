@@ -3,8 +3,9 @@ import { VoucherEntity, VoucherUsageEntity } from '../entities';
 export interface IVouchersRepository {
   /**
    * Create a new voucher
+   * @param shopId - Shop ID or null for platform vouchers
    */
-  create(shopId: string, data: Partial<VoucherEntity>): Promise<VoucherEntity>;
+  create(shopId: string | null, data: Partial<VoucherEntity>): Promise<VoucherEntity>;
 
   /**
    * Find voucher by ID
@@ -13,8 +14,9 @@ export interface IVouchersRepository {
 
   /**
    * Find voucher by shop + code (unique constraint)
+   * @param shopId - Shop ID or null for platform vouchers
    */
-  findByShopAndCode(shopId: string, code: string): Promise<VoucherEntity | null>;
+  findByShopAndCode(shopId: string | null, code: string): Promise<VoucherEntity | null>;
 
   /**
    * Find vouchers by shop (with optional filters)
@@ -28,6 +30,17 @@ export interface IVouchersRepository {
       orderDir?: 'asc' | 'desc';
     },
   ): Promise<VoucherEntity[]>;
+
+  /**
+   * Find all vouchers (ADMIN - with optional filters)
+   */
+  findAll(filters?: {
+    shopId?: string;
+    isActive?: boolean;
+    limit?: number;
+    orderBy?: 'createdAt' | 'validTo';
+    orderDir?: 'asc' | 'desc';
+  }): Promise<VoucherEntity[]>;
 
   /**
    * Update voucher fields (partial)

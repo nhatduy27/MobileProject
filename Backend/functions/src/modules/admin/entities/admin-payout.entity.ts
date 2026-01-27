@@ -34,12 +34,24 @@ export interface AdminPayoutEntity extends IBaseEntity {
 
   /** Wallet ID */
   walletId: string;
+  
+  /** Wallet type */
+  walletType?: string;
 
   /** Amount to payout (VND) */
   amount: number;
 
-  /** Bank info */
-  bankInfo: BankInfo;
+  /** Bank code (e.g., ICB, MB, VCB) */
+  bankCode: string;
+  
+  /** Account number */
+  accountNumber: string;
+  
+  /** Account name */
+  accountName: string;
+
+  /** Bank info (legacy - for backward compatibility) */
+  bankInfo?: BankInfo;
 
   /** Payout status */
   status: PayoutStatus;

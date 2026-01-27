@@ -158,14 +158,15 @@ Xem chi tiết:
 
 ## 6. API Reference
 
-| Document | Description |
-|----------|-------------|
-| [Authentication Guide](AUTH_GUIDE.md) | Auth flow chi tiết |
-| [User Guide](USER_GUIDE.md) | User profile, addresses, favorites |
-| [Admin Guide](ADMIN_GUIDE.md) | Admin management APIs |
-| [Test Accounts](TEST_ACCOUNTS.md) | Accounts có sẵn để test |
-| [OpenAPI Specification](../common/OPENAPI.md) | Danh sách endpoints với status |
-| Swagger UI | http://localhost:3000/api/docs |
+| Document                                                    | Description                          |
+| ----------------------------------------------------------- | ------------------------------------ |
+| [Authentication Guide](AUTH_GUIDE.md)                       | Auth flow chi tiết                   |
+| [User Guide](USER_GUIDE.md)                                 | User profile, addresses, favorites   |
+| [Admin Guide](ADMIN_GUIDE.md)                               | Admin management APIs                |
+| **[Payment & Payout QR Guide](PAYMENT_WALLET_QR_GUIDE.md)** | **🆕 SePay QR flows - Step by step** |
+| [Test Accounts](TEST_ACCOUNTS.md)                           | Accounts có sẵn để test              |
+| [OpenAPI Specification](../common/OPENAPI.md)               | Danh sách endpoints với status       |
+| Swagger UI                                                  | http://localhost:3000/api/docs       |
 
 ### Authentication
 

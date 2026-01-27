@@ -153,11 +153,35 @@ export class ConfigService {
   // SePay Config
   // ============================================
 
-  get sePayApiKey(): string {
-    return this.get('SEPAY_API_KEY', '');
+  get sePayApiUrl(): string {
+    return this.get('SEPAY_API_URL', 'https://my.sepay.vn/userapi');
   }
 
-  get sePayWebhookSecret(): string {
-    return this.get('SEPAY_WEBHOOK_SECRET', '');
+  get sePaySecretKey(): string {
+    return this.get('SEPAY_SECRET_KEY', '');
+  }
+
+  get sePayAccountNumber(): string {
+    return this.get('SEPAY_ACCOUNT_NUMBER', '');
+  }
+
+  get sePayAccountName(): string {
+    return this.get('SEPAY_ACCOUNT_NAME', '');
+  }
+
+  get sePayBankCode(): string {
+    return this.get('SEPAY_BANK_CODE', 'MB');
+  }
+
+  get sePayQrTemplate(): string {
+    return this.get('SEPAY_TEMPLATE_QR', 'https://qr.sepay.vn/img?acc={account}&bank={bank}&amount={amount}&des={content}&template=compact');
+  }
+
+  get sePayPollLimit(): number {
+    return parseInt(this.get('SEPAY_POLL_LIMIT', '50'), 10);
+  }
+
+  get sePayPollWindowMinutes(): number {
+    return parseInt(this.get('SEPAY_POLL_WINDOW_MINUTES', '60'), 10);
   }
 }

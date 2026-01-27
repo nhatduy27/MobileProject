@@ -132,11 +132,11 @@ export class CreateOrderDto {
 
   @ApiProperty({
     description: 'Payment method',
-    enum: ['COD', 'ZALOPAY', 'MOMO', 'SEPAY'],
+    enum: ['COD', 'SEPAY'],
     example: 'COD',
   })
   @IsString()
-  paymentMethod: 'COD' | 'ZALOPAY' | 'MOMO' | 'SEPAY';
+  paymentMethod: 'COD' | 'SEPAY';
 
   @ApiPropertyOptional({
     description: 'Voucher code to apply (optional for all payment methods)',

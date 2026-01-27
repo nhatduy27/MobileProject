@@ -366,4 +366,106 @@ export class VouchersService {
     }
     return voucher;
   }
+
+  // ==================== Admin Operations ====================
+
+  /**
+   * Get all vouchers (ADMIN)
+   * Route: GET /admin/vouchers
+   */
+  async getAllVouchers(filters?: {
+    shopId?: string;
+    isActive?: boolean;
+  }): Promise<VoucherEntity[]> {
+    return await this.vouchersRepository.findAll({
+      shopId: filters?.shopId,
+      isActive: filters?.isActive,
+    });
+  }
+
+  /**
+   * Get voucher by ID (ADMIN - no ownership check)
+   * Route: GET /admin/vouchers/:id
+   */
+  async getVoucherByIdAsAdmin(voucherId: string): Promise<VoucherEntity> {
+    return await this.getVoucherById(voucherId);
+  }
+
+  /**
+   * Create platform voucher (ADMIN only)
+   * Route: POST /admin/vouchers
+   * shopId = null means platform-wide voucher
+   */
+  async createPlatformVoucher(dto: CreateVoucherDto): Promise<VoucherEntity> {
+    // Check uniqueness: platform vouchers (shopId = null) + code
+    const existing = await this.vouchersRepository.findByShopAndCode(null, dto.code);
+    if (existing) {
+      throw new ConflictException({
+        code: ErrorCodes.VOUCHER_CODE_EXISTS,
+        message: 'Mã voucher platform đã tồn tại',
+        statusCode: 409,
+      });
+    }
+
+    // Validate date range
+    const validFrom = new Date(dto.validFrom);
+    const validTo = new Date(dto.validTo);
+    if (validTo <= validFrom) {
+      throw new BadRequestException({
+        code: ErrorCodes.VOUCHER_INVALID_DATE_RANGE,
+        message: 'Ngày kết thúc phải sau ngày bắt đầu',
+        statusCode: 400,
+      });
+    }
+
+    // Normalize payload
+    const normalizedDto = this.normalizeVoucherPayload(dto);
+
+    // Create with shopId = null (platform voucher)
+    return await this.vouchersRepository.create(null, normalizedDto);
+  }
+
+  /**
+   * Update voucher (ADMIN - can update any voucher)
+   * Route: PUT /admin/vouchers/:id
+   */
+  async updateVoucherAsAdmin(voucherId: string, dto: UpdateVoucherDto): Promise<void> {
+    const voucher = await this.getVoucherById(voucherId);
+
+    // Validate validTo if provided
+    if (dto.validTo) {
+      const newValidTo = new Date(dto.validTo);
+      const validFrom = new Date(voucher.validFrom);
+      if (newValidTo <= validFrom) {
+        throw new BadRequestException({
+          code: ErrorCodes.VOUCHER_INVALID_DATE_RANGE,
+          message: 'Ngày kết thúc phải sau ngày bắt đầu',
+          statusCode: 400,
+        });
+      }
+    }
+
+    // Normalize payload
+    const normalizedDto = this.normalizeVoucherPayload(dto);
+
+    await this.vouchersRepository.update(voucherId, normalizedDto);
+  }
+
+  /**
+   * Update voucher status (ADMIN)
+   * Route: PUT /admin/vouchers/:id/status
+   */
+  async updateVoucherStatusAsAdmin(voucherId: string, isActive: boolean): Promise<void> {
+    await this.getVoucherById(voucherId); // Validate exists
+    await this.vouchersRepository.update(voucherId, { isActive });
+  }
+
+  /**
+   * Delete voucher (ADMIN - soft delete)
+   * Route: DELETE /admin/vouchers/:id
+   */
+  async deleteVoucherAsAdmin(voucherId: string): Promise<void> {
+    await this.getVoucherById(voucherId); // Validate exists
+    await this.vouchersRepository.update(voucherId, { isDeleted: true, isActive: false });
+  }
 }
