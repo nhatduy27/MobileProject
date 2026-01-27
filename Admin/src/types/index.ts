@@ -81,6 +81,11 @@ export interface Payout {
   userEmail?: string;
   amount: number;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'TRANSFERRED';
+  // Backend field names
+  bankCode?: string;
+  accountNumber?: string;
+  accountName?: string;
+  // Legacy/alternative field names (for backward compatibility)
   bankName?: string;
   bankAccountNumber?: string;
   bankAccountName?: string;
