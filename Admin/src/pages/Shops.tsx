@@ -51,11 +51,36 @@ export default function Shops() {
         ...filters,
       };
 
-      const response = await api.get<PaginatedResponse<Shop>>('/admin/shops', { params });
-      setShops(response.data.data);
+      const response = await api.get<any>('/admin/shops', { params });
+      
+      const responseData = response.data;
+      let shopsArray: Shop[] = [];
+      let totalCount = 0;
+
+      // Handle different response formats from backend
+      if (Array.isArray(responseData)) {
+        shopsArray = responseData;
+        totalCount = responseData.length;
+      } else if (Array.isArray(responseData.data)) {
+        shopsArray = responseData.data;
+        totalCount = responseData.pagination?.total || responseData.data.length;
+      } else if (responseData.data && Array.isArray(responseData.data.shops)) {
+        // Wrapped in { data: { shops: [...], total: N } }
+        shopsArray = responseData.data.shops;
+        totalCount = responseData.data.total || responseData.data.shops.length;
+      } else if (responseData.data && Array.isArray(responseData.data.data)) {
+        // Wrapped in { data: { data: [...] } }
+        shopsArray = responseData.data.data;
+        totalCount = responseData.data.pagination?.total || responseData.data.data.length;
+      } else if (responseData.shops && Array.isArray(responseData.shops)) {
+        shopsArray = responseData.shops;
+        totalCount = responseData.total || responseData.shops.length;
+      }
+
+      setShops(shopsArray);
       setPagination((prev) => ({
         ...prev,
-        total: response.data.pagination.total,
+        total: totalCount,
       }));
     } catch (error: any) {
       console.error('Failed to load shops:', error);

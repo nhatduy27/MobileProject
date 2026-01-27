@@ -50,8 +50,33 @@ export default function Categories() {
   const loadCategories = async () => {
     try {
       setLoading(true);
-      const response = await api.get<ApiResponse<Category[]>>('/admin/categories');
-      setCategories(response.data.data || []);
+      const response = await api.get<any>('/admin/categories');
+      
+      // Handle different response formats from backend
+      const responseData = response.data;
+      let categoriesArray: Category[] = [];
+
+      console.log('Categories API Response:', responseData);
+
+      if (Array.isArray(responseData)) {
+        // Direct array response
+        categoriesArray = responseData;
+      } else if (Array.isArray(responseData.data)) {
+        // Wrapped in { data: [...] }
+        categoriesArray = responseData.data;
+      } else if (responseData.data && Array.isArray(responseData.data.categories)) {
+        // Wrapped in { data: { categories: [...] } }
+        categoriesArray = responseData.data.categories;
+      } else if (responseData.data && Array.isArray(responseData.data.data)) {
+        // Wrapped in { data: { data: [...] } }
+        categoriesArray = responseData.data.data;
+      } else if (responseData.categories && Array.isArray(responseData.categories)) {
+        // Wrapped in { categories: [...] }
+        categoriesArray = responseData.categories;
+      }
+
+      console.log('Parsed categoriesArray:', categoriesArray);
+      setCategories(categoriesArray);
     } catch (error: any) {
       console.error('Failed to load categories:', error);
       message.error('Failed to load categories');

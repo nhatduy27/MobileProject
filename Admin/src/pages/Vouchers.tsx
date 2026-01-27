@@ -81,10 +81,33 @@ export default function Vouchers() {
   const loadVouchers = async () => {
     try {
       setLoading(true);
-      const response = await api.get<ApiResponse<Voucher[]>>('/admin/vouchers');
-      // Handle nested data structure from backend
-      const data = response.data?.data;
-      setVouchers(Array.isArray(data) ? data : []);
+      const response = await api.get<any>('/admin/vouchers');
+      
+      // Handle different response formats from backend
+      const responseData = response.data;
+      let vouchersArray: Voucher[] = [];
+
+      console.log('Vouchers API Response:', responseData);
+
+      if (Array.isArray(responseData)) {
+        // Direct array response
+        vouchersArray = responseData;
+      } else if (Array.isArray(responseData.data)) {
+        // Wrapped in { data: [...] }
+        vouchersArray = responseData.data;
+      } else if (responseData.data && Array.isArray(responseData.data.vouchers)) {
+        // Wrapped in { data: { vouchers: [...] } }
+        vouchersArray = responseData.data.vouchers;
+      } else if (responseData.data && Array.isArray(responseData.data.data)) {
+        // Wrapped in { data: { data: [...] } }
+        vouchersArray = responseData.data.data;
+      } else if (responseData.vouchers && Array.isArray(responseData.vouchers)) {
+        // Wrapped in { vouchers: [...] }
+        vouchersArray = responseData.vouchers;
+      }
+
+      console.log('Parsed vouchersArray:', vouchersArray);
+      setVouchers(vouchersArray);
     } catch (error: any) {
       console.error('Failed to load vouchers:', error);
       message.error('Failed to load vouchers');

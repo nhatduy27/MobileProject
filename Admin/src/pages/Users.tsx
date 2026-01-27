@@ -49,11 +49,44 @@ export default function Users() {
         ...filters,
       };
 
-      const response = await api.get<PaginatedResponse<User>>('/admin/users', { params });
-      setUsers(response.data.data);
+      const response = await api.get<any>('/admin/users', { params });
+      
+      const responseData = response.data;
+      let usersArray: User[] = [];
+      let totalCount = 0;
+
+      console.log('API Response:', responseData);
+
+      // Handle different response formats from backend
+      // Response is: { success: true, data: { users: [...], total: N } } or { success: true, data: [...] }
+      if (Array.isArray(responseData)) {
+        // Direct array response
+        usersArray = responseData;
+        totalCount = responseData.length;
+      } else if (Array.isArray(responseData.data)) {
+        // Wrapped in { data: [...] }
+        usersArray = responseData.data;
+        totalCount = responseData.pagination?.total || responseData.data.length;
+      } else if (responseData.data && Array.isArray(responseData.data.users)) {
+        // Wrapped in { data: { users: [...], total: N } }
+        usersArray = responseData.data.users;
+        totalCount = responseData.data.total || responseData.data.users.length;
+      } else if (responseData.data && Array.isArray(responseData.data.data)) {
+        // Wrapped in { data: { data: [...] } }
+        usersArray = responseData.data.data;
+        totalCount = responseData.data.pagination?.total || responseData.data.data.length;
+      } else if (responseData.users && Array.isArray(responseData.users)) {
+        // Wrapped in { users: [...] }
+        usersArray = responseData.users;
+        totalCount = responseData.total || responseData.users.length;
+      }
+
+      console.log('Parsed usersArray:', usersArray, 'Total:', totalCount);
+
+      setUsers(usersArray);
       setPagination((prev) => ({
         ...prev,
-        total: response.data.pagination.total,
+        total: totalCount,
       }));
     } catch (error: any) {
       console.error('Failed to load users:', error);
