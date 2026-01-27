@@ -360,4 +360,72 @@ export class PaymentsService {
       return false;
     }
   }
+
+  /**
+   * Confirm SEPAY payment from webhook
+   * Called by SEPAY webhook when bank transfer is received
+   */
+  async confirmSepayPayment(
+    orderId: string,
+    amount: number,
+    transactionId: string,
+    bankCode: string,
+    transactionDate: string,
+  ): Promise<void> {
+    this.logger.log(`Confirming SEPAY payment for order ${orderId}`);
+
+    // Find payment for this order
+    const payment = await this.paymentsRepo.findByOrderId(orderId);
+    
+    if (!payment) {
+      this.logger.warn(`Payment not found for order ${orderId}, skipping confirmation`);
+      return;
+    }
+
+    // Check if already confirmed (idempotent)
+    if (payment.status === PaymentStatus.PAID) {
+      this.logger.log(`Payment ${payment.id} already confirmed, skipping`);
+      return;
+    }
+
+    // Verify amount matches
+    if (Math.abs(payment.amount - amount) > 1) {
+      this.logger.error(
+        `Amount mismatch for order ${orderId}: expected ${payment.amount}, got ${amount}`,
+      );
+      // Don't throw - still mark as paid but log warning
+    }
+
+    // Find order
+    const order = await this.ordersRepo.findById(orderId);
+    if (!order) {
+      this.logger.error(`Order ${orderId} not found`);
+      return;
+    }
+
+    // Update payment status
+    const updatedPayment: Partial<PaymentEntity> = {
+      status: PaymentStatus.PAID,
+      paidAt: Timestamp.now(),
+      providerData: {
+        ...(payment.providerData || {}),
+        transactionId,
+        bankCode,
+        transactionDate,
+        confirmedViaWebhook: true,
+      },
+      updatedAt: Timestamp.now(),
+    };
+
+    await this.paymentsRepo.update(payment.id!, updatedPayment);
+
+    // Update order payment status
+    await this.ordersRepo.update(orderId, {
+      paymentStatus: OrderPaymentStatus.PAID,
+    });
+
+    this.logger.log(
+      `SEPAY payment confirmed: Order ${order.orderNumber}, Amount ${amount}đ, TxnId ${transactionId}`,
+    );
+  }
 }

@@ -2,11 +2,13 @@ import {
   Injectable,
   Inject,
   NotFoundException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { Timestamp, Firestore } from '@google-cloud/firestore';
 import { IWalletsRepository, WALLETS_REPOSITORY_TOKEN } from './interfaces';
 import { WalletEntity, WalletLedgerEntity, WalletType, LedgerType } from './entities';
+import { RequestPayoutDto } from './dto';
 
 @Injectable()
 export class WalletsService {
@@ -241,5 +243,70 @@ export class WalletsService {
       this.logger.error(`Failed to process payout for order ${orderNumber}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Request payout (withdraw funds)
+   * Create payout request for admin approval
+   */
+  async requestPayout(
+    userId: string,
+    walletType: WalletType,
+    dto: RequestPayoutDto,
+  ): Promise<any> {
+    // Get wallet
+    const wallet = await this.getWalletByUserIdAndType(userId, walletType);
+
+    // Validate balance
+    if (wallet.balance < dto.amount) {
+      throw new BadRequestException({
+        code: 'WALLET_002',
+        message: `Insufficient balance. Available: ${wallet.balance}đ, Requested: ${dto.amount}đ`,
+        statusCode: 400,
+      });
+    }
+
+    // Minimum withdrawal amounts
+    const minAmount = walletType === WalletType.OWNER ? 100000 : 50000;
+    if (dto.amount < minAmount) {
+      throw new BadRequestException({
+        code: 'WALLET_003',
+        message: `Minimum payout amount is ${minAmount.toLocaleString()}đ`,
+        statusCode: 400,
+      });
+    }
+
+    // Create payout request
+    const payoutRequestRef = this.firestore.collection('payoutRequests').doc();
+    const payoutRequest = {
+      id: payoutRequestRef.id,
+      userId,
+      walletId: wallet.id,
+      walletType,
+      amount: dto.amount,
+      bankCode: dto.bankCode,
+      accountNumber: dto.accountNumber,
+      accountName: dto.accountName,
+      note: dto.note || '',
+      status: 'PENDING', // PENDING | APPROVED | REJECTED | TRANSFERRED
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    };
+
+    await payoutRequestRef.set(payoutRequest);
+
+    this.logger.log(
+      `Payout request created: ${payoutRequestRef.id} for user ${userId}, amount: ${dto.amount}đ`,
+    );
+
+    return {
+      id: payoutRequest.id,
+      amount: payoutRequest.amount,
+      status: payoutRequest.status,
+      bankCode: payoutRequest.bankCode,
+      accountNumber: payoutRequest.accountNumber,
+      accountName: payoutRequest.accountName,
+      createdAt: payoutRequest.createdAt,
+    };
   }
 }

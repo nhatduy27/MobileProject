@@ -1,6 +1,8 @@
 import {
   Controller,
   Get,
+  Post,
+  Body,
   Query,
   UseGuards,
   HttpCode,
@@ -14,7 +16,7 @@ import { CurrentUser } from '../../../core/decorators/current-user.decorator';
 import { UserRole } from '../../users/entities/user.entity';
 import { WalletsService } from '../wallets.service';
 import { WalletType } from '../entities';
-import { GetLedgerDto } from '../dto';
+import { GetLedgerDto, RequestPayoutDto } from '../dto';
 
 @Controller('wallets')
 @UseGuards(AuthGuard, RolesGuard)
@@ -92,6 +94,30 @@ export class WalletsController {
       limit: result.limit,
       total: result.total,
       totalPages: result.totalPages,
+    };
+  }
+
+  /**
+   * Request payout (withdraw funds)
+   * POST /api/wallets/payout
+   */
+  @Post('payout')
+  @Roles(UserRole.OWNER, UserRole.SHIPPER)
+  @HttpCode(HttpStatus.CREATED)
+  async requestPayout(
+    @CurrentUser('uid') userId: string,
+    @Req() req: any,
+    @Body() dto: RequestPayoutDto,
+  ) {
+    // Get wallet type from user's role
+    const userRole = req.user?.role as string;
+    const walletType = userRole === 'OWNER' ? WalletType.OWNER : WalletType.SHIPPER;
+    
+    const payoutRequest = await this.walletsService.requestPayout(userId, walletType, dto);
+    
+    return {
+      message: 'Payout request submitted successfully',
+      payoutRequest,
     };
   }
 }

@@ -9,6 +9,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   AppstoreOutlined,
+  TagOutlined,
   WalletOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
@@ -46,6 +47,11 @@ export default function Layout() {
       key: '/categories',
       icon: <AppstoreOutlined />,
       label: 'Categories',
+    },
+    {
+      key: '/vouchers',
+      icon: <TagOutlined />,
+      label: 'Vouchers',
     },
     {
       key: '/payouts',

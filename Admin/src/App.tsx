@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import Users from './pages/Users';
 import Shops from './pages/Shops';
 import Categories from './pages/Categories';
+import Vouchers from './pages/Vouchers';
 import Payouts from './pages/Payouts';
 
 function App() {
@@ -38,6 +39,7 @@ function App() {
               <Route path="users" element={<Users />} />
               <Route path="shops" element={<Shops />} />
               <Route path="categories" element={<Categories />} />
+              <Route path="vouchers" element={<Vouchers />} />
               <Route path="payouts" element={<Payouts />} />
             </Route>
 

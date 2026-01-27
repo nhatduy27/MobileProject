@@ -2,9 +2,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 
 export enum PaymentMethod {
   COD = 'COD',
-  MOMO = 'MOMO',
   SEPAY = 'SEPAY',
-  ZALOPAY = 'ZALOPAY',
 }
 
 export enum PaymentStatus {
