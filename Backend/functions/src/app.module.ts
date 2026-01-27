@@ -20,8 +20,8 @@ import { CartModule } from './modules/cart/cart.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { VouchersModule } from './modules/vouchers/vouchers.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
-// import { PaymentsModule } from './modules/payments/payments.module';
-// import { WalletsModule } from './modules/wallets/wallets.module';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { WalletsModule } from './modules/wallets/wallets.module';
 
 @Module({
   imports: [
@@ -57,9 +57,9 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
     // EPIC 05: Notifications (CORE)
     NotificationsModule,
 
-    // Future EPICs
-    // PaymentsModule,
-    // WalletsModule,
+    // EPIC 06: Payments & Wallets ✅
+    PaymentsModule,
+    WalletsModule,
   ],
 })
 export class AppModule {}

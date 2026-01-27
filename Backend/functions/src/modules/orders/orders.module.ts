@@ -14,6 +14,7 @@ import { ShippersModule } from '../shippers/shippers.module';
 import { UsersModule } from '../users/users.module';
 import { VouchersModule } from '../vouchers/vouchers.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { WalletsModule } from '../wallets/wallets.module';
 import { ConfigModule } from '../../core/config/config.module';
 import { ORDERS_REPOSITORY } from './interfaces';
 
@@ -26,6 +27,7 @@ import { ORDERS_REPOSITORY } from './interfaces';
     UsersModule,
     VouchersModule,
     NotificationsModule,
+    WalletsModule,
     forwardRef(() => ShippersModule),
   ],
   controllers: [
@@ -42,6 +44,6 @@ import { ORDERS_REPOSITORY } from './interfaces';
       useClass: FirestoreOrdersRepository,
     },
   ],
-  exports: [OrderStateMachineService, OrdersService],
+  exports: [OrderStateMachineService, OrdersService, ORDERS_REPOSITORY],
 })
 export class OrdersModule {}

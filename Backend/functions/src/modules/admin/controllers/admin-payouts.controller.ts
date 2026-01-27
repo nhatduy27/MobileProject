@@ -26,7 +26,7 @@ export class AdminPayoutsController {
    */
   @Get()
   @ApiOperation({
-    summary: 'Lấy danh sách payout requests (⛔ BLOCKED — cần: WalletModule, OrderModule)',
+    summary: 'Lấy danh sách payout requests',
   })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -41,7 +41,7 @@ export class AdminPayoutsController {
    * Lấy chi tiết payout
    */
   @Get(':payoutId')
-  @ApiOperation({ summary: 'Lấy chi tiết payout (⛔ BLOCKED — cần: WalletModule)' })
+  @ApiOperation({ summary: 'Lấy chi tiết payout' })
   @ApiResponse({ status: 200, description: 'Chi tiết payout' })
   @ApiResponse({ status: 404, description: 'Payout không tồn tại' })
   async getPayout(@Param('payoutId') payoutId: string) {
@@ -55,7 +55,7 @@ export class AdminPayoutsController {
    * ADMIN-009: Approve Payout Request
    */
   @Post(':payoutId/approve')
-  @ApiOperation({ summary: 'Approve payout request (⛔ BLOCKED — cần: WalletModule)' })
+  @ApiOperation({ summary: 'Approve payout request' })
   @ApiResponse({ status: 200, description: 'Payout đã được approve' })
   @ApiResponse({ status: 404, description: 'Payout không tồn tại' })
   @ApiResponse({ status: 409, description: 'Payout đã được xử lý' })
@@ -72,7 +72,7 @@ export class AdminPayoutsController {
    * ADMIN-010: Reject Payout Request
    */
   @Post(':payoutId/reject')
-  @ApiOperation({ summary: 'Reject payout request (⛔ BLOCKED — cần: WalletModule)' })
+  @ApiOperation({ summary: 'Reject payout request' })
   @ApiResponse({ status: 200, description: 'Payout đã bị reject' })
   @ApiResponse({ status: 400, description: 'Lý do là bắt buộc' })
   @ApiResponse({ status: 404, description: 'Payout không tồn tại' })
@@ -94,7 +94,7 @@ export class AdminPayoutsController {
    * ADMIN-011: Mark Payout as Transferred
    */
   @Post(':payoutId/transferred')
-  @ApiOperation({ summary: 'Đánh dấu payout đã chuyển khoản (⛔ BLOCKED — cần: WalletModule)' })
+  @ApiOperation({ summary: 'Đánh dấu payout đã chuyển khoản' })
   @ApiResponse({ status: 200, description: 'Đã đánh dấu transferred' })
   @ApiResponse({ status: 404, description: 'Payout không tồn tại' })
   @ApiResponse({ status: 409, description: 'Payout chưa được approve' })

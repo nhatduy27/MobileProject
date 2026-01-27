@@ -10,6 +10,8 @@ import {
 } from '@nestjs/common';
 import { FirebaseService } from '../../core/firebase/firebase.service';
 import { EmailService } from '../email/email.service';
+import { WalletsService } from '../wallets/wallets.service';
+import { WalletType } from '../wallets/entities';
 import {
   IUsersRepository,
   IOTPRepository,
@@ -50,6 +52,7 @@ export class AuthService {
     private readonly otpRepository: IOTPRepository,
     private readonly firebaseService: FirebaseService,
     private readonly emailService: EmailService,
+    private readonly walletsService: WalletsService,
   ) {}
 
   /**
@@ -174,8 +177,9 @@ export class AuthService {
       });
 
       // Set custom claims (role)
+      const userRole = dto.role || UserRole.CUSTOMER;
       await this.firebaseService.auth.setCustomUserClaims(userRecord.uid, {
-        role: dto.role,
+        role: userRole,
       });
 
       // Create Firestore user document
@@ -183,7 +187,7 @@ export class AuthService {
         email: dto.email,
         displayName: dto.displayName,
         ...(phoneNumber && { phone: phoneNumber }), // Store normalized phone
-        role: UserRole.CUSTOMER,
+        role: userRole, // FIX: Use dto.role (not hardcoded CUSTOMER) to sync with claims
         status: UserStatus.ACTIVE,
         emailVerified: false,
         fcmTokens: [],
@@ -195,6 +199,16 @@ export class AuthService {
       await this.usersRepository.createWithId(userRecord.uid, userEntity as UserEntity);
 
       // Generate custom token for client to sign in
+      
+      // Initialize wallet if user is OWNER (non-blocking, best-effort)
+      if (userRole === UserRole.OWNER) {
+        this.walletsService
+          .initializeWallet(userRecord.uid, WalletType.OWNER)
+          .catch((err) => {
+            console.error('Failed to initialize owner wallet:', err);
+          });
+      }
+
       const customToken = await this.firebaseService.auth.createCustomToken(userRecord.uid);
       // Send welcome email (don't await - run in background)
       this.emailService.sendWelcomeEmail(dto.email, dto.displayName).catch((err) => {

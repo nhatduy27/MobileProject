@@ -3,6 +3,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { USERS_REPOSITORY_TOKEN, OTP_REPOSITORY_TOKEN } from './interfaces';
 import { FirestoreUsersRepository, FirestoreOTPRepository } from './repositories';
+import { WalletsModule } from '../wallets/wallets.module';
 
 /**
  * Auth Module
@@ -19,7 +20,7 @@ import { FirestoreUsersRepository, FirestoreOTPRepository } from './repositories
  * - OTP_REPOSITORY_TOKEN -> FirestoreOTPRepository
  */
 @Module({
-  imports: [],
+  imports: [WalletsModule],
   controllers: [AuthController],
   providers: [
     // Register repositories

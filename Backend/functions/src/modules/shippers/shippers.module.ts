@@ -9,9 +9,10 @@ import { ShopsModule } from '../shops/shops.module';
 import { FirebaseModule } from '../../core/firebase/firebase.module';
 import { SharedModule } from '../../shared/shared.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { WalletsModule } from '../wallets/wallets.module';
 
 @Module({
-  imports: [FirebaseModule, UsersModule, ShopsModule, SharedModule, NotificationsModule],
+  imports: [FirebaseModule, UsersModule, ShopsModule, SharedModule, NotificationsModule, WalletsModule],
   controllers: [
     ShipperApplicationsController,
     OwnerShippersController,

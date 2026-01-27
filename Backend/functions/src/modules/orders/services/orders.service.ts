@@ -22,6 +22,7 @@ import { NotificationType } from '../../notifications/entities/notification.enti
 import { NotificationCategory } from '../../notifications/dto/admin-batch-send.dto';
 import { ConfigService } from '../../../core/config/config.service';
 import { FirebaseService } from '../../../core/firebase/firebase.service';
+import { WalletsService } from '../../wallets/wallets.service';
 import { OrderEntity, OrderStatus, PaymentStatus, DeliveryAddress } from '../entities';
 import {
   CreateOrderDto,
@@ -57,6 +58,7 @@ export class OrdersService {
     private readonly stateMachine: OrderStateMachineService,
     private readonly configService: ConfigService,
     private readonly firebaseService: FirebaseService,
+    private readonly walletsService: WalletsService,
   ) {}
 
   /**
@@ -605,8 +607,8 @@ export class OrdersService {
       });
     }
 
-    // 3. Validate payment (COD can be confirmed immediately)
-    if (order.paymentMethod !== 'COD' && order.paymentStatus !== PaymentStatus.PAID) {
+    // 3. Validate payment - ALL orders must be PAID before confirmation (no COD bypass)
+    if (order.paymentStatus !== PaymentStatus.PAID) {
       throw new ConflictException({
         code: 'ORDER_009',
         message: 'Cannot confirm order - payment not completed',
@@ -1324,9 +1326,10 @@ export class OrdersService {
       updatedAt: Timestamp.now(),
     };
 
-    // 5. For COD orders, mark as PAID upon delivery
+    // 5. For COD orders, mark as PAID upon delivery (fallback if not already paid)
     if (order.paymentMethod === 'COD' && order.paymentStatus === PaymentStatus.UNPAID) {
       updateData.paymentStatus = PaymentStatus.PAID;
+      this.logger.log(`Order ${order.orderNumber} COD payment marked as PAID on delivery`);
     }
 
     await this.ordersRepo.update(orderId, updateData);
@@ -1344,54 +1347,109 @@ export class OrdersService {
 
     console.log(`✓ Order ${order.orderNumber} delivered by shipper: ${shipperId}`);
 
-    // Refetch order and notify customer and owner
+    // Refetch order for notifications and payout
     const deliveredOrder = await this.ordersRepo.findById(orderId);
-    if (deliveredOrder) {
-      // Notify customer
-      await this.sendOrderNotification(
-        order.customerId,
-        `Order Delivered`,
-        `Order #${deliveredOrder.orderNumber} has been successfully delivered`,
-        NotificationType.ORDER_DELIVERED,
-        deliveredOrder,
-      );
+    if (!deliveredOrder) {
+      this.logger.error(`Order ${orderId} not found after delivery update`);
+      return null;
+    }
 
-      // Notify shop owner
+    // 7. Send notifications (non-blocking)
+    // Notify customer
+    await this.sendOrderNotification(
+      order.customerId,
+      `Order Delivered`,
+      `Order #${deliveredOrder.orderNumber} has been successfully delivered`,
+      NotificationType.ORDER_DELIVERED,
+      deliveredOrder,
+    );
+
+    // Notify shop owner
+    try {
+      const shop = await this.shopsRepo.findById(order.shopId);
+      if (shop?.ownerId) {
+        // FIX #1: Safe shipper name fallback - prefer available displayName from user, then name, then fallback
+        // Since ShipperEntity doesn't have displayName, we try to fetch it from users collection
+        let shipperName = 'Shipper';
+        if (shipper?.name) {
+          shipperName = shipper.name;
+        } else {
+          try {
+            const shipperUser = await this.usersRepo.findById(shipperId);
+            shipperName = shipperUser?.displayName ?? 'Shipper';
+          } catch {
+            shipperName = 'Shipper';
+          }
+        }
+        await this.notificationsService.send({
+          userId: shop.ownerId,
+          title: `Order Delivered`,
+          body: `Order #${deliveredOrder.orderNumber} was successfully delivered by ${shipperName}`,
+          type: NotificationType.ORDER_DELIVERED,
+          data: { orderId, orderNumber: deliveredOrder.orderNumber, shipperId },
+          orderId,
+          shopId: order.shopId,
+        });
+      }
+    } catch (error) {
+      this.logger.error('Failed to send ORDER_DELIVERED notification to owner:', error);
+    }
+
+    // 8. Process payout (atomic transaction)
+    // Only payout if order is PAID and not already paid out
+    // P0-FIX: processOrderPayout now handles Order.paidOut update atomically
+    if (
+      deliveredOrder.paymentStatus === PaymentStatus.PAID &&
+      !deliveredOrder.paidOut
+    ) {
       try {
         const shop = await this.shopsRepo.findById(order.shopId);
-        if (shop?.ownerId) {
-          // FIX #1: Safe shipper name fallback - prefer available displayName from user, then name, then fallback
-          // Since ShipperEntity doesn't have displayName, we try to fetch it from users collection
-          let shipperName = 'Shipper';
-          if (shipper?.name) {
-            shipperName = shipper.name;
-          } else {
-            try {
-              const shipperUser = await this.usersRepo.findById(shipperId);
-              shipperName = shipperUser?.displayName ?? 'Shipper';
-            } catch {
-              shipperName = 'Shipper';
-            }
-          }
-          await this.notificationsService.send({
-            userId: shop.ownerId,
-            title: `Order Delivered`,
-            body: `Order #${deliveredOrder.orderNumber} was successfully delivered by ${shipperName}`,
-            type: NotificationType.ORDER_DELIVERED,
-            data: { orderId, orderNumber: deliveredOrder.orderNumber, shipperId },
+        if (!shop?.ownerId) {
+          this.logger.error(`Cannot process payout: shop owner not found for order ${orderId}`);
+        } else {
+          // Calculate payout amounts using CORRECT formula
+          // shipperAmount = order.shipperPayout (internal shipper payment from shop)
+          // ownerAmount = order.total - order.shipperPayout
+          const shipperAmount = deliveredOrder.shipperPayout || 0;
+          const ownerAmount = deliveredOrder.total - shipperAmount;
+
+          this.logger.log(
+            `Processing payout for order ${order.orderNumber}: ` +
+              `total=${deliveredOrder.total}, ` +
+              `shipperPayout=${shipperAmount}, ` +
+              `ownerAmount=${ownerAmount}`,
+          );
+
+          // P0-FIX: Process payout atomically (includes Order.paidOut update in transaction)
+          // No need to update order.paidOut separately - it's done inside the transaction
+          await this.walletsService.processOrderPayout(
             orderId,
-            shopId: order.shopId,
-          });
+            deliveredOrder.orderNumber,
+            shop.ownerId,
+            ownerAmount,
+            shipperId,
+            shipperAmount,
+          );
+
+          this.logger.log(`✓ Payout completed for order ${order.orderNumber}`);
         }
       } catch (error) {
-        this.logger.error('Failed to send ORDER_DELIVERED notification to owner:', error);
+        this.logger.error(`Failed to process payout for order ${order.orderNumber}:`, error);
+        // Non-blocking: payout failure should not fail delivery confirmation
+        // Admin can manually retry payout later
+      }
+    } else {
+      if (deliveredOrder.paidOut) {
+        this.logger.warn(`Order ${order.orderNumber} already paid out (idempotent)`);
+      } else {
+        this.logger.warn(
+          `Order ${order.orderNumber} not PAID (status: ${deliveredOrder.paymentStatus}), skipping payout`,
+        );
       }
     }
 
-    // TODO: Trigger payout to shop owner (Phase 2 enhancement)
-    // await this.walletService.processOrderPayout(orderId);
-
-    return deliveredOrder;
+    // Return final order state
+    return this.ordersRepo.findById(orderId);
   }
 
   /**

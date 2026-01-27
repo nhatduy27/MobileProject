@@ -13,6 +13,8 @@ import { UsersService } from '../users/users.service';
 import { ShopsService } from '../shops/services/shops.service';
 import { StorageService } from '../../shared/services/storage.service';
 import { FirebaseService } from '../../core/firebase/firebase.service';
+import { WalletsService } from '../wallets/wallets.service';
+import { WalletType } from '../wallets/entities';
 import { ApplyShipperDto } from './dto/apply-shipper.dto';
 import { RejectApplicationDto } from './dto/reject-application.dto';
 import { ShipperApplicationEntity, ApplicationStatus } from './entities/shipper-application.entity';
@@ -32,6 +34,7 @@ export class ShippersService {
     private readonly storageService: StorageService,
     private readonly firebaseService: FirebaseService,
     private readonly notificationsService: NotificationsService,
+    private readonly walletsService: WalletsService,
     @Inject('FIRESTORE')
     private readonly firestore: Firestore,
   ) {}
@@ -227,6 +230,16 @@ export class ShippersService {
       const appRef = this.firestore.collection('shipperApplications').doc(applicationId);
       const userRef = this.firestore.collection('users').doc(app.userId); // ✓ Correct: shipper's document
 
+      // Check if already approved (idempotent)
+      const appDoc = await transaction.get(appRef);
+      const currentApp = appDoc.data() as any;
+      
+      if (currentApp.status === ApplicationStatus.APPROVED) {
+        // Already approved, skip Firestore update (will still sync claims below)
+        this.logger.log(`Application ${applicationId} already approved (idempotent)`);
+        return;
+      }
+
       // Update application
       transaction.update(appRef, {
         status: ApplicationStatus.APPROVED,
@@ -254,26 +267,54 @@ export class ShippersService {
           currentOrders: [],
           joinedAt: FieldValue.serverTimestamp(),
         },
+        claimsSyncStatus: 'PENDING', // Track claims sync state
         updatedAt: FieldValue.serverTimestamp(),
       });
     });
 
     // CRITICAL: Update Firebase Custom Claims to keep authorization in sync
+    // P0-FIX: DO NOT THROW after transaction commit - log and mark status instead
     // AuthGuard and RolesGuard check custom claims, so claims must be updated
     // after Firestore transaction succeeds
     try {
       await this.firebaseService.auth.setCustomUserClaims(app.userId, {
         role: 'SHIPPER',
       });
+      
+      // Mark claims sync as successful
+      await this.firestore.collection('users').doc(app.userId).update({
+        claimsSyncStatus: 'OK',
+        claimsSyncedAt: FieldValue.serverTimestamp(),
+      });
+      
+      this.logger.log(`Claims synced successfully for shipper ${app.userId}`);
     } catch (error) {
-      // If claims update fails, log error and throw
-      // The Firestore update succeeded but claims are out of sync
-      // User will see new role in GET /me but 403 on SHIPPER endpoints
-      // until they re-login (which will read updated claims)
-      const errorMsg = `Failed to sync Firebase custom claims for shipper ${app.userId} after approval. Claims will be inconsistent until user re-login.`;
-      console.error(errorMsg, error);
-      throw new Error(errorMsg);
+      // P0-FIX: DO NOT THROW - this would fail the API even though data is committed
+      // Instead: log error and mark status for manual/automatic retry
+      const errorMsg = `Failed to sync Firebase custom claims for shipper ${app.userId} after approval. ` +
+        `User has role SHIPPER in Firestore but claims not updated. ` +
+        `User should re-login or admin should retry sync.`;
+      
+      this.logger.error(errorMsg, error);
+      
+      // Mark status as FAILED for backfill/retry
+      await this.firestore.collection('users').doc(app.userId).update({
+        claimsSyncStatus: 'FAILED',
+        claimsSyncError: error instanceof Error ? error.message : String(error),
+      }).catch(err => {
+        this.logger.error(`Failed to update claimsSyncStatus: ${err}`);
+      });
+      
+      // DO NOT THROW - approval succeeded, just claims sync failed
+      // API returns success, shipper can re-login to get fresh claims
     }
+
+    // Initialize shipper wallet (non-blocking, best-effort)
+    this.walletsService
+      .initializeWallet(app.userId, WalletType.SHIPPER)
+      .catch((err) => {
+        console.error(`Failed to initialize shipper wallet for ${app.userId}:`, err);
+      });
 
     // Notify shipper about approval
     try {
