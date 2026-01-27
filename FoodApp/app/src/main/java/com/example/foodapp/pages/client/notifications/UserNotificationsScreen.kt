@@ -1,329 +1,775 @@
+// NotificationsScreen.kt
 package com.example.foodapp.pages.client.notifications
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
-import com.example.foodapp.pages.client.components.home.UserBottomNav
-
-data class UserNotification(
-    val id: String,
-    val title: String,
-    val message: String,
-    val timestamp: String,
-    val type: NotificationType,
-    val isRead: Boolean = false
-)
-
-enum class NotificationType(val emoji: String, val color: Color) {
-    ORDER("📦", Color(0xFF4CAF50)),
-    DELIVERY("🚗", Color(0xFF2196F3)),
-    PROMOTION("🎉", Color(0xFFFFC107)),
-    SYSTEM("ℹ️", Color(0xFF9E9E9E))
-}
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.data.remote.client.response.notification.NotificationResponse
+import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun UserNotificationsScreen(
-    navController: NavHostController,
-    onBackClick: () -> Unit
+fun NotificationsScreen(
+    onBack: () -> Unit,
+    //onNotificationClick: (notificationId: String) -> Unit = {},
 ) {
-    var notifications by remember {
-        mutableStateOf(
-            listOf(
-                UserNotification(
-                    "1",
-                    "Đơn hàng được xác nhận",
-                    "Đơn hàng #12345 của bạn đã được xác nhận. Cảm ơn đã mua hàng!",
-                    "Hôm nay 10:30",
-                    NotificationType.ORDER,
-                    false
-                ),
-                UserNotification(
-                    "2",
-                    "Đơn hàng đang giao",
-                    "Shipper đang trên đường giao hàng đến bạn. Vui lòng chờ đợi.",
-                    "Hôm nay 09:15",
-                    NotificationType.DELIVERY,
-                    false
-                ),
-                UserNotification(
-                    "3",
-                    "Khuyến mãi mới",
-                    "Giảm 30% cho tất cả đồ uống hôm nay!",
-                    "Hôm nay 08:00",
-                    NotificationType.PROMOTION
-                ),
-                UserNotification(
-                    "4",
-                    "Giao hàng thành công",
-                    "Đơn hàng #12340 của bạn đã được giao thành công.",
-                    "Hôm qua 15:45",
-                    NotificationType.ORDER
-                ),
-                UserNotification(
-                    "5",
-                    "Đánh giá đơn hàng",
-                    "Vui lòng đánh giá đơn hàng #12340 của bạn.",
-                    "Hôm qua 16:00",
-                    NotificationType.SYSTEM
-                ),
-                UserNotification(
-                    "6",
-                    "Khuyến mãi đặc biệt",
-                    "Được tặng voucher 50.000đ cho lần mua tiếp theo!",
-                    "2 ngày trước",
-                    NotificationType.PROMOTION
-                ),
-                UserNotification(
-                    "7",
-                    "Cập nhật hệ thống",
-                    "Ứng dụng đã được cập nhật phiên bản mới.",
-                    "3 ngày trước",
-                    NotificationType.SYSTEM
-                ),
-            )
-        )
+    val context = LocalContext.current
+    val viewModel: NotificationsViewModel = viewModel(
+        factory = NotificationsViewModel.factory(context)
+    )
+
+    // Observe các state từ ViewModel
+    val notificationsState by viewModel.notificationsState.observeAsState()
+    val currentNotifications by viewModel.currentNotifications.observeAsState()
+    val unreadCount by viewModel.unreadCount.observeAsState(0)
+    val markReadState by viewModel.markReadState.observeAsState()
+
+    // Local state
+    var selectedFilter by remember { mutableStateOf(NotificationFilter.ALL) }
+    var showFilterDropdown by remember { mutableStateOf(false) }
+
+    // Animation state
+    var refreshRotation by remember { mutableStateOf(0f) }
+    val infiniteTransition = rememberInfiniteTransition(label = "refresh")
+
+    // Xử lý kết quả đánh dấu đã đọc
+    LaunchedEffect(markReadState) {
+        when (markReadState) {
+            is MarkReadState.Success -> {
+                delay(2000)
+                viewModel.resetMarkReadState()
+            }
+            else -> {}
+        }
     }
 
-    val unreadCount = notifications.count { !it.isRead }
+    // Hiển thị loading/error/success states
+    LaunchedEffect(notificationsState) {
+        when (notificationsState) {
+            is NotificationsState.Success -> {
+                println("DEBUG: Notifications loaded successfully")
+            }
+            is NotificationsState.Error -> {
+                val error = (notificationsState as NotificationsState.Error).message
+                println("DEBUG: Error loading notifications: $error")
+            }
+            else -> {}
+        }
+    }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Column {
-                        Text(
-                            "Thông báo",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                        if (unreadCount > 0) {
+            Surface(
+                shadowElevation = 2.dp,
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
                             Text(
-                                "$unreadCount thông báo chưa đọc",
-                                fontSize = 12.sp,
-                                color = Color(0xFFFF9800)
+                                "Thông báo",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            if (unreadCount > 0) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                AnimatedContent(
+                                    targetState = unreadCount,
+                                    transitionSpec = {
+                                        (slideInVertically { -it } + fadeIn()).togetherWith(
+                                            slideOutVertically { it } + fadeOut()
+                                        )
+                                    },
+                                    label = "badge"
+                                ) { count ->
+                                    Badge(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .shadow(4.dp, CircleShape)
+                                    ) {
+                                        Text(
+                                            text = if (count > 9) "9+" else "$count",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    navigationIcon = {
+                        IconButton(
+                            onClick = onBack,
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .size(40.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Quay lại",
+                                tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
+                    },
+                    actions = {
+                        // Filter button with badge
+                        Box {
+                            BadgedBox(
+                                badge = {
+                                    if (selectedFilter != NotificationFilter.ALL) {
+                                        Badge(
+                                            containerColor = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(8.dp)
+                                        )
+                                    }
+                                }
+                            ) {
+                                IconButton(onClick = { showFilterDropdown = true }) {
+                                    Icon(
+                                        Icons.Default.FilterList,
+                                        contentDescription = "Lọc thông báo",
+                                        tint = if (selectedFilter != NotificationFilter.ALL) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.onSurface
+                                        }
+                                    )
+                                }
+                            }
+
+                            MaterialTheme(
+                                shapes = MaterialTheme.shapes.copy(
+                                    extraSmall = RoundedCornerShape(16.dp)
+                                )
+                            ) {
+                                DropdownMenu(
+                                    expanded = showFilterDropdown,
+                                    onDismissRequest = { showFilterDropdown = false },
+                                    modifier = Modifier
+                                        .widthIn(min = 200.dp)
+                                        .background(
+                                            MaterialTheme.colorScheme.surface,
+                                            RoundedCornerShape(16.dp)
+                                        )
+                                ) {
+                                    Text(
+                                        "Lọc thông báo",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                                    )
+                                    HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+
+                                    NotificationFilter.entries.forEach { filter ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    modifier = Modifier.fillMaxWidth()
+                                                ) {
+                                                    Icon(
+                                                        imageVector = filter.icon,
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(20.dp),
+                                                        tint = if (selectedFilter == filter) {
+                                                            MaterialTheme.colorScheme.primary
+                                                        } else {
+                                                            MaterialTheme.colorScheme.onSurfaceVariant
+                                                        }
+                                                    )
+                                                    Spacer(modifier = Modifier.width(12.dp))
+                                                    Text(
+                                                        filter.displayName,
+                                                        fontWeight = if (selectedFilter == filter) {
+                                                            FontWeight.SemiBold
+                                                        } else {
+                                                            FontWeight.Normal
+                                                        },
+                                                        color = if (selectedFilter == filter) {
+                                                            MaterialTheme.colorScheme.primary
+                                                        } else {
+                                                            MaterialTheme.colorScheme.onSurface
+                                                        }
+                                                    )
+                                                    Spacer(modifier = Modifier.weight(1f))
+                                                    if (selectedFilter == filter) {
+                                                        Icon(
+                                                            Icons.Default.Check,
+                                                            contentDescription = null,
+                                                            modifier = Modifier.size(20.dp),
+                                                            tint = MaterialTheme.colorScheme.primary
+                                                        )
+                                                    }
+                                                }
+                                            },
+                                            onClick = {
+                                                selectedFilter = filter
+                                                showFilterDropdown = false
+                                            },
+                                            modifier = Modifier.padding(horizontal = 8.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // Refresh button
+                        IconButton(
+                            onClick = { viewModel.refreshNotifications() },
+                            enabled = notificationsState !is NotificationsState.Loading
+                        ) {
+                            if (notificationsState is NotificationsState.Loading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.5.dp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Default.Refresh,
+                                    contentDescription = "Làm mới",
+                                    tint = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface,
+                        actionIconContentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                )
+            }
+        }
+    ) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(paddingValues)
+        ) {
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Nội dung chính
+                when (val state = notificationsState) {
+                    is NotificationsState.Loading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(20.dp),
+                                modifier = Modifier.padding(32.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(48.dp),
+                                    strokeWidth = 4.dp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    "Đang tải thông báo...",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
                     }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+
+                    is NotificationsState.Error -> {
+                        val error = (state as NotificationsState.Error).message
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(20.dp),
+                                modifier = Modifier.padding(32.dp)
+                            ) {
+                                // Error icon with gradient background
+                                Box(
+                                    modifier = Modifier
+                                        .size(80.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            Brush.radialGradient(
+                                                colors = listOf(
+                                                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
+                                                    MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f)
+                                                )
+                                            )
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.ErrorOutline,
+                                        contentDescription = "Lỗi",
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(40.dp)
+                                    )
+                                }
+
+                                Text(
+                                    text = "Không thể tải thông báo",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+
+                                Text(
+                                    text = error,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                )
+
+                                Button(
+                                    onClick = { viewModel.refreshNotifications() },
+                                    modifier = Modifier.padding(top = 8.dp),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.Refresh,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Thử lại", fontWeight = FontWeight.SemiBold)
+                                }
+                            }
+                        }
                     }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFFF9800)
-                ),
-                actions = {
-                    if (unreadCount > 0) {
-                        TextButton(onClick = {
-                            notifications = notifications.map { it.copy(isRead = true) }
-                        }) {
-                            Text("Đánh dấu đã đọc", color = Color.White, fontSize = 12.sp)
+
+                    is NotificationsState.Success -> {
+                        val notifications = currentNotifications ?: emptyList()
+
+                        // Lọc theo loại nếu cần
+                        val filteredNotifications = when (selectedFilter) {
+                            NotificationFilter.ALL -> notifications
+                            NotificationFilter.UNREAD -> notifications.filter { !it.read }
+                            NotificationFilter.ORDER -> notifications.filter {
+                                it.type?.contains("ORDER", ignoreCase = true) == true
+                            }
+                            NotificationFilter.SYSTEM -> notifications.filter {
+                                it.type?.contains("SYSTEM", ignoreCase = true) == true
+                            }
+                        }
+
+                        // Kiểm tra nếu danh sách rỗng
+                        if (filteredNotifications.isEmpty()) {
+                            EmptyNotificationsView(selectedFilter = selectedFilter)
+                        } else {
+                            // Hiển thị danh sách thông báo
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(
+                                    items = filteredNotifications,
+                                    key = { it.id ?: it.hashCode().toString() }
+                                ) { notification ->
+                                    NotificationItem(
+                                        notification = notification,
+                                        onNotificationClick = {
+                                            // Xử lý khi click vào thông báo
+                                            //viewModel.markAsRead(notification.id ?: "")
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    else -> {
+                        // State ban đầu hoặc idle
+                        if (notificationsState == null) {
+                            EmptyNotificationsView(selectedFilter = NotificationFilter.ALL)
                         }
                     }
                 }
-            )
-        },
-        bottomBar = {
-            UserBottomNav(navController = navController, onProfileClick = { })
-        },
-        containerColor = Color.White
-    ) { padding ->
-        if (notifications.isEmpty()) {
-            EmptyNotificationsContent(modifier = Modifier.padding(padding))
-        } else {
-            NotificationsContent(
-                notifications = notifications,
-                onRemoveNotification = { notificationId ->
-                    notifications = notifications.filter { it.id != notificationId }
-                },
-                onMarkAsRead = { notificationId ->
-                    notifications = notifications.map { notification ->
-                        if (notification.id == notificationId) {
-                            notification.copy(isRead = true)
-                        } else notification
+            }
+
+            // Hiển thị Snackbar khi đánh dấu đã đọc thành công
+            AnimatedVisibility(
+                visible = markReadState is MarkReadState.Success || markReadState is MarkReadState.Error,
+                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            ) {
+                when (markReadState) {
+                    is MarkReadState.Success -> {
+                        Snackbar(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.shadow(8.dp, RoundedCornerShape(12.dp))
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Đã đánh dấu đã đọc", fontWeight = FontWeight.Medium)
+                            }
+                        }
                     }
-                },
-                modifier = Modifier.padding(padding)
-            )
+                    is MarkReadState.Error -> {
+                        val error = (markReadState as MarkReadState.Error).message
+                        Snackbar(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.shadow(8.dp, RoundedCornerShape(12.dp))
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Error,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Lỗi: $error", fontWeight = FontWeight.Medium)
+                            }
+                        }
+                    }
+                    else -> {}
+                }
+            }
         }
     }
 }
 
 @Composable
-private fun NotificationsContent(
-    notifications: List<UserNotification>,
-    onRemoveNotification: (String) -> Unit,
-    onMarkAsRead: (String) -> Unit,
-    modifier: Modifier = Modifier
+fun NotificationItem(
+    notification: NotificationResponse,
+    onNotificationClick: () -> Unit
 ) {
-    LazyColumn(
-        modifier = modifier
-            .fillMaxSize(),
-        contentPadding = PaddingValues(vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        items(notifications) { notification ->
-            NotificationItemCard(
-                notification = notification,
-                onRemove = { onRemoveNotification(notification.id) },
-                onMarkAsRead = { onMarkAsRead(notification.id) }
-            )
-        }
-    }
-}
+    val isUnread = !notification.read
 
-@Composable
-private fun NotificationItemCard(
-    notification: UserNotification,
-    onRemove: () -> Unit,
-    onMarkAsRead: () -> Unit
-) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp),
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (notification.isRead) 0.dp else 2.dp),
+            .clickable(
+                onClick = onNotificationClick,
+                enabled = isUnread
+            )
+            .animateContentSize(),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (notification.isRead) Color.White else Color(0xFFFFF8F3)
+            containerColor = if (isUnread) {
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isUnread) 4.dp else 1.dp
         )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
-            verticalAlignment = Alignment.Top,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(16.dp),
+            verticalAlignment = Alignment.Top
         ) {
-            // Type icon
+            // Icon theo loại thông báo với gradient background
+            val (icon, iconColor, gradientColors) = when {
+                notification.type?.contains("ORDER", ignoreCase = true) == true ->
+                    Triple(
+                        Icons.Default.ShoppingBag,
+                        MaterialTheme.colorScheme.primary,
+                        listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+                        )
+                    )
+                notification.type?.contains("SYSTEM", ignoreCase = true) == true ->
+                    Triple(
+                        Icons.Default.Info,
+                        MaterialTheme.colorScheme.secondary,
+                        listOf(
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
+                            MaterialTheme.colorScheme.secondary.copy(alpha = 0.05f)
+                        )
+                    )
+                notification.type?.contains("PROMOTION", ignoreCase = true) == true ->
+                    Triple(
+                        Icons.Default.LocalOffer,
+                        Color(0xFF4CAF50),
+                        listOf(
+                            Color(0xFF4CAF50).copy(alpha = 0.2f),
+                            Color(0xFF4CAF50).copy(alpha = 0.05f)
+                        )
+                    )
+                else ->
+                    Triple(
+                        Icons.Default.Notifications,
+                        MaterialTheme.colorScheme.tertiary,
+                        listOf(
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.2f),
+                            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.05f)
+                        )
+                    )
+            }
+
             Box(
                 modifier = Modifier
                     .size(48.dp)
+                    .clip(CircleShape)
                     .background(
-                        notification.type.color.copy(alpha = 0.2f),
-                        RoundedCornerShape(8.dp)
+                        Brush.radialGradient(colors = gradientColors)
+                    )
+                    .shadow(
+                        elevation = if (isUnread) 4.dp else 2.dp,
+                        shape = CircleShape
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(notification.type.emoji, fontSize = 24.sp)
+                Icon(
+                    icon,
+                    contentDescription = notification.type,
+                    tint = iconColor,
+                    modifier = Modifier.size(24.dp)
+                )
             }
 
-            // Content
+            Spacer(modifier = Modifier.width(16.dp))
+
+            // Nội dung thông báo
             Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxHeight(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+                modifier = Modifier.weight(1f)
             ) {
-                // Title with unread indicator
+                Text(
+                    text = notification.title ?: "Thông báo",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = if (isUnread) FontWeight.Bold else FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = notification.body ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    lineHeight = MaterialTheme.typography.bodyMedium.lineHeight,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // Metadata với divider
+                HorizontalDivider(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                )
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        notification.title,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        color = Color.Black,
-                        modifier = Modifier.weight(1f)
-                    )
-                    if (!notification.isRead) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .background(Color(0xFFFF9800), RoundedCornerShape(50))
-                        )
-                    }
-                }
-
-                // Message
-                Text(
-                    notification.message,
-                    fontSize = 12.sp,
-                    color = Color(0xFF666666),
-                    maxLines = 2
-                )
-
-                // Timestamp
-                Text(
-                    notification.timestamp,
-                    fontSize = 11.sp,
-                    color = Color(0xFF999999)
-                )
-
-                // Actions
-                if (!notification.isRead) {
-                    Row(
-                        modifier = Modifier.padding(top = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        TextButton(
-                            onClick = onMarkAsRead,
-                            modifier = Modifier.height(28.dp),
-                            contentPadding = PaddingValues(horizontal = 8.dp)
+                    // Thời gian với icon
+                    notification.createdAt?.let { createdAt ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Đánh dấu đã đọc", fontSize = 11.sp)
+                            Icon(
+                                Icons.Default.AccessTime,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.outline
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = formatNotificationTime(createdAt),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        }
+                    }
+
+                    // Trạng thái đọc/chưa đọc
+                    if (isUnread) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.shadow(2.dp, RoundedCornerShape(8.dp))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(6.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.onPrimary)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Mới",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
+                    } else {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.DoneAll,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = MaterialTheme.colorScheme.outline
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Đã đọc",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.outline
+                            )
                         }
                     }
                 }
-            }
-
-            // Delete button
-            IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = "Remove",
-                    tint = Color(0xFF999999),
-                    modifier = Modifier.size(18.dp)
-                )
             }
         }
     }
 }
 
 @Composable
-private fun EmptyNotificationsContent(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+fun EmptyNotificationsView(selectedFilter: NotificationFilter) {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            "🔔",
-            fontSize = 64.sp,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-        Text(
-            "Không có thông báo",
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
-            color = Color.Black
-        )
-        Text(
-            "Bạn sẽ nhận được thông báo về đơn hàng của mình",
-            fontSize = 14.sp,
-            color = Color(0xFF999999),
-            modifier = Modifier.padding(top = 8.dp),
-            textAlign = TextAlign.Center
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            modifier = Modifier.padding(48.dp)
+        ) {
+            // Empty icon with gradient background
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                                Color.Transparent
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.NotificationsNone,
+                    contentDescription = "Không có thông báo",
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                    modifier = Modifier.size(64.dp)
+                )
+            }
+
+            Text(
+                text = when (selectedFilter) {
+                    NotificationFilter.ALL -> "Không có thông báo nào"
+                    NotificationFilter.UNREAD -> "Không có thông báo chưa đọc"
+                    NotificationFilter.ORDER -> "Không có thông báo đơn hàng"
+                    NotificationFilter.SYSTEM -> "Không có thông báo hệ thống"
+                },
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+
+            Text(
+                text = "Chúng tôi sẽ thông báo cho bạn khi có tin mới",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+        }
     }
+}
+
+// Helper function để format thời gian
+private fun formatNotificationTime(timestamp: String): String {
+    return try {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+        dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        val date = dateFormat.parse(timestamp)
+
+        val now = Date()
+        val diff = now.time - (date?.time ?: 0)
+
+        when {
+            diff < 60000 -> "Vừa xong"
+            diff < 3600000 -> "${diff / 60000} phút trước"
+            diff < 86400000 -> "${diff / 3600000} giờ trước"
+            diff < 604800000 -> "${diff / 86400000} ngày trước"
+            else -> {
+                val displayFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                displayFormat.format(date ?: Date())
+            }
+        }
+    } catch (e: Exception) {
+        "Thời gian không xác định"
+    }
+}
+
+enum class NotificationFilter(val displayName: String, val icon: ImageVector) {
+    ALL("Tất cả", Icons.Default.Notifications),
+    UNREAD("Chưa đọc", Icons.Default.MarkEmailUnread),
+    ORDER("Đơn hàng", Icons.Default.ShoppingBag),
+    SYSTEM("Hệ thống", Icons.Default.Info)
 }

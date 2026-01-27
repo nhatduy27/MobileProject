@@ -10,19 +10,25 @@ import com.example.foodapp.data.model.shared.auth.*
 import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
 import com.example.foodapp.data.repository.shared.AuthRepository
 import com.example.foodapp.data.repository.firebase.AuthManager
+import com.example.foodapp.data.repository.client.notification.NotificationRepository
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.delay
+
 
 class LoginViewModel(
     private val repository: UserFirebaseRepository,
     private val authRepository: AuthRepository,
+    private val notificationRepository: NotificationRepository,
     private val context: Context
 ) : ViewModel() {
 
@@ -122,6 +128,7 @@ class LoginViewModel(
 
                         // Xử lý custom token để sign in Firebase
                         handleGoogleCustomToken(authData.customToken, userInfo)
+
                     } else {
                         _googleLogInState.value = GoogleLogInState.Error(
                             "Dữ liệu người dùng không hợp lệ",
@@ -151,6 +158,10 @@ class LoginViewModel(
             if (isSuccessful) {
                 if (!idToken.isNullOrEmpty()) {
                     authManager.saveFirebaseToken(idToken)
+                    Log.d("LoginViewModel", "✅ Đã lưu Firebase token: ${idToken.take(10)}...")
+
+                    // Cập nhật token cho ApiClient ngay lập tức
+                    updateApiClientToken(idToken)
                 }
 
                 // Cập nhật state
@@ -161,6 +172,9 @@ class LoginViewModel(
                     role = userInfo.role
                 )
                 _existAccountState.value = true
+
+                // GỌI ĐĂNG KÝ DEVICE TOKEN (sau khi đã cập nhật token)
+                delayAndRegisterDeviceToken()
 
             } else {
                 // Vẫn coi là thành công vì đã có user info
@@ -312,6 +326,10 @@ class LoginViewModel(
             if (isSuccessful) {
                 if (!idToken.isNullOrEmpty()) {
                     authManager.saveFirebaseToken(idToken)
+                    Log.d("LoginViewModel", "✅ Đã lưu Firebase token: ${idToken.take(10)}...")
+
+                    // Cập nhật token cho ApiClient ngay lập tức
+                    updateApiClientToken(idToken)
                 }
 
                 _logInState.value = LogInState.Success(
@@ -321,6 +339,10 @@ class LoginViewModel(
                     role = userInfo.role
                 )
                 _existAccountState.value = true
+
+                // GỌI ĐĂNG KÝ DEVICE TOKEN (sau khi đã cập nhật token)
+                delayAndRegisterDeviceToken()
+
             } else {
                 // Vẫn coi là thành công vì đã có user info
                 _logInState.value = LogInState.Success(
@@ -330,7 +352,69 @@ class LoginViewModel(
                     role = userInfo.role
                 )
                 _existAccountState.value = true
+            }
+        }
+    }
 
+    /**
+     * Cập nhật token cho ApiClient
+     */
+    private fun updateApiClientToken(token: String) {
+        try {
+            // Lưu vào SharedPreferences
+            val sharedPref = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
+            sharedPref.edit().putString("firebase_id_token", token).apply()
+
+            // Đồng thời, tạo một static method trong ApiClient để update token
+            // Nếu chưa có, bạn cần thêm vào ApiClient:
+            // ApiClient.updateCurrentToken(token)
+
+            Log.d("LoginViewModel", "💾 Đã cập nhật token cho ApiClient: ${token.take(10)}...")
+        } catch (e: Exception) {
+            Log.e("LoginViewModel", "❌ Lỗi khi cập nhật token: ${e.message}")
+        }
+    }
+
+    /**
+     * Đợi một chút rồi mới đăng ký device token
+     */
+    private fun delayAndRegisterDeviceToken() {
+        viewModelScope.launch {
+            // Đợi 1 giây để đảm bảo token đã được cập nhật trong ApiClient
+            delay(1000)
+            registerDeviceTokenForUser()
+        }
+    }
+
+
+    private fun registerDeviceTokenForUser() {
+        viewModelScope.launch {
+            try {
+                // Lấy FCM token
+                val fcmToken = FirebaseMessaging.getInstance().token.await()
+
+                // Device info
+                val deviceModel = android.os.Build.MODEL
+                val osVersion = android.os.Build.VERSION.RELEASE
+
+                // Gọi API đăng ký token
+                val result = notificationRepository.registerDeviceToken(
+                    token = fcmToken,
+                    platform = "android",
+                    model = deviceModel,
+                    osVersion = osVersion
+                )
+
+                when (result) {
+                    is com.example.foodapp.data.remote.client.response.notification.ApiResult.Success -> {
+                    }
+                    is com.example.foodapp.data.remote.client.response.notification.ApiResult.Failure -> {
+                        result.exception.printStackTrace()
+                    }
+                    else -> {}
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
@@ -374,9 +458,10 @@ class LoginViewModel(
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     return LoginViewModel(
-                        UserFirebaseRepository(context),
-                        AuthRepository(),
-                        context
+                        repository = UserFirebaseRepository(context),
+                        authRepository = AuthRepository(),
+                        notificationRepository = NotificationRepository(),
+                        context = context
                     ) as T
                 }
             }

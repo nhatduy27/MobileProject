@@ -11,6 +11,7 @@ import com.example.foodapp.data.remote.client.CartApiService
 import  com.example.foodapp.data.remote.shared.CategoryService
 import com.example.foodapp.data.remote.client.OrderApiService
 import com.example.foodapp.data.remote.client.VoucherApiService
+import com.example.foodapp.data.remote.client.NotificationApiService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -110,4 +111,5 @@ object ApiClient {
     val cartApiService: CartApiService by lazy { retrofit.create(CartApiService::class.java) }
     val orderApiService: OrderApiService by lazy { retrofit.create(OrderApiService::class.java) }
     val voucherApiService: VoucherApiService by lazy { retrofit.create(VoucherApiService::class.java) }
+    val notificationApiService: NotificationApiService by lazy { retrofit.create(NotificationApiService::class.java) }
 }

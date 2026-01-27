@@ -1,9 +1,6 @@
 package com.example.foodapp.pages.client.components.payment
 
-
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ShoppingBag
@@ -11,16 +8,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
 import com.example.foodapp.data.model.shared.product.Product
-import com.example.foodapp.pages.client.payment.*
+import com.example.foodapp.pages.client.payment.CartItem
 import com.example.foodapp.ui.theme.*
 
 @Composable
@@ -32,65 +26,47 @@ fun ProductListSection(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .shadow(
-                elevation = 4.dp,
-                shape = RoundedCornerShape(16.dp),
-                spotColor = Color.Black.copy(alpha = 0.1f)
-            ),
+            .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = CardWhite)
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp, bottom = 8.dp)
-        ) {
+        Column(modifier = Modifier.padding(vertical = 16.dp)) {
+            // Header Section
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(horizontal = 20.dp)
+                modifier = Modifier.padding(horizontal = 16.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(AccentGreen.copy(alpha = 0.1f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.ShoppingBag,
-                        contentDescription = null,
-                        tint = AccentGreen,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
+                Icon(
+                    imageVector = Icons.Default.ShoppingBag,
+                    contentDescription = null,
+                    tint = PrimaryOrange,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Thông tin đơn hàng",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    text = "Sản phẩm đã chọn",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
+            // Danh sách sản phẩm
             items.forEachIndexed { index, cartItem ->
                 ProductInfoRow(
                     product = cartItem.product,
-                    quantity = cartItem.quantity,
-                    onQuantityIncrease = { onQuantityIncrease(cartItem.product.id) },
-                    onQuantityDecrease = { onQuantityDecrease(cartItem.product.id) }
+                    quantity = cartItem.quantity
                 )
                 if (index < items.size - 1) {
-                    Divider(
-                        color = BorderLight,
-                        thickness = 1.dp,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp)
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                        thickness = 0.5.dp,
+                        color = Color.LightGray.copy(alpha = 0.5f)
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
@@ -98,52 +74,41 @@ fun ProductListSection(
 @Composable
 fun ProductInfoRow(
     product: Product,
-    quantity: Int,
-    onQuantityIncrease: () -> Unit,
-    onQuantityDecrease: () -> Unit
+    quantity: Int
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 16.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-
-        AsyncImage(
-            model = product.imageUrl,
-            contentDescription = product.name,
-            modifier = Modifier
-                .size(64.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color.LightGray),
-            contentScale = ContentScale.Crop
-        )
-
-        Spacer(modifier = Modifier.width(16.dp))
-
+        // INFO SECTION
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = product.name,
-                fontSize = 16.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary,
-                lineHeight = 22.sp
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = Color.Black
             )
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Số lượng: $quantity",
+                fontSize = 13.sp,
+                color = Color.Gray
+            )
+        }
+
+        // PRICE SECTION
+        Column(horizontalAlignment = Alignment.End) {
             Text(
                 text = product.price,
-                fontSize = 17.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryOrange
             )
         }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        QuantitySelector(
-            quantity = quantity,
-            onIncrease = onQuantityIncrease,
-            onDecrease = onQuantityDecrease
-        )
     }
 }

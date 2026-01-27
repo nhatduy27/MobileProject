@@ -128,10 +128,6 @@ export class MeController {
     }
 
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    if (!allowedTypes.includes(file.mimetype)) {
-      throw new BadRequestException('Only JPEG and PNG images are allowed');
-    }
 
     // Validate file size (5MB max)
     const maxSize = 5 * 1024 * 1024;

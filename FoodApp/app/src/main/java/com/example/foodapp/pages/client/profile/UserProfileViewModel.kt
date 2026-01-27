@@ -4,16 +4,13 @@ import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.foodapp.data.model.Client
 import com.example.foodapp.data.remote.client.response.profile.*
-import com.example.foodapp.data.repository.shared.AuthRepository
-import com.example.foodapp.data.repository.firebase.AuthManager
 import com.example.foodapp.data.repository.client.profile.ProfileRepository
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 // Sealed class cho các trạng thái
 sealed class ProfileState {
@@ -21,13 +18,6 @@ sealed class ProfileState {
     object Loading : ProfileState()
     data class Success(val user: Client, val addresses: List<AddressResponse>) : ProfileState()
     data class Error(val message: String) : ProfileState()
-}
-
-sealed class UpdateProfileState {
-    object Idle : UpdateProfileState()
-    object Loading : UpdateProfileState()
-    data class Success(val message: String) : UpdateProfileState()
-    data class Error(val message: String) : UpdateProfileState()
 }
 
 sealed class ChangePasswordState {
@@ -70,18 +60,12 @@ sealed class SetDefaultAddressState {
 }
 
 class ProfileViewModel(
-    private val authRepository: AuthRepository,
-    private val profileRepository: ProfileRepository,
-    private val authManager: AuthManager,
+    private val profileRepository: ProfileRepository
 ) : ViewModel() {
 
     // State cho việc lấy thông tin người dùng
     private val _userState = MutableLiveData<ProfileState>(ProfileState.Idle)
     val userState: LiveData<ProfileState> = _userState
-
-    // State cho việc cập nhật profile
-    private val _updateState = MutableLiveData<UpdateProfileState>(UpdateProfileState.Idle)
-    val updateState: LiveData<UpdateProfileState> = _updateState
 
     // State cho việc đổi mật khẩu
     private val _changePasswordState = MutableLiveData<ChangePasswordState>(ChangePasswordState.Idle)
@@ -114,9 +98,6 @@ class ProfileViewModel(
     // Current addresses
     private val _addresses = MutableLiveData<List<AddressResponse>>(emptyList())
     val addresses: LiveData<List<AddressResponse>> = _addresses
-
-    // Format date cho ngày tham gia
-    private val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
     // Load thông tin của người dùng ngay khi vừa vào app
     init {
@@ -194,58 +175,6 @@ class ProfileViewModel(
                 }
             } catch (e: Exception) {
                 println("DEBUG: [ViewModel] Refresh addresses exception: ${e.message}")
-            }
-        }
-    }
-
-    fun updateProfile(displayName: String?, phone: String?) {
-        viewModelScope.launch {
-            _updateState.value = UpdateProfileState.Loading
-
-            try {
-                // Tạo request
-                val request = UpdateProfileRequest(
-                    displayName = displayName?.trim().takeIf { !it.isNullOrBlank() },
-                    phone = phone?.trim().takeIf { !it.isNullOrBlank() },
-                    avatarUrl = null
-                )
-
-                println("DEBUG: [ViewModel] Update request: $request")
-
-                val result = profileRepository.updateProfile(request)
-
-                when (result) {
-                    is ApiResult.Success -> {
-                        val updatedUserData = result.data
-                        println("DEBUG: [ViewModel] Update successful: ${updatedUserData}")
-
-                        // Cập nhật current user với dữ liệu mới
-                        val currentUser = _currentUser.value
-                        currentUser?.let { user ->
-                            val updatedUser = user.copy(
-                                fullName = updatedUserData.displayName ?: user.fullName,
-                                phone = updatedUserData.phone ?: user.phone,
-                                imageAvatar = updatedUserData.avatarUrl ?: user.imageAvatar
-                            )
-                            _currentUser.value = updatedUser
-                            // Giữ nguyên danh sách địa chỉ
-                            _userState.value = ProfileState.Success(updatedUser, _addresses.value ?: emptyList())
-                        }
-
-                        _updateState.value = UpdateProfileState.Success("Cập nhật thông tin thành công")
-                        println("DEBUG: [ViewModel] Update state set to success")
-                    }
-
-                    is ApiResult.Failure -> {
-                        val errorMessage = result.exception.message ?: "Cập nhật thất bại"
-                        _updateState.value = UpdateProfileState.Error(errorMessage)
-                        println("DEBUG: [ViewModel] Update failed: $errorMessage")
-                    }
-                }
-            } catch (e: Exception) {
-                val errorMessage = e.message ?: "Lỗi không xác định khi cập nhật"
-                _updateState.value = UpdateProfileState.Error(errorMessage)
-                println("DEBUG: [ViewModel] Update exception: $errorMessage")
             }
         }
     }
@@ -422,33 +351,11 @@ class ProfileViewModel(
         _setDefaultAddressState.value = SetDefaultAddressState.Idle
     }
 
-    fun resetUpdateProfileState() {
-        _updateState.value = UpdateProfileState.Idle
-    }
-
-    // Factory cho ViewModel
-    class Factory(private val context: Context) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
-                val authRepository = AuthRepository()
+    companion object {
+        fun factory(context: Context) = viewModelFactory {
+            initializer {
                 val profileRepository = ProfileRepository()
-                val authManager = AuthManager(context)
-                return ProfileViewModel(authRepository, profileRepository, authManager) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
-        }
-
-        companion object {
-            @Volatile
-            private var INSTANCE: Factory? = null
-
-            fun getInstance(context: Context): Factory {
-                return INSTANCE ?: synchronized(this) {
-                    INSTANCE ?: Factory(context.applicationContext).also {
-                        INSTANCE = it
-                    }
-                }
+                ProfileViewModel(profileRepository)
             }
         }
     }

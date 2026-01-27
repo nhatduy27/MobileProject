@@ -29,9 +29,10 @@ import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
 import com.example.foodapp.pages.client.cart.CartScreen
 import com.example.foodapp.pages.client.favorites.FavoritesScreen
 import com.example.foodapp.pages.client.home.UserHomeScreen
-import com.example.foodapp.pages.client.notifications.UserNotificationsScreen
+import com.example.foodapp.pages.client.notifications.NotificationsScreen
 import com.example.foodapp.pages.client.payment.PaymentScreen
 import com.example.foodapp.pages.client.productdetail.UserProductDetailScreen
+import com.example.foodapp.pages.client.userInfo.UserInfoScreen
 import com.example.foodapp.pages.client.profile.UserProfileScreen
 import com.example.foodapp.pages.client.orderdetail.OrderDetailScreen
 import com.example.foodapp.pages.client.setting.SettingsScreen
@@ -61,6 +62,8 @@ sealed class Screen(val route: String) {
     object ResetPassword : Screen("resetpassword")
     object UserSetting : Screen ("setting")
     object UserOrder : Screen("user_order")
+
+    object UserInfo : Screen("user_info")
 
     object UserProductDetail : Screen ("product_detail/{productId}") {
         fun createRoute(productId: String) = "product_detail/$productId"
@@ -351,7 +354,16 @@ fun FoodAppNavHost(
                 onChangePasswordClick = { navController.navigate(Screen.UserSetting.route) },
                 onOrderButtonClick = {
                     navController.navigate(Screen.UserOrder.route)
+                },
+                onUserInfoClick = {
+                    navController.navigate(Screen.UserInfo.route)
                 }
+            )
+        }
+
+        composable(Screen.UserInfo.route) {
+            UserInfoScreen(
+                onBackClick = { navController.navigateUp() },
             )
         }
 
@@ -405,7 +417,7 @@ fun FoodAppNavHost(
         }
 
         composable(Screen.UserNotifications.route) {
-            UserNotificationsScreen(navController = navController, onBackClick = { navController.navigateUp() })
+            NotificationsScreen( onBack = { navController.navigateUp() })
         }
 
         // Composable cho các vai trò khác (Shipper, Owner)

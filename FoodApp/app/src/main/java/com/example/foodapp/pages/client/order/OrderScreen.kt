@@ -26,12 +26,18 @@ import kotlinx.coroutines.launch
 import com.example.foodapp.pages.client.components.order.OrderCard
 import com.example.foodapp.ui.theme.*
 
+// Màu chủ đạo cam
+private val PrimaryOrange = Color(0xFFFF6B35)
+private val LightOrange = Color(0xFFFFF4E6)
+private val DarkOrange = Color(0xFFE55A2B)
+private val AccentOrange = Color(0xFFFF8C42)
+
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderScreen(
     onBack: () -> Unit,
-    onOrderClick: (String) -> Unit = {} // Thêm callback khi nhấn vào order
+    onOrderClick: (String) -> Unit = {}
 ) {
     val viewModel: OrderViewModel = viewModel(factory = OrderViewModel.factory())
     val coroutineScope = rememberCoroutineScope()
@@ -42,6 +48,21 @@ fun OrderScreen(
     val hasMore by viewModel.hasMore.observeAsState(true)
     val selectedStatus by viewModel.selectedStatus.observeAsState(null)
     val deleteState by viewModel.deleteOrderState.observeAsState()
+
+    // Sắp xếp đơn hàng: Ưu tiên đơn đang giao (SHIPPING) lên đầu
+    val sortedOrders = remember(orders) {
+        orders.sortedWith(
+            compareByDescending<com.example.foodapp.data.remote.client.response.order.OrderPreviewApiModel> {
+                when (it.status) {
+                    "SHIPPING" -> 3      // Đang giao - Ưu tiên cao nhất
+                    "PENDING" -> 2       // Đang chờ
+                    "DELIVERED" -> 1     // Đã giao
+                    "CANCELLED" -> 0     // Đã hủy - Ưu tiên thấp nhất
+                    else -> -1
+                }
+            }.thenByDescending { it.createdAt }
+        )
+    }
 
     // State để quản lý flow xóa đơn hàng
     var showDeleteReasonDialog by remember { mutableStateOf(false) }
@@ -93,7 +114,18 @@ fun OrderScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+                snackbar = { data ->
+                    Snackbar(
+                        snackbarData = data,
+                        containerColor = PrimaryOrange,
+                        contentColor = Color.White
+                    )
+                }
+            )
+        },
         topBar = {
             OrderTopBar(
                 selectedStatus = selectedStatus,
@@ -107,6 +139,7 @@ fun OrderScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .background(Color(0xFFFAFAFA))
         ) {
             when (orderState) {
                 is OrderState.Idle -> {
@@ -116,11 +149,11 @@ fun OrderScreen(
                     LoadingState()
                 }
                 is OrderState.Success -> {
-                    if (orders.isEmpty()) {
+                    if (sortedOrders.isEmpty()) {
                         EmptyState()
                     } else {
                         OrderList(
-                            orders = orders,
+                            orders = sortedOrders,
                             isLoadingMore = isLoadingMore,
                             hasMore = hasMore,
                             onLoadMore = viewModel::loadMoreOrders,
@@ -128,7 +161,7 @@ fun OrderScreen(
                                 deletingOrderId = orderId
                                 showDeleteReasonDialog = true
                             },
-                            onOrderClick = onOrderClick // Truyền callback xuống
+                            onOrderClick = onOrderClick
                         )
                     }
                 }
@@ -152,23 +185,28 @@ fun OrderScreen(
                         deleteReason = ""
                     },
                     title = {
-                        Text("Lý do xóa đơn hàng")
+                        Text(
+                            "Lý do xóa đơn hàng",
+                            fontWeight = FontWeight.Bold,
+                            color = PrimaryOrange
+                        )
                     },
                     text = {
                         Column {
                             // Hiển thị thông tin đơn hàng
                             deletingOrderId?.let { orderId ->
-                                val order = orders.find { it.id == orderId }
+                                val order = sortedOrders.find { it.id == orderId }
                                 order?.let {
                                     Column(
                                         modifier = Modifier
-                                            .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp))
-                                            .padding(12.dp)
+                                            .background(LightOrange, RoundedCornerShape(12.dp))
+                                            .padding(16.dp)
                                             .fillMaxWidth()
                                     ) {
                                         Text(
                                             "Mã đơn: #${it.orderNumber}",
-                                            fontWeight = FontWeight.Medium
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = DarkOrange
                                         )
                                         Text(
                                             "Cửa hàng: ${it.shopName}",
@@ -176,7 +214,8 @@ fun OrderScreen(
                                         )
                                         Text(
                                             "Tổng tiền: ${formatPrice(it.total)}",
-                                            fontSize = 14.sp
+                                            fontSize = 14.sp,
+                                            fontWeight = FontWeight.Medium
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(16.dp))
@@ -200,21 +239,22 @@ fun OrderScreen(
                                         onClick = {
                                             deleteReason = reason
                                             if (reason == "Lý do khác") {
-                                                // Reset để người dùng nhập lý do khác
                                                 deleteReason = ""
                                             }
                                         },
                                         modifier = Modifier.fillMaxWidth(),
                                         colors = CardDefaults.cardColors(
                                             containerColor = if (isSelected)
-                                                Color(0xFFE3F2FD)
+                                                LightOrange
                                             else
-                                                Color.Transparent
+                                                Color.White
                                         ),
-                                        border = if (isSelected)
-                                            CardDefaults.outlinedCardBorder()
-                                        else
-                                            null
+                                        border = CardDefaults.outlinedCardBorder().copy(
+                                            brush = if (isSelected)
+                                                androidx.compose.ui.graphics.SolidColor(PrimaryOrange)
+                                            else
+                                                androidx.compose.ui.graphics.SolidColor(Color.LightGray)
+                                        )
                                     ) {
                                         Row(
                                             modifier = Modifier.padding(12.dp),
@@ -227,12 +267,17 @@ fun OrderScreen(
                                                     if (reason == "Lý do khác") {
                                                         deleteReason = ""
                                                     }
-                                                }
+                                                },
+                                                colors = RadioButtonDefaults.colors(
+                                                    selectedColor = PrimaryOrange,
+                                                    unselectedColor = Color.Gray
+                                                )
                                             )
                                             Text(
                                                 text = reason,
                                                 modifier = Modifier.weight(1f),
-                                                fontSize = 14.sp
+                                                fontSize = 14.sp,
+                                                color = if (isSelected) DarkOrange else Color.Black
                                             )
                                         }
                                     }
@@ -249,7 +294,12 @@ fun OrderScreen(
                                     label = { Text("Nhập lý do khác") },
                                     placeholder = { Text("Vui lòng nhập lý do cụ thể...") },
                                     maxLines = 3,
-                                    shape = RoundedCornerShape(8.dp)
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        focusedBorderColor = PrimaryOrange,
+                                        focusedLabelColor = PrimaryOrange,
+                                        cursorColor = PrimaryOrange
+                                    )
                                 )
                             }
                         }
@@ -269,9 +319,14 @@ fun OrderScreen(
                                     }
                                 }
                             },
-                            enabled = deleteReason.isNotBlank()
+                            enabled = deleteReason.isNotBlank(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = PrimaryOrange,
+                                disabledContainerColor = Color.LightGray
+                            ),
+                            shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("Tiếp tục")
+                            Text("Tiếp tục", fontWeight = FontWeight.SemiBold)
                         }
                     },
                     dismissButton = {
@@ -282,9 +337,10 @@ fun OrderScreen(
                                 deleteReason = ""
                             }
                         ) {
-                            Text("Hủy")
+                            Text("Hủy", color = Color.Gray)
                         }
-                    }
+                    },
+                    shape = RoundedCornerShape(16.dp)
                 )
             }
 
@@ -295,29 +351,44 @@ fun OrderScreen(
                         showConfirmDeleteDialog = false
                     },
                     title = {
-                        Text("⚠️ Xác nhận xóa đơn hàng")
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = "Cảnh báo",
+                                tint = PrimaryOrange,
+                                modifier = Modifier.size(28.dp)
+                            )
+                            Text(
+                                "Xác nhận xóa đơn hàng",
+                                fontWeight = FontWeight.Bold,
+                                color = PrimaryOrange
+                            )
+                        }
                     },
                     text = {
                         Column {
                             // Hiển thị thông tin đơn hàng
-                            val order = orders.find { it.id == deletingOrderId }
+                            val order = sortedOrders.find { it.id == deletingOrderId }
                             order?.let {
                                 Column(
                                     modifier = Modifier
-                                        .background(Color(0xFFFFF3E0), RoundedCornerShape(8.dp))
-                                        .padding(12.dp)
+                                        .background(Color(0xFFFFF3E0), RoundedCornerShape(12.dp))
+                                        .padding(16.dp)
                                         .fillMaxWidth()
                                 ) {
                                     Text(
                                         "Bạn sắp xóa đơn hàng sau:",
-                                        fontWeight = FontWeight.Medium,
-                                        color = Color(0xFFE65100)
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = DarkOrange
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Text("📦 Mã đơn: #${it.orderNumber}")
-                                    Text("🏪 Cửa hàng: ${it.shopName}")
-                                    Text("💰 Tổng tiền: ${formatPrice(it.total)}")
-                                    Text("📅 Ngày đặt: ${formatDate(it.createdAt)}")
+                                    Text("📦 Mã đơn: #${it.orderNumber}", fontSize = 14.sp)
+                                    Text("🏪 Cửa hàng: ${it.shopName}", fontSize = 14.sp)
+                                    Text("💰 Tổng tiền: ${formatPrice(it.total)}", fontSize = 14.sp)
+                                    Text("📅 Ngày đặt: ${formatDate(it.createdAt)}", fontSize = 14.sp)
                                 }
                             }
 
@@ -326,18 +397,19 @@ fun OrderScreen(
                             // Hiển thị lý do xóa
                             Column(
                                 modifier = Modifier
-                                    .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp))
-                                    .padding(12.dp)
+                                    .background(LightOrange, RoundedCornerShape(12.dp))
+                                    .padding(16.dp)
                                     .fillMaxWidth()
                             ) {
                                 Text(
                                     "Lý do xóa:",
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = DarkOrange
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     deleteReason,
-                                    color = Color(0xFF616161),
+                                    color = Color(0xFF424242),
                                     fontSize = 14.sp
                                 )
                             }
@@ -346,21 +418,24 @@ fun OrderScreen(
 
                             // Cảnh báo quan trọng
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color(0xFFFFEBEE), RoundedCornerShape(8.dp))
+                                    .padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Warning,
                                     contentDescription = "Cảnh báo",
-                                    tint = Color.Red,
+                                    tint = Color(0xFFD32F2F),
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Text(
-                                    "Hành động này KHÔNG THỂ hoàn tác. Bạn có chắc chắn muốn xóa?",
-                                    color = Color.Red,
+                                    "Hành động này KHÔNG THỂ hoàn tác!",
+                                    color = Color(0xFFD32F2F),
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 14.sp
+                                    fontSize = 13.sp
                                 )
                             }
                         }
@@ -374,22 +449,29 @@ fun OrderScreen(
                                 showConfirmDeleteDialog = false
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color.Red,
+                                containerColor = Color(0xFFD32F2F),
                                 contentColor = Color.White
-                            )
+                            ),
+                            shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("XÓA ĐƠN HÀNG")
+                            Text("XÓA ĐƠN HÀNG", fontWeight = FontWeight.Bold)
                         }
                     },
                     dismissButton = {
                         Button(
                             onClick = {
                                 showConfirmDeleteDialog = false
-                            }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.LightGray,
+                                contentColor = Color.Black
+                            ),
+                            shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("Hủy bỏ")
+                            Text("Hủy bỏ", fontWeight = FontWeight.Medium)
                         }
-                    }
+                    },
+                    shape = RoundedCornerShape(16.dp)
                 )
             }
         }
@@ -403,7 +485,7 @@ fun OrderList(
     hasMore: Boolean,
     onLoadMore: () -> Unit,
     onDeleteClick: (String) -> Unit,
-    onOrderClick: (String) -> Unit // Thêm callback parameter
+    onOrderClick: (String) -> Unit
 ) {
     val listState = rememberLazyListState()
 
@@ -414,15 +496,16 @@ fun OrderList(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(orders) { order ->
-            // Wrap OrderCard với clickable
-            Box(
+            // Wrap OrderCard với clickable và hiệu ứng
+            Card(
                 modifier = Modifier
-                    .clickable(
-                        onClick = {
-                            // Gọi callback với order ID
-                            onOrderClick(order.id)
-                        }
-                    )
+                    .fillMaxWidth()
+                    .clickable(onClick = { onOrderClick(order.id) }),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                )
             ) {
                 OrderCard(
                     order = order,
@@ -441,7 +524,7 @@ fun OrderList(
                             .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(color = PrimaryOrange)
                     }
                 } else {
                     LaunchedEffect(listState) {
@@ -476,7 +559,7 @@ fun OrderTopBar(
             )
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = Color(0xFF4CAF50), // Primary Color
+            containerColor = PrimaryOrange,
             titleContentColor = Color.White,
             navigationIconContentColor = Color.White,
             actionIconContentColor = Color.White
@@ -514,7 +597,28 @@ fun OrderTopBar(
                         leadingIcon = {
                             Icon(
                                 Icons.Default.AllInbox,
-                                contentDescription = null
+                                contentDescription = null,
+                                tint = PrimaryOrange
+                            )
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                "Đang giao",
+                                fontWeight = FontWeight.SemiBold,
+                                color = PrimaryOrange
+                            )
+                        },
+                        onClick = {
+                            onFilterClick("SHIPPING")
+                            expanded = false
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.DeliveryDining,
+                                contentDescription = null,
+                                tint = PrimaryOrange
                             )
                         }
                     )
@@ -527,19 +631,6 @@ fun OrderTopBar(
                         leadingIcon = {
                             Icon(
                                 Icons.Default.Schedule,
-                                contentDescription = null
-                            )
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Đang giao") },
-                        onClick = {
-                            onFilterClick("SHIPPING")
-                            expanded = false
-                        },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Default.DeliveryDining,
                                 contentDescription = null
                             )
                         }
@@ -585,59 +676,6 @@ fun OrderTopBar(
 }
 
 @Composable
-fun OrderList(
-    orders: List<com.example.foodapp.data.remote.client.response.order.OrderPreviewApiModel>,
-    isLoadingMore: Boolean,
-    hasMore: Boolean,
-    onLoadMore: () -> Unit,
-    onDeleteClick: (String) -> Unit
-) {
-    val listState = rememberLazyListState()
-    val deleteState by remember { mutableStateOf(DeleteOrderState.Idle) }
-
-    LazyColumn(
-        state = listState,
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(orders) { order ->
-            OrderCard(
-                order = order,
-                onDeleteClick = onDeleteClick,
-                isDeleting = deleteState is DeleteOrderState.Loading
-            )
-        }
-
-        if (hasMore) {
-            item {
-                if (isLoadingMore) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                } else {
-                    // Auto load when scrolled to bottom
-                    LaunchedEffect(listState) {
-                        val layoutInfo = listState.layoutInfo
-                        val totalItems = layoutInfo.totalItemsCount
-                        val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()?.index
-
-                        if (lastVisibleItem != null && lastVisibleItem >= totalItems - 5) {
-                            onLoadMore()
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
 fun LoadingState() {
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -647,8 +685,12 @@ fun LoadingState() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            CircularProgressIndicator()
-            Text("Đang tải đơn hàng...")
+            CircularProgressIndicator(color = PrimaryOrange)
+            Text(
+                "Đang tải đơn hàng...",
+                color = PrimaryOrange,
+                fontWeight = FontWeight.Medium
+            )
         }
     }
 }
@@ -661,24 +703,25 @@ fun EmptyState() {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(32.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.ShoppingBag,
                 contentDescription = "Không có đơn hàng",
-                modifier = Modifier.size(64.dp),
-                tint = Color.Gray
+                modifier = Modifier.size(80.dp),
+                tint = PrimaryOrange.copy(alpha = 0.5f)
             )
             Text(
                 text = "Chưa có đơn hàng nào",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Gray
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryOrange
             )
             Text(
-                text = "Hãy đặt món ngay để trải nghiệm dịch vụ",
+                text = "Hãy đặt món ngay để trải nghiệm\ndịch vụ giao hàng nhanh chóng!",
                 fontSize = 14.sp,
-                color = Color.LightGray,
+                color = Color.Gray,
                 textAlign = TextAlign.Center
             )
         }
@@ -696,40 +739,48 @@ fun ErrorState(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.padding(32.dp)
         ) {
             Icon(
                 imageVector = Icons.Default.Error,
                 contentDescription = "Lỗi",
-                modifier = Modifier.size(64.dp),
-                tint = Color.Red
+                modifier = Modifier.size(80.dp),
+                tint = PrimaryOrange
             )
             Text(
                 text = "Đã xảy ra lỗi",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.Red
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = PrimaryOrange
             )
             Text(
                 text = message,
                 fontSize = 14.sp,
                 color = Color.Gray,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 32.dp)
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
             Button(
                 onClick = onRetry,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF4CAF50) // Primary Color
-                )
+                    containerColor = PrimaryOrange
+                ),
+                shape = RoundedCornerShape(8.dp)
             ) {
-                Text("Thử lại")
+                Icon(
+                    imageVector = Icons.Default.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Thử lại", fontWeight = FontWeight.SemiBold)
             }
         }
     }
 }
 
-// Cần import từ OrderCard hoặc định nghĩa lại
+// Helper functions
 fun formatPrice(price: Double): String {
     return try {
         String.format("%,.0f", price) + "đ"

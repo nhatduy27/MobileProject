@@ -6,6 +6,9 @@ import retrofit2.HttpException
 import java.io.IOException
 import com.example.foodapp.data.remote.api.ApiClient
 import com.example.foodapp.data.remote.client.response.profile.*
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
 
 class ProfileRepository {
 
@@ -359,6 +362,82 @@ class ProfileRepository {
                 println("DEBUG: [Repository] Set Default Address Exception: ${e.message}")
                 e.printStackTrace()
                 ApiResult.Failure(Exception("Lỗi không xác định khi đặt địa chỉ mặc định: ${e.message}"))
+            }
+        }
+    }
+
+
+    suspend fun uploadAvatar(imageFile: java.io.File): ApiResult<String> {
+        return withContext(Dispatchers.IO) {
+            try {
+                println("DEBUG: [Repository] Starting uploadAvatar...")
+
+                // Validate file size (5MB max)
+                val maxSize = 5 * 1024 * 1024 // 5MB
+                if (imageFile.length() > maxSize) {
+                    println("DEBUG: [Repository] File size exceeds 5MB: ${imageFile.length()}")
+                    return@withContext ApiResult.Failure(Exception("Kích thước file không được vượt quá 5MB"))
+                }
+
+                // Validate file type
+                val fileName = imageFile.name.lowercase()
+                if (!fileName.endsWith(".jpg") && !fileName.endsWith(".jpeg") && !fileName.endsWith(".png")) {
+                    println("DEBUG: [Repository] Invalid file type: $fileName")
+                    return@withContext ApiResult.Failure(Exception("Chỉ chấp nhận file JPEG hoặc PNG"))
+                }
+
+                // Create MultipartBody.Part
+                val requestFile = imageFile.asRequestBody("image/*".toMediaTypeOrNull())
+                val avatarPart = MultipartBody.Part.createFormData(
+                    "avatar", // Field name must match @FileInterceptor('avatar')
+                    imageFile.name,
+                    requestFile
+                )
+
+                println("DEBUG: [Repository] Uploading avatar: ${imageFile.name}, size: ${imageFile.length()} bytes")
+
+                val response = profileService.uploadAvatar(avatarPart)
+
+                if (response.isSuccessful) {
+                    val avatarResponse = response.body()
+                    println("DEBUG: [Repository] Upload avatar response: ${avatarResponse != null}")
+
+                    if (avatarResponse != null) {
+                        val avatarUrl = avatarResponse.avatarUrl
+                        if (avatarUrl.isNotEmpty()) {
+                            println("DEBUG: [Repository] Avatar uploaded successfully: $avatarUrl")
+                            ApiResult.Success(avatarUrl)
+                        } else {
+                            println("DEBUG: [Repository] Avatar URL is empty")
+                            ApiResult.Failure(Exception("URL avatar trống"))
+                        }
+                    } else {
+                        println("DEBUG: [Repository] Upload avatar response body is null")
+                        ApiResult.Failure(Exception("Không có phản hồi từ server"))
+                    }
+                } else {
+                    val errorCode = response.code()
+                    val errorBody = response.errorBody()?.string()
+                    println("DEBUG: [Repository] Upload Avatar API Error - $errorCode: $errorBody")
+
+                    val errorMessage = when (errorCode) {
+                        400 -> "File không hợp lệ. Chỉ chấp nhận JPEG/PNG và không quá 5MB"
+                        401 -> "Phiên đăng nhập hết hạn, vui lòng đăng nhập lại"
+                        500 -> "Lỗi server, vui lòng thử lại sau"
+                        else -> "Lỗi $errorCode: ${errorBody ?: response.message()}"
+                    }
+                    ApiResult.Failure(Exception(errorMessage))
+                }
+            } catch (e: IOException) {
+                println("DEBUG: [Repository] Upload Avatar IOException: ${e.message}")
+                ApiResult.Failure(Exception("Lỗi kết nối khi tải lên ảnh: ${e.message}"))
+            } catch (e: HttpException) {
+                println("DEBUG: [Repository] Upload Avatar HttpException: ${e.code()} - ${e.message()}")
+                ApiResult.Failure(Exception("Lỗi server khi tải lên ảnh: ${e.code()} - ${e.message()}"))
+            } catch (e: Exception) {
+                println("DEBUG: [Repository] Upload Avatar Exception: ${e.message}")
+                e.printStackTrace()
+                ApiResult.Failure(Exception("Lỗi không xác định khi tải lên ảnh: ${e.message}"))
             }
         }
     }

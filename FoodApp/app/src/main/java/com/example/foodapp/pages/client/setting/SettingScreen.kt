@@ -32,7 +32,7 @@ fun SettingsScreen(
 ) {
     val context = LocalContext.current
     val viewModel: SettingsViewModel = viewModel(
-        factory = SettingsViewModel.Factory(context)
+        factory = SettingsViewModel.factory(context)
     )
 
     var showChangePasswordDialog by remember { mutableStateOf(false) }
@@ -49,11 +49,34 @@ fun SettingsScreen(
     // State cho Confirm Delete Dialog
     var agreeToTerms by remember { mutableStateOf(false) }
 
+    // THÊM MỚI: State cho notification settings
+    var transactionalEnabled by remember { mutableStateOf(false) }
+    var informationalEnabled by remember { mutableStateOf(false) }
+    var marketingEnabled by remember { mutableStateOf(false) }
+
     // Observe state từ ViewModel
     val deleteAccountState by viewModel.deleteAccountState.observeAsState()
     val changePasswordState by viewModel.changePasswordState.observeAsState()
     val logoutState by viewModel.logoutState.observeAsState()
     val navigateToLogin by viewModel.navigateToLogin.observeAsState()
+
+    // THÊM MỚI: Observe notification preferences state
+    val notificationPreferencesState by viewModel.notificationPreferencesState.observeAsState()
+    val notificationPreferences by viewModel.notificationPreferences.observeAsState()
+
+    // THÊM MỚI: Load notification preferences khi screen loads
+    LaunchedEffect(Unit) {
+        viewModel.loadNotificationPreferences()
+    }
+
+    // THÊM MỚI: Update local states khi notification preferences được load
+    LaunchedEffect(notificationPreferences) {
+        notificationPreferences?.let { prefs ->
+            transactionalEnabled = prefs.transactional
+            informationalEnabled = prefs.informational
+            marketingEnabled = prefs.marketing
+        }
+    }
 
     // Xử lý khi logout thành công
     LaunchedEffect(logoutState) {
@@ -155,6 +178,99 @@ fun SettingsScreen(
                 .padding(paddingValues)
                 .verticalScroll(rememberScrollState())
         ) {
+            // THÊM MỚI: Notification Settings Section
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                shape = MaterialTheme.shapes.medium,
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Cài đặt thông báo",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+
+                        // Show loading indicator khi đang tải
+                        when (notificationPreferencesState) {
+                            is NotificationPreferencesState.Loading -> {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                            is NotificationPreferencesState.Error -> {
+                                Icon(
+                                    imageVector = Icons.Default.Error,
+                                    contentDescription = "Error",
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            else -> {}
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    NotificationSettingItem(
+                        title = "Thông báo thông tin",
+                        description = "Cập nhật, thông báo từ hệ thống",
+                        checked = informationalEnabled,
+                        onCheckedChange = {
+                            informationalEnabled = it
+                            viewModel.updateNotificationPreferences(informational = it)
+                        },
+                        enabled = notificationPreferences != null
+                    )
+
+                    NotificationSettingItem(
+                        title = "Thông báo khuyến mãi",
+                        description = "Khuyến mãi, ưu đãi đặc biệt",
+                        checked = marketingEnabled,
+                        onCheckedChange = {
+                            marketingEnabled = it
+                            viewModel.updateNotificationPreferences(marketing = it)
+                        },
+                        enabled = notificationPreferences != null
+                    )
+
+                    // Show error message nếu có lỗi
+                    when (notificationPreferencesState) {
+                        is NotificationPreferencesState.Error -> {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = (notificationPreferencesState as NotificationPreferencesState.Error).message,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error
+                            )
+
+                            // Retry button nếu có lỗi
+                            Spacer(modifier = Modifier.height(8.dp))
+                            OutlinedButton(
+                                onClick = { viewModel.loadNotificationPreferences() },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text("Thử lại")
+                            }
+                        }
+                        else -> {}
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // Tài khoản
             SettingsSection(title = "Tài khoản") {
                 SettingsItem(
@@ -689,4 +805,42 @@ fun SettingsItem(
         },
         modifier = Modifier.clickable(onClick = onClick)
     )
+}
+
+// THÊM MỚI: NotificationSettingItem Composable
+@Composable
+fun NotificationSettingItem(
+    title: String,
+    description: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            enabled = enabled
+        )
+    }
 }

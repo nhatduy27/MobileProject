@@ -9,6 +9,9 @@ import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.repository.shared.AuthRepository
 import com.example.foodapp.data.repository.firebase.AuthManager
 import com.example.foodapp.data.model.shared.auth.ApiResult
+import com.example.foodapp.data.repository.client.notification.NotificationRepository
+import com.example.foodapp.data.remote.client.response.notification.NotificationPreferencesResponse
+import com.example.foodapp.data.remote.client.response.notification.UpdateNotificationPreferencesData
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -30,8 +33,17 @@ sealed class DeleteAccountState {
     data class Error(val message: String) : DeleteAccountState()
 }
 
+// State cho notification preferences
+sealed class NotificationPreferencesState {
+    object Idle : NotificationPreferencesState()
+    object Loading : NotificationPreferencesState()
+    data class Success(val preferences: NotificationPreferencesResponse) : NotificationPreferencesState()
+    data class Error(val message: String) : NotificationPreferencesState()
+}
+
 class SettingsViewModel(
     private val authRepository: AuthRepository,
+    private val notificationRepository: NotificationRepository,
     private val authManager: AuthManager
 ) : ViewModel() {
 
@@ -57,6 +69,132 @@ class SettingsViewModel(
 
     // Biến tạm lưu trạng thái xác nhận
     private var _deleteAccountConfirmed = false
+
+    // State cho notification preferences
+    private val _notificationPreferencesState = MutableLiveData<NotificationPreferencesState>(NotificationPreferencesState.Idle)
+    val notificationPreferencesState: LiveData<NotificationPreferencesState> = _notificationPreferencesState
+
+    // Data cho notification preferences
+    private val _notificationPreferences = MutableLiveData<NotificationPreferencesResponse?>()
+    val notificationPreferences: LiveData<NotificationPreferencesResponse?> = _notificationPreferences
+
+    // ==================== NOTIFICATION PREFERENCES ====================
+
+    /**
+     * Tải notification preferences từ server
+     */
+    fun loadNotificationPreferences() {
+        _notificationPreferencesState.value = NotificationPreferencesState.Loading
+
+        viewModelScope.launch {
+            try {
+                // Lấy access token từ AuthManager
+                val accessToken = authManager.getCurrentToken()
+
+                if (accessToken == null) {
+                    _notificationPreferencesState.value = NotificationPreferencesState.Error(
+                        "Vui lòng đăng nhập lại"
+                    )
+                    return@launch
+                }
+
+                // Gọi API lấy notification preferences
+                val result = notificationRepository.getNotificationPreferences(accessToken)
+
+                when (result) {
+                    is com.example.foodapp.data.remote.client.response.notification.ApiResult.Success -> {
+                        val preferences = result.data
+                        _notificationPreferences.value = preferences
+                        _notificationPreferencesState.value = NotificationPreferencesState.Success(preferences)
+                    }
+
+                    is com.example.foodapp.data.remote.client.response.notification.ApiResult.Failure -> {
+                        val errorMessage = result.exception.message ?: "Không thể tải cài đặt thông báo"
+                        _notificationPreferencesState.value = NotificationPreferencesState.Error(errorMessage)
+                    }
+
+                    // Xử lý loading state
+                    is com.example.foodapp.data.remote.client.response.notification.ApiResult.Loading -> {
+                        // Đã set loading state ở đầu, không cần làm gì thêm
+                    }
+                }
+            } catch (e: Exception) {
+                _notificationPreferencesState.value = NotificationPreferencesState.Error(
+                    "Lỗi hệ thống: ${e.message}"
+                )
+            }
+        }
+    }
+
+    /**
+     * Cập nhật notification preferences lên server
+     */
+    fun updateNotificationPreferences(
+        informational: Boolean? = null,
+        marketing: Boolean? = null
+    ) {
+        viewModelScope.launch {
+            try {
+                // Lấy access token từ AuthManager
+                val accessToken = authManager.getCurrentToken()
+
+                if (accessToken == null) {
+                    showNotification("Vui lòng đăng nhập lại")
+                    return@launch
+                }
+
+                // Gọi API cập nhật preferences
+                val result = notificationRepository.updateNotificationPreferences(
+                    accessToken = accessToken,
+                    informational = informational,
+                    marketing = marketing
+                )
+
+                when (result) {
+                    is com.example.foodapp.data.remote.client.response.notification.ApiResult.Success -> {
+                        // Xử lý thành công
+                        handleUpdatePreferencesSuccess(result.data)
+                    }
+
+                    is com.example.foodapp.data.remote.client.response.notification.ApiResult.Failure -> {
+                        // Xử lý lỗi
+                        handleUpdatePreferencesFailure(result.exception)
+                    }
+
+                    // Xử lý loading state
+                    is com.example.foodapp.data.remote.client.response.notification.ApiResult.Loading -> {
+                        // Có thể hiển thị loading indicator nếu cần
+                    }
+                }
+
+            } catch (e: Exception) {
+                handleUpdatePreferencesFailure(e)
+            }
+        }
+    }
+
+    private fun handleUpdatePreferencesSuccess(updateData: UpdateNotificationPreferencesData) {
+        // Tạo NotificationPreferencesResponse từ UpdateNotificationPreferencesData
+        val notificationPreferences = NotificationPreferencesResponse(
+            userId = updateData.userId,
+            transactional = updateData.transactional,
+            informational = updateData.informational,
+            marketing = updateData.marketing,
+            updatedAt = updateData.updatedAt
+        )
+
+        // Cập nhật cả hai state
+        _notificationPreferences.value = notificationPreferences
+        _notificationPreferencesState.value = NotificationPreferencesState.Success(notificationPreferences)
+
+        showNotification("Đã cập nhật cài đặt thông báo")
+    }
+
+    private fun handleUpdatePreferencesFailure(exception: Exception) {
+        val errorMessage = exception.message ?: "Cập nhật thất bại"
+        showNotification("Lỗi: $errorMessage")
+        _notificationPreferencesState.value = NotificationPreferencesState.Error(errorMessage)
+    }
 
     // ==================== CHANGE PASSWORD ====================
 
@@ -211,9 +349,9 @@ class SettingsViewModel(
         // Xóa dữ liệu auth
         authManager.clearAuthData()
 
-        // Có thể thêm xóa cache, shared preferences khác ở đây
-        // cacheManager.clearAll()
-        // sharedPreferences.clear()
+        // Clear notification preferences
+        _notificationPreferences.value = null
+        _notificationPreferencesState.value = NotificationPreferencesState.Idle
     }
 
     private fun handleDeleteAccountFailure(exception: Exception) {
@@ -283,6 +421,7 @@ class SettingsViewModel(
                     accessToken = accessToken,
                     fcmToken = fcmToken
                 )
+                unRegisterDeviceTokenForUser()
                 handleLocalLogout()
 
             } catch (e: Exception) {
@@ -292,9 +431,41 @@ class SettingsViewModel(
         }
     }
 
+    private fun unRegisterDeviceTokenForUser() {
+        viewModelScope.launch {
+            try {
+                // 1. Lấy FCM token
+                val fcmToken = FirebaseMessaging.getInstance().token.await()
+
+                // 2. Lấy access token từ AuthManager
+                val accessToken = authManager.getCurrentToken()
+
+                if (accessToken != null && fcmToken.isNotBlank()) {
+                    notificationRepository.unRegisterDeviceToken(
+                        accessToken = accessToken,
+                        fcmToken = fcmToken
+                    )
+                } else {
+                    if (accessToken == null) {
+                        println("DEBUG: Cannot unregister FCM token - access token is null")
+                    }
+                    if (fcmToken.isBlank()) {
+                        println("DEBUG: Cannot unregister FCM token - FCM token is empty")
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     private fun handleLocalLogout() {
         // Xóa dữ liệu local
         authManager.clearAuthData()
+
+        // Clear notification preferences khi logout
+        _notificationPreferences.value = null
+        _notificationPreferencesState.value = NotificationPreferencesState.Idle
         _logoutState.value = true
     }
 
@@ -315,26 +486,19 @@ class SettingsViewModel(
 
     // ==================== FACTORY ====================
 
-    class Factory(private val context: Context) : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
-                val authRepository = AuthRepository()
-                val authManager = AuthManager(context)
-                return SettingsViewModel(authRepository, authManager) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
-        }
-
-        companion object {
-            @Volatile
-            private var INSTANCE: Factory? = null
-
-            fun getInstance(context: Context): Factory {
-                return INSTANCE ?: synchronized(this) {
-                    INSTANCE ?: Factory(context.applicationContext).also {
-                        INSTANCE = it
+    companion object {
+        fun factory(context: Context): ViewModelProvider.Factory {
+            return object : ViewModelProvider.Factory {
+                @Suppress("UNCHECKED_CAST")
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    if (modelClass.isAssignableFrom(SettingsViewModel::class.java)) {
+                        return SettingsViewModel(
+                            authRepository = AuthRepository(),
+                            notificationRepository = NotificationRepository(),
+                            authManager = AuthManager(context)
+                        ) as T
                     }
+                    throw IllegalArgumentException("Unknown ViewModel class")
                 }
             }
         }

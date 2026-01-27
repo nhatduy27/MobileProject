@@ -8,12 +8,16 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.repository.shared.AuthRepository
+import com.example.foodapp.data.repository.client.notification.NotificationRepository
 import com.example.foodapp.data.repository.firebase.AuthManager
 import com.example.foodapp.data.model.shared.auth.ApiResult
+import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class SignUpViewModel(
     private val authRepository: AuthRepository,
+    private val notificationRepository: NotificationRepository,
     private val context: Context
 ) : ViewModel() {
 
@@ -58,22 +62,20 @@ class SignUpViewModel(
                                 authManager.signInWithCustomToken(customToken) { isSuccessful, idToken, error ->
                                     if (isSuccessful) {
                                         if (!idToken.isNullOrEmpty()) {
-                                            // SỬA: Dùng AuthManager để lưu token với expiry time
                                             authManager.saveFirebaseToken(idToken)
-
-                                            // Debug: In thông tin token
                                             authManager.debugTokenInfo()
+                                            registerDeviceTokenForUser()
 
                                             _signUpState.postValue(SignUpState.Success)
                                         } else {
-                                            _signUpState.postValue(SignUpState.Success) // Vẫn success vì đã có user info
+                                            _signUpState.postValue(SignUpState.Success)
                                         }
                                     } else {
-                                        _signUpState.postValue(SignUpState.Success) // Vẫn success vì đã có user info
+                                        _signUpState.postValue(SignUpState.Success)
                                     }
                                 }
                             } else {
-                                _signUpState.value = SignUpState.Success // Đã có user info từ API
+                                _signUpState.value = SignUpState.Success
                             }
                         } else {
                             _signUpState.value = SignUpState.Error("Dữ liệu người dùng không hợp lệ")
@@ -87,6 +89,39 @@ class SignUpViewModel(
                 }
             } catch (e: Exception) {
                 _signUpState.value = SignUpState.Error("Lỗi không xác định: ${e.message}")
+            }
+        }
+    }
+
+
+    private fun registerDeviceTokenForUser() {
+        viewModelScope.launch {
+            try {
+                // Lấy FCM token
+                val fcmToken = FirebaseMessaging.getInstance().token.await()
+
+                // Device info
+                val deviceModel = android.os.Build.MODEL
+                val osVersion = android.os.Build.VERSION.RELEASE
+
+                // Gọi API đăng ký token
+                val result = notificationRepository.registerDeviceToken(
+                    token = fcmToken,
+                    platform = "android",
+                    model = deviceModel,
+                    osVersion = osVersion
+                )
+
+                when (result) {
+                    is com.example.foodapp.data.remote.client.response.notification.ApiResult.Success -> {
+                    }
+                    is com.example.foodapp.data.remote.client.response.notification.ApiResult.Failure -> {
+                        result.exception.printStackTrace()
+                    }
+                    else -> {}
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
@@ -115,6 +150,7 @@ class SignUpViewModel(
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     return SignUpViewModel(
                         AuthRepository(),
+                        notificationRepository = NotificationRepository(),
                         context
                     ) as T
                 }

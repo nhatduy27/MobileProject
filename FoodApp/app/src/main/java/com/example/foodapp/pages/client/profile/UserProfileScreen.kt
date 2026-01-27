@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -17,24 +18,22 @@ import com.example.foodapp.data.model.Client
 import com.example.foodapp.data.remote.client.response.profile.AddressResponse
 import com.example.foodapp.pages.client.components.profile.*
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 @Composable
 fun UserProfileScreen(
     onBackClick: () -> Unit = {},
+    onUserInfoClick: () -> Unit = {},
     onChangePasswordClick: () -> Unit = {},
     onOrderButtonClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val viewModel: ProfileViewModel = viewModel(
-        factory = ProfileViewModel.Factory(context)
+        factory = ProfileViewModel.factory(context)
     )
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
 
     // State cho các popup
-    var showEditProfileDialog by remember { mutableStateOf(false) }
     var showAddAddressDialog by remember { mutableStateOf(false) }
     var showEditAddressDialog by remember { mutableStateOf(false) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
@@ -46,32 +45,11 @@ fun UserProfileScreen(
 
     // Observe state từ ViewModel
     val userState by viewModel.userState.observeAsState()
-    val currentUser by viewModel.currentUser.observeAsState()
     val addresses by viewModel.addresses.observeAsState(emptyList())
-    val updateState by viewModel.updateState.observeAsState()
     val createAddressState by viewModel.createAddressState.observeAsState()
     val deleteAddressState by viewModel.deleteAddressState.observeAsState()
     val updateAddressState by viewModel.updateAddressState.observeAsState()
     val setDefaultAddressState by viewModel.setDefaultAddressState.observeAsState()
-
-    // Xử lý khi update profile thành công
-    LaunchedEffect(updateState) {
-        updateState?.let { state ->
-            when (state) {
-                is UpdateProfileState.Success -> {
-                    coroutineScope.launch {
-                        snackbarHostState.showSnackbar(
-                            message = state.message,
-                            duration = SnackbarDuration.Short
-                        )
-                        showEditProfileDialog = false
-                    }
-                    viewModel.resetUpdateProfileState()
-                }
-                else -> {}
-            }
-        }
-    }
 
     // Xử lý khi thêm địa chỉ thành công
     LaunchedEffect(createAddressState) {
@@ -172,19 +150,6 @@ fun UserProfileScreen(
                 else -> {}
             }
         }
-    }
-
-    // Popup chỉnh sửa profile
-    if (showEditProfileDialog) {
-        EditProfileDialog(
-            currentUser = currentUser,
-            viewModel = viewModel,
-            updateState = updateState,
-            onDismiss = {
-                showEditProfileDialog = false
-                viewModel.resetUpdateProfileState()
-            }
-        )
     }
 
     // Popup thêm địa chỉ
@@ -324,6 +289,7 @@ fun UserProfileScreen(
                             .fillMaxSize()
                             .padding(padding)
                             .verticalScroll(rememberScrollState()),
+                        onUserInfoClick = onUserInfoClick,
                         onAddAddressClick = { showAddAddressDialog = true },
                         onEditAddressClick = { addressId ->
                             // Tìm địa chỉ theo ID và hiển thị dialog chỉnh sửa
@@ -334,7 +300,6 @@ fun UserProfileScreen(
                             }
                         },
                         onChangePasswordClick = onChangePasswordClick,
-                        onEditProfileClick = { showEditProfileDialog = true },
                         onDeleteAddressClick = { addressId ->
                             addressToDelete = addressId
                             showDeleteConfirmDialog = true
@@ -361,24 +326,14 @@ fun ProfileContent(
     user: Client,
     addresses: List<AddressResponse>,
     modifier: Modifier = Modifier,
+    onUserInfoClick: () -> Unit,
     onAddAddressClick: () -> Unit,
     onEditAddressClick: (String) -> Unit,
     onChangePasswordClick: () -> Unit,
-    onEditProfileClick: () -> Unit,
     onDeleteAddressClick: (String) -> Unit,
     onSetDefaultAddressClick: (String) -> Unit,
     onOrderButtonClick: () -> Unit
 ) {
-    // Format ngày tham gia từ timestamp
-    val joinDate = remember(user.createdAt) {
-        try {
-            val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-            formatter.format(user.createdAt)
-        } catch (e: Exception) {
-            "Không rõ"
-        }
-    }
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -387,14 +342,8 @@ fun ProfileContent(
         // BUTTON ĐƠN MUA
         OrderButtonSection(onOrderButtonClick = onOrderButtonClick)
 
-        // Thông tin cá nhân card
-        PersonalInfoCard(
-            user = user,
-            onEditClick = onEditProfileClick
-        )
-
-        // Trạng thái tài khoản
-        AccountStatusCard(user = user)
+        // BUTTON THÔNG TIN NGƯỜI DÙNG
+        UserInfoButtonSection(onUserInfoClick = onUserInfoClick)
 
         // Địa chỉ - Chỉ hiển thị nếu có địa chỉ
         if (addresses.isNotEmpty()) {
@@ -409,18 +358,48 @@ fun ProfileContent(
             EmptyAddressCard(onAddClick = onAddAddressClick)
         }
 
-        // Thông tin tài khoản
-        AccountInfoCard(
-            role = user.role,
-            joinDate = joinDate,
-            isVerified = user.isVerify
-        )
-
         // Các chức năng
         SettingsCard(
             onChangePasswordClick = onChangePasswordClick
         )
 
         Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+fun LoadingScreen(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+@Composable
+fun ErrorScreen(
+    errorMessage: String,
+    onRetryClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = errorMessage,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.error,
+            modifier = Modifier.padding(16.dp)
+        )
+
+        Button(
+            onClick = onRetryClick,
+            modifier = Modifier.padding(top = 16.dp)
+        ) {
+            Text("Thử lại")
+        }
     }
 }

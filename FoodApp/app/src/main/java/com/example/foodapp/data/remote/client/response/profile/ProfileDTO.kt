@@ -287,3 +287,9 @@ data class SetDefaultAddressResponse(
     @SerializedName("message")
     val message: String? = null
 )
+
+
+data class UploadAvatarResponse(
+    @SerializedName("avatarUrl")
+    val avatarUrl: String
+)

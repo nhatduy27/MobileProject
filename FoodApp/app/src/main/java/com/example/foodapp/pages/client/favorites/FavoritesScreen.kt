@@ -1,24 +1,33 @@
 // com.example.foodapp.pages.client.favorites.FavoritesScreen.kt
 package com.example.foodapp.pages.client.favorites
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -47,7 +56,6 @@ fun FavoritesScreen(
     LaunchedEffect(removeState) {
         when (removeState) {
             is RemoveFavoriteState.Success -> {
-                // Reset state sau 2 giây
                 kotlinx.coroutines.delay(2000)
                 viewModel.resetRemoveFavoriteState()
             }
@@ -57,41 +65,105 @@ fun FavoritesScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "Yêu thích",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                    }
-                },
-                actions = {
-                    // Nút refresh
-                    IconButton(
-                        onClick = { viewModel.refreshFavorites() },
-                        enabled = favoritesState !is FavoritesState.Loading
-                    ) {
-                        Icon(
-                            Icons.Default.Refresh,
-                            contentDescription = "Refresh",
-                            tint = if (favoritesState is FavoritesState.Loading) Color.LightGray else Color.White
+            Surface(
+                shadowElevation = 4.dp,
+                color = Color.Transparent
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(
+                                    Color(0xFFFF9800),
+                                    Color(0xFFFF6F00)
+                                )
+                            )
                         )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color(0xFFFF9800)
-                )
-            )
+                ) {
+                    TopAppBar(
+                        title = {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Favorite,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        "Yêu thích",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        color = Color.White
+                                    )
+                                    val count = currentFavorites?.size ?: 0
+                                    if (count > 0) {
+                                        Text(
+                                            "$count sản phẩm",
+                                            fontSize = 12.sp,
+                                            color = Color.White.copy(alpha = 0.9f),
+                                            fontWeight = FontWeight.Normal
+                                        )
+                                    }
+                                }
+                            }
+                        },
+                        navigationIcon = {
+                            IconButton(
+                                onClick = onBackClick,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.2f))
+                            ) {
+                                Icon(
+                                    Icons.Default.ArrowBack,
+                                    contentDescription = "Back",
+                                    tint = Color.White
+                                )
+                            }
+                        },
+                        actions = {
+                            IconButton(
+                                onClick = { viewModel.refreshFavorites() },
+                                enabled = favoritesState !is FavoritesState.Loading,
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.2f))
+                            ) {
+                                if (favoritesState is FavoritesState.Loading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        strokeWidth = 2.dp,
+                                        color = Color.White
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Default.Refresh,
+                                        contentDescription = "Refresh",
+                                        tint = Color.White
+                                    )
+                                }
+                            }
+                        },
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            containerColor = Color.Transparent
+                        )
+                    )
+                }
+            }
         },
         bottomBar = {
             UserBottomNav(navController = navController, onProfileClick = {})
         },
-        containerColor = Color.White
+        containerColor = Color(0xFFF8F9FA)
     ) { padding ->
         Box(
             modifier = Modifier
@@ -123,21 +195,82 @@ fun FavoritesScreen(
                         )
                     }
                 }
-                // Xử lý trường hợp null hoặc các trạng thái khác (như Idle)
                 else -> {
                     LoadingContent()
                 }
             }
 
-            // Hiển thị loading khi đang xóa
-            if (removeState is RemoveFavoriteState.Loading) {
+            // Hiển thì loading overlay khi đang xóa
+            AnimatedVisibility(
+                visible = removeState is RemoveFavoriteState.Loading,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.3f)),
+                        .background(Color.Black.copy(alpha = 0.4f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator(color = Color.White)
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color.White,
+                        shadowElevation = 8.dp,
+                        modifier = Modifier.padding(32.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(24.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(32.dp),
+                                color = Color(0xFFFF9800),
+                                strokeWidth = 3.dp
+                            )
+                            Text(
+                                "Đang xóa...",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = Color.Black
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Snackbar khi xóa thành công
+            AnimatedVisibility(
+                visible = removeState is RemoveFavoriteState.Success,
+                enter = slideInVertically { it } + fadeIn(),
+                exit = slideOutVertically { it } + fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp)
+            ) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFF4CAF50),
+                    shadowElevation = 8.dp
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Favorite,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            "Đã xóa khỏi yêu thích",
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp
+                        )
+                    }
                 }
             }
         }
@@ -152,13 +285,14 @@ private fun FavoritesContent(
     modifier: Modifier = Modifier,
 ) {
     LazyColumn(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        contentPadding = PaddingValues(bottom = 16.dp)
+        modifier = modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        items(products) { product ->
+        items(
+            items = products,
+            key = { it.id }
+        ) { product ->
             FavoriteProductCard(
                 product = product,
                 onRemove = { onRemoveFavorite(product.id) },
@@ -174,42 +308,63 @@ private fun FavoriteProductCard(
     onRemove: () -> Unit,
     onClick: () -> Unit
 ) {
+    var isFavorite by remember { mutableStateOf(true) }
+    val scale by animateFloatAsState(
+        targetValue = if (isFavorite) 1f else 0.95f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "scale"
+    )
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(120.dp),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+            .animateContentSize(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
         onClick = onClick
     ) {
         Row(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxWidth()
                 .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Ảnh sản phẩm
-            if (!product.imageUrl.isNullOrEmpty()) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(product.imageUrl)
-                        .crossfade(true)
-                        .build(),
-                    contentDescription = product.name,
-                    modifier = Modifier
-                        .size(96.dp)
-                        .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp)),
-                    contentScale = ContentScale.Crop
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(96.dp)
-                        .background(Color(0xFFF5F5F5), RoundedCornerShape(8.dp)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text("🍜", fontSize = 36.sp)
+            // Ảnh sản phẩm với gradient overlay
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(RoundedCornerShape(12.dp))
+            ) {
+                if (!product.imageUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(product.imageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = product.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.linearGradient(
+                                    colors = listOf(
+                                        Color(0xFFFFE0B2),
+                                        Color(0xFFFFCC80)
+                                    )
+                                )
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("🍜", fontSize = 40.sp)
+                    }
                 }
             }
 
@@ -220,74 +375,126 @@ private fun FavoriteProductCard(
                     .fillMaxHeight(),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                // Tên sản phẩm
-                Text(
-                    product.name,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = Color.Black,
-                    maxLines = 2,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    // Tên sản phẩm
+                    Text(
+                        product.name,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = Color(0xFF212121),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                        lineHeight = 20.sp
+                    )
 
-                // Tên cửa hàng
-                Text(
-                    product.shopName ?: "Cửa hàng",
-                    fontSize = 12.sp,
-                    color = Color.Gray,
-                    maxLines = 1,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    // Tên cửa hàng với icon
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = Color(0xFFFF9800).copy(alpha = 0.1f),
+                            modifier = Modifier.size(6.dp)
+                        ) {}
+                        Text(
+                            product.shopName ?: "Cửa hàng",
+                            fontSize = 13.sp,
+                            color = Color(0xFF757575),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Giá và đánh giá
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    // Giá
-                    Text(
-                        product.price,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 16.sp,
-                        color = Color(0xFFFF9800)
-                    )
+                    // Giá với background
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFFF9800).copy(alpha = 0.1f)
+                    ) {
+                        Text(
+                            product.price,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = Color(0xFFFF6F00)
+                        )
+                    }
 
-                    // Đánh giá (nếu có)
+                    // Đánh giá
                     if (product.rating > 0) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFFFF8E1)
                         ) {
-                            Text(
-                                "⭐ ${String.format("%.1f", product.rating)}",
-                                fontSize = 12.sp,
-                                color = Color(0xFF757575)
-                            )
-
-                            if (product.totalRatings > 0) {
-                                Text(
-                                    "(${product.totalRatings})",
-                                    fontSize = 10.sp,
-                                    color = Color(0xFF9E9E9E),
-                                    modifier = Modifier.padding(start = 2.dp)
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.Star,
+                                    contentDescription = null,
+                                    tint = Color(0xFFFFC107),
+                                    modifier = Modifier.size(14.dp)
                                 )
+                                Text(
+                                    String.format("%.1f", product.rating),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF424242)
+                                )
+                                if (product.totalRatings > 0) {
+                                    Text(
+                                        "(${product.totalRatings})",
+                                        fontSize = 11.sp,
+                                        color = Color(0xFF757575)
+                                    )
+                                }
                             }
                         }
                     }
                 }
             }
 
-            // Nút yêu thích (đã thích)
-            IconButton(
-                onClick = onRemove,
-                modifier = Modifier.size(40.dp)
+            // Nút yêu thích với animation
+            Box(
+                modifier = Modifier.align(Alignment.CenterVertically)
             ) {
-                Icon(
-                    Icons.Default.Favorite,
-                    contentDescription = "Remove from favorites",
-                    tint = Color.Red,
-                    modifier = Modifier.size(24.dp)
-                )
+                IconButton(
+                    onClick = {
+                        isFavorite = false
+                        onRemove()
+                    },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0xFFFFEBEE),
+                                    Color.White
+                                )
+                            )
+                        )
+                ) {
+                    Icon(
+                        Icons.Default.Favorite,
+                        contentDescription = "Remove from favorites",
+                        tint = Color(0xFFE91E63),
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }
@@ -295,18 +502,43 @@ private fun FavoriteProductCard(
 
 @Composable
 private fun LoadingContent() {
-    Column(
+    Box(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator(color = Color(0xFFFF9800))
-        Text(
-            "Đang tải danh sách yêu thích...",
-            fontSize = 16.sp,
-            color = Color.Gray,
-            modifier = Modifier.padding(top = 16.dp)
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            // Loading animation với pulse effect
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFFFF9800).copy(alpha = 0.2f),
+                                Color(0xFFFF9800).copy(alpha = 0.05f)
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(48.dp),
+                    color = Color(0xFFFF9800),
+                    strokeWidth = 4.dp
+                )
+            }
+
+            Text(
+                "Đang tải danh sách yêu thích...",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF424242)
+            )
+        }
     }
 }
 
@@ -315,58 +547,132 @@ private fun ErrorContent(
     message: String,
     onRetry: () -> Unit
 ) {
-    Column(
+    Box(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            "❌",
-            fontSize = 48.sp,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-        Text(
-            message,
-            fontSize = 14.sp,
-            color = Color.Red,
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 32.dp)
-        )
-        Button(
-            onClick = onRetry,
-            modifier = Modifier.padding(top = 16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFFF9800)
-            )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            modifier = Modifier.padding(32.dp)
         ) {
-            Text("Thử lại")
+            // Error icon với gradient background
+            Box(
+                modifier = Modifier
+                    .size(100.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFFFFEBEE),
+                                Color(0xFFFCE4EC)
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "❌",
+                    fontSize = 48.sp
+                )
+            }
+
+            Text(
+                "Không thể tải dữ liệu",
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF212121)
+            )
+
+            Text(
+                message,
+                fontSize = 14.sp,
+                color = Color(0xFF757575),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+
+            Button(
+                onClick = onRetry,
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFFFF9800)
+                ),
+                shape = RoundedCornerShape(12.dp),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
+            ) {
+                Icon(
+                    Icons.Default.Refresh,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "Thử lại",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
     }
 }
 
 @Composable
 private fun EmptyFavoritesContent() {
-    Column(
+    Box(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            "❤️",
-            fontSize = 64.sp,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-        Text(
-            "Không có sản phẩm yêu thích",
-            fontWeight = FontWeight.Bold,
-            fontSize = 18.sp,
-            color = Color.Black
-        )
-        Text(
-            "Hãy thêm những sản phẩm bạn thích",
-            fontSize = 14.sp,
-            color = Color(0xFF999999),
-            modifier = Modifier.padding(top = 8.dp)
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+            modifier = Modifier.padding(48.dp)
+        ) {
+            // Empty heart icon với animation
+            Box(
+                modifier = Modifier
+                    .size(140.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFFFFEBEE),
+                                Color(0xFFFCE4EC),
+                                Color.White
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.FavoriteBorder,
+                    contentDescription = null,
+                    tint = Color(0xFFE91E63).copy(alpha = 0.6f),
+                    modifier = Modifier.size(64.dp)
+                )
+            }
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    "Chưa có sản phẩm yêu thích",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    color = Color(0xFF212121),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+
+                Text(
+                    "Hãy khám phá và thêm những món ăn\nbạn yêu thích vào danh sách",
+                    fontSize = 14.sp,
+                    color = Color(0xFF757575),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                    lineHeight = 20.sp
+                )
+            }
+        }
     }
 }

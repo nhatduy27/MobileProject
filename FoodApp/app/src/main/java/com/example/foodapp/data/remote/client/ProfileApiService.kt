@@ -1,6 +1,7 @@
 package com.example.foodapp.data.remote.client
 
 import com.example.foodapp.data.remote.client.response.profile.*
+import okhttp3.MultipartBody
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -33,4 +34,10 @@ interface ProfileApiService {
     suspend fun setDefaultAddress(
         @Path("id") addressId: String
     ): Response<SetDefaultAddressResponse>
+
+    @Multipart
+    @POST("me/avatar")
+    suspend fun uploadAvatar(
+        @Part avatar: MultipartBody.Part
+    ): Response<UploadAvatarResponse>
 }

@@ -364,8 +364,20 @@ private fun handleCheckoutShop(
     shopGroup: ShopGroup,
     onCheckoutShop: (List<Product>, List<Int>, String, String) -> Unit
 ) {
-    // Tạo danh sách products
+    // DEBUG: Log thông tin CartItem
+    println("🔴 DEBUG CartScreen - handleCheckoutShop")
+    println("🔴 Shop: ${shopGroup.shopName}")
+    println("🔴 Items count: ${shopGroup.items.size}")
+
     val products = shopGroup.items.map { cartItem ->
+        // DEBUG từng CartItem
+        println("🔴 CartItem: ${cartItem.name}")
+        println("🔴   - id: ${cartItem.id}")
+        println("🔴   - imageUrl: '${cartItem.imageUrl}'")
+        println("🔴   - imageUrl is null? ${cartItem.imageUrl == null}")
+        println("🔴   - imageUrl is empty? ${cartItem.imageUrl.isNullOrEmpty()}")
+
+        // Tạo Product với fallback nếu imageUrl null
         Product(
             id = cartItem.id,
             name = cartItem.name,
@@ -373,16 +385,22 @@ private fun handleCheckoutShop(
             price = cartItem.formattedPrice,
             priceValue = cartItem.price,
             category = FoodCategory.FOOD,
-            imageUrl = cartItem.imageUrl ?: "",
+            imageUrl = cartItem.imageUrl ?: run {
+                println("⚠️ WARNING: imageUrl is null for ${cartItem.name}, using placeholder")
+                "https://via.placeholder.com/150" // Fallback URL
+            },
             shopId = shopGroup.shopId,
             shopName = shopGroup.shopName
         )
     }
 
-    // Tạo danh sách quantities tương ứng
-    val quantities = shopGroup.items.map { it.quantity }
+    // Debug Product đã tạo
+    products.forEachIndexed { index, product ->
+        println("🟢 Product $index: ${product.name}")
+        println("🟢   - imageUrl: '${product.imageUrl}'")
+    }
 
-    // Truyền cả products và quantities
+    val quantities = shopGroup.items.map { it.quantity }
     onCheckoutShop(products, quantities, shopGroup.shopId, shopGroup.shopName)
 }
 
