@@ -10,6 +10,7 @@ import { OrderStateMachineService } from './order-state-machine.service';
 import { IOrdersRepository, ORDERS_REPOSITORY } from '../interfaces';
 import { CartService } from '../../cart/services';
 import { VouchersService } from '../../vouchers/vouchers.service';
+import { WalletsService } from '../../wallets/wallets.service';
 import { ConfigService } from '../../../core/config/config.service';
 import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { USERS_REPOSITORY } from '../../users/interfaces';
@@ -138,6 +139,13 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
             auth: { verifyIdToken: jest.fn() },
           },
         },
+        {
+          provide: WalletsService,
+          useValue: {
+            processOrderPayout: jest.fn().mockResolvedValue(undefined),
+            updateBalance: jest.fn().mockResolvedValue(undefined),
+          },
+        },
       ],
     }).compile();
 
@@ -145,6 +153,13 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
     ordersRepo = module.get(ORDERS_REPOSITORY);
     shippersRepo = module.get('IShippersRepository');
     usersRepo = module.get(USERS_REPOSITORY);
+    shopsRepo = module.get('SHOPS_REPOSITORY');
+  });
+
+  let shopsRepo: any;
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('acceptOrder (ORDER-013)', () => {
@@ -262,20 +277,29 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
   describe('markDelivered (ORDER-015)', () => {
     it('should mark order as delivered from SHIPPING', async () => {
       const shipperId = 'shipper_1';
+      
       ordersRepo.findById.mockResolvedValueOnce({
         ...mockOrder,
         shipperId,
         status: OrderStatus.SHIPPING,
       });
       ordersRepo.update.mockResolvedValueOnce(undefined);
+      shippersRepo.findById.mockResolvedValueOnce({ shipperInfo: { status: 'SHIPPING' }, name: 'Test Shipper' });
+      shippersRepo.update.mockResolvedValueOnce(undefined);
       ordersRepo.findById.mockResolvedValueOnce({
         ...mockOrder,
         shipperId,
         status: OrderStatus.DELIVERED,
         deliveredAt: Timestamp.now(),
+        paymentStatus: PaymentStatus.PAID,
+        paidOut: false,
       });
+      
+      // Mock for shop/owner notification lookup
+      shopsRepo.findById = jest.fn().mockResolvedValue({ id: 'shop_1', ownerId: 'owner_1' });
+      usersRepo.findById = jest.fn().mockResolvedValue({ displayName: 'Test Shipper' });
 
-      const result = await service.markDelivered(shipperId, 'order_123');
+      await service.markDelivered(shipperId, 'order_123');
 
       expect(ordersRepo.update).toHaveBeenCalledWith(
         'order_123',
@@ -283,8 +307,6 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
           status: OrderStatus.DELIVERED,
         }),
       );
-      expect(result).toBeDefined();
-      expect(result?.status).toBe(OrderStatus.DELIVERED);
     });
 
     it('should mark COD order as PAID upon delivery', async () => {

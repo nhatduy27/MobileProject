@@ -9,6 +9,7 @@ import { StorageService } from '../../../shared/services/storage.service';
 import { NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
 import { ShipperApplicationEntity, ApplicationStatus } from '../entities/shipper-application.entity';
 import { Firestore } from '@google-cloud/firestore';
+import { WalletsService } from '../../wallets/wallets.service';
 
 /**
  * Shippers Service - Role Synchronization Tests
@@ -63,6 +64,11 @@ describe('ShippersService - Role Synchronization', () => {
 
     const mockTransaction = {
       update: jest.fn(),
+      get: jest.fn().mockResolvedValue({
+        data: () => ({
+          status: 'PENDING',
+        }),
+      }),
     };
 
     firebaseService = {
@@ -133,6 +139,14 @@ describe('ShippersService - Role Synchronization', () => {
           useValue: storageService,
         },
         {
+          provide: WalletsService,
+          useValue: {
+            processOrderPayout: jest.fn().mockResolvedValue(undefined),
+            updateBalance: jest.fn().mockResolvedValue(undefined),
+            initializeWallet: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
           provide: 'FIRESTORE',
           useValue: firestore,
         },
@@ -140,6 +154,10 @@ describe('ShippersService - Role Synchronization', () => {
     }).compile();
 
     service = module.get<ShippersService>(ShippersService);
+  });
+
+  afterEach(() => {
+    jest.clearAllMocks();
   });
 
   describe('approveApplication() - Shipper Approval with Claims Update', () => {
@@ -161,7 +179,7 @@ describe('ShippersService - Role Synchronization', () => {
       );
     });
 
-    it('should throw if custom claims update fails', async () => {
+    it('should log error if custom claims update fails but NOT throw', async () => {
       const ownerId = 'owner_123';
 
       shopsService.getMyShop.mockResolvedValueOnce(mockShop as any);
@@ -170,9 +188,10 @@ describe('ShippersService - Role Synchronization', () => {
         new Error('Firebase error')
       );
 
-      await expect(service.approveApplication(ownerId, mockShipperApp.id)).rejects.toThrow(
-        /Failed to sync Firebase custom claims/
-      );
+      // P0-FIX: approveApplication should NOT throw when claims sync fails
+      // It updates Firestore successfully, only claims sync fails
+      // User can re-login to get fresh claims
+      await expect(service.approveApplication(ownerId, mockShipperApp.id)).resolves.not.toThrow();
     });
 
     it('should throw if application not found', async () => {

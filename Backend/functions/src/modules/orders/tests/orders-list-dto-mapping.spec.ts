@@ -10,6 +10,7 @@ import { ConfigService } from '../../../core/config/config.service';
 import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { OrderEntity, OrderStatus, PaymentStatus } from '../entities';
 import { Timestamp } from 'firebase-admin/firestore';
+import { WalletsService } from '../../wallets/wallets.service';
 
 describe('OrdersService - Owner List DTO Mapping', () => {
   let service: OrdersService;
@@ -47,6 +48,10 @@ describe('OrdersService - Owner List DTO Mapping', () => {
       firestore: { collection: jest.fn(), batch: jest.fn() },
       auth: { verifyIdToken: jest.fn() },
     };
+    const mockWalletsService = {
+      processOrderPayout: jest.fn().mockResolvedValue(undefined),
+      updateBalance: jest.fn().mockResolvedValue(undefined),
+    };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -60,6 +65,7 @@ describe('OrdersService - Owner List DTO Mapping', () => {
         { provide: USERS_REPOSITORY, useValue: mockUsersRepo },
         { provide: VouchersService, useValue: mockVouchersService },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: WalletsService, useValue: mockWalletsService },
         { provide: OrderStateMachineService, useValue: mockStateMachine },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: FirebaseService, useValue: mockFirebaseService },

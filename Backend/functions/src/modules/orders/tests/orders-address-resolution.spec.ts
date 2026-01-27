@@ -9,6 +9,7 @@ import { ADDRESSES_REPOSITORY, USERS_REPOSITORY } from '../../users/interfaces';
 import { OrderStateMachineService } from '../services/order-state-machine.service';
 import { ConfigService } from '../../../core/config/config.service';
 import { FirebaseService } from '../../../core/firebase/firebase.service';
+import { WalletsService } from '../../wallets/wallets.service';
 
 describe('OrdersService - Address Resolution', () => {
   let service: OrdersService;
@@ -71,6 +72,7 @@ describe('OrdersService - Address Resolution', () => {
         { provide: USERS_REPOSITORY, useValue: { findById: jest.fn() } },
         { provide: VouchersService, useValue: mockVouchersService },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: WalletsService, useValue: { processOrderPayout: jest.fn().mockResolvedValue(undefined), updateBalance: jest.fn().mockResolvedValue(undefined) } },
         { provide: OrderStateMachineService, useValue: mockStateMachine },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: FirebaseService, useValue: mockFirebaseService },
