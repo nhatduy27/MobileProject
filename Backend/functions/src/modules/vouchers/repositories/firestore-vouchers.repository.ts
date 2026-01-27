@@ -340,7 +340,12 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
   /**
    * Get paginated voucher usage history for a user
    * Supports filtering by shopId and date range
-   * FIX for VOUCH-009: shopId is now denormalized on usage records for efficient DB-level filtering
+   * 
+   * BACKWARD COMPATIBLE FIX for VOUCH-009:
+   * - New records: shopId denormalized on usage records (fast DB-level filtering)
+   * - Legacy records: shopId missing/null → derive from voucher via batch lookup
+   * - Strategy: Query all records → batch enrich → filter by shopId → paginate
+   * - Pagination: Filter BEFORE paginating to ensure accurate total count
    */
   async getUsageHistory(
     userId: string,
@@ -352,15 +357,10 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
     page: number = 1,
     limit: number = 20,
   ): Promise<{ items: VoucherUsageEntity[]; total: number }> {
-    // Build query for all usage records of this user
+    // Step 1: Query usage records (no shopId filter yet - must support legacy records)
     let query = this.firestore
       .collection(this.voucherUsagesCollection)
       .where('userId', '==', userId);
-
-    // Apply shopId filter at DB level (FIXED: was previously filtered in-memory after pagination)
-    if (filters?.shopId) {
-      query = query.where('shopId', '==', filters.shopId);
-    }
 
     // Apply date filters if provided
     if (filters?.from) {
@@ -370,21 +370,96 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
       query = query.where('createdAt', '<=', filters.to);
     }
 
-    // Get total count AFTER applying all filters (now accurate)
-    const countSnapshot = await query.count().get();
-    const total = countSnapshot.data().count;
-
-    // Calculate pagination
-    const offset = (page - 1) * limit;
-
-    // Get paginated results, ordered by createdAt descending (newest first)
-    const snapshot = await query.orderBy('createdAt', 'desc').offset(offset).limit(limit).get();
-
-    const items: VoucherUsageEntity[] = snapshot.docs.map(
+    // Get all results ordered by createdAt
+    // Note: Not using pagination here - we must enrich and filter BEFORE applying pagination
+    const snapshot = await query.orderBy('createdAt', 'desc').get();
+    const allUsageRecords: VoucherUsageEntity[] = snapshot.docs.map(
       (doc) => ({ id: doc.id, ...doc.data() }) as VoucherUsageEntity,
     );
 
-    return { items, total };
+    // Step 2: If shopId filter requested, enrich and filter
+    let filteredRecords = allUsageRecords;
+
+    if (filters?.shopId) {
+      // Separate records into "has shopId" and "needs enrichment"
+      const recordsWithShopId = allUsageRecords.filter(
+        (record) => record.shopId === filters.shopId,
+      );
+
+      const recordsNeedingEnrichment = allUsageRecords.filter(
+        (record) => !record.shopId,
+      );
+
+      // Batch enrich legacy records (no shopId field)
+      const enrichedRecords = await this.enrichUsageRecordsWithShopId(
+        recordsNeedingEnrichment,
+      );
+
+      // Filter enriched records to match requested shopId
+      const enrichedMatchingShopId = enrichedRecords.filter(
+        (record) => record.shopId === filters.shopId,
+      );
+
+      // Combine: records already with shopId + newly enriched and filtered
+      filteredRecords = [...recordsWithShopId, ...enrichedMatchingShopId];
+
+      // Re-sort combined results by createdAt (descending)
+      filteredRecords.sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateB - dateA;
+      });
+    }
+
+    // Step 3: Calculate pagination on filtered results
+    const total = filteredRecords.length;
+    const offset = (page - 1) * limit;
+    const paginatedItems = filteredRecords.slice(offset, offset + limit);
+
+    return { items: paginatedItems, total };
+  }
+
+  /**
+   * Batch enrich usage records with shopId from their corresponding vouchers
+   * Prevents N+1 queries by fetching all vouchers at once
+   * 
+   * @param usageRecords Usage records with missing/null shopId
+   * @returns Usage records enriched with shopId from voucher lookup
+   */
+  private async enrichUsageRecordsWithShopId(
+    usageRecords: VoucherUsageEntity[],
+  ): Promise<VoucherUsageEntity[]> {
+    if (usageRecords.length === 0) {
+      return [];
+    }
+
+    // Collect unique voucherIds
+    const voucherIds = Array.from(new Set(usageRecords.map((r) => r.voucherId)));
+
+    // Batch fetch vouchers (Firestore 'in' operator, chunked for safety)
+    const voucherMap: Record<string, VoucherEntity> = {};
+    const chunkSize = 10;
+
+    for (let i = 0; i < voucherIds.length; i += chunkSize) {
+      const chunk = voucherIds.slice(i, i + chunkSize);
+      const snapshot = await this.firestore
+        .collection(this.vouchersCollection)
+        .where(this.firestore.FieldPath.documentId(), 'in', chunk)
+        .get();
+
+      for (const doc of snapshot.docs) {
+        voucherMap[doc.id] = { id: doc.id, ...doc.data() } as VoucherEntity;
+      }
+    }
+
+    // Enrich usage records with shopId from voucher
+    return usageRecords.map((usage) => {
+      const voucher = voucherMap[usage.voucherId];
+      return {
+        ...usage,
+        shopId: voucher?.shopId || null, // Use voucher's shopId, or null if not found
+      };
+    });
   }
 
   /**

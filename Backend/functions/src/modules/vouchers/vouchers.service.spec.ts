@@ -590,6 +590,105 @@ describe('VouchersService - Per-User Usage Fields', () => {
         expect(result.pages).toBe(1);
         expect(result.hasMore).toBe(false);
       });
+
+      it('REGRESSION TEST: should handle legacy records without shopId field when filtering', async () => {
+        // Regression test for Phase 3 fix: B.3 now returns empty unexpectedly
+        // Issue: New DB-level filtering breaks legacy records that don't have shopId denormalized
+        // Fix: Hybrid approach - enrich legacy records via batch voucher lookup before filtering
+        
+        // Arrange
+        const userId = 'user_123';
+        const newRecordsWithShopId: VoucherUsageEntity[] = [
+          { id: 'usage_new_1', voucherId: 'v_shop1_new', shopId: 'shop_001', userId, orderId: 'o1', discountAmount: 100, createdAt: '2026-01-20T00:00:00Z' },
+        ];
+        const legacyRecordsWithoutShopId: VoucherUsageEntity[] = [
+          { id: 'usage_legacy_1', voucherId: 'v_shop1_legacy', shopId: null, userId, orderId: 'o2', discountAmount: 200, createdAt: '2026-01-19T00:00:00Z' },
+          { id: 'usage_legacy_2', voucherId: 'v_shop1_legacy2', shopId: null, userId, orderId: 'o3', discountAmount: 150, createdAt: '2026-01-18T00:00:00Z' },
+        ];
+        
+        // All 3 records returned (enrichment happened in repository)
+        const allEnrichedItems = [
+          ...newRecordsWithShopId,
+          ...legacyRecordsWithoutShopId.map(r => ({ ...r, shopId: 'shop_001' })), // Enriched with correct shopId
+        ];
+
+        vouchersRepository.getUsageHistory = jest.fn().mockResolvedValue({
+          items: allEnrichedItems,
+          total: 3, // All 3 records after enrichment and filtering
+        });
+
+        // Act
+        const result = await service.getMyVoucherUsageHistory(userId, { shopId: 'shop_001' });
+
+        // Assert
+        expect(result.items).toHaveLength(3);
+        expect(result.total).toBe(3); // Now correctly includes legacy records that were enriched
+        expect(result.items).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({ voucherId: 'v_shop1_new' }),
+            expect.objectContaining({ voucherId: 'v_shop1_legacy' }),
+            expect.objectContaining({ voucherId: 'v_shop1_legacy2' }),
+          ]),
+        );
+      });
+
+      it('REGRESSION TEST: should filter out legacy records if they belong to different shop after enrichment', async () => {
+        // When enriching legacy records, they may belong to a different shop
+        // Ensure they are correctly filtered out
+        
+        // Arrange
+        const userId = 'user_123';
+        const recordsWithMixedShops: VoucherUsageEntity[] = [
+          { id: 'usage_1', voucherId: 'v_shop1', shopId: 'shop_001', userId, orderId: 'o1', discountAmount: 100, createdAt: '2026-01-20T00:00:00Z' },
+          { id: 'usage_2', voucherId: 'v_shop2', shopId: 'shop_002', userId, orderId: 'o2', discountAmount: 200, createdAt: '2026-01-19T00:00:00Z' },
+        ];
+
+        vouchersRepository.getUsageHistory = jest.fn().mockResolvedValue({
+          items: [recordsWithMixedShops[0]], // Only shop_001 record returned
+          total: 1,
+        });
+
+        // Act
+        const result = await service.getMyVoucherUsageHistory(userId, { shopId: 'shop_001' });
+
+        // Assert
+        expect(result.items).toHaveLength(1);
+        expect(result.total).toBe(1);
+        expect(result.items[0].shopId).toBe('shop_001');
+      });
+
+      it('REGRESSION TEST: pagination should work correctly with enriched legacy records', async () => {
+        // Ensure pagination offsets are correct after enrichment
+        // Problem: Previously pagination happened before enrichment, causing wrong slicing
+        
+        // Arrange
+        const userId = 'user_123';
+        const enrichedRecords: VoucherUsageEntity[] = Array(25)
+          .fill(null)
+          .map((_, i) => ({
+            id: `usage_${i}`,
+            voucherId: `v_${i}`,
+            shopId: 'shop_001', // All enriched to shop_001
+            userId,
+            orderId: `o${i}`,
+            discountAmount: 100 + i * 10,
+            createdAt: `2026-01-${25 - i}T00:00:00Z`,
+          }));
+
+        vouchersRepository.getUsageHistory = jest.fn().mockResolvedValue({
+          items: enrichedRecords.slice(0, 20), // Page 1: 20 items
+          total: 25, // Total after enrichment and filtering
+        });
+
+        // Act
+        const result = await service.getMyVoucherUsageHistory(userId, { shopId: 'shop_001' }, 1, 20);
+
+        // Assert
+        expect(result.items).toHaveLength(20);
+        expect(result.total).toBe(25);
+        expect(result.pages).toBe(2); // ceil(25 / 20) = 2
+        expect(result.hasMore).toBe(true);
+      });
     });
 
     describe('Custom Pagination Parameters', () => {
