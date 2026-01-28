@@ -180,7 +180,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                     isSelected = false,
                     onClick = {
                         FirebaseAuth.getInstance().signOut()
-                        navController.navigate("login") {
+                        navController.navigate("intro") {
                             popUpTo(0)
                         }
                     }

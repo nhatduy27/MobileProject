@@ -44,6 +44,7 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import com.example.foodapp.pages.owner.dashboard.DashBoardRootScreen
+import com.example.foodapp.pages.shipper.dashboard.ShipperDashboardRootScreen
 
 sealed class Screen(val route: String) {
     object Intro : Screen("intro")
@@ -423,10 +424,7 @@ fun FoodAppNavHost(
 
         // Composable cho các vai trò khác (Shipper, Owner)
         composable(Screen.ShipperHome.route) {
-            // Thay thế bằng màn hình Shipper Home thực tế của bạn
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Shipper Home Screen")
-            }
+            ShipperDashboardRootScreen(navController = navController)
         }
 
         composable(Screen.OwnerHome.route) {

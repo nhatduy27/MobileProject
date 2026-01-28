@@ -40,6 +40,7 @@ import com.example.foodapp.pages.owner.notifications.NotificationsViewModel
 @Composable
 fun SettingsScreen(
     navController: NavHostController,
+    onLogout: () -> Unit,
     notificationViewModel: NotificationsViewModel = viewModel()
 ) {
     val notificationUiState by notificationViewModel.uiState.collectAsState()
@@ -165,9 +166,7 @@ fun SettingsScreen(
             Button(
                 onClick = {
                     com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
-                    navController.navigate("login") {
-                        popUpTo(0)
-                    }
+                    onLogout()
                 },
                 modifier = Modifier.fillMaxWidth().height(56.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)),

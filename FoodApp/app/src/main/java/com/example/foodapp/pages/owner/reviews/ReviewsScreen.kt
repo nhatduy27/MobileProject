@@ -31,6 +31,7 @@ import java.util.*
 @Composable
 fun ReviewsScreen(
     shopId: String,
+    onMenuClick: () -> Unit,
     viewModel: ReviewsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -70,7 +71,8 @@ fun ReviewsScreen(
             ReviewsHeader(
                 avgRating = uiState.avgRating,
                 totalReviews = uiState.totalReviews,
-                unrepliedCount = viewModel.getUnrepliedCount()
+                unrepliedCount = viewModel.getUnrepliedCount(),
+                onMenuClick = onMenuClick
             )
             
             // Filter chips
@@ -132,7 +134,8 @@ fun ReviewsScreen(
 private fun ReviewsHeader(
     avgRating: Double,
     totalReviews: Int,
-    unrepliedCount: Int
+    unrepliedCount: Int,
+    onMenuClick: () -> Unit
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surface,
@@ -148,18 +151,32 @@ private fun ReviewsHeader(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
-                    Text(
-                        "Đánh giá của khách",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        "$totalReviews đánh giá",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = onMenuClick) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Menu",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    
+                    Spacer(modifier = Modifier.width(8.dp))
+                    
+                    Column {
+                        Text(
+                            "Đánh giá của khách",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            "$totalReviews đánh giá",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                 }
                 
                 // Rating badge

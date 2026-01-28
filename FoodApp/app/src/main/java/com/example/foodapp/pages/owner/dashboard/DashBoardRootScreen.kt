@@ -310,8 +310,18 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     "vouchers" -> VouchersScreen(onMenuClick = { scope.launch { drawerState.open() } })
                     "customers" -> CustomerScreenMain(onMenuClick = { scope.launch { drawerState.open() } }) 
                     "revenue" -> RevenueScreen()
-                    "reviews" -> ReviewsScreen(shopId = shopState.shopId)
-                    "settings" -> SettingsNavHost(navController = settingsNavController)
+                    "reviews" -> ReviewsScreen(
+                        shopId = shopState.shopId,
+                        onMenuClick = { scope.launch { drawerState.open() } }
+                    )
+                    "settings" -> SettingsNavHost(
+                        navController = settingsNavController,
+                        onLogout = {
+                            navController.navigate("intro") {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    )
                     else -> DashboardScreen(onMenuClick = { scope.launch { drawerState.open() } })
                 }
             }
