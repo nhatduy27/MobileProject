@@ -180,7 +180,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                     isSelected = false,
                     onClick = {
                         FirebaseAuth.getInstance().signOut()
-                        navController.navigate("login") {
+                        navController.navigate("intro") {
                             popUpTo(0)
                         }
                     }
@@ -245,7 +245,14 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
             ) { innerPadding ->
                 Box(modifier = Modifier.padding(innerPadding)) {
                     when (currentScreen) {
-                        "home" -> ShipperHomeScreen()
+                        "home" -> ShipperHomeScreen(
+                            onOrderClick = { orderId ->
+                                navController.navigate("shipper_order_detail/$orderId")
+                            },
+                            onApplyShipper = {
+                                navController.navigate("shipper_apply")
+                            }
+                        )
                         "earnings" -> EarningsScreen()
                         "history" -> HistoryScreen()
                         "profile" -> ShipperSettingsNavHost(navController = settingsNavController)

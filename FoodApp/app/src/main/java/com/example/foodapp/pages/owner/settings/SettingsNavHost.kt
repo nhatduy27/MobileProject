@@ -6,13 +6,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 
 @Composable
-fun SettingsNavHost(navController: NavHostController) {
+fun SettingsNavHost(
+    navController: NavHostController,
+    onLogout: () -> Unit
+) {
     NavHost(
         navController = navController,
         startDestination = "settings_main"
     ) {
         composable("settings_main") {
-            SettingsScreen(navController = navController)
+            SettingsScreen(
+                navController = navController,
+                onLogout = onLogout
+            )
         }
         
         composable("personal_info") {

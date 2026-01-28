@@ -44,6 +44,7 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import com.example.foodapp.pages.owner.dashboard.DashBoardRootScreen
+import com.example.foodapp.pages.shipper.dashboard.ShipperDashboardRootScreen
 
 sealed class Screen(val route: String) {
     object Intro : Screen("intro")
@@ -81,6 +82,10 @@ sealed class Screen(val route: String) {
     object OrderDetail : Screen("order_detail/{orderId}") {
         fun createRoute(orderId: String) = "order_detail/$orderId"
     }
+    object ShipperOrderDetail : Screen("shipper_order_detail/{orderId}") {
+        fun createRoute(orderId: String) = "shipper_order_detail/$orderId"
+    }
+    object ShipperApply : Screen("shipper_apply")
 }
 
 @Composable
@@ -423,10 +428,24 @@ fun FoodAppNavHost(
 
         // Composable cho các vai trò khác (Shipper, Owner)
         composable(Screen.ShipperHome.route) {
-            // Thay thế bằng màn hình Shipper Home thực tế của bạn
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Shipper Home Screen")
-            }
+            ShipperDashboardRootScreen(navController = navController)
+        }
+        
+        composable(
+            route = Screen.ShipperOrderDetail.route,
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
+            com.example.foodapp.pages.shipper.order.ShipperOrderDetailScreen(
+                orderId = orderId,
+                onBack = { navController.navigateUp() }
+            )
+        }
+        
+        composable(Screen.ShipperApply.route) {
+            com.example.foodapp.pages.shipper.application.ShopSelectionScreen(
+                onApplicationSubmitted = { navController.navigateUp() }
+            )
         }
 
         composable(Screen.OwnerHome.route) {

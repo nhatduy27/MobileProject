@@ -255,6 +255,8 @@ export class ShopsService {
       closeTime: shop.closeTime,
       shipFeePerOrder: shop.shipFeePerOrder,
       minOrderAmount: shop.minOrderAmount,
+      logoUrl: shop.logoUrl,
+      coverImageUrl: shop.coverImageUrl,
     }));
 
     return {

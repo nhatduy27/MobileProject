@@ -67,17 +67,9 @@ fun SupportScreen(navController: NavHostController) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Trợ giúp & Hỗ trợ", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
-                )
+            SettingsTopBar(
+                title = "Trợ giúp & Hỗ trợ",
+                onBackClick = { navController.popBackStack() }
             )
         }
     ) { padding ->

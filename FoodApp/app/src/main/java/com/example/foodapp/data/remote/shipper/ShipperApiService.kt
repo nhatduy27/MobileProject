@@ -1,57 +1,40 @@
 package com.example.foodapp.data.remote.shipper
 
-import com.example.foodapp.data.remote.shipper.response.EarningsResponse
-import com.example.foodapp.data.remote.shipper.response.HistoryResponse
-import com.example.foodapp.data.remote.shipper.response.HomeResponse
-import com.example.foodapp.data.remote.shipper.response.ProfileResponse
+import com.example.foodapp.data.model.shipper.order.PaginatedShipperOrdersDto
+import com.example.foodapp.data.model.shipper.order.ShipperOrder
+import retrofit2.Response
+import retrofit2.http.*
 
-/**
- * Interface định nghĩa các API endpoint cho Shipper.
- * Backend sẽ implement các endpoint này.
- * 
- * Framework: Retrofit hoặc Ktor (tùy backend chọn)
- * 
- * TODO Backend: Implement các API endpoint sau:
- * - GET /api/shipper/home - Lấy thống kê và danh sách task
- * - GET /api/shipper/earnings - Lấy lịch sử thu nhập
- * - GET /api/shipper/history - Lấy lịch sử giao hàng
- * - GET /api/shipper/profile - Lấy thông tin profile
- */
 interface ShipperApiService {
-    
-    /**
-     * Lấy dữ liệu cho màn Home
-     * Endpoint: GET /api/shipper/home
-     * 
-     * @return HomeResponse chứa stats và tasks
-     */
-    // @GET("api/shipper/home")
-    suspend fun getHomeData(): HomeResponse
-    
-    /**
-     * Lấy lịch sử thu nhập
-     * Endpoint: GET /api/shipper/earnings
-     * 
-     * @return EarningsResponse chứa danh sách earnings
-     */
-    // @GET("api/shipper/earnings")
-    suspend fun getEarningsHistory(): EarningsResponse
-    
-    /**
-     * Lấy lịch sử giao hàng
-     * Endpoint: GET /api/shipper/history
-     * 
-     * @return HistoryResponse chứa danh sách history
-     */
-    // @GET("api/shipper/history")
-    suspend fun getDeliveryHistory(): HistoryResponse
-    
-    /**
-     * Lấy thông tin profile shipper
-     * Endpoint: GET /api/shipper/profile
-     * 
-     * @return ProfileResponse chứa thông tin shipper
-     */
-    // @GET("api/shipper/profile")
-    suspend fun getShipperProfile(): ProfileResponse
+
+    // Get assigned orders (filters: status, page, limit)
+    @GET("orders/shipper")
+    suspend fun getMyOrders(
+        @Query("status") status: String? = null,
+        @Query("page") page: Int? = 1,
+        @Query("limit") limit: Int? = 10
+    ): Response<PaginatedShipperOrdersDto>
+
+    // Get available orders
+    @GET("orders/shipper/available")
+    suspend fun getAvailableOrders(
+        @Query("page") page: Int? = 1,
+        @Query("limit") limit: Int? = 10
+    ): Response<PaginatedShipperOrdersDto>
+
+    // Get order detail
+    @GET("orders/shipper/{id}")
+    suspend fun getOrderDetail(@Path("id") id: String): Response<ShipperOrder>
+
+    // Accept order
+    @PUT("orders/{id}/accept")
+    suspend fun acceptOrder(@Path("id") id: String): Response<ShipperOrder>
+
+    // Mark shipping (pickup)
+    @PUT("orders/{id}/shipping")
+    suspend fun markShipping(@Path("id") id: String): Response<ShipperOrder>
+
+    // Mark delivered
+    @PUT("orders/{id}/delivered")
+    suspend fun markDelivered(@Path("id") id: String): Response<ShipperOrder>
 }
