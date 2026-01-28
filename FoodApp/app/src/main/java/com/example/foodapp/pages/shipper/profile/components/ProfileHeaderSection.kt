@@ -3,20 +3,24 @@ package com.example.foodapp.pages.shipper.profile.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.Verified
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodapp.data.model.shipper.ShipperProfile
+import com.example.foodapp.pages.shipper.theme.ShipperColors
 
 @Composable
 fun ProfileHeaderSection(
@@ -27,7 +31,7 @@ fun ProfileHeaderSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color(0xFFFF6B35))
+            .background(ShipperColors.Primary)
             .padding(bottom = 24.dp)
     ) {
         // Top bar
@@ -40,22 +44,22 @@ fun ProfileHeaderSection(
         ) {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color.White
+                    tint = ShipperColors.Surface
                 )
             }
             Text(
                 text = "Hồ sơ",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = ShipperColors.Surface
             )
             IconButton(onClick = onEditClick) {
                 Icon(
-                    imageVector = Icons.Default.Edit,
+                    imageVector = Icons.Outlined.Edit,
                     contentDescription = "Edit",
-                    tint = Color.White
+                    tint = ShipperColors.Surface
                 )
             }
         }
@@ -68,53 +72,81 @@ fun ProfileHeaderSection(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Avatar
-            Box(
-                modifier = Modifier
-                    .size(100.dp)
-                    .background(Color.White, CircleShape),
-                contentAlignment = Alignment.Center
+            Surface(
+                modifier = Modifier.size(88.dp),
+                shape = CircleShape,
+                color = ShipperColors.Surface
             ) {
-                Text(
-                    text = profile.name.first().toString(),
-                    fontSize = 40.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFF6B35)
-                )
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = profile.name.first().toString(),
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = ShipperColors.Primary
+                    )
+                }
             }
 
             Text(
                 text = profile.name,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                modifier = Modifier.padding(top = 16.dp)
+                fontSize = 22.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = ShipperColors.Surface,
+                modifier = Modifier.padding(top = 14.dp)
             )
 
             Row(
                 modifier = Modifier.padding(top = 8.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Outlined.Star,
+                        contentDescription = null,
+                        tint = ShipperColors.Surface.copy(alpha = 0.9f),
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${profile.rating}",
+                        fontSize = 14.sp,
+                        color = ShipperColors.Surface.copy(alpha = 0.9f)
+                    )
+                }
+                
                 Text(
-                    text = "⭐ ${profile.rating}",
-                    fontSize = 16.sp,
-                    color = Color(0xFFFFE5D9)
+                    text = "•",
+                    fontSize = 14.sp,
+                    color = ShipperColors.Surface.copy(alpha = 0.7f)
                 )
-                Text(
-                    text = " • ",
-                    fontSize = 16.sp,
-                    color = Color(0xFFFFE5D9)
-                )
+                
                 Text(
                     text = "${profile.totalDeliveries} đơn",
-                    fontSize = 16.sp,
-                    color = Color(0xFFFFE5D9)
+                    fontSize = 14.sp,
+                    color = ShipperColors.Surface.copy(alpha = 0.9f)
                 )
+                
                 if (profile.isVerified) {
                     Text(
-                        text = " • ✓ Đã xác thực",
+                        text = "•",
                         fontSize = 14.sp,
-                        color = Color(0xFF4CAF50)
+                        color = ShipperColors.Surface.copy(alpha = 0.7f)
                     )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Outlined.Verified,
+                            contentDescription = null,
+                            tint = ShipperColors.Success,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Đã xác thực",
+                            fontSize = 14.sp,
+                            color = ShipperColors.Success
+                        )
+                    }
                 }
             }
         }

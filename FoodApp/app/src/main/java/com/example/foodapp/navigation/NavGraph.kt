@@ -86,6 +86,7 @@ sealed class Screen(val route: String) {
         fun createRoute(orderId: String) = "shipper_order_detail/$orderId"
     }
     object ShipperApply : Screen("shipper_apply")
+    object ShipperMyApplications : Screen("shipper_my_applications")
 }
 
 @Composable
@@ -444,7 +445,14 @@ fun FoodAppNavHost(
         
         composable(Screen.ShipperApply.route) {
             com.example.foodapp.pages.shipper.application.ShopSelectionScreen(
+                onBack = { navController.navigateUp() },
                 onApplicationSubmitted = { navController.navigateUp() }
+            )
+        }
+        
+        composable(Screen.ShipperMyApplications.route) {
+            com.example.foodapp.pages.shipper.application.MyApplicationsScreen(
+                onBack = { navController.navigateUp() }
             )
         }
 

@@ -1,149 +1,209 @@
 package com.example.foodapp.pages.shipper.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.google.firebase.auth.FirebaseAuth
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.pages.shipper.theme.ShipperColors
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditProfileScreen(onCancel: () -> Unit = {}) {
-    var fullName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var phone by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
-    var vehicleType by remember { mutableStateOf("") }
-    var isEditing by remember { mutableStateOf(false) }
+fun EditProfileScreen(
+    onCancel: () -> Unit = {},
+    viewModel: EditProfileViewModel = viewModel()
+) {
+    val context = LocalContext.current
+    val uiState by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(Unit) {
-        val currentUser = FirebaseAuth.getInstance().currentUser
-        email = currentUser?.email ?: ""
-        fullName = currentUser?.displayName ?: ""
-        phone = currentUser?.phoneNumber ?: ""
+    // Show toast for success message
+    LaunchedEffect(uiState.successMessage) {
+        uiState.successMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearSuccessMessage()
+        }
+    }
+
+    // Show toast for error message
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+            viewModel.clearError()
+        }
+    }
+
+    if (uiState.isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(ShipperColors.Background),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = ShipperColors.Primary)
+        }
+        return
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(ShipperColors.Background)
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        TopAppBar(
-            title = { Text("Thông tin cá nhân", fontWeight = FontWeight.Bold) },
-            navigationIcon = {
-                IconButton(onClick = onCancel) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
-                }
-            },
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.White,
-                titleContentColor = Color(0xFF333333)
-            )
-        )
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+        // Avatar card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = ShipperColors.Surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Surface(
+                    modifier = Modifier.size(88.dp),
+                    shape = RoundedCornerShape(44.dp),
+                    color = ShipperColors.Primary
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(100.dp)
-                            .background(Color(0xFFFF6B35), RoundedCornerShape(50.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Box(contentAlignment = Alignment.Center) {
                         Text(
-                            text = fullName.firstOrNull()?.toString() ?: "S",
-                            fontSize = 40.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            text = uiState.displayName.firstOrNull()?.toString() ?: "S",
+                            fontSize = 36.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = ShipperColors.Surface
                         )
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    TextButton(onClick = { /* TODO */ }) {
-                        Text("Thay đổi ảnh đại diện", color = Color(0xFFFF6B35))
-                    }
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                TextButton(onClick = { /* TODO: Upload avatar */ }) {
+                    Text("Thay đổi ảnh đại diện", color = ShipperColors.Primary)
                 }
             }
+        }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        // Profile fields card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = ShipperColors.Surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column(
+                ProfileField(
+                    label = "Họ và tên",
+                    value = uiState.displayName,
+                    onValueChange = { viewModel.updateDisplayName(it) },
+                    enabled = uiState.isEditing,
+                    icon = Icons.Outlined.Person
+                )
+                HorizontalDivider(color = ShipperColors.Divider)
+                ProfileField(
+                    label = "Email",
+                    value = uiState.email,
+                    onValueChange = { },
+                    enabled = false,
+                    icon = Icons.Outlined.Email
+                )
+                HorizontalDivider(color = ShipperColors.Divider)
+                ProfileField(
+                    label = "Số điện thoại",
+                    value = uiState.phone,
+                    onValueChange = { viewModel.updatePhone(it) },
+                    enabled = uiState.isEditing,
+                    icon = Icons.Outlined.Phone
+                )
+                HorizontalDivider(color = ShipperColors.Divider)
+                ProfileField(
+                    label = "Địa chỉ",
+                    value = uiState.address,
+                    onValueChange = { viewModel.updateAddress(it) },
+                    enabled = uiState.isEditing,
+                    icon = Icons.Outlined.LocationOn,
+                    singleLine = false
+                )
+                HorizontalDivider(color = ShipperColors.Divider)
+                ProfileField(
+                    label = "Loại phương tiện",
+                    value = uiState.vehicleType,
+                    onValueChange = { viewModel.updateVehicleType(it) },
+                    enabled = uiState.isEditing,
+                    icon = Icons.Outlined.DirectionsBike
+                )
+            }
+        }
+
+        // Action buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            if (uiState.isEditing) {
+                OutlinedButton(
+                    onClick = {
+                        viewModel.setEditing(false)
+                        viewModel.loadProfile() // Reset to original values
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = ShipperColors.TextSecondary
+                    )
+                ) {
+                    Text("Hủy")
+                }
+                Button(
+                    onClick = { viewModel.saveProfile() },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ShipperColors.Primary),
+                    enabled = !uiState.isSaving
+                ) {
+                    if (uiState.isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(22.dp),
+                            color = ShipperColors.Surface,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text("Lưu", fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            } else {
+                Button(
+                    onClick = { viewModel.setEditing(true) },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                        .height(48.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ShipperColors.Primary)
                 ) {
-                    ProfileField("Họ và tên", fullName, { fullName = it }, isEditing, "👤")
-                    Divider(color = Color(0xFFEEEEEE))
-                    ProfileField("Email", email, { email = it }, false, "📧")
-                    Divider(color = Color(0xFFEEEEEE))
-                    ProfileField("Số điện thoại", phone, { phone = it }, isEditing, "📱")
-                    Divider(color = Color(0xFFEEEEEE))
-                    ProfileField("Địa chỉ", address, { address = it }, isEditing, "📍", false)
-                    Divider(color = Color(0xFFEEEEEE))
-                    ProfileField("Loại phương tiện", vehicleType, { vehicleType = it }, isEditing, "🏍️")
-                }
-            }
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                if (isEditing) {
-                    OutlinedButton(
-                        onClick = { isEditing = false },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Text("Hủy", modifier = Modifier.padding(vertical = 4.dp))
-                    }
-                    Button(
-                        onClick = { isEditing = false },
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35))
-                    ) {
-                        Text("Lưu", modifier = Modifier.padding(vertical = 4.dp))
-                    }
-                } else {
-                    Button(
-                        onClick = { isEditing = true },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35))
-                    ) {
-                        Text("Chỉnh sửa thông tin", modifier = Modifier.padding(vertical = 4.dp))
-                    }
+                    Text("Chỉnh sửa thông tin", fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -156,7 +216,7 @@ fun ProfileField(
     value: String,
     onValueChange: (String) -> Unit,
     enabled: Boolean,
-    icon: String,
+    icon: ImageVector,
     singleLine: Boolean = true
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -164,11 +224,16 @@ fun ProfileField(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(text = icon, fontSize = 18.sp)
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = ShipperColors.TextSecondary,
+                modifier = Modifier.size(18.dp)
+            )
             Text(
                 text = label,
                 fontSize = 14.sp,
-                color = Color(0xFF666666),
+                color = ShipperColors.TextSecondary,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -177,13 +242,13 @@ fun ProfileField(
             onValueChange = onValueChange,
             enabled = enabled,
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(10.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                disabledTextColor = Color(0xFF333333),
-                disabledBorderColor = Color(0xFFEEEEEE),
-                disabledContainerColor = Color(0xFFFAFAFA),
-                focusedBorderColor = Color(0xFFFF6B35),
-                unfocusedBorderColor = Color(0xFFEEEEEE)
+                disabledTextColor = ShipperColors.TextPrimary,
+                disabledBorderColor = ShipperColors.Divider,
+                disabledContainerColor = ShipperColors.Background,
+                focusedBorderColor = ShipperColors.Primary,
+                unfocusedBorderColor = ShipperColors.Divider
             ),
             singleLine = singleLine,
             maxLines = if (singleLine) 1 else 3

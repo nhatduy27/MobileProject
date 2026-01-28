@@ -69,9 +69,9 @@ data class ShipperInfo(
 data class Shipper(
     @SerializedName("id") val id: String,
     @SerializedName("name") val name: String,
-    @SerializedName("phone") val phone: String,
-    @SerializedName("avatar") val avatar: String,
-    @SerializedName("shipperInfo") val shipperInfo: ShipperInfo
+    @SerializedName("phone") val phone: String? = null,
+    @SerializedName("avatar") val avatar: String? = null,
+    @SerializedName("shipperInfo") val shipperInfo: ShipperInfo? = null
 )
 
 /**

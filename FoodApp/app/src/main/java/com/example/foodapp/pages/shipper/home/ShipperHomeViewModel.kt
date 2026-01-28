@@ -109,7 +109,54 @@ class ShipperHomeViewModel : ViewModel() {
         }
     }
     
+    /**
+     * Toggle shipper online/offline status
+     * When online: Subscribe to topic to receive ORDER_READY broadcasts
+     * When offline: Unsubscribe from topic
+     */
+    fun toggleOnlineStatus() {
+        val currentlyOnline = _uiState.value.isOnline
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(isTogglingOnlineStatus = true) }
+            
+            val result = if (currentlyOnline) {
+                repository.goOffline()
+            } else {
+                repository.goOnline()
+            }
+            
+            result.onSuccess { topic ->
+                val newOnlineState = !currentlyOnline
+                val message = if (newOnlineState) "Đang nhận đơn hàng mới" else "Đã tắt nhận đơn"
+                
+                _uiState.update {
+                    it.copy(
+                        isOnline = newOnlineState,
+                        isTogglingOnlineStatus = false,
+                        onlineStatusMessage = message
+                    )
+                }
+                
+                Log.d("ShipperHomeVM", "Online status changed to: $newOnlineState, topic: $topic")
+            }.onFailure { e ->
+                _uiState.update {
+                    it.copy(
+                        isTogglingOnlineStatus = false,
+                        error = e.message
+                    )
+                }
+                Log.e("ShipperHomeVM", "Failed to toggle online status", e)
+            }
+        }
+    }
+    
     fun clearError() {
         _uiState.update { it.copy(error = null) }
     }
+    
+    fun clearOnlineStatusMessage() {
+        _uiState.update { it.copy(onlineStatusMessage = null) }
+    }
 }
+

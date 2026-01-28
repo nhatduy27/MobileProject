@@ -234,8 +234,8 @@ class ShippersViewModel : ViewModel() {
         } else {
             state.shippers.filter {
                 it.name.contains(query, ignoreCase = true) ||
-                it.phone.contains(query, ignoreCase = true) ||
-                it.shipperInfo.vehicleNumber.contains(query, ignoreCase = true)
+                (it.phone?.contains(query, ignoreCase = true) == true) ||
+                (it.shipperInfo?.vehicleNumber?.contains(query, ignoreCase = true) == true)
             }
         }
     }
@@ -248,8 +248,8 @@ class ShippersViewModel : ViewModel() {
             totalApplications = state.applications.size,
             pendingApplications = state.applications.count { it.status == ApplicationStatus.PENDING },
             totalShippers = state.shippers.size,
-            availableShippers = state.shippers.count { it.shipperInfo.status == ShipperStatus.AVAILABLE },
-            busyShippers = state.shippers.count { it.shipperInfo.status == ShipperStatus.BUSY }
+            availableShippers = state.shippers.count { it.shipperInfo?.status == ShipperStatus.AVAILABLE },
+            busyShippers = state.shippers.count { it.shipperInfo?.status == ShipperStatus.BUSY }
         )
     }
 

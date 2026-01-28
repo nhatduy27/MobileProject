@@ -2,6 +2,8 @@ package com.example.foodapp.data.remote.shipper
 
 import com.example.foodapp.data.model.shipper.order.PaginatedShipperOrdersDto
 import com.example.foodapp.data.model.shipper.order.ShipperOrder
+import com.example.foodapp.data.remote.shipper.response.GoOnlineResponse
+import com.example.foodapp.data.remote.shipper.response.GoOfflineResponse
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -37,4 +39,13 @@ interface ShipperApiService {
     // Mark delivered
     @PUT("orders/{id}/delivered")
     suspend fun markDelivered(@Path("id") id: String): Response<ShipperOrder>
+    
+    // Shipper goes online - subscribe to topic for ORDER_READY broadcasts
+    @POST("shippers/notifications/online")
+    suspend fun goOnline(): Response<GoOnlineResponse>
+    
+    // Shipper goes offline - unsubscribe from topic
+    @DELETE("shippers/notifications/online")
+    suspend fun goOffline(): Response<GoOfflineResponse>
 }
+

@@ -46,6 +46,10 @@ class ShopSelectionViewModel : ViewModel() {
             _uiState.update { it.copy(isLoading = true, error = null) }
             repository.getShops(1, 50, _uiState.value.searchQuery.ifBlank { null })
                 .onSuccess { response ->
+                    // DEBUG: Log shop details to check image URLs
+                    response.shops.forEach { shop ->
+                        Log.d("ShopSelectionVM", "Shop: ${shop.name}, logoUrl=${shop.logoUrl}, coverImageUrl=${shop.coverImageUrl}")
+                    }
                     _uiState.update { 
                         it.copy(
                             shops = response.shops,

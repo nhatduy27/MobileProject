@@ -9,11 +9,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodapp.data.model.shipper.EarningsSummary
+import com.example.foodapp.pages.shipper.theme.ShipperColors
 
 @Composable
 fun EarningsSummaryCard(summary: EarningsSummary) {
@@ -22,10 +22,10 @@ fun EarningsSummaryCard(summary: EarningsSummary) {
             .fillMaxWidth()
             .padding(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFF6B35)
+            containerColor = ShipperColors.Primary
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        shape = RoundedCornerShape(16.dp)
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
             modifier = Modifier
@@ -36,13 +36,13 @@ fun EarningsSummaryCard(summary: EarningsSummary) {
             Text(
                 text = "Tổng thu nhập tháng này",
                 fontSize = 14.sp,
-                color = Color(0xFFFFE5D9)
+                color = ShipperColors.Surface.copy(alpha = 0.8f)
             )
             Text(
                 text = "%,dđ".format(summary.monthEarnings),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = ShipperColors.Surface,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
 
@@ -60,7 +60,7 @@ fun EarningsSummaryCard(summary: EarningsSummary) {
                     modifier = Modifier
                         .width(1.dp)
                         .height(40.dp)
-                        .background(Color(0xFFFFE5D9))
+                        .background(ShipperColors.Surface.copy(alpha = 0.3f))
                 )
                 EarningsInfoItem(
                     label = "TB/đơn",
@@ -80,12 +80,12 @@ fun EarningsInfoItem(label: String, value: String) {
             text = value,
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = ShipperColors.Surface
         )
         Text(
             text = label,
             fontSize = 12.sp,
-            color = Color(0xFFFFE5D9)
+            color = ShipperColors.Surface.copy(alpha = 0.8f)
         )
     }
 }

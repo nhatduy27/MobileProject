@@ -3,6 +3,7 @@ package com.example.foodapp.data.remote.shipper
 import com.example.foodapp.data.model.shipper.application.ShopsApiResponse
 import com.example.foodapp.data.model.shipper.application.ApplicationsApiResponse
 import com.example.foodapp.data.model.shipper.application.ApplicationApiResponse
+import com.example.foodapp.data.model.shipper.application.CancelApplicationResponse
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import retrofit2.Response
@@ -38,5 +39,5 @@ interface ShipperApplicationApiService {
 
     // Cancel application
     @DELETE("shipper-applications/{id}")
-    suspend fun cancelApplication(@Path("id") id: String): Response<Unit>
+    suspend fun cancelApplication(@Path("id") id: String): Response<CancelApplicationResponse>
 }

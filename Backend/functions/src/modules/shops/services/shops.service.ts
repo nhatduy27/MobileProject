@@ -243,6 +243,7 @@ export class ShopsService {
     const result = await this.shopsRepository.findAll(params);
 
     // Map to customer entity (exclude sensitive fields)
+    // Always include logoUrl and coverImageUrl (even if null) for consistent API response
     const customerShops = result.shops.map((shop) => ({
       id: shop.id,
       name: shop.name,
@@ -255,8 +256,8 @@ export class ShopsService {
       closeTime: shop.closeTime,
       shipFeePerOrder: shop.shipFeePerOrder,
       minOrderAmount: shop.minOrderAmount,
-      logoUrl: shop.logoUrl,
-      coverImageUrl: shop.coverImageUrl,
+      logoUrl: shop.logoUrl ?? undefined,
+      coverImageUrl: shop.coverImageUrl ?? undefined,
     }));
 
     return {

@@ -1,6 +1,7 @@
 package com.example.foodapp.pages.shipper.notifications
 
 import androidx.compose.ui.graphics.Color
+import com.example.foodapp.pages.shipper.theme.ShipperColors
 
 data class Notification(
     val id: String,
@@ -11,10 +12,10 @@ data class Notification(
     val isRead: Boolean = false
 )
 
-enum class NotificationType(val displayName: String, val icon: String, val color: Color) {
-    NEW_ORDER("Đơn mới", "📦", Color(0xFF2196F3)),
-    ORDER_UPDATE("Cập nhật đơn", "🔄", Color(0xFFFF9800)),
-    PAYMENT("Thanh toán", "💰", Color(0xFF4CAF50)),
-    SYSTEM("Hệ thống", "⚙️", Color(0xFF757575)),
-    PROMOTION("Khuyến mãi", "🎁", Color(0xFFE91E63))
+enum class NotificationType(val displayName: String, val color: Color) {
+    NEW_ORDER("Đơn mới", ShipperColors.Primary),
+    ORDER_UPDATE("Cập nhật đơn", ShipperColors.Warning),
+    PAYMENT("Thanh toán", ShipperColors.Success),
+    SYSTEM("Hệ thống", ShipperColors.TextSecondary),
+    PROMOTION("Khuyến mãi", ShipperColors.Info)
 }

@@ -7,19 +7,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.HourglassEmpty
+import androidx.compose.material.icons.outlined.HourglassEmpty
+import androidx.compose.material.icons.outlined.Store
 import androidx.compose.material3.*
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.data.model.shipper.order.ShipperOrder
+import com.example.foodapp.pages.shipper.theme.ShipperColors
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 
@@ -43,90 +44,92 @@ fun ShipperHomeScreen(
             viewModel.clearError()
         }
     }
+    
+    LaunchedEffect(uiState.onlineStatusMessage) {
+        uiState.onlineStatusMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearOnlineStatusMessage()
+        }
+    }
 
-    Scaffold(
-        containerColor = Color(0xFFF5F5F5)
-    ) { paddingValues ->
-        // Nếu shipper chưa được gán vào shop, hiển thị thông báo
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ShipperColors.Background)
+    ) {
         if (uiState.isNotAssignedToShop) {
             NotAssignedToShopContent(
                 onRefresh = { viewModel.loadData() },
-                onApplyClick = onApplyShipper,
-                modifier = Modifier.padding(paddingValues)
+                onApplyClick = onApplyShipper
             )
         } else {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
+                modifier = Modifier.fillMaxSize()
             ) {
-                // Tabs
+                // Tabs with new style
                 TabRow(
                     selectedTabIndex = uiState.selectedTab,
-                    containerColor = Color.White,
-                    contentColor = MaterialTheme.colorScheme.primary,
+                    containerColor = ShipperColors.Surface,
+                    contentColor = ShipperColors.Primary,
                     indicator = { tabPositions ->
                         TabRowDefaults.SecondaryIndicator(
                             Modifier.tabIndicatorOffset(tabPositions[uiState.selectedTab]),
-                            color = MaterialTheme.colorScheme.primary
+                            color = ShipperColors.Primary,
+                            height = 3.dp
                         )
-                    }
+                    },
+                    divider = { HorizontalDivider(color = ShipperColors.Divider) }
                 ) {
                     Tab(
                         selected = uiState.selectedTab == 0,
                         onClick = { viewModel.onTabSelected(0) },
+                        selectedContentColor = ShipperColors.Primary,
+                        unselectedContentColor = ShipperColors.TextSecondary,
                         text = { 
                             Text(
                                 "Đơn mới (${uiState.availableOrders.size})", 
-                                fontWeight = if(uiState.selectedTab == 0) FontWeight.Bold else FontWeight.Normal
+                                fontWeight = if(uiState.selectedTab == 0) FontWeight.SemiBold else FontWeight.Normal
                             ) 
                         }
                     )
                     Tab(
                         selected = uiState.selectedTab == 1,
                         onClick = { viewModel.onTabSelected(1) },
+                        selectedContentColor = ShipperColors.Primary,
+                        unselectedContentColor = ShipperColors.TextSecondary,
                         text = { 
                             Text(
                                 "Đơn của tôi (${uiState.myOrders.size})",
-                                fontWeight = if(uiState.selectedTab == 1) FontWeight.Bold else FontWeight.Normal
+                                fontWeight = if(uiState.selectedTab == 1) FontWeight.SemiBold else FontWeight.Normal
                             ) 
                         }
                     )
                 }
                 
                 // Content
-                Box(modifier = Modifier.fillMaxSize()) {
-                    if (uiState.selectedTab == 0) {
-                        OrdersList(
-                            orders = uiState.availableOrders,
-                            isLoading = uiState.isLoadingAvailable,
-                            onRefresh = { viewModel.loadAvailableOrders() },
-                            onAccept = { order -> viewModel.acceptOrder(order.id) },
-                            onViewDetail = { order -> onOrderClick(order.id) }
-                        )
-                    } else {
-                        OrdersList(
-                            orders = uiState.myOrders,
-                            isLoading = uiState.isLoadingMyOrders,
-                            onRefresh = { viewModel.loadMyOrders() },
-                            onAccept = { },
-                            onViewDetail = { order -> onOrderClick(order.id) },
-                            isMyOrder = true
-                        )
-                    }
-                    
-                    if (uiState.isLoadingAvailable || uiState.isLoadingMyOrders) {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    }
+                if (uiState.selectedTab == 0) {
+                    OrdersList(
+                        orders = uiState.availableOrders,
+                        isLoading = uiState.isLoadingAvailable,
+                        onRefresh = { viewModel.loadAvailableOrders() },
+                        onAccept = { order -> viewModel.acceptOrder(order.id) },
+                        onViewDetail = { order -> onOrderClick(order.id) }
+                    )
+                } else {
+                    OrdersList(
+                        orders = uiState.myOrders,
+                        isLoading = uiState.isLoadingMyOrders,
+                        onRefresh = { viewModel.loadMyOrders() },
+                        onAccept = { },
+                        onViewDetail = { order -> onOrderClick(order.id) },
+                        isMyOrder = true
+                    )
                 }
             }
         }
     }
 }
 
-/**
- * Composable hiển thị khi shipper chưa được gán vào shop
- */
 @Composable
 fun NotAssignedToShopContent(
     onRefresh: () -> Unit,
@@ -144,54 +147,70 @@ fun NotAssignedToShopContent(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
-                containerColor = Color(0xFFFFF3E0) // Light orange
-            )
+                containerColor = ShipperColors.Surface
+            ),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = Modifier.padding(28.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(
-                    imageVector = Icons.Default.HourglassEmpty,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp),
-                    tint = Color(0xFFFF9800)
-                )
+                // Icon background
+                Surface(
+                    modifier = Modifier.size(80.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    color = ShipperColors.PrimaryLight
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Outlined.Store,
+                            contentDescription = null,
+                            modifier = Modifier.size(40.dp),
+                            tint = ShipperColors.Primary
+                        )
+                    }
+                }
                 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(20.dp))
                 
                 Text(
                     text = "Chưa đăng ký cửa hàng",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFE65100)
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = ShipperColors.TextPrimary
                 )
                 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
                     text = "Bạn cần đăng ký làm shipper cho một cửa hàng để có thể nhận và giao đơn hàng.",
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
-                    color = Color(0xFF795548)
+                    color = ShipperColors.TextSecondary
                 )
                 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(28.dp))
                 
                 Button(
                     onClick = onApplyClick,
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = ShipperColors.Primary
+                    )
                 ) {
-                    Text("Đăng ký cửa hàng")
+                    Text("Đăng ký cửa hàng", fontWeight = FontWeight.SemiBold)
                 }
                 
                 Spacer(modifier = Modifier.height(12.dp))
                 
                 OutlinedButton(
                     onClick = onRefresh,
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.fillMaxWidth()
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = ShipperColors.TextSecondary
+                    )
                 ) {
                     Text("Kiểm tra lại")
                 }
@@ -204,7 +223,7 @@ fun NotAssignedToShopContent(
             text = "Nếu bạn đã gửi đơn, vui lòng đợi chủ cửa hàng phê duyệt.",
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = ShipperColors.TextSecondary
         )
     }
 }
@@ -232,22 +251,34 @@ fun OrdersList(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = if (isMyOrder) "Bạn chưa nhận đơn nào" else "Không có đơn hàng mới",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.HourglassEmpty,
+                        contentDescription = null,
+                        modifier = Modifier.size(48.dp),
+                        tint = ShipperColors.TextTertiary
+                    )
+                    Text(
+                        text = if (isMyOrder) "Bạn chưa nhận đơn nào" else "Không có đơn hàng mới",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = ShipperColors.TextSecondary
+                    )
+                }
             }
         } else {
             LazyColumn(
-                contentPadding = PaddingValues(bottom = 80.dp),
+                contentPadding = PaddingValues(top = 8.dp, bottom = 80.dp),
                 modifier = Modifier.fillMaxSize()
             ) {
                 items(orders) { order ->
                     ShipperOrderCard(
                         order = order,
                         onAccept = { onAccept(order) },
-                        onClick = { onViewDetail(order) }
+                        onClick = { onViewDetail(order) },
+                        showAcceptButton = !isMyOrder
                     )
                 }
             }

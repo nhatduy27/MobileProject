@@ -14,34 +14,36 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.outlined.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.foodapp.data.model.shipper.application.ShopForApplication
+import com.example.foodapp.pages.shipper.theme.ShipperColors
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShopSelectionScreen(
+    onBack: () -> Unit = {},
     onApplicationSubmitted: () -> Unit = {},
     viewModel: ShopSelectionViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val context = LocalContext.current
     
-    // Error handling
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
             Toast.makeText(context, it, Toast.LENGTH_LONG).show()
@@ -49,7 +51,6 @@ fun ShopSelectionScreen(
         }
     }
     
-    // Success handling
     LaunchedEffect(uiState.applySuccess) {
         if (uiState.applySuccess) {
             Toast.makeText(context, "Đã gửi đơn xin làm shipper thành công!", Toast.LENGTH_LONG).show()
@@ -60,10 +61,25 @@ fun ShopSelectionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Chọn cửa hàng") },
+                title = { 
+                    Text(
+                        "Chọn cửa hàng",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 18.sp
+                    ) 
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(
+                            Icons.AutoMirrored.Outlined.ArrowBack,
+                            contentDescription = "Quay lại",
+                            tint = ShipperColors.TextPrimary
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = Color.White
+                    containerColor = ShipperColors.Surface,
+                    titleContentColor = ShipperColors.TextPrimary
                 )
             )
         }
@@ -72,7 +88,7 @@ fun ShopSelectionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(Color(0xFFF5F5F5))
+                .background(ShipperColors.Background)
         ) {
             // Search bar
             OutlinedTextField(
@@ -82,9 +98,21 @@ fun ShopSelectionScreen(
                     .fillMaxWidth()
                     .padding(16.dp),
                 placeholder = { Text("Tìm kiếm cửa hàng...") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                leadingIcon = { 
+                    Icon(
+                        Icons.Outlined.Search, 
+                        contentDescription = null,
+                        tint = ShipperColors.TextSecondary
+                    ) 
+                },
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(10.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = ShipperColors.Primary,
+                    unfocusedBorderColor = ShipperColors.Divider,
+                    focusedContainerColor = ShipperColors.Surface,
+                    unfocusedContainerColor = ShipperColors.Surface
+                )
             )
             
             // Pending applications banner
@@ -93,28 +121,29 @@ fun ShopSelectionScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFF3E0))
+                    colors = CardDefaults.cardColors(containerColor = ShipperColors.WarningLight),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
                     Row(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            Icons.Default.HourglassEmpty,
+                            Icons.Outlined.HourglassEmpty,
                             contentDescription = null,
-                            tint = Color(0xFFFF9800)
+                            tint = ShipperColors.Warning
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 "Đang chờ phê duyệt",
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFFE65100)
+                                fontWeight = FontWeight.SemiBold,
+                                color = ShipperColors.Warning
                             )
                             Text(
                                 "Bạn đã gửi đơn và đang chờ cửa hàng phê duyệt",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF795548)
+                                color = ShipperColors.TextSecondary
                             )
                         }
                     }
@@ -125,7 +154,7 @@ fun ShopSelectionScreen(
             Text(
                 text = "Chọn một cửa hàng để đăng ký làm shipper",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = ShipperColors.TextSecondary,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
             
@@ -135,7 +164,7 @@ fun ShopSelectionScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    CircularProgressIndicator()
+                    CircularProgressIndicator(color = ShipperColors.Primary)
                 }
             } else if (uiState.shops.isEmpty()) {
                 Box(
@@ -144,15 +173,15 @@ fun ShopSelectionScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            Icons.Default.StoreMallDirectory,
+                            Icons.Outlined.Storefront,
                             contentDescription = null,
                             modifier = Modifier.size(64.dp),
-                            tint = Color.Gray
+                            tint = ShipperColors.TextTertiary
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             "Không tìm thấy cửa hàng nào",
-                            color = Color.Gray
+                            color = ShipperColors.TextSecondary
                         )
                     }
                 }
@@ -197,10 +226,10 @@ fun ShopCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 6.dp)
             .clickable(enabled = !isApplied, onClick = onClick),
         colors = CardDefaults.cardColors(
-            containerColor = if (isApplied) Color(0xFFE8F5E9) else Color.White
+            containerColor = if (isApplied) ShipperColors.SuccessLight else ShipperColors.Surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp)
@@ -210,51 +239,73 @@ fun ShopCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Shop logo
-            AsyncImage(
-                model = shop.logoUrl ?: shop.coverImageUrl,
-                contentDescription = shop.name,
-                modifier = Modifier
-                    .size(60.dp)
-                    .clip(CircleShape)
-                    .background(Color(0xFFE0E0E0)),
-                contentScale = ContentScale.Crop
-            )
+            Surface(
+                modifier = Modifier.size(52.dp),
+                shape = RoundedCornerShape(10.dp),
+                color = ShipperColors.PrimaryLight
+            ) {
+                val imageUrl = shop.logoUrl ?: shop.coverImageUrl
+                if (!imageUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = coil.request.ImageRequest.Builder(LocalContext.current)
+                            .data(imageUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = shop.name,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Outlined.Store,
+                            contentDescription = null,
+                            tint = ShipperColors.Primary,
+                            modifier = Modifier.size(26.dp)
+                        )
+                    }
+                }
+            }
             
-            Spacer(modifier = Modifier.width(16.dp))
+            Spacer(modifier = Modifier.width(14.dp))
             
             Column(modifier = Modifier.weight(1f)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = shop.name,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.SemiBold,
+                        color = ShipperColors.TextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f)
                     )
                     
                     if (shop.isOpen) {
+                        Spacer(modifier = Modifier.width(8.dp))
                         Surface(
-                            color = Color(0xFF4CAF50).copy(alpha = 0.1f),
+                            color = ShipperColors.Success.copy(alpha = 0.1f),
                             shape = RoundedCornerShape(4.dp)
                         ) {
                             Text(
                                 "Mở cửa",
                                 style = MaterialTheme.typography.labelSmall,
-                                color = Color(0xFF4CAF50),
+                                color = ShipperColors.Success,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(4.dp))
-                
                 if (shop.address != null) {
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = shop.address,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = ShipperColors.TextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -265,23 +316,24 @@ fun ShopCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (shop.rating != null && shop.rating > 0) {
                         Icon(
-                            Icons.Default.Star,
+                            Icons.Outlined.Star,
                             contentDescription = null,
-                            tint = Color(0xFFFFC107),
-                            modifier = Modifier.size(16.dp)
+                            tint = ShipperColors.Warning,
+                            modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = String.format("%.1f", shop.rating),
                             style = MaterialTheme.typography.bodySmall,
-                            fontWeight = FontWeight.Medium
+                            fontWeight = FontWeight.Medium,
+                            color = ShipperColors.TextPrimary
                         )
                         
                         if (shop.totalRatings != null && shop.totalRatings > 0) {
                             Text(
                                 text = " (${shop.totalRatings})",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = Color.Gray
+                                color = ShipperColors.TextSecondary
                             )
                         }
                     }
@@ -292,7 +344,7 @@ fun ShopCard(
                         Text(
                             "Đã gửi đơn",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF4CAF50),
+                            color = ShipperColors.Success,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -300,10 +352,11 @@ fun ShopCard(
             }
             
             if (!isApplied) {
+                Spacer(modifier = Modifier.width(8.dp))
                 Icon(
-                    Icons.Default.ChevronRight,
+                    Icons.AutoMirrored.Outlined.KeyboardArrowRight,
                     contentDescription = "Chọn",
-                    tint = Color.Gray
+                    tint = ShipperColors.TextTertiary
                 )
             }
         }
@@ -367,7 +420,7 @@ fun ApplyShipperDialog(
         title = { 
             Text(
                 "Đăng ký làm shipper",
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.SemiBold
             )
         },
         text = {
@@ -380,13 +433,19 @@ fun ApplyShipperDialog(
                 Text(
                     "Cửa hàng: ${shop.name}",
                     style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
+                    fontWeight = FontWeight.Medium,
+                    color = ShipperColors.Primary
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 // Vehicle Type
-                Text("Loại xe", style = MaterialTheme.typography.labelMedium)
+                Text(
+                    "Loại xe", 
+                    style = MaterialTheme.typography.labelMedium,
+                    color = ShipperColors.TextSecondary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -394,17 +453,29 @@ fun ApplyShipperDialog(
                     FilterChip(
                         selected = vehicleType == "MOTORBIKE",
                         onClick = { vehicleType = "MOTORBIKE" },
-                        label = { Text("Xe máy") }
+                        label = { Text("Xe máy") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = ShipperColors.PrimaryLight,
+                            selectedLabelColor = ShipperColors.Primary
+                        )
                     )
                     FilterChip(
                         selected = vehicleType == "CAR",
                         onClick = { vehicleType = "CAR" },
-                        label = { Text("Ô tô") }
+                        label = { Text("Ô tô") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = ShipperColors.PrimaryLight,
+                            selectedLabelColor = ShipperColors.Primary
+                        )
                     )
                     FilterChip(
                         selected = vehicleType == "BICYCLE",
                         onClick = { vehicleType = "BICYCLE" },
-                        label = { Text("Xe đạp") }
+                        label = { Text("Xe đạp") },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = ShipperColors.PrimaryLight,
+                            selectedLabelColor = ShipperColors.Primary
+                        )
                     )
                 }
                 
@@ -417,7 +488,12 @@ fun ApplyShipperDialog(
                     label = { Text("Biển số xe") },
                     placeholder = { Text("VD: 59X1-12345") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ShipperColors.Primary,
+                        unfocusedBorderColor = ShipperColors.Divider
+                    )
                 )
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -428,7 +504,12 @@ fun ApplyShipperDialog(
                     onValueChange = { idCardNumber = it },
                     label = { Text("Số CMND/CCCD") },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ShipperColors.Primary,
+                        unfocusedBorderColor = ShipperColors.Divider
+                    )
                 )
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -439,12 +520,21 @@ fun ApplyShipperDialog(
                     onValueChange = { message = it },
                     label = { Text("Lời nhắn (tùy chọn)") },
                     modifier = Modifier.fillMaxWidth(),
-                    maxLines = 2
+                    maxLines = 2,
+                    shape = RoundedCornerShape(10.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = ShipperColors.Primary,
+                        unfocusedBorderColor = ShipperColors.Divider
+                    )
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                Text("Ảnh giấy tờ", style = MaterialTheme.typography.labelMedium)
+                Text(
+                    "Ảnh giấy tờ", 
+                    style = MaterialTheme.typography.labelMedium,
+                    color = ShipperColors.TextSecondary
+                )
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 // File upload buttons
@@ -503,16 +593,18 @@ fun ApplyShipperDialog(
                         licenseFile
                     )
                 },
-                enabled = !isApplying
+                enabled = !isApplying,
+                colors = ButtonDefaults.buttonColors(containerColor = ShipperColors.Primary),
+                shape = RoundedCornerShape(10.dp)
             ) {
                 if (isApplying) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(20.dp),
-                        color = Color.White,
+                        color = ShipperColors.Surface,
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Gửi đơn")
+                    Text("Gửi đơn", fontWeight = FontWeight.SemiBold)
                 }
             }
         },
@@ -521,7 +613,7 @@ fun ApplyShipperDialog(
                 onClick = onDismiss,
                 enabled = !isApplying
             ) {
-                Text("Hủy")
+                Text("Hủy", color = ShipperColors.TextSecondary)
             }
         }
     )
@@ -537,21 +629,28 @@ fun ImageUploadButton(
     OutlinedButton(
         onClick = onClick,
         modifier = modifier,
+        shape = RoundedCornerShape(10.dp),
         colors = ButtonDefaults.outlinedButtonColors(
-            containerColor = if (hasFile) Color(0xFFE8F5E9) else Color.Transparent
+            containerColor = if (hasFile) ShipperColors.SuccessLight else ShipperColors.Surface
+        ),
+        border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(
+            brush = androidx.compose.ui.graphics.SolidColor(
+                if (hasFile) ShipperColors.Success else ShipperColors.Divider
+            )
         )
     ) {
         Icon(
-            if (hasFile) Icons.Default.CheckCircle else Icons.Default.AddAPhoto,
+            if (hasFile) Icons.Outlined.CheckCircle else Icons.Outlined.AddPhotoAlternate,
             contentDescription = null,
-            tint = if (hasFile) Color(0xFF4CAF50) else MaterialTheme.colorScheme.primary,
+            tint = if (hasFile) ShipperColors.Success else ShipperColors.Primary,
             modifier = Modifier.size(16.dp)
         )
         Spacer(modifier = Modifier.width(4.dp))
         Text(
             label,
             style = MaterialTheme.typography.labelSmall,
-            maxLines = 1
+            maxLines = 1,
+            color = if (hasFile) ShipperColors.Success else ShipperColors.TextPrimary
         )
     }
 }
