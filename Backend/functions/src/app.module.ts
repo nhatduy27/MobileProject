@@ -23,6 +23,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { PaymentsModule } from './modules/payments/payments.module';
 import { WalletsModule } from './modules/wallets/wallets.module';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
+import { BuyersModule } from './modules/buyers/buyers.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { ChatbotModule } from './modules/chatbot/chatbot.module';
     CartModule,
     OrdersModule,
     VouchersModule,
+    BuyersModule,
 
     // EPIC 05: Notifications (CORE)
     NotificationsModule,

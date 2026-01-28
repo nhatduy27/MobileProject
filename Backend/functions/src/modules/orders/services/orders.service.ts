@@ -35,6 +35,7 @@ import {
 import { OrderStateMachineService } from './order-state-machine.service';
 import { normalizeDeliveryAddress } from '../utils/address.normalizer';
 import { toIsoString } from '../utils/timestamp.serializer';
+import { BuyersStatsService } from '../../buyers/services/buyers-stats.service';
 
 @Injectable()
 export class OrdersService {
@@ -61,6 +62,7 @@ export class OrdersService {
     private readonly configService: ConfigService,
     private readonly firebaseService: FirebaseService,
     private readonly walletsService: WalletsService,
+    private readonly buyersStatsService: BuyersStatsService,
   ) {}
 
   /**
@@ -1415,7 +1417,11 @@ export class OrdersService {
       this.logger.error('Failed to send ORDER_DELIVERED notification to owner:', error);
     }
 
-    // 8. Process payout (atomic transaction)
+    // 9. MVP: Sync buyer stats synchronously (non-blocking)
+    // Phase 2: Replace with Cloud Function trigger
+    await this.buyersStatsService.updateBuyerStatsOnDelivery(deliveredOrder);
+
+    // 10. Process payout (atomic transaction)
     // Only payout if order is PAID and not already paid out
     // P0-FIX: processOrderPayout now handles Order.paidOut update atomically
     if (deliveredOrder.paymentStatus === PaymentStatus.PAID && !deliveredOrder.paidOut) {
