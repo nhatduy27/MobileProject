@@ -75,14 +75,7 @@ export class PaymentsService {
       });
     }
 
-    // 5. Check order is UNPAID
-    if (order.paymentStatus !== OrderPaymentStatus.UNPAID) {
-      throw new ConflictException({
-        code: 'PAYMENT_005',
-        message: `Order payment status is ${order.paymentStatus}`,
-        statusCode: 409,
-      });
-    }
+  
 
     // 6. Handle payment based on method
     let paymentStatus: PaymentStatus;
