@@ -61,4 +61,7 @@ export enum NotificationType {
   // Promotions
   PROMOTION = 'PROMOTION',
   VOUCHER_AVAILABLE = 'VOUCHER_AVAILABLE',
+
+  // Chat
+  CHAT = 'CHAT',
 }

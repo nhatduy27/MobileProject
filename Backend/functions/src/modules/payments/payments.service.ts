@@ -434,10 +434,7 @@ export class PaymentsService {
    * Updates both Payment.status and Order.paymentStatus to REFUNDED
    * Maintains consistency between payment and order records
    */
-  async initiateRefund(
-    orderId: string,
-    reason: string,
-  ): Promise<PaymentEntity | null> {
+  async initiateRefund(orderId: string, reason: string): Promise<PaymentEntity | null> {
     // 1. Get payment for order
     const payment = await this.paymentsRepo.findByOrderId(orderId);
     if (!payment) {
@@ -466,9 +463,7 @@ export class PaymentsService {
       paymentStatus: OrderPaymentStatus.UNPAID, // Or REFUNDED if Order entity has it
     });
 
-    this.logger.log(
-      `Payment refunded for order ${orderId}: reason="${reason}", status=REFUNDED`,
-    );
+    this.logger.log(`Payment refunded for order ${orderId}: reason="${reason}", status=REFUNDED`);
 
     // 5. Return updated payment
     return this.paymentsRepo.findById(payment.id!);

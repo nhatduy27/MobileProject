@@ -66,7 +66,9 @@ export class BuyersStatsService {
 
       // Get customer info from order snapshot
       const displayName =
-        order.customerSnapshot?.displayName || order.customer?.displayName || `Customer ${customerId.slice(0, 8)}`;
+        order.customerSnapshot?.displayName ||
+        order.customer?.displayName ||
+        `Customer ${customerId.slice(0, 8)}`;
       const phone = order.customerSnapshot?.phone || order.customer?.phone;
 
       // Create or update buyer
