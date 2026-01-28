@@ -166,11 +166,11 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                     }
                 )
                 DrawerMenuItem(
-                    icon = "👤",
-                    title = "Hồ sơ",
-                    isSelected = currentScreen == "profile",
+                    icon = "⚙️",
+                    title = "Cài đặt",
+                    isSelected = currentScreen == "settings",
                     onClick = {
-                        currentScreen = "profile"
+                        currentScreen = "settings"
                         scope.launch { drawerState.close() }
                     }
                 )
@@ -219,7 +219,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                                     "earnings" -> "Thu nhập của tôi"
                                     "history" -> "Lịch sử giao hàng"
                                     "applications" -> "Đơn ứng tuyển"
-                                    "profile" -> "Hồ sơ"
+                                    "settings" -> "Cài đặt"
                                     "notifications" -> "Thông báo"
                                     "help" -> "Trợ giúp & Hỗ trợ"
                                     else -> "FoodApp Shipper"
@@ -269,7 +269,14 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                             onBack = { currentScreen = "home" },
                             showTopBar = false
                         )
-                        "profile" -> ShipperSettingsNavHost(navController = settingsNavController)
+                        "settings" -> ShipperSettingsNavHost(
+                            navController = settingsNavController,
+                            onLogout = {
+                                navController.navigate("intro") {
+                                    popUpTo(0)
+                                }
+                            }
+                        )
                         "notifications" -> NotificationsScreen()
                         "help" -> HelpScreen()
                     }

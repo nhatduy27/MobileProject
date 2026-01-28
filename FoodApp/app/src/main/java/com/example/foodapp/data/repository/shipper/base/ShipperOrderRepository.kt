@@ -11,4 +11,9 @@ interface ShipperOrderRepository {
     suspend fun acceptOrder(id: String): Result<ShipperOrder>
     suspend fun markShipping(id: String): Result<ShipperOrder>
     suspend fun markDelivered(id: String): Result<ShipperOrder>
+    
+    // Online status management
+    suspend fun goOnline(): Result<String>
+    suspend fun goOffline(): Result<String>
 }
+

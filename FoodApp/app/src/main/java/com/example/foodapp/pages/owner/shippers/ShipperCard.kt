@@ -76,7 +76,7 @@ fun ShipperCard(
                             Box(
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .background(getStatusColor(shipper.shipperInfo.status), CircleShape)
+                                    .background(getStatusColor(shipper.shipperInfo?.status ?: ShipperStatus.OFFLINE), CircleShape)
                             )
                         }
                     }
@@ -89,7 +89,7 @@ fun ShipperCard(
                             color = Color(0xFF1A1A1A)
                         )
                         Text(
-                            text = shipper.phone,
+                            text = shipper.phone ?: "",
                             fontSize = 14.sp,
                             color = Color(0xFF757575)
                         )
@@ -116,7 +116,7 @@ fun ShipperCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Status Badge
-            ShipperStatusBadge(shipper.shipperInfo.status)
+            ShipperStatusBadge(shipper.shipperInfo?.status ?: ShipperStatus.OFFLINE)
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -128,14 +128,14 @@ fun ShipperCard(
                 StatBox(
                     icon = Icons.Default.Star,
                     label = "Rating",
-                    value = String.format("%.1f", shipper.shipperInfo.rating),
+                    value = String.format("%.1f", shipper.shipperInfo?.rating ?: 0.0),
                     color = Color(0xFFFFC107),
                     modifier = Modifier.weight(1f)
                 )
                 StatBox(
                     icon = Icons.Default.LocalShipping,
                     label = "Đơn đã giao",
-                    value = shipper.shipperInfo.totalDeliveries.toString(),
+                    value = (shipper.shipperInfo?.totalDeliveries ?: 0).toString(),
                     color = Color(0xFF4CAF50),
                     modifier = Modifier.weight(1f)
                 )
@@ -164,13 +164,13 @@ fun ShipperCard(
                     )
                     Column {
                         Text(
-                            getVehicleTypeName(shipper.shipperInfo.vehicleType),
+                            getVehicleTypeName(shipper.shipperInfo?.vehicleType ?: VehicleType.MOTORBIKE),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = Color(0xFF1A1A1A)
                         )
                         Text(
-                            shipper.shipperInfo.vehicleNumber,
+                            shipper.shipperInfo?.vehicleNumber ?: "",
                             fontSize = 12.sp,
                             color = Color(0xFF757575)
                         )
@@ -178,14 +178,15 @@ fun ShipperCard(
                 }
 
                 // Current orders badge
-                if (shipper.shipperInfo.currentOrders.isNotEmpty()) {
+                val currentOrders = shipper.shipperInfo?.currentOrders ?: emptyList()
+                if (currentOrders.isNotEmpty()) {
                     Box(
                         modifier = Modifier
                             .background(Color(0xFFFF6B35), RoundedCornerShape(12.dp))
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            "${shipper.shipperInfo.currentOrders.size} đơn",
+                            "${currentOrders.size} đơn",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -207,7 +208,7 @@ fun ShipperCard(
                     modifier = Modifier.size(14.dp)
                 )
                 Text(
-                    "Tham gia: ${formatDate(shipper.shipperInfo.joinedAt)}",
+                    "Tham gia: ${formatDate(shipper.shipperInfo?.joinedAt ?: "")}",
                     fontSize = 12.sp,
                     color = Color(0xFF757575)
                 )
@@ -231,10 +232,11 @@ fun ShipperCard(
             text = {
                 Column {
                     Text("Bạn có chắc muốn xóa \"${shipper.name}\" khỏi danh sách shipper?")
-                    if (shipper.shipperInfo.currentOrders.isNotEmpty()) {
+                    val dialogCurrentOrders = shipper.shipperInfo?.currentOrders ?: emptyList()
+                    if (dialogCurrentOrders.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            "⚠️ Shipper này đang có ${shipper.shipperInfo.currentOrders.size} đơn hàng chưa hoàn thành!",
+                            "⚠️ Shipper này đang có ${dialogCurrentOrders.size} đơn hàng chưa hoàn thành!",
                             color = Color(0xFFF44336),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium

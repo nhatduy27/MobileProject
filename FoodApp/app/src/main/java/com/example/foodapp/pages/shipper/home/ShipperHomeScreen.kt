@@ -43,22 +43,30 @@ fun ShipperHomeScreen(
             viewModel.clearError()
         }
     }
+    
+    // Show toast for online status change
+    LaunchedEffect(uiState.onlineStatusMessage) {
+        uiState.onlineStatusMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            viewModel.clearOnlineStatusMessage()
+        }
+    }
 
-    Scaffold(
-        containerColor = Color(0xFFF5F5F5)
-    ) { paddingValues ->
+    // Content without Scaffold - parent already provides TopAppBar
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color(0xFFF5F5F5))
+    ) {
         // Nếu shipper chưa được gán vào shop, hiển thị thông báo
         if (uiState.isNotAssignedToShop) {
             NotAssignedToShopContent(
                 onRefresh = { viewModel.loadData() },
-                onApplyClick = onApplyShipper,
-                modifier = Modifier.padding(paddingValues)
+                onApplyClick = onApplyShipper
             )
         } else {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
+                modifier = Modifier.fillMaxSize()
             ) {
                 // Tabs
                 TabRow(
@@ -94,30 +102,24 @@ fun ShipperHomeScreen(
                     )
                 }
                 
-                // Content
-                Box(modifier = Modifier.fillMaxSize()) {
-                    if (uiState.selectedTab == 0) {
-                        OrdersList(
-                            orders = uiState.availableOrders,
-                            isLoading = uiState.isLoadingAvailable,
-                            onRefresh = { viewModel.loadAvailableOrders() },
-                            onAccept = { order -> viewModel.acceptOrder(order.id) },
-                            onViewDetail = { order -> onOrderClick(order.id) }
-                        )
-                    } else {
-                        OrdersList(
-                            orders = uiState.myOrders,
-                            isLoading = uiState.isLoadingMyOrders,
-                            onRefresh = { viewModel.loadMyOrders() },
-                            onAccept = { },
-                            onViewDetail = { order -> onOrderClick(order.id) },
-                            isMyOrder = true
-                        )
-                    }
-                    
-                    if (uiState.isLoadingAvailable || uiState.isLoadingMyOrders) {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    }
+                // Content - OrdersList has its own loading indicator
+                if (uiState.selectedTab == 0) {
+                    OrdersList(
+                        orders = uiState.availableOrders,
+                        isLoading = uiState.isLoadingAvailable,
+                        onRefresh = { viewModel.loadAvailableOrders() },
+                        onAccept = { order -> viewModel.acceptOrder(order.id) },
+                        onViewDetail = { order -> onOrderClick(order.id) }
+                    )
+                } else {
+                    OrdersList(
+                        orders = uiState.myOrders,
+                        isLoading = uiState.isLoadingMyOrders,
+                        onRefresh = { viewModel.loadMyOrders() },
+                        onAccept = { },
+                        onViewDetail = { order -> onOrderClick(order.id) },
+                        isMyOrder = true
+                    )
                 }
             }
         }
@@ -247,7 +249,8 @@ fun OrdersList(
                     ShipperOrderCard(
                         order = order,
                         onAccept = { onAccept(order) },
-                        onClick = { onViewDetail(order) }
+                        onClick = { onViewDetail(order) },
+                        showAcceptButton = !isMyOrder
                     )
                 }
             }

@@ -9,5 +9,11 @@ data class ShipperHomeUiState(
     val isLoadingMyOrders: Boolean = false,
     val error: String? = null,
     val selectedTab: Int = 0, // 0: Available, 1: My Orders
-    val isNotAssignedToShop: Boolean = false // Shipper chưa được phê duyệt/gán vào shop
+    val isNotAssignedToShop: Boolean = false, // Shipper chưa được phê duyệt/gán vào shop
+    
+    // Online status
+    val isOnline: Boolean = false,
+    val isTogglingOnlineStatus: Boolean = false,
+    val onlineStatusMessage: String? = null
 )
+

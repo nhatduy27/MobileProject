@@ -35,6 +35,42 @@ class RealShipperOrderRepository(
     override suspend fun markDelivered(id: String): Result<ShipperOrder> {
         return safeApiCall { apiService.markDelivered(id) }
     }
+    
+    override suspend fun goOnline(): Result<String> {
+        return try {
+            val response = apiService.goOnline()
+            if (response.isSuccessful) {
+                val topic = response.body()?.data?.topic ?: ""
+                Log.d("ShipperOrderRepo", "Go online success, topic: $topic")
+                Result.success(topic)
+            } else {
+                val errorMessage = parseErrorBody(response)
+                Log.e("ShipperOrderRepo", "Go online failed: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            Log.e("ShipperOrderRepo", "Go online exception", e)
+            Result.failure(e)
+        }
+    }
+    
+    override suspend fun goOffline(): Result<String> {
+        return try {
+            val response = apiService.goOffline()
+            if (response.isSuccessful) {
+                val topic = response.body()?.data?.topic ?: ""
+                Log.d("ShipperOrderRepo", "Go offline success, topic: $topic")
+                Result.success(topic)
+            } else {
+                val errorMessage = parseErrorBody(response)
+                Log.e("ShipperOrderRepo", "Go offline failed: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            Log.e("ShipperOrderRepo", "Go offline exception", e)
+            Result.failure(e)
+        }
+    }
 
     private suspend fun <T> safeApiCall(apiCall: suspend () -> Response<T>): Result<T> {
         return try {
