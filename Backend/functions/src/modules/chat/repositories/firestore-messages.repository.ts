@@ -90,16 +90,6 @@ export class FirestoreMessagesRepository implements IMessagesRepository {
     return this.mapDocToEntity(doc);
   }
 
-  async countUnread(conversationId: string, userId: string): Promise<number> {
-    // Count messages not sent by user and not read
-    const snapshot = await this.getMessagesCollection(conversationId)
-      .where('senderId', '!=', userId)
-      .where('status', '!=', MessageStatus.READ)
-      .get();
-
-    return snapshot.size;
-  }
-
   private mapDocToEntity(doc: admin.firestore.DocumentSnapshot): MessageEntity {
     const data = doc.data()!;
     return {

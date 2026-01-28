@@ -176,18 +176,39 @@ export class ChatService {
       throw new NotFoundException('Conversation not found');
     }
 
-    // Create message
-    const message = await this.messagesRepo.create(conversationId, {
-      senderId: userId,
-      text,
+    // Use Firestore transaction for atomicity
+    const db = this.firebaseApp.firestore();
+    const messageRef = db.collection('conversations').doc(conversationId).collection('messages').doc();
+    const conversationRef = db.collection('conversations').doc(conversationId);
+    const now = admin.firestore.FieldValue.serverTimestamp();
+
+    await db.runTransaction(async (transaction) => {
+      // Create message
+      transaction.set(messageRef, {
+        senderId: userId,
+        text,
+        status: MessageStatus.SENT,
+        createdAt: now,
+      });
+
+      // Update conversation's last message
+      transaction.update(conversationRef, {
+        lastMessage: text.substring(0, 100),
+        lastSenderId: userId,
+        lastMessageAt: now,
+        updatedAt: now,
+      });
     });
 
-    // Update conversation's last message
-    await this.conversationsRepo.updateLastMessage(conversationId, {
-      lastMessage: text,
-      lastSenderId: userId,
-      lastMessageAt: message.createdAt,
-    });
+    // Fetch the created message
+    const messageDoc = await messageRef.get();
+    const message: MessageEntity = {
+      id: messageDoc.id,
+      senderId: userId,
+      text,
+      status: MessageStatus.SENT,
+      createdAt: messageDoc.data()?.createdAt?.toDate() || new Date(),
+    };
 
     // Send FCM notification to recipient (async, non-blocking)
     const recipientId = this.getOtherParticipant(conversationId, userId);
