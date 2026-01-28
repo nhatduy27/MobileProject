@@ -27,7 +27,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.data.model.owner.notification.Notification
 import com.example.foodapp.data.model.owner.notification.NotificationType
@@ -49,24 +52,40 @@ fun NotificationBell(
     // State cho toast notification mới
     var showNewNotificationToast by remember { mutableStateOf(false) }
     var latestNotification by remember { mutableStateOf<Notification?>(null) }
-    var previousUnreadCount by remember { mutableIntStateOf(0) }
     
-    // Theo dõi khi có thông báo mới
-    LaunchedEffect(uiState.unreadCount, uiState.notifications) {
-        // Nếu số unread tăng lên và có notification mới
-        if (uiState.unreadCount > previousUnreadCount && uiState.notifications.isNotEmpty()) {
-            // Tìm thông báo chưa đọc mới nhất
-            val newestUnread = uiState.notifications.firstOrNull { !it.read }
-            if (newestUnread != null && newestUnread != latestNotification) {
-                latestNotification = newestUnread
-                showNewNotificationToast = true
+    // Theo dõi các notification ID đã biết để phát hiện thông báo MỚI THẬT SỰ
+    var knownNotificationIds by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var isInitialLoad by remember { mutableStateOf(true) }
+    
+    // Theo dõi khi có thông báo mới THẬT SỰ (không phải thông báo cũ chưa đọc)
+    LaunchedEffect(uiState.notifications) {
+        val currentIds = uiState.notifications.map { it.id }.toSet()
+        
+        if (isInitialLoad) {
+            // Lần đầu mount - lưu tất cả ID hiện tại, không hiển thị toast
+            knownNotificationIds = currentIds
+            isInitialLoad = false
+        } else {
+            // Tìm các notification ID mới (chưa có trong danh sách đã biết)
+            val newIds = currentIds - knownNotificationIds
+            
+            if (newIds.isNotEmpty()) {
+                // Tìm thông báo mới nhất trong số các thông báo mới
+                val newNotification = uiState.notifications.firstOrNull { it.id in newIds && !it.read }
                 
-                // Tự động ẩn sau 4 giây
-                kotlinx.coroutines.delay(4000)
-                showNewNotificationToast = false
+                if (newNotification != null) {
+                    latestNotification = newNotification
+                    showNewNotificationToast = true
+                    
+                    // Tự động ẩn sau 4 giây
+                    kotlinx.coroutines.delay(4000)
+                    showNewNotificationToast = false
+                }
             }
+            
+            // Cập nhật danh sách ID đã biết
+            knownNotificationIds = currentIds
         }
-        previousUnreadCount = uiState.unreadCount
     }
     
     // Animation cho bell khi có thông báo mới
@@ -137,7 +156,8 @@ fun NotificationBell(
 }
 
 /**
- * Toast Popup hiển thị thông báo mới - slide từ trên xuống, tự động biến mất
+ * Toast Popup hiển thị thông báo mới - Overlay thực sự trên cùng màn hình
+ * Sử dụng Popup để hiển thị độc lập với layout hierarchy
  */
 @Composable
 private fun NewNotificationToast(
@@ -146,86 +166,104 @@ private fun NewNotificationToast(
     onDismiss: () -> Unit,
     onClick: () -> Unit
 ) {
-    AnimatedVisibility(
-        visible = visible && notification != null,
-        enter = slideInVertically(
-            initialOffsetY = { -it },
-            animationSpec = tween(300, easing = FastOutSlowInEasing)
-        ) + fadeIn(animationSpec = tween(300)),
-        exit = slideOutVertically(
-            targetOffsetY = { -it },
-            animationSpec = tween(300, easing = FastOutSlowInEasing)
-        ) + fadeOut(animationSpec = tween(300))
-    ) {
-        notification?.let { notif ->
-            val iconInfo = getNotificationIconInfo(notif.type)
+    if (visible && notification != null) {
+        Popup(
+            alignment = Alignment.TopCenter,
+            offset = IntOffset(0, 0),
+            onDismissRequest = onDismiss,
+            properties = PopupProperties(
+                focusable = false,
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false
+            )
+        ) {
+            // Wrap trong Box để có animation
+            var isVisible by remember { mutableStateOf(false) }
             
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                    .clickable(onClick = onClick),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            LaunchedEffect(Unit) {
+                isVisible = true
+            }
+            
+            AnimatedVisibility(
+                visible = isVisible,
+                enter = slideInVertically(
+                    initialOffsetY = { -it },
+                    animationSpec = tween(300, easing = FastOutSlowInEasing)
+                ) + fadeIn(animationSpec = tween(300)),
+                exit = slideOutVertically(
+                    targetOffsetY = { -it },
+                    animationSpec = tween(300, easing = FastOutSlowInEasing)
+                ) + fadeOut(animationSpec = tween(300))
             ) {
-                Row(
+                val iconInfo = getNotificationIconInfo(notification.type)
+                
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 16.dp, vertical = 48.dp) // Padding từ top để tránh status bar
+                        .clickable(onClick = onClick),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
                 ) {
-                    // Icon
-                    Box(
+                    Row(
                         modifier = Modifier
-                            .size(40.dp)
-                            .clip(CircleShape)
-                            .background(iconInfo.second.copy(alpha = 0.12f)),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = iconInfo.first,
-                            contentDescription = null,
-                            tint = iconInfo.second,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.width(12.dp))
-                    
-                    // Content
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = notif.title,
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = notif.body,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                    
-                    // Close button
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.size(32.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Close,
-                            contentDescription = "Đóng",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
-                        )
+                        // Icon
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(iconInfo.second.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = iconInfo.first,
+                                contentDescription = null,
+                                tint = iconInfo.second,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        
+                        Spacer(modifier = Modifier.width(12.dp))
+                        
+                        // Content
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = notification.title,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = notification.body,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        
+                        // Close button
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Đóng",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
                     }
                 }
             }
