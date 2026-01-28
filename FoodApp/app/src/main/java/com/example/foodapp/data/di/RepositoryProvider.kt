@@ -204,6 +204,16 @@ object RepositoryProvider {
         )
     }
     
+    // ==================== OWNER NOTIFICATION REPOSITORY ====================
+    
+    fun getNotificationRepository(): com.example.foodapp.data.repository.owner.base.OwnerNotificationRepository {
+        return com.example.foodapp.data.repository.owner.notifications.RealNotificationRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.owner.NotificationApiService::class.java
+            )
+        )
+    }
+    
     // ==================== USER PROFILE REPOSITORY ====================
     
     fun getUserProfileRepository(): com.example.foodapp.data.repository.user.base.UserProfileRepository {

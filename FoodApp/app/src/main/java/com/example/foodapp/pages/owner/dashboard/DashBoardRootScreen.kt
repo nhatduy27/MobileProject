@@ -25,6 +25,8 @@ import com.example.foodapp.pages.owner.revenue.RevenueScreen
 import com.example.foodapp.pages.owner.shippers.ShippersScreen
 // Import VouchersScreen
 import com.example.foodapp.pages.owner.vouchers.VouchersScreen
+// Import NotificationBell
+import com.example.foodapp.pages.owner.notifications.NotificationBell
 // Import SettingsScreen
 import com.example.foodapp.pages.owner.settings.SettingsNavHost
 import androidx.navigation.NavHostController
@@ -164,6 +166,8 @@ fun DashBoardRootScreen(navController: NavHostController) {
                         scope.launch { drawerState.close() }
                     }
 
+
+
                     DrawerItem(
                         text = "Quản lý đơn hàng", 
                         iconRes = R.drawable.ic_shopping_cart,
@@ -247,16 +251,13 @@ fun DashBoardRootScreen(navController: NavHostController) {
         // ===== Main Screen =====
         Scaffold(
             topBar = {
-                // HIDE TopBar if we are on Dashboard
-
-                // HIDE TopBar if we are on Dashboard
+                // Show TopBar for screens that don't have their own TopBar
                 if (currentScreen != "dashboard" && currentScreen != "orders" && currentScreen != "foods" && currentScreen != "shippers" && currentScreen != "vouchers" && currentScreen != "customers") {
-
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(64.dp) // Taller header
-                            .background(MaterialTheme.colorScheme.background) // White background
+                            .height(64.dp)
+                            .background(MaterialTheme.colorScheme.background)
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -268,18 +269,17 @@ fun DashBoardRootScreen(navController: NavHostController) {
 
                         Text(
                             text = when (currentScreen) {
-                                "orders" -> "Quản lý đơn hàng"
-                                "foods" -> "Quản lý món ăn"
-                                "shippers" -> "Quản lý Shipper"
-                                "vouchers" -> "Quản lý Voucher"
-                                "customers" -> "Quản lý khách hàng"
                                 "revenue" -> "Báo cáo doanh thu"
                                 "settings" -> "Cài đặt"
                                 else -> shopState.shopName.ifEmpty { "KTX Food" }
                             },
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.weight(1f)
                         )
+                        
+                        // Notification Bell Icon
+                        NotificationBell()
                     }
                 }
             }
@@ -291,6 +291,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
             ) {
                 when (currentScreen) {
                     "dashboard" -> DashboardScreen(onMenuClick = { scope.launch { drawerState.open() } }) // Pass Open Drawer
+
                     "orders" -> OrdersScreen(onMenuClick = { scope.launch { drawerState.open() } })
                     "foods" -> FoodsScreen(onMenuClick = { scope.launch { drawerState.open() } })
                     "shippers" -> ShippersScreen(onMenuClick = { scope.launch { drawerState.open() } })

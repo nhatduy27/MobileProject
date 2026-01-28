@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.font.FontWeight
 import com.example.foodapp.data.model.owner.product.Product
+import com.example.foodapp.pages.owner.notifications.NotificationBell
 
 /**
  * Màn hình quản lý sản phẩm - FoodsScreen
@@ -335,7 +336,7 @@ fun FoodsSearchHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     IconButton(onClick = onMenuClick) {
                         Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color(0xFF1A1A1A))
                     }
@@ -347,6 +348,9 @@ fun FoodsSearchHeader(
                         color = Color(0xFF1A1A1A)
                     )
                 }
+                
+                // Notification Bell Icon
+                NotificationBell()
 
                 Row {
                     IconButton(onClick = onRefresh) {

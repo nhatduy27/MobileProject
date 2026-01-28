@@ -44,6 +44,7 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util.*
+import com.example.foodapp.pages.owner.notifications.NotificationBell
 
 // Colors
 private val OrangeAccent = Color(0xFFFF6B35)
@@ -257,7 +258,7 @@ fun VouchersSearchHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     IconButton(onClick = onMenuClick) {
                         Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color(0xFF1A1A1A))
                     }
@@ -269,6 +270,9 @@ fun VouchersSearchHeader(
                         color = Color(0xFF1A1A1A)
                     )
                 }
+                
+                // Notification Bell Icon
+                NotificationBell()
 
                 IconButton(
                     onClick = { isSearchActive = true },

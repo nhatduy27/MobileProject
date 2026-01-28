@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.data.model.owner.*
+import com.example.foodapp.pages.owner.notifications.NotificationBell
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -243,7 +244,15 @@ fun DashboardHeaderNew(onMenuClick: () -> Unit) {
                 Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color.Black)
             }
             Spacer(Modifier.width(8.dp))
-            Text("Tổng quan", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            Text(
+                "Tổng quan", 
+                style = MaterialTheme.typography.titleLarge, 
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f)
+            )
+            
+            // Notification Bell Icon
+            NotificationBell()
         }
     }
 }

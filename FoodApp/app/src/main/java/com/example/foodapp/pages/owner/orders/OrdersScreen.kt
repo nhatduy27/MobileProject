@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.pages.owner.notifications.NotificationBell
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -317,17 +318,21 @@ fun OrdersSearchHeader(
                         text = "Quản lý đơn hàng",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1A1A)
+                        color = Color(0xFF1A1A1A),
+                        modifier = Modifier.weight(1f)
                     )
-                }
+                    
+                    // Notification Bell Icon
+                    NotificationBell()
 
-                IconButton(
-                    onClick = { isSearchActive = true },
-                    modifier = Modifier
-                        .background(Color(0xFFF5F5F5), CircleShape)
-                        .size(40.dp)
-                ) {
-                    Icon(Icons.Default.Search, contentDescription = "Search", tint = Color(0xFF1A1A1A))
+                    IconButton(
+                        onClick = { isSearchActive = true },
+                        modifier = Modifier
+                            .background(Color(0xFFF5F5F5), CircleShape)
+                            .size(40.dp)
+                    ) {
+                        Icon(Icons.Default.Search, contentDescription = "Search", tint = Color(0xFF1A1A1A))
+                    }
                 }
             }
         }

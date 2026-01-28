@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.pages.owner.notifications.NotificationBell
 
 /**
  * Header cho màn hình Shippers với search và refresh
@@ -61,7 +62,7 @@ fun ShippersHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     IconButton(onClick = onMenuClick) {
                         Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color(0xFF1A1A1A))
                     }
@@ -73,6 +74,9 @@ fun ShippersHeader(
                         color = Color(0xFF1A1A1A)
                     )
                 }
+                
+                // Notification Bell Icon
+                NotificationBell()
 
                 Row {
                     IconButton(onClick = onRefresh) {
