@@ -1,12 +1,12 @@
 package com.example.foodapp.pages.shipper.profile
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodapp.pages.shipper.theme.ShipperColors
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VehicleInfoScreen(
     onSave: () -> Unit = {},
@@ -30,88 +29,60 @@ fun VehicleInfoScreen(
     var color by remember { mutableStateOf("Đen") }
     var brand by remember { mutableStateOf("Honda") }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { 
-                    Text(
-                        "Thông tin phương tiện", 
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 18.sp
-                    ) 
-                },
-                navigationIcon = {
-                    IconButton(onClick = onCancel) {
-                        Icon(
-                            Icons.AutoMirrored.Outlined.ArrowBack, 
-                            contentDescription = "Quay lại",
-                            tint = ShipperColors.TextPrimary
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = ShipperColors.Surface,
-                    titleContentColor = ShipperColors.TextPrimary
-                )
-            )
-        },
-        containerColor = ShipperColors.Background
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(ShipperColors.Background)
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = ShipperColors.Surface),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = CardDefaults.cardColors(containerColor = ShipperColors.Surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    VehicleField("Loại phương tiện", vehicleType, { vehicleType = it }, Icons.Outlined.DirectionsBike)
-                    HorizontalDivider(color = ShipperColors.Divider)
-                    VehicleField("Biển số xe", licensePlate, { licensePlate = it }, Icons.Outlined.Badge)
-                    HorizontalDivider(color = ShipperColors.Divider)
-                    VehicleField("Màu xe", color, { color = it }, Icons.Outlined.ColorLens)
-                    HorizontalDivider(color = ShipperColors.Divider)
-                    VehicleField("Hãng xe", brand, { brand = it }, Icons.Outlined.BrandingWatermark)
-                }
+                VehicleField("Loại phương tiện", vehicleType, { vehicleType = it }, Icons.Outlined.DirectionsBike)
+                HorizontalDivider(color = ShipperColors.Divider)
+                VehicleField("Biển số xe", licensePlate, { licensePlate = it }, Icons.Outlined.Badge)
+                HorizontalDivider(color = ShipperColors.Divider)
+                VehicleField("Màu xe", color, { color = it }, Icons.Outlined.ColorLens)
+                HorizontalDivider(color = ShipperColors.Divider)
+                VehicleField("Hãng xe", brand, { brand = it }, Icons.Outlined.BrandingWatermark)
             }
+        }
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedButton(
+                onClick = onCancel,
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = ShipperColors.TextSecondary
+                )
             ) {
-                OutlinedButton(
-                    onClick = onCancel,
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = ShipperColors.TextSecondary
-                    )
-                ) {
-                    Text("Hủy")
-                }
-                Button(
-                    onClick = {
-                        Toast.makeText(context, "Lưu thành công!", Toast.LENGTH_SHORT).show()
-                        onSave()
-                    },
-                    modifier = Modifier.weight(1f).height(48.dp),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = ShipperColors.Primary)
-                ) {
-                    Text("Lưu", fontWeight = FontWeight.SemiBold)
-                }
+                Text("Hủy")
+            }
+            Button(
+                onClick = {
+                    Toast.makeText(context, "Lưu thành công!", Toast.LENGTH_SHORT).show()
+                    onSave()
+                },
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = ShipperColors.Primary)
+            ) {
+                Text("Lưu", fontWeight = FontWeight.SemiBold)
             }
         }
     }

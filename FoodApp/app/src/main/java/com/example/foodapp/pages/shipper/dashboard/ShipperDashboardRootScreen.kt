@@ -74,8 +74,16 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var currentScreen by remember { mutableStateOf("home") }
+    var currentSettingsRoute by remember { mutableStateOf("settings_main") }
     
     val settingsNavController = rememberNavController()
+    
+    // Listen to settings navigation changes
+    LaunchedEffect(settingsNavController) {
+        settingsNavController.currentBackStackEntryFlow.collect { entry ->
+            currentSettingsRoute = entry.destination.route ?: "settings_main"
+        }
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -225,17 +233,32 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
         content = {
             Scaffold(
                 topBar = {
+                    val isInSettingsChild = currentScreen == "settings" && currentSettingsRoute != "settings_main"
                     TopAppBar(
                         title = {
                             Text(
-                                text = when (currentScreen) {
-                                    "home" -> "Trang chủ"
-                                    "earnings" -> "Thu nhập của tôi"
-                                    "history" -> "Lịch sử giao hàng"
-                                    "applications" -> "Đơn ứng tuyển"
-                                    "settings" -> "Cài đặt"
-                                    "notifications" -> "Thông báo"
-                                    "help" -> "Trợ giúp & Hỗ trợ"
+                                text = when {
+                                    currentScreen == "settings" && currentSettingsRoute != "settings_main" -> {
+                                        when (currentSettingsRoute) {
+                                            "edit_profile" -> "Thông tin cá nhân"
+                                            "change_password" -> "Đổi mật khẩu"
+                                            "vehicle_info" -> "Thông tin phương tiện"
+                                            "payment_method" -> "Phương thức thanh toán"
+                                            "notification_settings" -> "Cài đặt thông báo"
+                                            "language" -> "Ngôn ngữ"
+                                            "terms" -> "Điều khoản & Chính sách"
+                                            "privacy" -> "Bảo mật & Quyền riêng tư"
+                                            "help_screen" -> "Trợ giúp & Hỗ trợ"
+                                            else -> "Cài đặt"
+                                        }
+                                    }
+                                    currentScreen == "home" -> "Trang chủ"
+                                    currentScreen == "earnings" -> "Thu nhập của tôi"
+                                    currentScreen == "history" -> "Lịch sử giao hàng"
+                                    currentScreen == "applications" -> "Đơn ứng tuyển"
+                                    currentScreen == "settings" -> "Cài đặt"
+                                    currentScreen == "notifications" -> "Thông báo"
+                                    currentScreen == "help" -> "Trợ giúp & Hỗ trợ"
                                     else -> "FoodApp Shipper"
                                 },
                                 fontWeight = FontWeight.SemiBold,
@@ -243,23 +266,35 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                             )
                         },
                         navigationIcon = {
-                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                                Icon(
-                                    imageVector = Icons.Default.Menu,
-                                    contentDescription = "Menu",
-                                    tint = ShipperColors.TextPrimary
-                                )
+                            if (isInSettingsChild) {
+                                IconButton(onClick = { settingsNavController.navigateUp() }) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.ArrowBack,
+                                        contentDescription = "Quay lại",
+                                        tint = ShipperColors.TextPrimary
+                                    )
+                                }
+                            } else {
+                                IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Menu,
+                                        contentDescription = "Menu",
+                                        tint = ShipperColors.TextPrimary
+                                    )
+                                }
                             }
                         },
                         actions = {
-                            IconButton(onClick = {
-                                currentScreen = "notifications"
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Notifications,
-                                    contentDescription = "Thông báo",
-                                    tint = ShipperColors.TextPrimary
-                                )
+                            if (!isInSettingsChild) {
+                                IconButton(onClick = {
+                                    currentScreen = "notifications"
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Notifications,
+                                        contentDescription = "Thông báo",
+                                        tint = ShipperColors.TextPrimary
+                                    )
+                                }
                             }
                         },
                         colors = TopAppBarDefaults.topAppBarColors(

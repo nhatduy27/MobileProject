@@ -13,11 +13,49 @@ class RealShipperOrderRepository(
 ) : ShipperOrderRepository {
 
     override suspend fun getMyOrders(status: String?, page: Int, limit: Int): Result<PaginatedShipperOrdersDto> {
-        return safeApiCall { apiService.getMyOrders(status, page, limit) }
+        return try {
+            val response = apiService.getMyOrders(status, page, limit)
+            Log.d("ShipperOrderRepo", "🔍 getMyOrders response: isSuccessful=${response.isSuccessful}, code=${response.code()}")
+            if (response.isSuccessful) {
+                val body = response.body()
+                Log.d("ShipperOrderRepo", "📦 getMyOrders body: orders=${body?.orders?.size ?: 0}, total=${body?.total ?: 0}")
+                if (body != null) {
+                    Result.success(body)
+                } else {
+                    Result.failure(Exception("Response body is null"))
+                }
+            } else {
+                val errorMessage = parseErrorBody(response)
+                Log.e("ShipperOrderRepo", "❌ getMyOrders error: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            Log.e("ShipperOrderRepo", "❌ getMyOrders exception", e)
+            Result.failure(e)
+        }
     }
 
     override suspend fun getAvailableOrders(page: Int, limit: Int): Result<PaginatedShipperOrdersDto> {
-        return safeApiCall { apiService.getAvailableOrders(page, limit) }
+        return try {
+            val response = apiService.getAvailableOrders(page, limit)
+            Log.d("ShipperOrderRepo", "🔍 getAvailableOrders response: isSuccessful=${response.isSuccessful}, code=${response.code()}")
+            if (response.isSuccessful) {
+                val body = response.body()
+                Log.d("ShipperOrderRepo", "📦 getAvailableOrders body: orders=${body?.orders?.size ?: 0}, total=${body?.total ?: 0}")
+                if (body != null) {
+                    Result.success(body)
+                } else {
+                    Result.failure(Exception("Response body is null"))
+                }
+            } else {
+                val errorMessage = parseErrorBody(response)
+                Log.e("ShipperOrderRepo", "❌ getAvailableOrders error: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            Log.e("ShipperOrderRepo", "❌ getAvailableOrders exception", e)
+            Result.failure(e)
+        }
     }
 
     override suspend fun getOrderDetail(id: String): Result<ShipperOrder> {
