@@ -4,7 +4,6 @@ import {
   Query,
   UseGuards,
   BadRequestException,
-  ForbiddenException,
   InternalServerErrorException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
@@ -204,22 +203,21 @@ export class RevenueController {
         topProducts: analytics.topProducts,
       });
     } catch (error) {
-      // Handle known errors
-      if (error instanceof BadRequestException) {
+      console.error('DEBUG_ERROR:', error); // Handle known errors
+      const err = error as any; 
+
+      if (err.response) {
         throw error;
       }
 
-      if (error instanceof ForbiddenException) {
-        throw new ForbiddenException({
-          code: 'REV_002',
-          message: 'Access denied. Only shop owners can access revenue analytics',
-        });
-      }
-
-      // Handle unknown errors
       throw new InternalServerErrorException({
-        code: 'REV_500',
-        message: 'Failed to retrieve revenue analytics',
+        success: false,
+        error: {
+          code: 'REV_500',
+          message: err.message || 'Failed to retrieve revenue analytics',
+          details: err.details || null,
+        },
+        timestamp: new Date().toISOString(),
       });
     }
   }
