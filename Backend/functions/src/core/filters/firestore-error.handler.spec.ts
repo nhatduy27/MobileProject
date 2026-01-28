@@ -18,12 +18,12 @@ describe('FirestoreErrorHandler', () => {
         const exception = thrown as HttpException;
         expect(exception).toBeInstanceOf(HttpException);
         expect(exception.getStatus()).toBe(HttpStatus.PRECONDITION_FAILED); // 412
-        
+
         const response = exception.getResponse() as Record<string, unknown>;
         expect(response.errorCode).toBe('FIRESTORE_INDEX_REQUIRED');
-        expect((response.message as string)).toContain('Query requires a Firestore index');
+        expect(response.message as string).toContain('Query requires a Firestore index');
         const details = response.details as Record<string, unknown>;
-        expect((details.indexUrl as string)).toContain('console.firebase.google.com');
+        expect(details.indexUrl as string).toContain('console.firebase.google.com');
       }
     });
 
@@ -40,8 +40,8 @@ describe('FirestoreErrorHandler', () => {
         const exception = thrown as HttpException;
         const response = exception.getResponse() as Record<string, unknown>;
         const details = response.details as Record<string, unknown>;
-        expect((details.indexUrl as string)).toBe(
-          'https://console.firebase.google.com/firestore/indexes?create_composite=ClRQCgoJdXNlcnNfcmVhZBIIChAKBnVzZXJJZBACEA0KCG9yZGVyQnkQAw=='
+        expect(details.indexUrl as string).toBe(
+          'https://console.firebase.google.com/firestore/indexes?create_composite=ClRQCgoJdXNlcnNfcmVhZBIIChAKBnVzZXJJZBACEA0KCG9yZGVyQnkQAw==',
         );
       }
     });
@@ -58,17 +58,20 @@ describe('FirestoreErrorHandler', () => {
       } catch (thrown: unknown) {
         const exception = thrown as HttpException;
         const response = exception.getResponse() as Record<string, unknown>;
-        expect((response.message as string)).toContain('index');
-        expect((response.message as string)).toContain('https://console.firebase.google.com/firestore/indexes');
+        expect(response.message as string).toContain('index');
+        expect(response.message as string).toContain(
+          'https://console.firebase.google.com/firestore/indexes',
+        );
         const details = response.details as Record<string, unknown>;
-        expect((details.firestoreMessage as string)).toBe(error.message);
+        expect(details.firestoreMessage as string).toBe(error.message);
       }
     });
 
     it('should return 412, not 500 for missing index', () => {
       const error = {
         code: 'FAILED_PRECONDITION',
-        message: 'The query requires an index. You can create it here: https://console.firebase.google.com/firestore/indexes',
+        message:
+          'The query requires an index. You can create it here: https://console.firebase.google.com/firestore/indexes',
       };
 
       try {
@@ -101,7 +104,8 @@ describe('FirestoreErrorHandler', () => {
       // Test: Index is building
       const buildingError = {
         code: 'FAILED_PRECONDITION',
-        message: 'The query requires an index. That index is currently building and cannot be used yet.',
+        message:
+          'The query requires an index. That index is currently building and cannot be used yet.',
       };
 
       try {
@@ -111,13 +115,14 @@ describe('FirestoreErrorHandler', () => {
         expect(exception.getStatus()).toBe(HttpStatus.SERVICE_UNAVAILABLE); // 503
         const response = exception.getResponse() as Record<string, unknown>;
         expect(response.errorCode).toBe('FIRESTORE_INDEX_BUILDING');
-        expect((response.message as string)).toContain('index is building');
+        expect(response.message as string).toContain('index is building');
       }
 
       // Test: Index is missing
       const missingError = {
         code: 'FAILED_PRECONDITION',
-        message: 'The query requires an index. You can create it here: https://console.firebase.google.com/firestore/indexes',
+        message:
+          'The query requires an index. You can create it here: https://console.firebase.google.com/firestore/indexes',
       };
 
       try {
@@ -144,7 +149,7 @@ describe('FirestoreErrorHandler', () => {
         const exception = thrown as HttpException;
         expect(exception.getStatus()).toBe(HttpStatus.BAD_REQUEST);
         const response = exception.getResponse() as Record<string, unknown>;
-        expect((response.errorCode as string)).toContain('INVALID_ARGUMENT');
+        expect(response.errorCode as string).toContain('INVALID_ARGUMENT');
       }
     });
 
@@ -160,7 +165,7 @@ describe('FirestoreErrorHandler', () => {
         const exception = thrown as HttpException;
         expect(exception.getStatus()).toBe(HttpStatus.FORBIDDEN);
         const response = exception.getResponse() as Record<string, unknown>;
-        expect((response.errorCode as string)).toContain('PERMISSION_DENIED');
+        expect(response.errorCode as string).toContain('PERMISSION_DENIED');
       }
     });
 

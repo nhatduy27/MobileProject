@@ -68,9 +68,20 @@ describe('ErrorCodeNormalizer', () => {
      */
     it('should never throw an error during normalization (defensive)', () => {
       const maliciousInputs = [
-        { toString: () => { throw new Error('Malicious!'); } },
+        {
+          toString: () => {
+            throw new Error('Malicious!');
+          },
+        },
         Object.create(null),
-        new Proxy({}, { get: () => { throw new Error('Trap!'); } }),
+        new Proxy(
+          {},
+          {
+            get: () => {
+              throw new Error('Trap!');
+            },
+          },
+        ),
       ];
 
       for (const input of maliciousInputs) {

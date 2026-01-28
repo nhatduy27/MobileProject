@@ -33,7 +33,14 @@ describe('Pagination Validation Utilities', () => {
     });
 
     it('should fail if both hasNext and hasPrev are present', () => {
-      const meta = { page: 1, limit: 10, total: 100, totalPages: 10, hasNext: true, hasPrev: false };
+      const meta = {
+        page: 1,
+        limit: 10,
+        total: 100,
+        totalPages: 10,
+        hasNext: true,
+        hasPrev: false,
+      };
       expect(() => validatePaginationMeta(meta)).toThrow(/unexpected fields/);
     });
 
@@ -44,17 +51,23 @@ describe('Pagination Validation Utilities', () => {
 
     it('should fail if limit is missing', () => {
       const meta = { page: 1, total: 100, totalPages: 10 } as any;
-      expect(() => validatePaginationMeta(meta)).toThrow(/Required pagination field missing.*limit/);
+      expect(() => validatePaginationMeta(meta)).toThrow(
+        /Required pagination field missing.*limit/,
+      );
     });
 
     it('should fail if total is missing', () => {
       const meta = { page: 1, limit: 10, totalPages: 10 } as any;
-      expect(() => validatePaginationMeta(meta)).toThrow(/Required pagination field missing.*total/);
+      expect(() => validatePaginationMeta(meta)).toThrow(
+        /Required pagination field missing.*total/,
+      );
     });
 
     it('should fail if totalPages is missing', () => {
       const meta = { page: 1, limit: 10, total: 100 } as any;
-      expect(() => validatePaginationMeta(meta)).toThrow(/Required pagination field missing.*totalPages/);
+      expect(() => validatePaginationMeta(meta)).toThrow(
+        /Required pagination field missing.*totalPages/,
+      );
     });
 
     it('should fail if page is not a number', () => {
@@ -143,7 +156,9 @@ describe('Pagination Validation Utilities', () => {
           hasNext: false,
         },
       };
-      expect(() => validatePaginatedResponse(response, 'data', 'orders')).toThrow(/unexpected fields.*hasNext/);
+      expect(() => validatePaginatedResponse(response, 'data', 'orders')).toThrow(
+        /unexpected fields.*hasNext/,
+      );
     });
 
     it('should fail with hasPrev in response', () => {
@@ -158,7 +173,9 @@ describe('Pagination Validation Utilities', () => {
           hasPrev: false,
         },
       };
-      expect(() => validatePaginatedResponse(response, 'data', 'orders')).toThrow(/unexpected fields.*hasPrev/);
+      expect(() => validatePaginatedResponse(response, 'data', 'orders')).toThrow(
+        /unexpected fields.*hasPrev/,
+      );
     });
 
     it('should fail if success is false', () => {
@@ -166,7 +183,9 @@ describe('Pagination Validation Utilities', () => {
         success: false,
         data: { orders: [], page: 1, limit: 10, total: 0, totalPages: 0 },
       };
-      expect(() => validatePaginatedResponse(response, 'data', 'orders')).toThrow(/success must be true/);
+      expect(() => validatePaginatedResponse(response, 'data', 'orders')).toThrow(
+        /success must be true/,
+      );
     });
 
     it('should fail if data field is missing', () => {
@@ -178,7 +197,9 @@ describe('Pagination Validation Utilities', () => {
         total: 0,
         totalPages: 0,
       };
-      expect(() => validatePaginatedResponse(response, 'data', 'orders')).toThrow(/data is missing/);
+      expect(() => validatePaginatedResponse(response, 'data', 'orders')).toThrow(
+        /data is missing/,
+      );
     });
 
     it('should fail if items field is not an array', () => {
@@ -192,7 +213,9 @@ describe('Pagination Validation Utilities', () => {
           totalPages: 0,
         },
       };
-      expect(() => validatePaginatedResponse(response, 'data', 'orders')).toThrow(/must be an array/);
+      expect(() => validatePaginatedResponse(response, 'data', 'orders')).toThrow(
+        /must be an array/,
+      );
     });
 
     it('should fail if item count exceeds limit', () => {
@@ -206,7 +229,9 @@ describe('Pagination Validation Utilities', () => {
           totalPages: 2,
         },
       };
-      expect(() => validatePaginatedResponse(response, 'data', 'orders')).toThrow(/Item count.*exceeds limit/);
+      expect(() => validatePaginatedResponse(response, 'data', 'orders')).toThrow(
+        /Item count.*exceeds limit/,
+      );
     });
   });
 
@@ -243,9 +268,9 @@ describe('Pagination Validation Utilities', () => {
         total: 42,
         totalPages: 5,
       };
-      expect(() =>
-        expectPaginationStructure(data, 'orders', { total: 100 }),
-      ).toThrow(/total mismatch/);
+      expect(() => expectPaginationStructure(data, 'orders', { total: 100 })).toThrow(
+        /total mismatch/,
+      );
     });
 
     it('should fail if items field is missing', () => {

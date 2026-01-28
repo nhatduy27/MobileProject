@@ -174,7 +174,10 @@ export class ConfigService {
   }
 
   get sePayQrTemplate(): string {
-    return this.get('SEPAY_TEMPLATE_QR', 'https://qr.sepay.vn/img?acc={account}&bank={bank}&amount={amount}&des={content}&template=compact');
+    return this.get(
+      'SEPAY_TEMPLATE_QR',
+      'https://qr.sepay.vn/img?acc={account}&bank={bank}&amount={amount}&des={content}&template=compact',
+    );
   }
 
   get sePayPollLimit(): number {

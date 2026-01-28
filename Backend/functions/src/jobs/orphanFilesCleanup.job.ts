@@ -96,13 +96,16 @@ export async function runOrphanFilesCleanup(firestore: Firestore): Promise<void>
           const nextRetryMinutes = BACKOFF_MINUTES * newRetryCount;
           const nextRetryTime = new Date(Date.now() + nextRetryMinutes * 60 * 1000);
 
-          await firestore.collection('orphanFiles').doc(recordId).update({
-            status: 'PENDING',
-            retryCount: newRetryCount,
-            lastError: deleteResult.error,
-            updatedAt: FieldValue.serverTimestamp(),
-            nextRetryAt: admin.firestore.Timestamp.fromDate(nextRetryTime),
-          });
+          await firestore
+            .collection('orphanFiles')
+            .doc(recordId)
+            .update({
+              status: 'PENDING',
+              retryCount: newRetryCount,
+              lastError: deleteResult.error,
+              updatedAt: FieldValue.serverTimestamp(),
+              nextRetryAt: admin.firestore.Timestamp.fromDate(nextRetryTime),
+            });
 
           failureCount++;
 
@@ -131,12 +134,15 @@ export async function runOrphanFilesCleanup(firestore: Firestore): Promise<void>
             const nextRetryMinutes = BACKOFF_MINUTES * newRetryCount;
             const nextRetryTime = new Date(Date.now() + nextRetryMinutes * 60 * 1000);
 
-            await firestore.collection('orphanFiles').doc(recordId).update({
-              retryCount: newRetryCount,
-              lastError: error?.message || String(error),
-              updatedAt: FieldValue.serverTimestamp(),
-              nextRetryAt: admin.firestore.Timestamp.fromDate(nextRetryTime),
-            });
+            await firestore
+              .collection('orphanFiles')
+              .doc(recordId)
+              .update({
+                retryCount: newRetryCount,
+                lastError: error?.message || String(error),
+                updatedAt: FieldValue.serverTimestamp(),
+                nextRetryAt: admin.firestore.Timestamp.fromDate(nextRetryTime),
+              });
           }
         } catch (updateError) {
           console.error(`Failed to update error info for record ${recordId}`, updateError);
@@ -167,10 +173,10 @@ export async function runOrphanFilesCleanup(firestore: Firestore): Promise<void>
  */
 async function deleteAvatarFromStorage(
   avatarUrl: string,
-): Promise<{success: boolean; error?: string}> {
+): Promise<{ success: boolean; error?: string }> {
   try {
     if (!avatarUrl || typeof avatarUrl !== 'string') {
-      return {success: false, error: 'Invalid avatarUrl'};
+      return { success: false, error: 'Invalid avatarUrl' };
     }
 
     const bucket = admin.storage().bucket(BUCKET_NAME);
@@ -193,7 +199,7 @@ async function deleteAvatarFromStorage(
     }
 
     if (!filename) {
-      return {success: false, error: 'Could not extract filename from URL'};
+      return { success: false, error: 'Could not extract filename from URL' };
     }
 
     const file = bucket.file(filename);
@@ -201,13 +207,13 @@ async function deleteAvatarFromStorage(
 
     if (!exists) {
       // File already gone - treat as success
-      return {success: true};
+      return { success: true };
     }
 
     await file.delete();
-    return {success: true};
+    return { success: true };
   } catch (error: any) {
     const errorMessage = error?.message || String(error);
-    return {success: false, error: errorMessage};
+    return { success: false, error: errorMessage };
   }
 }

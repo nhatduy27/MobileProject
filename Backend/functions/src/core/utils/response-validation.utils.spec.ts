@@ -307,9 +307,7 @@ describe('Response Validation Utils', () => {
           groups: [
             {
               shopId: 'shop_123',
-              items: [
-                { productId: 'prod_1', quantity: 2, price: 35000 },
-              ],
+              items: [{ productId: 'prod_1', quantity: 2, price: 35000 }],
             },
           ],
           total: 1,
