@@ -1,4 +1,5 @@
-import { Injectable, Inject, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, ForbiddenException, InternalServerErrorException } from '@nestjs/common';
+import { FieldValue } from 'firebase-admin/firestore';
 import { IUsersRepository, USERS_REPOSITORY } from './interfaces/users-repository.interface';
 import {
   IAddressesRepository,
@@ -221,26 +222,70 @@ export class UsersService {
   async deleteAccount(userId: string): Promise<void> {
     const user = await this.getProfile(userId);
 
-    // Delete avatar from storage
-    if (user.avatarUrl) {
-      await this.storageService.deleteAvatar(user.avatarUrl);
+    // CRITICAL: Delete from Firebase Auth FIRST (fail-fast) before marking Firestore as DELETED.
+    // If Auth deletion fails, we abort and don't mark Firestore DELETED to avoid
+    // inconsistent state (Auth has user but Firestore says DELETED).
+    // This also prevents re-registration blocks caused by leftover Auth users.
+    try {
+      await this.firebaseService.auth.deleteUser(userId);
+    } catch (error: any) {
+      console.error('Failed to delete user from Firebase Auth', {
+        userId,
+        operation: 'deleteAccount',
+        step: 'auth.deleteUser',
+        errorCode: error.code,
+        errorMessage: error.message,
+      });
+      throw new InternalServerErrorException('Account deletion incomplete - Auth cleanup failed');
     }
 
-    // Delete all addresses
+    // Auth deletion succeeded. Now mark as DELETED in Firestore (soft-delete).
+    // At this point, user no longer exists in Firebase Auth.
+    await this.usersRepository.softDelete(userId);
+
+    // Cleanup related Firestore collections (addresses)
     const addresses = await this.addressesRepository.findByUserId(userId);
     for (const address of addresses) {
       await this.addressesRepository.delete(address.id);
     }
 
-    // Soft delete user in Firestore
-    await this.usersRepository.softDelete(userId);
+    // Cleanup storage (avatar) - non-blocking, best effort
+    if (user.avatarUrl) {
+      try {
+        await this.storageService.deleteAvatar(user.avatarUrl);
+      } catch (error: any) {
+        console.warn(`Failed to delete avatar from storage for user ${userId}:`, error);
+        // Record orphaned file for later cleanup instead of failing the deletion
+        await this.recordOrphanFile(userId, 'AVATAR', user.avatarUrl, error);
+        // Do not throw - storage failure should not block account deletion
+      }
+    }
+  }
 
-    // Delete user from Firebase Auth
+  /**
+   * Record an orphaned file (failed storage deletion) for later cleanup
+   * Helps track failed deletions without blocking the primary operation
+   */
+  private async recordOrphanFile(
+    userId: string,
+    fileType: string,
+    filePath: string,
+    error: any,
+  ): Promise<void> {
     try {
-      await this.firebaseService.auth.deleteUser(userId);
-    } catch (error) {
-      // If auth deletion fails, log but don't throw (user data already deleted)
-      console.error('Failed to delete user from Firebase Auth:', error);
+      await this.firebaseService.firestore.collection('orphanFiles').add({
+        userId,
+        fileType,
+        filePath,
+        errorMessage: error?.message || String(error) || 'Unknown error',
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    } catch (recordError) {
+      // Even recording failure should not block account deletion
+      console.error(
+        `Failed to record orphan file for user ${userId}:`,
+        recordError,
+      );
     }
   }
 }

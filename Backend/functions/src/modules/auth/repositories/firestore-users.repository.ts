@@ -122,6 +122,54 @@ export class FirestoreUsersRepository
   }
 
   /**
+   * Find user by email, excluding soft-deleted accounts
+   * 
+   * Returns users with status in [ACTIVE, BANNED] only.
+   * Excludes DELETED users to allow re-registration after account deletion.
+   * 
+   * IMPORTANT: Soft-deleted users (status=DELETED) are excluded from registration
+   * uniqueness checks, allowing re-registration with the same email.
+   * However, BANNED users still block registration (can be unbanned later).
+   */
+  async findActiveByEmail(email: string): Promise<UserEntity | null> {
+    const snapshot = await this.collection
+      .where('email', '==', email)
+      .where('status', 'in', [UserStatus.ACTIVE, UserStatus.BANNED])
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    return this.mapDocToEntity(snapshot.docs[0]);
+  }
+
+  /**
+   * Find user by phone, excluding soft-deleted accounts
+   * 
+   * Returns users with status in [ACTIVE, BANNED] only.
+   * Excludes DELETED users to allow re-registration after account deletion.
+   * 
+   * IMPORTANT: Soft-deleted users (status=DELETED) are excluded from registration
+   * uniqueness checks, allowing re-registration with the same phone.
+   * However, BANNED users still block registration (can be unbanned later).
+   */
+  async findActiveByPhone(phone: string): Promise<UserEntity | null> {
+    const snapshot = await this.collection
+      .where('phone', '==', phone)
+      .where('status', 'in', [UserStatus.ACTIVE, UserStatus.BANNED])
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    return this.mapDocToEntity(snapshot.docs[0]);
+  }
+
+  /**
    * Check if email exists
    */
   async emailExists(email: string): Promise<boolean> {

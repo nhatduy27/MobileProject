@@ -49,6 +49,20 @@ export interface IUsersRepository extends IBaseRepository<UserEntity> {
   ): Promise<UserEntity>;
 
   /**
+   * Find user by email, excluding soft-deleted accounts
+   * Returns users with status in [ACTIVE, BANNED] only.
+   * Soft-deleted users (status=DELETED) are excluded from registration uniqueness checks.
+   */
+  findActiveByEmail(email: string): Promise<UserEntity | null>;
+
+  /**
+   * Find user by phone, excluding soft-deleted accounts
+   * Returns users with status in [ACTIVE, BANNED] only.
+   * Soft-deleted users (status=DELETED) are excluded from registration uniqueness checks.
+   */
+  findActiveByPhone(phone: string): Promise<UserEntity | null>;
+
+  /**
    * Check if email already exists
    */
   emailExists(email: string): Promise<boolean>;

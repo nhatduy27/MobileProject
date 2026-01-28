@@ -8,10 +8,13 @@
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import { onRequest } from 'firebase-functions/v2/https';
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+import * as admin from 'firebase-admin';
 import express from 'express';
 import { ValidationPipe, INestApplication } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { runOrphanFilesCleanup } from './jobs/orphanFilesCleanup.job';
 
 // Express instance (reused across invocations)
 const expressServer = express();
@@ -109,3 +112,33 @@ export const api = onRequest(
     expressServer(req, res);
   },
 );
+
+/**
+ * Scheduled job: Orphan Avatar Files Cleanup
+ *
+ * Runs every 10 minutes to retry deletion of orphaned avatar files.
+ * Queries `orphanFiles` collection for AVATAR records with status PENDING
+ * and retries deletion with exponential backoff.
+ *
+ * Schedule: every 10 minutes (cron: every 10 minutes)
+ * Memory: 256 MiB (only needs Firestore/Storage access)
+ * Timeout: 30 seconds (cleanup typically completes in less than 10 seconds)
+ */
+export const orphanFilesCleanup = onSchedule(
+  {
+    region: 'asia-southeast1',
+    schedule: 'every 10 minutes',
+    memory: '256MiB',
+    timeoutSeconds: 30,
+  },
+  async () => {
+    // Initialize Firebase Admin SDK if not already done
+    if (!admin.apps.length) {
+      admin.initializeApp();
+    }
+
+    const firestore = admin.firestore();
+    await runOrphanFilesCleanup(firestore);
+  },
+);
+

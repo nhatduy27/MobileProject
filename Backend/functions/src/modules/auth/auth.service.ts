@@ -141,15 +141,16 @@ export class AuthService {
    * AUTH-003
    */
   async register(dto: RegisterDto) {
-    // Check if email already exists
-    const existingUser = await this.usersRepository.findByEmail(dto.email);
+    // Check if email already exists (excludes only DELETED users; BANNED/ACTIVE still block)
+    // Soft-deleted users (status=DELETED) are excluded, allowing re-registration
+    const existingUser = await this.usersRepository.findActiveByEmail(dto.email);
     if (existingUser) {
       throw new ConflictException('Email đã được sử dụng');
     }
 
-    // Check if phone already exists (if provided)
+    // Check if phone already exists (if provided; excludes only DELETED users; BANNED/ACTIVE still block)
     if (dto.phone) {
-      const existingPhone = await this.usersRepository.findByPhone(dto.phone);
+      const existingPhone = await this.usersRepository.findActiveByPhone(dto.phone);
       if (existingPhone) {
         throw new ConflictException('Số điện thoại đã được sử dụng');
       }
