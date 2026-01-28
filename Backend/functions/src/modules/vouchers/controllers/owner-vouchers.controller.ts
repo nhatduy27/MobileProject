@@ -461,10 +461,7 @@ export class OwnerVouchersController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Voucher belongs to different shop' })
   @ApiResponse({ status: 404, description: 'Voucher not found' })
-  async getVoucherStats(
-    @CurrentUser('uid') ownerId: string,
-    @Param('id') voucherId: string,
-  ) {
+  async getVoucherStats(@CurrentUser('uid') ownerId: string, @Param('id') voucherId: string) {
     const shop = await this.shopsService.getMyShop(ownerId);
 
     // Verify voucher exists and belongs to owner's shop
@@ -476,10 +473,7 @@ export class OwnerVouchersController {
       throw new ForbiddenException('Voucher does not belong to your shop');
     }
 
-    const stats = await this.vouchersService.getVoucherStatistics(
-      voucherId,
-      voucher.usageLimit,
-    );
+    const stats = await this.vouchersService.getVoucherStatistics(voucherId, voucher.usageLimit);
 
     return {
       stats: {

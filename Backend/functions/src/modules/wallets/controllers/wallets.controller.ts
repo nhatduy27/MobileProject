@@ -31,16 +31,13 @@ export class WalletsController {
   @Get('me')
   @Roles(UserRole.OWNER, UserRole.SHIPPER)
   @HttpCode(HttpStatus.OK)
-  async getMyWallet(
-    @CurrentUser('uid') userId: string,
-    @Req() req: any,
-  ) {
+  async getMyWallet(@CurrentUser('uid') userId: string, @Req() req: any) {
     // P0-FIX: Get wallet type from user's role (from custom claims)
     const userRole = req.user?.role as string;
     const walletType = userRole === 'OWNER' ? WalletType.OWNER : WalletType.SHIPPER;
-    
+
     const wallet = await this.walletsService.getWalletByUserIdAndType(userId, walletType);
-    
+
     return {
       wallet: {
         id: wallet.id,
@@ -70,16 +67,16 @@ export class WalletsController {
     // P0-FIX: Get wallet type from user's role
     const userRole = req.user?.role as string;
     const walletType = userRole === 'OWNER' ? WalletType.OWNER : WalletType.SHIPPER;
-    
+
     const result = await this.walletsService.getLedger(
       userId,
       walletType,
       dto.page || 1,
       dto.limit || 20,
     );
-    
+
     return {
-      entries: result.entries.map(entry => ({
+      entries: result.entries.map((entry) => ({
         id: entry.id,
         type: entry.type,
         amount: entry.amount,
@@ -112,9 +109,9 @@ export class WalletsController {
     // Get wallet type from user's role
     const userRole = req.user?.role as string;
     const walletType = userRole === 'OWNER' ? WalletType.OWNER : WalletType.SHIPPER;
-    
+
     const payoutRequest = await this.walletsService.requestPayout(userId, walletType, dto);
-    
+
     return {
       message: 'Payout request submitted successfully',
       payoutRequest,

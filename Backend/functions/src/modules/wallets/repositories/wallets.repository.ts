@@ -16,7 +16,7 @@ export class WalletsRepository implements IWalletsRepository {
   async create(wallet: WalletEntity): Promise<WalletEntity> {
     const docRef = this.firestore.collection(this.walletsCollection).doc(wallet.id);
     const now = Timestamp.now();
-    
+
     const data = {
       ...wallet,
       createdAt: now,
@@ -29,7 +29,7 @@ export class WalletsRepository implements IWalletsRepository {
 
   async findById(id: string): Promise<WalletEntity | null> {
     const doc = await this.firestore.collection(this.walletsCollection).doc(id).get();
-    
+
     if (!doc.exists) {
       return null;
     }
@@ -90,7 +90,7 @@ export class WalletsRepository implements IWalletsRepository {
   async createLedgerEntry(entry: Omit<WalletLedgerEntity, 'id'>): Promise<WalletLedgerEntity> {
     const docRef = this.firestore.collection(this.ledgerCollection).doc();
     const now = Timestamp.now();
-    
+
     const data = {
       ...entry,
       createdAt: now,
@@ -115,7 +115,7 @@ export class WalletsRepository implements IWalletsRepository {
       .where('walletId', '==', walletId)
       .count()
       .get();
-    
+
     const total = countSnapshot.data().count;
 
     // Get paginated entries

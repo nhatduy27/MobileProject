@@ -1,7 +1,12 @@
 import { Controller, Post, Get, Body, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { VouchersService } from '../vouchers.service';
-import { ValidateVoucherDto, AvailableVoucherDto, GetVoucherUsageQueryDto, PaginatedVoucherUsageDto } from '../dto';
+import {
+  ValidateVoucherDto,
+  AvailableVoucherDto,
+  GetVoucherUsageQueryDto,
+  PaginatedVoucherUsageDto,
+} from '../dto';
 import { AuthGuard } from '../../../core/guards/auth.guard';
 import { RolesGuard } from '../../../core/guards/roles.guard';
 import { Roles } from '../../../core/decorators/roles.decorator';
@@ -142,7 +147,8 @@ export class VouchersController {
   @Get('me/usage')
   @ApiOperation({
     summary: 'Get my voucher usage history',
-    description: 'Retrieve paginated list of vouchers used by current user with optional filters (shopId, date range)',
+    description:
+      'Retrieve paginated list of vouchers used by current user with optional filters (shopId, date range)',
   })
   @ApiResponse({
     status: 200,

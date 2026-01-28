@@ -340,7 +340,7 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
   /**
    * Get paginated voucher usage history for a user
    * Supports filtering by shopId and date range
-   * 
+   *
    * BACKWARD COMPATIBLE FIX for VOUCH-009:
    * - New records: shopId denormalized on usage records (fast DB-level filtering)
    * - Legacy records: shopId missing/null → derive from voucher via batch lookup
@@ -386,14 +386,10 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
         (record) => record.shopId === filters.shopId,
       );
 
-      const recordsNeedingEnrichment = allUsageRecords.filter(
-        (record) => !record.shopId,
-      );
+      const recordsNeedingEnrichment = allUsageRecords.filter((record) => !record.shopId);
 
       // Batch enrich legacy records (no shopId field)
-      const enrichedRecords = await this.enrichUsageRecordsWithShopId(
-        recordsNeedingEnrichment,
-      );
+      const enrichedRecords = await this.enrichUsageRecordsWithShopId(recordsNeedingEnrichment);
 
       // Filter enriched records to match requested shopId
       const enrichedMatchingShopId = enrichedRecords.filter(
@@ -422,7 +418,7 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
   /**
    * Batch enrich usage records with shopId from their corresponding vouchers
    * Prevents N+1 queries by fetching all vouchers at once
-   * 
+   *
    * @param usageRecords Usage records with missing/null shopId
    * @returns Usage records enriched with shopId from voucher lookup
    */
@@ -506,9 +502,7 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
    * Get aggregated statistics for a voucher
    * Computes: total uses, total discount amount, unique users, last used time
    */
-  async getVoucherStats(
-    voucherId: string,
-  ): Promise<{
+  async getVoucherStats(voucherId: string): Promise<{
     totalUses: number;
     totalDiscountAmount: number;
     uniqueUsers: number;
@@ -551,7 +545,7 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
   /**
    * Mark all active vouchers with validTo < now as isActive=false (expiration sweep)
    * Idempotent: If already inactive, no change
-   * 
+   *
    * @param now Current timestamp (ISO 8601)
    * @returns { updatedCount: number }
    */
@@ -585,4 +579,3 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
     return { updatedCount };
   }
 }
-

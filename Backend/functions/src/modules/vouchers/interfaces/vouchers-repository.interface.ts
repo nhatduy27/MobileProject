@@ -131,9 +131,7 @@ export interface IVouchersRepository {
    * @param voucherId Voucher ID
    * @returns { totalUses, totalDiscountAmount, uniqueUsers, lastUsedAt }
    */
-  getVoucherStats(
-    voucherId: string,
-  ): Promise<{
+  getVoucherStats(voucherId: string): Promise<{
     totalUses: number;
     totalDiscountAmount: number;
     uniqueUsers: number;

@@ -44,10 +44,7 @@ export class AdminVouchersController {
   @ApiQuery({ name: 'shopId', required: false, description: 'Filter by shopId' })
   @ApiQuery({ name: 'isActive', required: false, enum: ['true', 'false'] })
   @HttpCode(HttpStatus.OK)
-  async getAllVouchers(
-    @Query('shopId') shopId?: string,
-    @Query('isActive') isActive?: string,
-  ) {
+  async getAllVouchers(@Query('shopId') shopId?: string, @Query('isActive') isActive?: string) {
     const vouchers = await this.vouchersService.getAllVouchers({
       shopId,
       isActive: isActive === 'true' ? true : isActive === 'false' ? false : undefined,
@@ -131,10 +128,7 @@ export class AdminVouchersController {
     description: 'Enable/disable voucher',
   })
   @HttpCode(HttpStatus.OK)
-  async toggleVoucherStatus(
-    @Param('id') voucherId: string,
-    @Body() dto: UpdateVoucherStatusDto,
-  ) {
+  async toggleVoucherStatus(@Param('id') voucherId: string, @Body() dto: UpdateVoucherStatusDto) {
     await this.vouchersService.updateVoucherStatusAsAdmin(voucherId, dto.isActive);
 
     return {

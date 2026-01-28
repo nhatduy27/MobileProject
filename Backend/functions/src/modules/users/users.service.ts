@@ -1,4 +1,10 @@
-import { Injectable, Inject, NotFoundException, ForbiddenException, InternalServerErrorException } from '@nestjs/common';
+import {
+  Injectable,
+  Inject,
+  NotFoundException,
+  ForbiddenException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { FieldValue } from 'firebase-admin/firestore';
 import { IUsersRepository, USERS_REPOSITORY } from './interfaces/users-repository.interface';
 import {
@@ -92,7 +98,7 @@ export class UsersService {
 
   /**
    * Delete current user's avatar
-   * 
+   *
    * Idempotent: if user has no avatar, still returns successfully
    * If Firebase Storage deletion fails, still clears DB entry to prevent dead links
    */
@@ -282,10 +288,7 @@ export class UsersService {
       });
     } catch (recordError) {
       // Even recording failure should not block account deletion
-      console.error(
-        `Failed to record orphan file for user ${userId}:`,
-        recordError,
-      );
+      console.error(`Failed to record orphan file for user ${userId}:`, recordError);
     }
   }
 }

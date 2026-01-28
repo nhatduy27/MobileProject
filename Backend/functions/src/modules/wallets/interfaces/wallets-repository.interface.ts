@@ -8,7 +8,7 @@ export interface IWalletsRepository {
   findByUserId(userId: string): Promise<WalletEntity | null>;
   findByUserIdAndType(userId: string, type: WalletType): Promise<WalletEntity | null>;
   update(id: string, data: Partial<WalletEntity>): Promise<void>;
-  
+
   // Ledger operations
   createLedgerEntry(entry: Omit<WalletLedgerEntity, 'id'>): Promise<WalletLedgerEntity>;
   findLedgerByWalletId(

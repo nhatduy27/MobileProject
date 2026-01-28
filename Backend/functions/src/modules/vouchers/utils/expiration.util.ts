@@ -1,12 +1,12 @@
 /**
  * Voucher Expiration Utility
- * 
+ *
  * Handles all expiration-related logic for vouchers.
  * Provides consistent expiration semantics across the codebase.
- * 
- * **Expiration Rule:** A voucher is considered expired if the current time (now) 
+ *
+ * **Expiration Rule:** A voucher is considered expired if the current time (now)
  * is AFTER its validTo timestamp.
- * 
+ *
  * Formula: now > validTo => EXPIRED
  */
 
@@ -18,7 +18,10 @@ import { VoucherEntity } from '../entities';
  * @param now Current time as ISO 8601 string (defaults to current time)
  * @returns true if voucher is expired (now > validTo), false otherwise
  */
-export function isVoucherExpired(voucher: VoucherEntity, now: string = new Date().toISOString()): boolean {
+export function isVoucherExpired(
+  voucher: VoucherEntity,
+  now: string = new Date().toISOString(),
+): boolean {
   return now > voucher.validTo;
 }
 
@@ -28,7 +31,10 @@ export function isVoucherExpired(voucher: VoucherEntity, now: string = new Date(
  * @param now Current time as ISO 8601 string (defaults to current time)
  * @returns true if voucher is within validFrom and validTo (inclusive), false otherwise
  */
-export function isVoucherInTimeRange(voucher: VoucherEntity, now: string = new Date().toISOString()): boolean {
+export function isVoucherInTimeRange(
+  voucher: VoucherEntity,
+  now: string = new Date().toISOString(),
+): boolean {
   return now >= voucher.validFrom && now <= voucher.validTo;
 }
 
@@ -38,7 +44,10 @@ export function isVoucherInTimeRange(voucher: VoucherEntity, now: string = new D
  * @param now Current time as ISO 8601 string (defaults to current time)
  * @returns true if voucher has not yet started (now < validFrom), false otherwise
  */
-export function isVoucherNotStarted(voucher: VoucherEntity, now: string = new Date().toISOString()): boolean {
+export function isVoucherNotStarted(
+  voucher: VoucherEntity,
+  now: string = new Date().toISOString(),
+): boolean {
   return now < voucher.validFrom;
 }
 
@@ -48,7 +57,10 @@ export function isVoucherNotStarted(voucher: VoucherEntity, now: string = new Da
  * @param now Current time as ISO 8601 string (defaults to current time)
  * @returns Number of days remaining (can be negative if expired), or 0 if expired
  */
-export function getVoucherDaysRemaining(voucher: VoucherEntity, now: string = new Date().toISOString()): number {
+export function getVoucherDaysRemaining(
+  voucher: VoucherEntity,
+  now: string = new Date().toISOString(),
+): number {
   const nowDate = new Date(now);
   const validToDate = new Date(voucher.validTo);
   const diffMs = validToDate.getTime() - nowDate.getTime();
@@ -58,12 +70,12 @@ export function getVoucherDaysRemaining(voucher: VoucherEntity, now: string = ne
 
 /**
  * Check if a voucher is "active" from a business perspective
- * 
+ *
  * A voucher is considered "active" if:
  * 1. isActive flag is true (not deleted/disabled)
  * 2. Within valid time range (validFrom <= now <= validTo)
  * 3. Has usage capacity remaining (currentUsage < usageLimit)
- * 
+ *
  * @param voucher The voucher to check
  * @param now Current time as ISO 8601 string (defaults to current time)
  * @returns true if all conditions are met, false otherwise
@@ -83,7 +95,7 @@ export function isVoucherActiveAndValid(
 /**
  * Get expiration status of a voucher
  * Useful for display/reporting purposes
- * 
+ *
  * @param voucher The voucher to check
  * @param now Current time as ISO 8601 string (defaults to current time)
  * @returns Object with status and descriptive fields

@@ -100,7 +100,8 @@ export class MeController {
   @Put()
   @ApiOperation({
     summary: 'Update my profile',
-    description: 'Update display name or phone. Avatar is managed via dedicated upload/delete endpoints.',
+    description:
+      'Update display name or phone. Avatar is managed via dedicated upload/delete endpoints.',
   })
   @ApiResponse({ status: 200, description: 'Profile updated' })
   @ApiResponse({ status: 400, description: 'Invalid data' })

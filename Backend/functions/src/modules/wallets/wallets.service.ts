@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  Inject,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, Inject, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { Timestamp, Firestore } from '@google-cloud/firestore';
 import { IWalletsRepository, WALLETS_REPOSITORY_TOKEN } from './interfaces';
 import { WalletEntity, WalletLedgerEntity, WalletType, LedgerType } from './entities';
@@ -59,7 +53,7 @@ export class WalletsService {
    */
   async getWalletByUserIdAndType(userId: string, type: WalletType): Promise<WalletEntity> {
     const wallet = await this.walletsRepo.findByUserIdAndType(userId, type);
-    
+
     if (!wallet) {
       throw new NotFoundException({
         code: 'WALLET_001',
@@ -77,7 +71,7 @@ export class WalletsService {
    */
   async getWalletByUserId(userId: string): Promise<WalletEntity> {
     const wallet = await this.walletsRepo.findByUserId(userId);
-    
+
     if (!wallet) {
       throw new NotFoundException({
         code: 'WALLET_001',
@@ -126,7 +120,7 @@ export class WalletsService {
   /**
    * Process payout for delivered order
    * P0-FIX: Uses Firestore transaction for FULL atomicity including Order.paidOut update
-   * 
+   *
    * @param orderId - Order ID
    * @param orderNumber - Order number for ledger reference
    * @param ownerId - Shop owner user ID
@@ -249,11 +243,7 @@ export class WalletsService {
    * Request payout (withdraw funds)
    * Create payout request for admin approval
    */
-  async requestPayout(
-    userId: string,
-    walletType: WalletType,
-    dto: RequestPayoutDto,
-  ): Promise<any> {
+  async requestPayout(userId: string, walletType: WalletType, dto: RequestPayoutDto): Promise<any> {
     // Get wallet
     const wallet = await this.getWalletByUserIdAndType(userId, walletType);
 
@@ -320,7 +310,9 @@ export class WalletsService {
     walletId: string,
     amount: number,
   ): Promise<void> {
-    this.logger.log(`Processing payout transfer: ${payoutId}, wallet: ${walletId}, amount: ${amount}đ`);
+    this.logger.log(
+      `Processing payout transfer: ${payoutId}, wallet: ${walletId}, amount: ${amount}đ`,
+    );
 
     const walletRef = this.firestore.collection('wallets').doc(walletId);
     const walletDoc = await walletRef.get();
@@ -344,7 +336,9 @@ export class WalletsService {
 
     // Validate sufficient balance
     if (wallet.balance < amount) {
-      this.logger.warn(`Insufficient balance for payout ${payoutId}: ${wallet.balance}đ < ${amount}đ`);
+      this.logger.warn(
+        `Insufficient balance for payout ${payoutId}: ${wallet.balance}đ < ${amount}đ`,
+      );
       throw new BadRequestException({
         code: 'WALLET_002',
         message: `Insufficient balance. Available: ${wallet.balance}đ, Required: ${amount}đ`,
@@ -388,15 +382,15 @@ export class WalletsService {
    */
   async getAllWalletsForAdmin(): Promise<WalletEntity[]> {
     this.logger.log('Fetching all wallets for admin stats');
-    
+
     try {
       const snapshot = await this.firestore.collection('wallets').get();
       const wallets: WalletEntity[] = [];
-      
+
       snapshot.forEach((doc) => {
         wallets.push({ id: doc.id, ...doc.data() } as WalletEntity);
       });
-      
+
       this.logger.log(`Found ${wallets.length} wallets for admin stats`);
       return wallets;
     } catch (error) {

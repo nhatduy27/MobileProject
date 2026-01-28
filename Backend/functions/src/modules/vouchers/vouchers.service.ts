@@ -589,14 +589,14 @@ export class VouchersService {
 
   /**
    * Mark all vouchers with validTo < now as inactive (expiration sweep)
-   * 
+   *
    * Can be called by:
    * - Scheduled job (if @nestjs/schedule is available)
    * - Manual maintenance command
    * - Admin endpoint (for manual trigger)
-   * 
+   *
    * **Idempotent:** Already-inactive vouchers are not updated
-   * 
+   *
    * @param now Current timestamp (ISO 8601, defaults to current time)
    * @returns { updatedCount: number } Count of vouchers marked as inactive
    */
@@ -604,4 +604,3 @@ export class VouchersService {
     return await this.vouchersRepository.expireVouchersBeforeDate(now);
   }
 }
-

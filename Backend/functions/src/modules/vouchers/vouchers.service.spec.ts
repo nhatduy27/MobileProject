@@ -63,7 +63,7 @@ describe('VouchersService - Per-User Usage Fields', () => {
 
         vouchersRepository.findByShopId.mockResolvedValue([mockVoucher]);
         vouchersRepository.countUsageByUserBatch.mockResolvedValue({
-          'voucher_summer_2024': 1,
+          voucher_summer_2024: 1,
         });
 
         // Act
@@ -86,7 +86,7 @@ describe('VouchersService - Per-User Usage Fields', () => {
 
         vouchersRepository.findByShopId.mockResolvedValue([mockVoucher]);
         vouchersRepository.countUsageByUserBatch.mockResolvedValue({
-          'voucher_summer_2024': 0,
+          voucher_summer_2024: 0,
         });
 
         // Act
@@ -104,7 +104,7 @@ describe('VouchersService - Per-User Usage Fields', () => {
 
         vouchersRepository.findByShopId.mockResolvedValue([mockVoucher]);
         vouchersRepository.countUsageByUserBatch.mockResolvedValue({
-          'voucher_summer_2024': 3,
+          voucher_summer_2024: 3,
         });
 
         // Act
@@ -123,7 +123,7 @@ describe('VouchersService - Per-User Usage Fields', () => {
 
         vouchersRepository.findByShopId.mockResolvedValue([mockVoucher]);
         vouchersRepository.countUsageByUserBatch.mockResolvedValue({
-          'voucher_summer_2024': 5,
+          voucher_summer_2024: 5,
         });
 
         // Act
@@ -144,9 +144,9 @@ describe('VouchersService - Per-User Usage Fields', () => {
 
         vouchersRepository.findByShopId.mockResolvedValue(vouchers);
         vouchersRepository.countUsageByUserBatch.mockResolvedValue({
-          'voucher_summer_2024': 1,
-          'voucher_2': 0,
-          'voucher_3': 3,
+          voucher_summer_2024: 1,
+          voucher_2: 0,
+          voucher_3: 3,
         });
 
         // Act
@@ -251,7 +251,7 @@ describe('VouchersService - Per-User Usage Fields', () => {
 
         vouchersRepository.findByShopId.mockResolvedValue([voucherNoLimit]);
         vouchersRepository.countUsageByUserBatch.mockResolvedValue({
-          'voucher_summer_2024': 5,
+          voucher_summer_2024: 5,
         });
 
         // Act
@@ -321,7 +321,7 @@ describe('VouchersService - Per-User Usage Fields', () => {
 
         vouchersRepository.findByShopId.mockResolvedValue([mockVoucher]);
         vouchersRepository.countUsageByUserBatch.mockResolvedValue({
-          'voucher_summer_2024': 1,
+          voucher_summer_2024: 1,
         });
 
         // Act
@@ -340,12 +340,12 @@ describe('VouchersService - Per-User Usage Fields', () => {
 
         // User 1 has used 1 time
         vouchersRepository.countUsageByUserBatch.mockResolvedValueOnce({
-          'voucher_summer_2024': 1,
+          voucher_summer_2024: 1,
         });
 
         // User 2 has used 2 times
         vouchersRepository.countUsageByUserBatch.mockResolvedValueOnce({
-          'voucher_summer_2024': 2,
+          voucher_summer_2024: 2,
         });
 
         // Act
@@ -377,8 +377,8 @@ describe('VouchersService - Per-User Usage Fields', () => {
 
         vouchersRepository.findByShopId.mockResolvedValue(vouchers);
         vouchersRepository.countUsageByUserBatch.mockResolvedValue({
-          'voucher_summer_2024': 1,
-          'v2': 0,
+          voucher_summer_2024: 1,
+          v2: 0,
         });
 
         // Act
@@ -437,15 +437,20 @@ describe('VouchersService - Per-User Usage Fields', () => {
       it('should calculate pagination correctly with multiple pages', async () => {
         // Arrange
         const userId = 'user_123';
-        const mockUsageItems = Array(20).fill(null).map((_, i) => ({
-          id: `usage_${i}`,
-          voucherId: `voucher_${i}`,
-          shopId: 'shop_123',
-          userId,
-          orderId: `order_${i}`,
-          discountAmount: 5000,
-          createdAt: `2026-01-${20 - i}T12:00:00Z`,
-        } as VoucherUsageEntity));
+        const mockUsageItems = Array(20)
+          .fill(null)
+          .map(
+            (_, i) =>
+              ({
+                id: `usage_${i}`,
+                voucherId: `voucher_${i}`,
+                shopId: 'shop_123',
+                userId,
+                orderId: `order_${i}`,
+                discountAmount: 5000,
+                createdAt: `2026-01-${20 - i}T12:00:00Z`,
+              }) as VoucherUsageEntity,
+          );
 
         vouchersRepository.getUsageHistory = jest.fn().mockResolvedValue({
           items: mockUsageItems,
@@ -463,15 +468,20 @@ describe('VouchersService - Per-User Usage Fields', () => {
       it('should set hasMore=false on last page', async () => {
         // Arrange
         const userId = 'user_123';
-        const mockUsageItems = Array(5).fill(null).map((_, i) => ({
-          id: `usage_${i}`,
-          voucherId: `voucher_${i}`,
-          shopId: 'shop_123',
-          userId,
-          orderId: `order_${i}`,
-          discountAmount: 5000,
-          createdAt: `2026-01-20T12:00:00Z`,
-        } as VoucherUsageEntity));
+        const mockUsageItems = Array(5)
+          .fill(null)
+          .map(
+            (_, i) =>
+              ({
+                id: `usage_${i}`,
+                voucherId: `voucher_${i}`,
+                shopId: 'shop_123',
+                userId,
+                orderId: `order_${i}`,
+                discountAmount: 5000,
+                createdAt: `2026-01-20T12:00:00Z`,
+              }) as VoucherUsageEntity,
+          );
 
         vouchersRepository.getUsageHistory = jest.fn().mockResolvedValue({
           items: mockUsageItems,
@@ -560,7 +570,9 @@ describe('VouchersService - Per-User Usage Fields', () => {
         });
 
         // Act
-        const result = await service.getMyVoucherUsageHistory(userId, { shopId: 'nonexistent_shop' });
+        const result = await service.getMyVoucherUsageHistory(userId, {
+          shopId: 'nonexistent_shop',
+        });
 
         // Assert
         expect(result.items).toEqual([]);
@@ -573,8 +585,24 @@ describe('VouchersService - Per-User Usage Fields', () => {
         // Arrange
         const userId = 'user_123';
         const mockItems = [
-          { id: 'usage_1', voucherId: 'v1', shopId: 'shop_valid', userId, orderId: 'o1', discountAmount: 100, createdAt: '2026-01-20T00:00:00Z' },
-          { id: 'usage_2', voucherId: 'v2', shopId: 'shop_valid', userId, orderId: 'o2', discountAmount: 200, createdAt: '2026-01-19T00:00:00Z' },
+          {
+            id: 'usage_1',
+            voucherId: 'v1',
+            shopId: 'shop_valid',
+            userId,
+            orderId: 'o1',
+            discountAmount: 100,
+            createdAt: '2026-01-20T00:00:00Z',
+          },
+          {
+            id: 'usage_2',
+            voucherId: 'v2',
+            shopId: 'shop_valid',
+            userId,
+            orderId: 'o2',
+            discountAmount: 200,
+            createdAt: '2026-01-19T00:00:00Z',
+          },
         ];
         vouchersRepository.getUsageHistory = jest.fn().mockResolvedValue({
           items: mockItems,
@@ -582,7 +610,12 @@ describe('VouchersService - Per-User Usage Fields', () => {
         });
 
         // Act
-        const result = await service.getMyVoucherUsageHistory(userId, { shopId: 'shop_valid' }, 1, 20);
+        const result = await service.getMyVoucherUsageHistory(
+          userId,
+          { shopId: 'shop_valid' },
+          1,
+          20,
+        );
 
         // Assert
         expect(result.items).toEqual(mockItems);
@@ -595,21 +628,45 @@ describe('VouchersService - Per-User Usage Fields', () => {
         // Regression test for Phase 3 fix: B.3 now returns empty unexpectedly
         // Issue: New DB-level filtering breaks legacy records that don't have shopId denormalized
         // Fix: Hybrid approach - enrich legacy records via batch voucher lookup before filtering
-        
+
         // Arrange
         const userId = 'user_123';
         const newRecordsWithShopId: VoucherUsageEntity[] = [
-          { id: 'usage_new_1', voucherId: 'v_shop1_new', shopId: 'shop_001', userId, orderId: 'o1', discountAmount: 100, createdAt: '2026-01-20T00:00:00Z' },
+          {
+            id: 'usage_new_1',
+            voucherId: 'v_shop1_new',
+            shopId: 'shop_001',
+            userId,
+            orderId: 'o1',
+            discountAmount: 100,
+            createdAt: '2026-01-20T00:00:00Z',
+          },
         ];
         const legacyRecordsWithoutShopId: VoucherUsageEntity[] = [
-          { id: 'usage_legacy_1', voucherId: 'v_shop1_legacy', shopId: null, userId, orderId: 'o2', discountAmount: 200, createdAt: '2026-01-19T00:00:00Z' },
-          { id: 'usage_legacy_2', voucherId: 'v_shop1_legacy2', shopId: null, userId, orderId: 'o3', discountAmount: 150, createdAt: '2026-01-18T00:00:00Z' },
+          {
+            id: 'usage_legacy_1',
+            voucherId: 'v_shop1_legacy',
+            shopId: null,
+            userId,
+            orderId: 'o2',
+            discountAmount: 200,
+            createdAt: '2026-01-19T00:00:00Z',
+          },
+          {
+            id: 'usage_legacy_2',
+            voucherId: 'v_shop1_legacy2',
+            shopId: null,
+            userId,
+            orderId: 'o3',
+            discountAmount: 150,
+            createdAt: '2026-01-18T00:00:00Z',
+          },
         ];
-        
+
         // All 3 records returned (enrichment happened in repository)
         const allEnrichedItems = [
           ...newRecordsWithShopId,
-          ...legacyRecordsWithoutShopId.map(r => ({ ...r, shopId: 'shop_001' })), // Enriched with correct shopId
+          ...legacyRecordsWithoutShopId.map((r) => ({ ...r, shopId: 'shop_001' })), // Enriched with correct shopId
         ];
 
         vouchersRepository.getUsageHistory = jest.fn().mockResolvedValue({
@@ -635,12 +692,28 @@ describe('VouchersService - Per-User Usage Fields', () => {
       it('REGRESSION TEST: should filter out legacy records if they belong to different shop after enrichment', async () => {
         // When enriching legacy records, they may belong to a different shop
         // Ensure they are correctly filtered out
-        
+
         // Arrange
         const userId = 'user_123';
         const recordsWithMixedShops: VoucherUsageEntity[] = [
-          { id: 'usage_1', voucherId: 'v_shop1', shopId: 'shop_001', userId, orderId: 'o1', discountAmount: 100, createdAt: '2026-01-20T00:00:00Z' },
-          { id: 'usage_2', voucherId: 'v_shop2', shopId: 'shop_002', userId, orderId: 'o2', discountAmount: 200, createdAt: '2026-01-19T00:00:00Z' },
+          {
+            id: 'usage_1',
+            voucherId: 'v_shop1',
+            shopId: 'shop_001',
+            userId,
+            orderId: 'o1',
+            discountAmount: 100,
+            createdAt: '2026-01-20T00:00:00Z',
+          },
+          {
+            id: 'usage_2',
+            voucherId: 'v_shop2',
+            shopId: 'shop_002',
+            userId,
+            orderId: 'o2',
+            discountAmount: 200,
+            createdAt: '2026-01-19T00:00:00Z',
+          },
         ];
 
         vouchersRepository.getUsageHistory = jest.fn().mockResolvedValue({
@@ -660,7 +733,7 @@ describe('VouchersService - Per-User Usage Fields', () => {
       it('REGRESSION TEST: pagination should work correctly with enriched legacy records', async () => {
         // Ensure pagination offsets are correct after enrichment
         // Problem: Previously pagination happened before enrichment, causing wrong slicing
-        
+
         // Arrange
         const userId = 'user_123';
         const enrichedRecords: VoucherUsageEntity[] = Array(25)
@@ -681,7 +754,12 @@ describe('VouchersService - Per-User Usage Fields', () => {
         });
 
         // Act
-        const result = await service.getMyVoucherUsageHistory(userId, { shopId: 'shop_001' }, 1, 20);
+        const result = await service.getMyVoucherUsageHistory(
+          userId,
+          { shopId: 'shop_001' },
+          1,
+          20,
+        );
 
         // Assert
         expect(result.items).toHaveLength(20);
@@ -1247,10 +1325,12 @@ describe('VouchersService - Per-User Usage Fields', () => {
           currentUsage: 50,
         };
 
-        vouchersRepository.findByShopId = jest.fn().mockResolvedValue([activeVoucher, expiredVoucher]);
+        vouchersRepository.findByShopId = jest
+          .fn()
+          .mockResolvedValue([activeVoucher, expiredVoucher]);
         vouchersRepository.countUsageByUserBatch = jest.fn().mockResolvedValue({
-          'voucher_summer_2024': 0,
-          'voucher_expired': 5,
+          voucher_summer_2024: 0,
+          voucher_expired: 5,
         });
 
         // Act
@@ -1282,4 +1362,3 @@ describe('VouchersService - Per-User Usage Fields', () => {
     });
   });
 });
-
