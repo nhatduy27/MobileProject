@@ -358,8 +358,9 @@ export class OrdersService {
     // FIX: Set paymentStatus based on paymentMethod
     // - COD: PAID (customer pays at delivery, so payment is already "done" for our system)
     // - Other methods: UNPAID (pending payment through payment gateway)
-    const initialPaymentStatus = dto.paymentMethod === 'COD' ? PaymentStatus.PAID : PaymentStatus.UNPAID;
-    
+    const initialPaymentStatus =
+      dto.paymentMethod === 'COD' ? PaymentStatus.PAID : PaymentStatus.UNPAID;
+
     const orderEntity: OrderEntity = {
       orderNumber,
       customerId,
@@ -555,10 +556,7 @@ export class OrdersService {
     // 5. Trigger refund if already paid (auto-sync paymentStatus)
     if (order.paymentStatus === PaymentStatus.PAID) {
       try {
-        await this.paymentsService.initiateRefund(
-          orderId,
-          reason || 'Cancelled by customer',
-        );
+        await this.paymentsService.initiateRefund(orderId, reason || 'Cancelled by customer');
         this.logger.log(`Auto-refund initiated for cancelled order ${orderId}`);
       } catch (error) {
         this.logger.error(`Failed to initiate refund for order ${orderId}:`, error);

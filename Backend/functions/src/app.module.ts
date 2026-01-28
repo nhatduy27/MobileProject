@@ -24,6 +24,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { WalletsModule } from './modules/wallets/wallets.module';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
 import { BuyersModule } from './modules/buyers/buyers.module';
+import { ChatModule } from './modules/chat/chat.module';
 
 @Module({
   imports: [
@@ -66,6 +67,9 @@ import { BuyersModule } from './modules/buyers/buyers.module';
 
     // AI Features
     ChatbotModule,
+
+    // Chat
+    ChatModule,
   ],
 })
 export class AppModule {}
