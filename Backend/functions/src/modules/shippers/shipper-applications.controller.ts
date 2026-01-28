@@ -65,11 +65,11 @@ export class ShipperApplicationsController {
   })
   @ApiResponse({
     status: 409,
-    description: 'Already a shipper or already applied',
+    description: 'Already assigned to a shop or already applied',
     schema: {
       example: {
         success: false,
-        message: 'SHIPPER_001: Bạn đã là shipper rồi',
+        message: 'SHIPPER_001: Bạn đã là shipper của một shop rồi',
       },
     },
   })

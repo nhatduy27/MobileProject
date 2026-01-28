@@ -230,7 +230,7 @@ export class EmailService {
       const response = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: {
-          'accept': 'application/json',
+          accept: 'application/json',
           'api-key': this.brevoApiKey,
           'content-type': 'application/json',
         },
@@ -250,8 +250,10 @@ export class EmailService {
         throw new Error(`Brevo API error: ${response.status} - ${errorBody}`);
       }
 
-      const result = await response.json() as { messageId?: string };
-      this.logger.log(`Email sent successfully via Brevo to ${to}: ${subject} (messageId: ${result.messageId || 'N/A'})`);
+      const result = (await response.json()) as { messageId?: string };
+      this.logger.log(
+        `Email sent successfully via Brevo to ${to}: ${subject} (messageId: ${result.messageId || 'N/A'})`,
+      );
     } catch (error: any) {
       this.logger.error(`Failed to send email via Brevo to ${to}:`, error.message);
 
@@ -280,7 +282,10 @@ export class EmailService {
       await sgMail.send(msg);
       this.logger.log(`Email sent successfully via SendGrid to ${to}: ${subject}`);
     } catch (error: any) {
-      this.logger.error(`Failed to send email via SendGrid to ${to}:`, error.response?.body || error.message);
+      this.logger.error(
+        `Failed to send email via SendGrid to ${to}:`,
+        error.response?.body || error.message,
+      );
 
       // Don't throw error - email failure shouldn't break the flow
       if (process.env.NODE_ENV === 'production') {

@@ -49,9 +49,11 @@ export class ShippersService {
   ): Promise<ShipperApplicationEntity> {
     const user = await this.usersService.getProfile(userId);
 
-    // Check if already shipper
-    if (user.role === 'SHIPPER') {
-      throw new ConflictException('SHIPPER_001: Bạn đã là shipper rồi');
+    // Check if already assigned to a shop (has shipperInfo with shopId)
+    // Note: User can have role SHIPPER but not yet assigned to any shop
+    // They need to apply to a shop first, then get approved
+    if (user.shipperInfo?.shopId) {
+      throw new ConflictException('SHIPPER_001: Bạn đã là shipper của một shop rồi');
     }
 
     // Validate shop exists first - get full shop entity to get ownerId
