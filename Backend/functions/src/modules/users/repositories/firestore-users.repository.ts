@@ -78,6 +78,13 @@ export class FirestoreUsersRepository implements IUsersRepository {
     });
   }
 
+  async clearAvatarUrl(userId: string): Promise<void> {
+    await this.firestore.collection(this.collection).doc(userId).update({
+      avatarUrl: null,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+  }
+
   async addFcmToken(userId: string, token: string, deviceId: string): Promise<void> {
     const userRef = this.firestore.collection(this.collection).doc(userId);
 

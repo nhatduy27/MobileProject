@@ -93,11 +93,14 @@ export class MeController {
    * Update current user profile
    *
    * USER-003
+   *
+   * Updates only: displayName, phone
+   * Avatar is managed exclusively through POST /me/avatar (upload) and DELETE /me/avatar (delete)
    */
   @Put()
   @ApiOperation({
     summary: 'Update my profile',
-    description: 'Update display name, phone, or avatar URL. Cannot change email, role, or status.',
+    description: 'Update display name or phone. Avatar is managed via dedicated upload/delete endpoints.',
   })
   @ApiResponse({ status: 200, description: 'Profile updated' })
   @ApiResponse({ status: 400, description: 'Invalid data' })
@@ -138,6 +141,28 @@ export class MeController {
     const avatarUrl = await this.usersService.uploadAvatar(user.uid, file.buffer, file.mimetype);
 
     return { avatarUrl };
+  }
+
+  /**
+   * DELETE /me/avatar
+   * Delete current user's avatar
+   *
+   * USER-004 (Extension)
+   *
+   * Idempotent: Returns success even if user has no avatar.
+   * Attempts to delete from Firebase Storage but continues even if file not found.
+   */
+  @Delete('avatar')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Delete my avatar',
+    description: 'Delete current user avatar. Idempotent: returns success if no avatar exists.',
+  })
+  @ApiResponse({ status: 200, description: 'Avatar deleted successfully' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async deleteAvatar(@CurrentUser() user: any) {
+    await this.usersService.deleteAvatar(user.uid);
+    return { message: 'Avatar deleted successfully' };
   }
 
   // ==================== Settings ====================

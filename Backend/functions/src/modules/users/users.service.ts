@@ -57,10 +57,12 @@ export class UsersService {
     await this.getProfile(userId); // Verify user exists
 
     // Only update allowed fields
+    // NOTE: avatarUrl is managed exclusively through POST /me/avatar and DELETE /me/avatar
+    // Ignore any avatarUrl in DTO to prevent users from injecting arbitrary URLs
     const updateData: Partial<UserEntity> = {};
     if (dto.displayName !== undefined) updateData.displayName = dto.displayName;
     if (dto.phone !== undefined) updateData.phone = dto.phone;
-    if (dto.avatarUrl !== undefined) updateData.avatarUrl = dto.avatarUrl;
+    // Intentionally NOT including dto.avatarUrl - use dedicated upload/delete endpoints
 
     return this.usersRepository.updateProfile(userId, updateData);
   }
@@ -85,6 +87,30 @@ export class UsersService {
     await this.updateAvatarUrl(userId, avatarUrl);
 
     return avatarUrl;
+  }
+
+  /**
+   * Delete current user's avatar
+   * 
+   * Idempotent: if user has no avatar, still returns successfully
+   * If Firebase Storage deletion fails, still clears DB entry to prevent dead links
+   */
+  async deleteAvatar(userId: string): Promise<void> {
+    const user = await this.getProfile(userId); // Verify user exists
+
+    // Attempt to delete from Firebase Storage if avatar exists
+    if (user.avatarUrl) {
+      try {
+        await this.storageService.deleteAvatar(user.avatarUrl);
+      } catch (error) {
+        // Log but don't throw: storage file may already be gone
+        // We still want to clear the DB entry to prevent dead links
+        console.warn(`Failed to delete avatar from storage for user ${userId}:`, error);
+      }
+    }
+
+    // Clear avatar URL in database
+    await this.usersRepository.clearAvatarUrl(userId);
   }
 
   // ==================== Settings ====================

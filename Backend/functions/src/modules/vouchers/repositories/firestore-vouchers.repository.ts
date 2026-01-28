@@ -1,5 +1,5 @@
 import { Injectable, Inject, BadRequestException } from '@nestjs/common';
-import { Firestore, Timestamp } from 'firebase-admin/firestore';
+import { Firestore, Timestamp, FieldPath } from 'firebase-admin/firestore';
 import { IVouchersRepository } from '../interfaces';
 import { VoucherEntity, VoucherUsageEntity, OwnerType } from '../entities';
 import { ErrorCodes } from '../../../shared/constants/error-codes';
@@ -444,7 +444,7 @@ export class FirestoreVouchersRepository implements IVouchersRepository {
       const chunk = voucherIds.slice(i, i + chunkSize);
       const snapshot = await this.firestore
         .collection(this.vouchersCollection)
-        .where(this.firestore.FieldPath.documentId(), 'in', chunk)
+        .where(FieldPath.documentId(), 'in', chunk)
         .get();
 
       for (const doc of snapshot.docs) {
