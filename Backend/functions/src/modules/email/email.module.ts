@@ -4,7 +4,7 @@ import { EmailService } from './email.service';
 /**
  * Email Module
  *
- * Global module for sending emails via SendGrid.
+ * Global module for sending emails via Brevo (primary) or SendGrid (fallback).
  * Can be used across all modules without importing.
  */
 @Global()

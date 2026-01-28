@@ -1,28 +1,50 @@
 import { Injectable, Logger } from '@nestjs/common';
 import sgMail from '@sendgrid/mail';
 
+type EmailProvider = 'brevo' | 'sendgrid';
+
 /**
  * Email Service
  *
- * Handles email sending via SendGrid.
+ * Handles email sending via Brevo (primary) or SendGrid (fallback).
  * Used for OTP verification, password reset, notifications, etc.
  */
 @Injectable()
 export class EmailService {
   private readonly logger = new Logger(EmailService.name);
+  private readonly provider: EmailProvider;
   private readonly fromEmail: string;
   private readonly fromName: string;
 
-  constructor() {
-    const apiKey = process.env.SENDGRID_API_KEY;
-    this.fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@ktxdelivery.com';
-    this.fromName = process.env.SENDGRID_FROM_NAME || 'KTX Delivery';
+  // Brevo config
+  private readonly brevoApiKey?: string;
 
-    if (!apiKey) {
-      this.logger.warn('SENDGRID_API_KEY not configured. Email sending will fail.');
+  constructor() {
+    // Determine which provider to use
+    this.provider = (process.env.EMAIL_PROVIDER as EmailProvider) || 'brevo';
+
+    if (this.provider === 'brevo') {
+      this.brevoApiKey = process.env.BREVO_API_KEY;
+      this.fromEmail = process.env.BREVO_FROM_EMAIL || 'noreply@ktxdelivery.com';
+      this.fromName = process.env.BREVO_FROM_NAME || 'KTX Delivery';
+
+      if (!this.brevoApiKey) {
+        this.logger.warn('BREVO_API_KEY not configured. Email sending will fail.');
+      } else {
+        this.logger.log('Brevo email provider initialized successfully');
+      }
     } else {
-      sgMail.setApiKey(apiKey);
-      this.logger.log('SendGrid initialized successfully');
+      // SendGrid fallback
+      const sgApiKey = process.env.SENDGRID_API_KEY;
+      this.fromEmail = process.env.SENDGRID_FROM_EMAIL || 'noreply@ktxdelivery.com';
+      this.fromName = process.env.SENDGRID_FROM_NAME || 'KTX Delivery';
+
+      if (!sgApiKey) {
+        this.logger.warn('SENDGRID_API_KEY not configured. Email sending will fail.');
+      } else {
+        sgMail.setApiKey(sgApiKey);
+        this.logger.log('SendGrid email provider initialized successfully');
+      }
     }
   }
 
@@ -185,9 +207,65 @@ export class EmailService {
   }
 
   /**
-   * Core email sending method using SendGrid
+   * Core email sending method - supports Brevo and SendGrid
    */
   private async sendEmail(to: string, subject: string, html: string): Promise<void> {
+    if (this.provider === 'brevo') {
+      await this.sendViaBrevo(to, subject, html);
+    } else {
+      await this.sendViaSendGrid(to, subject, html);
+    }
+  }
+
+  /**
+   * Send email via Brevo API
+   */
+  private async sendViaBrevo(to: string, subject: string, html: string): Promise<void> {
+    if (!this.brevoApiKey) {
+      this.logger.error('Brevo API key not configured');
+      return;
+    }
+
+    try {
+      const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'accept': 'application/json',
+          'api-key': this.brevoApiKey,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: {
+            name: this.fromName,
+            email: this.fromEmail,
+          },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`Brevo API error: ${response.status} - ${errorBody}`);
+      }
+
+      const result = await response.json() as { messageId?: string };
+      this.logger.log(`Email sent successfully via Brevo to ${to}: ${subject} (messageId: ${result.messageId || 'N/A'})`);
+    } catch (error: any) {
+      this.logger.error(`Failed to send email via Brevo to ${to}:`, error.message);
+
+      // Don't throw error - email failure shouldn't break the flow
+      if (process.env.NODE_ENV === 'production') {
+        // TODO: Send to error tracking (Sentry, etc.)
+      }
+    }
+  }
+
+  /**
+   * Send email via SendGrid (fallback)
+   */
+  private async sendViaSendGrid(to: string, subject: string, html: string): Promise<void> {
     try {
       const msg = {
         to,
@@ -200,14 +278,12 @@ export class EmailService {
       };
 
       await sgMail.send(msg);
-      this.logger.log(`Email sent successfully to ${to}: ${subject}`);
+      this.logger.log(`Email sent successfully via SendGrid to ${to}: ${subject}`);
     } catch (error: any) {
-      this.logger.error(`Failed to send email to ${to}:`, error.response?.body || error.message);
+      this.logger.error(`Failed to send email via SendGrid to ${to}:`, error.response?.body || error.message);
 
       // Don't throw error - email failure shouldn't break the flow
-      // User can still use the app without email
       if (process.env.NODE_ENV === 'production') {
-        // In production, log to monitoring service
         // TODO: Send to error tracking (Sentry, etc.)
       }
     }
