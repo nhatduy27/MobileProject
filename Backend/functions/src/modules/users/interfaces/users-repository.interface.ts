@@ -37,6 +37,11 @@ export interface IUsersRepository {
   updateAvatarUrl(userId: string, avatarUrl: string): Promise<void>;
 
   /**
+   * Clear avatar URL (set to null)
+   */
+  clearAvatarUrl(userId: string): Promise<void>;
+
+  /**
    * Add FCM token
    */
   addFcmToken(userId: string, token: string, deviceId: string): Promise<void>;
