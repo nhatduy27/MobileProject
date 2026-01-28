@@ -11,6 +11,7 @@ import { IOrdersRepository, ORDERS_REPOSITORY } from '../interfaces';
 import { CartService } from '../../cart/services';
 import { VouchersService } from '../../vouchers/vouchers.service';
 import { WalletsService } from '../../wallets/wallets.service';
+import { PaymentsService } from '../../payments/payments.service';
 import { ConfigService } from '../../../core/config/config.service';
 import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { USERS_REPOSITORY } from '../../users/interfaces';
@@ -137,6 +138,13 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
           useValue: {
             firestore: { collection: jest.fn(), batch: jest.fn() },
             auth: { verifyIdToken: jest.fn() },
+          },
+        },
+        {
+          provide: PaymentsService,
+          useValue: {
+            initiateRefund: jest.fn().mockResolvedValue(null),
+            createPayment: jest.fn(),
           },
         },
         {

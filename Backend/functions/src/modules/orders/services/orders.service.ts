@@ -23,6 +23,7 @@ import { NotificationCategory } from '../../notifications/dto/admin-batch-send.d
 import { ConfigService } from '../../../core/config/config.service';
 import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { WalletsService } from '../../wallets/wallets.service';
+import { PaymentsService } from '../../payments/payments.service';
 import { OrderEntity, OrderStatus, PaymentStatus, DeliveryAddress } from '../entities';
 import {
   CreateOrderDto,
@@ -55,6 +56,7 @@ export class OrdersService {
     private readonly usersRepo: IUsersRepository,
     private readonly vouchersService: VouchersService,
     private readonly notificationsService: NotificationsService,
+    private readonly paymentsService: PaymentsService,
     private readonly stateMachine: OrderStateMachineService,
     private readonly configService: ConfigService,
     private readonly firebaseService: FirebaseService,
@@ -351,6 +353,11 @@ export class OrdersService {
     // PRICING LOCK: All item prices are taken from cart snapshot (price field).
     // Product price changes after add-to-cart do NOT affect the order.
     const orderNumber = this.generateOrderNumber();
+    // FIX: Set paymentStatus based on paymentMethod
+    // - COD: PAID (customer pays at delivery, so payment is already "done" for our system)
+    // - Other methods: UNPAID (pending payment through payment gateway)
+    const initialPaymentStatus = dto.paymentMethod === 'COD' ? PaymentStatus.PAID : PaymentStatus.UNPAID;
+    
     const orderEntity: OrderEntity = {
       orderNumber,
       customerId,
@@ -372,7 +379,7 @@ export class OrdersService {
       voucherId,
       total,
       status: OrderStatus.PENDING,
-      paymentStatus: PaymentStatus.UNPAID,
+      paymentStatus: initialPaymentStatus,
       paymentMethod: dto.paymentMethod,
       deliveryAddress: normalizedAddress, // Use normalized address (no undefined values)
       deliveryNote: dto.deliveryNote,
@@ -543,9 +550,18 @@ export class OrdersService {
       cancelledBy: 'CUSTOMER',
     });
 
-    // 5. Trigger refund if already paid (stub for MVP)
+    // 5. Trigger refund if already paid (auto-sync paymentStatus)
     if (order.paymentStatus === PaymentStatus.PAID) {
-      // TODO: Call paymentService.initiateRefund(orderId) when available
+      try {
+        await this.paymentsService.initiateRefund(
+          orderId,
+          reason || 'Cancelled by customer',
+        );
+        this.logger.log(`Auto-refund initiated for cancelled order ${orderId}`);
+      } catch (error) {
+        this.logger.error(`Failed to initiate refund for order ${orderId}:`, error);
+        // Non-blocking: continue with cancellation even if refund fails
+      }
     }
 
     // 6. Notify shop owner about cancellation

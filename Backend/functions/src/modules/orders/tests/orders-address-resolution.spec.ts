@@ -10,6 +10,7 @@ import { OrderStateMachineService } from '../services/order-state-machine.servic
 import { ConfigService } from '../../../core/config/config.service';
 import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { WalletsService } from '../../wallets/wallets.service';
+import { PaymentsService } from '../../payments/payments.service';
 
 describe('OrdersService - Address Resolution', () => {
   let service: OrdersService;
@@ -50,6 +51,9 @@ describe('OrdersService - Address Resolution', () => {
       sendToTopic: jest.fn().mockResolvedValue(undefined),
     };
     const mockStateMachine = {};
+    const mockPaymentsService = {
+      initiateRefund: jest.fn().mockResolvedValue(null),
+    };
 
     const mockConfigService = {
       enableFirestorePaginationFallback: false,
@@ -72,6 +76,7 @@ describe('OrdersService - Address Resolution', () => {
         { provide: USERS_REPOSITORY, useValue: { findById: jest.fn() } },
         { provide: VouchersService, useValue: mockVouchersService },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: PaymentsService, useValue: mockPaymentsService },
         {
           provide: WalletsService,
           useValue: {

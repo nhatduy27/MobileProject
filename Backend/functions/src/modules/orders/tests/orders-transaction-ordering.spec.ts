@@ -14,6 +14,7 @@ import {
 import { OrderStateMachineService } from '../services/order-state-machine.service';
 import { ConfigService } from '../../../core/config/config.service';
 import { FirebaseService } from '../../../core/firebase/firebase.service';
+import { PaymentsService } from '../../payments/payments.service';
 import { CreateOrderDto } from '../dto';
 import { OrderEntity, OrderStatus, PaymentStatus } from '../entities';
 import { WalletsService } from '../../wallets/wallets.service';
@@ -72,6 +73,11 @@ describe('Orders - Firestore Transaction Ordering', () => {
       updateBalance: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockPaymentsService = {
+      initiateRefund: jest.fn().mockResolvedValue(null),
+      createPayment: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrdersService,
@@ -84,6 +90,7 @@ describe('Orders - Firestore Transaction Ordering', () => {
         { provide: USERS_REPOSITORY, useValue: { findById: jest.fn() } },
         { provide: VouchersService, useValue: mockVouchersService },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: PaymentsService, useValue: mockPaymentsService },
         { provide: WalletsService, useValue: mockWalletsService },
         { provide: ConfigService, useValue: mockConfigService },
         {
