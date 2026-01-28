@@ -144,7 +144,13 @@ class RealShipperApplicationRepository(
     }
 
     private fun createFilePart(name: String, file: File): MultipartBody.Part {
-        val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
+        // Detect correct mimetype from file extension
+        val mimeType = when (file.extension.lowercase()) {
+            "jpg", "jpeg" -> "image/jpeg"
+            "png" -> "image/png"
+            else -> "image/jpeg" // Default to jpeg
+        }
+        val requestBody = file.asRequestBody(mimeType.toMediaTypeOrNull())
         return MultipartBody.Part.createFormData(name, file.name, requestBody)
     }
 
