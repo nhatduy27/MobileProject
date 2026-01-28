@@ -56,17 +56,9 @@ fun PaymentMethodScreen(navController: NavHostController) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Phương thức thanh toán", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
-                )
+            SettingsTopBar(
+                title = "Phương thức thanh toán",
+                onBackClick = { navController.popBackStack() }
             )
         }
     ) { padding ->

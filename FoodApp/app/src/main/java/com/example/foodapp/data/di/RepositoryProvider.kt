@@ -214,6 +214,16 @@ object RepositoryProvider {
         )
     }
     
+    // ==================== OWNER REVIEW REPOSITORY ====================
+    
+    fun getReviewRepository(): com.example.foodapp.data.repository.owner.base.OwnerReviewRepository {
+        return com.example.foodapp.data.repository.owner.reviews.RealReviewRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.owner.ReviewApiService::class.java
+            )
+        )
+    }
+    
     // ==================== USER PROFILE REPOSITORY ====================
     
     fun getUserProfileRepository(): com.example.foodapp.data.repository.user.base.UserProfileRepository {

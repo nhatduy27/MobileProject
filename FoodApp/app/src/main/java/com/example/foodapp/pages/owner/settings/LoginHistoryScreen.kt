@@ -72,17 +72,9 @@ fun LoginHistoryScreen(navController: NavHostController) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Lịch sử đăng nhập", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
-                )
+            SettingsTopBar(
+                title = "Lịch sử đăng nhập",
+                onBackClick = { navController.popBackStack() }
             )
         }
     ) { padding ->

@@ -56,7 +56,12 @@ fun StoreInfoScreen(navController: androidx.navigation.NavHostController? = null
     }
     
     Scaffold(
-        // topBar removed as requested
+        topBar = {
+            SettingsTopBar(
+                title = "Thông tin cửa hàng",
+                onBackClick = { navController?.popBackStack() }
+            )
+        }
     ) { paddingValues ->
         if (uiState.isLoading) {
             Box(
