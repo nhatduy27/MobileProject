@@ -1,11 +1,11 @@
 package com.example.foodapp.pages.shipper.help
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.outlined.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -13,19 +13,29 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.pages.shipper.theme.ShipperColors
 
 @Composable
 fun HelpCategoryCard(
     category: HelpCategory,
     onClick: () -> Unit = {}
 ) {
+    val icon: ImageVector = when (category.icon) {
+        "rocket" -> Icons.Outlined.RocketLaunch
+        "package" -> Icons.Outlined.LocalShipping
+        "wallet" -> Icons.Outlined.AccountBalanceWallet
+        "settings" -> Icons.Outlined.Settings
+        "help" -> Icons.Outlined.HelpOutline
+        else -> Icons.Outlined.Info
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = ShipperColors.Surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         shape = RoundedCornerShape(12.dp),
         onClick = onClick
@@ -38,16 +48,18 @@ fun HelpCategoryCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(48.dp)
+                    .size(44.dp)
                     .background(
-                        Color(0xFFFFF3E0),
-                        RoundedCornerShape(12.dp)
+                        ShipperColors.PrimaryLight,
+                        RoundedCornerShape(10.dp)
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = category.icon,
-                    fontSize = 28.sp
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = ShipperColors.Primary,
+                    modifier = Modifier.size(22.dp)
                 )
             }
 
@@ -59,21 +71,21 @@ fun HelpCategoryCard(
                 Text(
                     text = category.title,
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A)
+                    fontWeight = FontWeight.Medium,
+                    color = ShipperColors.TextPrimary
                 )
                 Text(
                     text = category.description,
                     fontSize = 13.sp,
-                    color = Color(0xFF757575),
-                    modifier = Modifier.padding(top = 4.dp)
+                    color = ShipperColors.TextSecondary,
+                    modifier = Modifier.padding(top = 2.dp)
                 )
             }
 
             Icon(
-                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                imageVector = Icons.AutoMirrored.Outlined.KeyboardArrowRight,
                 contentDescription = null,
-                tint = Color(0xFFBDBDBD),
+                tint = ShipperColors.TextTertiary,
                 modifier = Modifier.size(20.dp)
             )
         }

@@ -74,6 +74,33 @@ firebase emulators:start
 
 ## 🔧 Cấu hình cho Frontend
 
+### Backend Environment Variables
+
+Tạo file `Backend/.env` với nội dung sau:
+
+```bash
+# Firebase (Bắt buộc)
+FIREBASE_PROJECT_ID=foodappproject-7c136
+FIREBASE_REGION=asia-southeast1
+FIREBASE_API_KEY=your-firebase-api-key
+
+# Google Routes API (GPS Module - Server-side)
+# Enable at: https://console.cloud.google.com/marketplace/product/google/routes.googleapis.com
+GOOGLE_ROUTES_API_KEY=your-google-routes-api-key
+
+# Optional Payment Providers
+ZALOPAY_APP_ID=
+MOMO_PARTNER_CODE=
+SEPAY_API_KEY=
+
+# Email Service
+SENDGRID_API_KEY=your-sendgrid-key
+```
+
+> ⚠️ **Security:** Never commit real API keys to git. Use `.env` (already in .gitignore).
+
+---
+
 ### Kết nối API
 
 ```kotlin
@@ -156,6 +183,46 @@ Mở Swagger UI để xem tất cả endpoints:
 ---
 
 ## 🐛 Troubleshooting
+
+### Android Maps API Key Setup
+
+**For GPS/Map features (Client-side):**
+
+1. **Get API Key:**
+   - Go to: https://console.cloud.google.com/apis/credentials
+   - Enable: Maps SDK for Android
+   - Create Android API key
+
+2. **Restrict Key (Security):**
+   - Restrict by Android apps
+   - Add package name: `com.yourapp.ktxdelivery`
+   - Add SHA-1 certificate fingerprint
+
+3. **Configure in Android Project:**
+
+```kotlin
+// Option 1: AndroidManifest.xml
+<manifest>
+  <application>
+    <meta-data
+      android:name="com.google.android.geo.API_KEY"
+      android:value="@string/google_maps_key" />
+  </application>
+</manifest>
+
+// res/values/strings.xml
+<string name="google_maps_key">YOUR_ANDROID_MAPS_API_KEY</string>
+```
+
+```gradle
+// Option 2: Secrets Gradle Plugin (Recommended)
+// local.properties
+GOOGLE_MAPS_API_KEY=YOUR_ANDROID_MAPS_API_KEY
+```
+
+> ⚠️ **Never commit keys to git!** Use `local.properties` (in .gitignore) or environment variables.
+
+---
 
 ### Lỗi Java version
 

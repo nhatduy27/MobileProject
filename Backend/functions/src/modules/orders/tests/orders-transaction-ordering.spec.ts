@@ -14,9 +14,11 @@ import {
 import { OrderStateMachineService } from '../services/order-state-machine.service';
 import { ConfigService } from '../../../core/config/config.service';
 import { FirebaseService } from '../../../core/firebase/firebase.service';
+import { PaymentsService } from '../../payments/payments.service';
 import { CreateOrderDto } from '../dto';
 import { OrderEntity, OrderStatus, PaymentStatus } from '../entities';
 import { WalletsService } from '../../wallets/wallets.service';
+import { BuyersStatsService } from '../../buyers/services/buyers-stats.service';
 
 describe('Orders - Firestore Transaction Ordering', () => {
   let service: OrdersService;
@@ -72,6 +74,11 @@ describe('Orders - Firestore Transaction Ordering', () => {
       updateBalance: jest.fn().mockResolvedValue(undefined),
     };
 
+    const mockPaymentsService = {
+      initiateRefund: jest.fn().mockResolvedValue(null),
+      createPayment: jest.fn(),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrdersService,
@@ -84,14 +91,21 @@ describe('Orders - Firestore Transaction Ordering', () => {
         { provide: USERS_REPOSITORY, useValue: { findById: jest.fn() } },
         { provide: VouchersService, useValue: mockVouchersService },
         { provide: NotificationsService, useValue: mockNotificationsService },
+        { provide: PaymentsService, useValue: mockPaymentsService },
         { provide: WalletsService, useValue: mockWalletsService },
         { provide: ConfigService, useValue: mockConfigService },
         {
           provide: OrderStateMachineService,
           useValue: { validateTransition: jest.fn() },
         },
-        { provide: FirebaseService, useValue: mockFirebaseService },
-      ],
+        { provide: FirebaseService, useValue: mockFirebaseService },        {
+          provide: BuyersStatsService,
+          useValue: {
+            incrementOrderCount: jest.fn().mockResolvedValue(undefined),
+            updateTotalSpent: jest.fn().mockResolvedValue(undefined),
+            updateBuyerStatsOnDelivery: jest.fn().mockResolvedValue(undefined),
+          },
+        },      ],
     }).compile();
 
     service = module.get<OrdersService>(OrdersService);

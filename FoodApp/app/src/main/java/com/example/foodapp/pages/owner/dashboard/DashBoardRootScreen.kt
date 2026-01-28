@@ -25,6 +25,8 @@ import com.example.foodapp.pages.owner.revenue.RevenueScreen
 import com.example.foodapp.pages.owner.shippers.ShippersScreen
 // Import VouchersScreen
 import com.example.foodapp.pages.owner.vouchers.VouchersScreen
+// Import ReviewsScreen
+import com.example.foodapp.pages.owner.reviews.ReviewsScreen
 // Import NotificationBell
 import com.example.foodapp.pages.owner.notifications.NotificationBell
 // Import SettingsScreen
@@ -222,6 +224,15 @@ fun DashBoardRootScreen(navController: NavHostController) {
                         scope.launch { drawerState.close() }
                     }
 
+                    DrawerItem(
+                        text = "Đánh giá", 
+                        iconRes = R.drawable.ic_review,
+                        isSelected = currentScreen == "reviews"
+                    ) {
+                        currentScreen = "reviews"
+                        scope.launch { drawerState.close() }
+                    }
+
                     Divider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha=0.3f))
 
                     DrawerItem(
@@ -252,7 +263,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
         Scaffold(
             topBar = {
                 // Show TopBar for screens that don't have their own TopBar
-                if (currentScreen != "dashboard" && currentScreen != "orders" && currentScreen != "foods" && currentScreen != "shippers" && currentScreen != "vouchers" && currentScreen != "customers") {
+                if (currentScreen != "dashboard" && currentScreen != "orders" && currentScreen != "foods" && currentScreen != "shippers" && currentScreen != "vouchers" && currentScreen != "customers" && currentScreen != "reviews") {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -270,6 +281,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                         Text(
                             text = when (currentScreen) {
                                 "revenue" -> "Báo cáo doanh thu"
+                                "reviews" -> "Đánh giá"
                                 "settings" -> "Cài đặt"
                                 else -> shopState.shopName.ifEmpty { "KTX Food" }
                             },
@@ -298,7 +310,18 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     "vouchers" -> VouchersScreen(onMenuClick = { scope.launch { drawerState.open() } })
                     "customers" -> CustomerScreenMain(onMenuClick = { scope.launch { drawerState.open() } }) 
                     "revenue" -> RevenueScreen()
-                    "settings" -> SettingsNavHost(navController = settingsNavController)
+                    "reviews" -> ReviewsScreen(
+                        shopId = shopState.shopId,
+                        onMenuClick = { scope.launch { drawerState.open() } }
+                    )
+                    "settings" -> SettingsNavHost(
+                        navController = settingsNavController,
+                        onLogout = {
+                            navController.navigate("intro") {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    )
                     else -> DashboardScreen(onMenuClick = { scope.launch { drawerState.open() } })
                 }
             }

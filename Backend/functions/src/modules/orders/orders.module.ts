@@ -22,8 +22,10 @@ import { UsersModule } from '../users/users.module';
 import { VouchersModule } from '../vouchers/vouchers.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { WalletsModule } from '../wallets/wallets.module';
+import { PaymentsModule } from '../payments/payments.module';
 import { ConfigModule } from '../../core/config/config.module';
 import { ORDERS_REPOSITORY } from './interfaces';
+import { BuyersModule } from '../buyers/buyers.module';
 
 @Module({
   imports: [
@@ -35,7 +37,9 @@ import { ORDERS_REPOSITORY } from './interfaces';
     VouchersModule,
     NotificationsModule,
     WalletsModule,
+    forwardRef(() => PaymentsModule),
     forwardRef(() => ShippersModule),
+    forwardRef(() => BuyersModule),
   ],
   controllers: [
     OrdersOwnerController,

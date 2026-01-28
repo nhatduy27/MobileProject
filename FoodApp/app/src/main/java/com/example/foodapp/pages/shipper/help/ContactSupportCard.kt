@@ -1,26 +1,24 @@
 package com.example.foodapp.pages.shipper.help
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Call
-import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.outlined.Call
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.pages.shipper.theme.ShipperColors
 
 @Composable
 fun ContactSupportCard() {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFFF6B35)
+            containerColor = ShipperColors.Primary
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
         shape = RoundedCornerShape(12.dp)
@@ -33,13 +31,13 @@ fun ContactSupportCard() {
             Text(
                 text = "Cần hỗ trợ ngay?",
                 fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
+                fontWeight = FontWeight.SemiBold,
+                color = ShipperColors.Surface
             )
             Text(
                 text = "Liên hệ với chúng tôi qua các kênh sau",
                 fontSize = 13.sp,
-                color = Color(0xFFFFE5D9),
+                color = ShipperColors.Surface.copy(alpha = 0.8f),
                 modifier = Modifier.padding(top = 4.dp)
             )
 
@@ -52,22 +50,22 @@ fun ContactSupportCard() {
                 Button(
                     onClick = {},
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White
+                        containerColor = ShipperColors.Surface
                     ),
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(10.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Call,
+                        imageVector = Icons.Outlined.Call,
                         contentDescription = null,
-                        tint = Color(0xFFFF6B35),
+                        tint = ShipperColors.Primary,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "Gọi ngay",
-                        color = Color(0xFFFF6B35),
-                        fontWeight = FontWeight.Bold,
+                        color = ShipperColors.Primary,
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp
                     )
                 }
@@ -75,22 +73,22 @@ fun ContactSupportCard() {
                 Button(
                     onClick = {},
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White
+                        containerColor = ShipperColors.Surface
                     ),
                     modifier = Modifier.weight(1f),
-                    shape = RoundedCornerShape(8.dp)
+                    shape = RoundedCornerShape(10.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Email,
+                        imageVector = Icons.Outlined.Email,
                         contentDescription = null,
-                        tint = Color(0xFFFF6B35),
+                        tint = ShipperColors.Primary,
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "Email",
-                        color = Color(0xFFFF6B35),
-                        fontWeight = FontWeight.Bold,
+                        color = ShipperColors.Primary,
+                        fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp
                     )
                 }

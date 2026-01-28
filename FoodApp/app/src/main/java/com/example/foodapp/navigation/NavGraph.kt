@@ -47,6 +47,7 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import com.example.foodapp.pages.owner.dashboard.DashBoardRootScreen
+import com.example.foodapp.pages.shipper.dashboard.ShipperDashboardRootScreen
 
 sealed class Screen(val route: String) {
     object Intro : Screen("intro")
@@ -98,6 +99,11 @@ sealed class Screen(val route: String) {
             return "order_success/$encodedOrderJson"
         }
     }
+    object ShipperOrderDetail : Screen("shipper_order_detail/{orderId}") {
+        fun createRoute(orderId: String) = "shipper_order_detail/$orderId"
+    }
+    object ShipperApply : Screen("shipper_apply")
+    object ShipperMyApplications : Screen("shipper_my_applications")
 }
 
 @Composable
@@ -497,9 +503,31 @@ fun FoodAppNavHost(
         }
 
         composable(Screen.ShipperHome.route) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Shipper Home Screen")
-            }
+            ShipperDashboardRootScreen(navController = navController)
+        }
+        
+        composable(
+            route = Screen.ShipperOrderDetail.route,
+            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val orderId = backStackEntry.arguments?.getString("orderId") ?: ""
+            com.example.foodapp.pages.shipper.order.ShipperOrderDetailScreen(
+                orderId = orderId,
+                onBack = { navController.navigateUp() }
+            )
+        }
+        
+        composable(Screen.ShipperApply.route) {
+            com.example.foodapp.pages.shipper.application.ShopSelectionScreen(
+                onBack = { navController.navigateUp() },
+                onApplicationSubmitted = { navController.navigateUp() }
+            )
+        }
+        
+        composable(Screen.ShipperMyApplications.route) {
+            com.example.foodapp.pages.shipper.application.MyApplicationsScreen(
+                onBack = { navController.navigateUp() }
+            )
         }
 
         composable(Screen.OwnerHome.route) {

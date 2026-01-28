@@ -1,19 +1,21 @@
 package com.example.foodapp.pages.shipper.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.platform.LocalContext
-import android.widget.Toast
+import com.example.foodapp.pages.shipper.theme.ShipperColors
 
 @Composable
 fun LanguageScreen(
@@ -21,63 +23,94 @@ fun LanguageScreen(
     onCancel: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val mainColor = Color(0xFFFF6B35)
-    val languages = listOf("Tiếng Việt", "English", "日本語", "한국어")
+    val languages = listOf(
+        "Tiếng Việt" to "🇻🇳",
+        "English" to "🇺🇸",
+        "日本語" to "🇯🇵",
+        "한국어" to "🇰🇷"
+    )
     var selected by remember { mutableStateOf("Tiếng Việt") }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFFFF5F5))
-            .padding(24.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .background(ShipperColors.Background)
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Text(
-            "Ngôn ngữ",
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = mainColor,
-            modifier = Modifier.align(Alignment.CenterHorizontally)
-        )
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(4.dp)
+            shape = RoundedCornerShape(12.dp),
+            colors = CardDefaults.cardColors(containerColor = ShipperColors.Surface),
+            elevation = CardDefaults.cardElevation(2.dp)
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier.padding(8.dp)
             ) {
-                languages.forEach { lang ->
+                languages.forEachIndexed { index, (lang, flag) ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { selected = lang },
-                        verticalAlignment = Alignment.CenterVertically
+                            .clickable { selected = lang }
+                            .padding(horizontal = 12.dp, vertical = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        Text(flag, fontSize = 24.sp)
+                        Text(
+                            lang, 
+                            fontSize = 15.sp, 
+                            fontWeight = if (selected == lang) FontWeight.SemiBold else FontWeight.Normal, 
+                            color = if (selected == lang) ShipperColors.Primary else ShipperColors.TextPrimary,
+                            modifier = Modifier.weight(1f)
+                        )
                         RadioButton(
                             selected = selected == lang,
                             onClick = { selected = lang },
-                            colors = RadioButtonDefaults.colors(selectedColor = mainColor)
+                            colors = RadioButtonDefaults.colors(
+                                selectedColor = ShipperColors.Primary,
+                                unselectedColor = ShipperColors.TextTertiary
+                            )
                         )
-                        Text(lang, fontSize = 18.sp, fontWeight = if (selected == lang) FontWeight.Bold else FontWeight.Normal, color = if (selected == lang) mainColor else Color.Black)
+                    }
+                    if (index < languages.lastIndex) {
+                        HorizontalDivider(
+                            color = ShipperColors.Divider,
+                            modifier = Modifier.padding(horizontal = 12.dp)
+                        )
                     }
                 }
             }
         }
+
+        Spacer(modifier = Modifier.weight(1f))
+
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            OutlinedButton(
+                onClick = onCancel,
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = ShipperColors.TextSecondary
+                )
+            ) {
+                Text("Hủy")
+            }
             Button(
                 onClick = {
                     Toast.makeText(context, "Đã chọn: $selected", Toast.LENGTH_SHORT).show()
                     onSave()
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = mainColor)
-            ) { Text("Lưu", color = Color.White) }
-            OutlinedButton(onClick = onCancel, colors = ButtonDefaults.outlinedButtonColors(contentColor = mainColor)) { Text("Hủy") }
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape = RoundedCornerShape(10.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = ShipperColors.Primary)
+            ) {
+                Text("Lưu", fontWeight = FontWeight.SemiBold)
+            }
         }
     }
 }

@@ -15,6 +15,8 @@ export class ShopCustomerEntity {
   closeTime: string;
   shipFeePerOrder: number;
   minOrderAmount: number;
+  logoUrl?: string;
+  coverImageUrl?: string;
 }
 
 /**

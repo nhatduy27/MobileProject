@@ -7,22 +7,18 @@ import androidx.navigation.compose.composable
 import com.example.foodapp.pages.shipper.profile.*
 
 @Composable
-fun ShipperSettingsNavHost(navController: NavHostController) {
+fun ShipperSettingsNavHost(
+    navController: NavHostController,
+    onLogout: () -> Unit = {}
+) {
     NavHost(
         navController = navController,
         startDestination = "settings_main"
     ) {
         composable("settings_main") {
-            ProfileScreen(
-                onEditProfile = { navController.navigate("edit_profile") },
-                onChangePassword = { navController.navigate("change_password") },
-                onVehicleInfo = { navController.navigate("vehicle_info") },
-                onPaymentMethod = { navController.navigate("payment_method") },
-                onNotificationSettings = { navController.navigate("notification_settings") },
-                onLanguage = { navController.navigate("language") },
-                onPrivacy = { navController.navigate("privacy") },
-                onTerms = { navController.navigate("terms") },
-                onHelp = { navController.navigate("help_screen") }
+            ShipperSettingsScreen(
+                onNavigate = { route -> navController.navigate(route) },
+                onLogout = onLogout
             )
         }
         
@@ -63,3 +59,4 @@ fun ShipperSettingsNavHost(navController: NavHostController) {
         }
     }
 }
+

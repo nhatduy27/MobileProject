@@ -6,10 +6,12 @@ import { OrderStateMachineService } from './order-state-machine.service';
 import { CartService } from '../../cart/services';
 import { VouchersService } from '../../vouchers/vouchers.service';
 import { WalletsService } from '../../wallets/wallets.service';
+import { PaymentsService } from '../../payments/payments.service';
 import { ConfigService } from '../../../core/config/config.service';
 import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { NotificationsService } from '../../notifications/services/notifications.service';
 import { USERS_REPOSITORY } from '../../users/interfaces';
+import { BuyersStatsService } from '../../buyers/services/buyers-stats.service';
 import { OrderEntity, OrderStatus, PaymentStatus } from '../entities';
 
 describe('OrdersService - Owner Flow', () => {
@@ -123,6 +125,14 @@ describe('OrdersService - Owner Flow', () => {
           useValue: { findById: jest.fn() },
         },
         {
+          provide: BuyersStatsService,
+          useValue: {
+            incrementOrderCount: jest.fn().mockResolvedValue(undefined),
+            updateTotalSpent: jest.fn().mockResolvedValue(undefined),
+            updateBuyerStatsOnDelivery: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
           provide: VouchersService,
           useValue: {
             validateVoucher: jest.fn(),
@@ -145,6 +155,13 @@ describe('OrdersService - Owner Flow', () => {
           useValue: {
             sendOrderNotification: jest.fn(),
             send: jest.fn(),
+          },
+        },
+        {
+          provide: PaymentsService,
+          useValue: {
+            initiateRefund: jest.fn().mockResolvedValue(null),
+            createPayment: jest.fn(),
           },
         },
         {

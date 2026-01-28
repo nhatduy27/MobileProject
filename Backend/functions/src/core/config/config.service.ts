@@ -187,4 +187,32 @@ export class ConfigService {
   get sePayPollWindowMinutes(): number {
     return parseInt(this.get('SEPAY_POLL_WINDOW_MINUTES', '60'), 10);
   }
+
+  // ============================================
+  // Google Routes API (GPS Module)
+  // ============================================
+
+  /**
+   * Get Google Routes API key (server-side)
+   * Required for GPS route optimization
+   * @throws Error if not configured
+   */
+  get googleRoutesApiKey(): string {
+    const key = this.get('GOOGLE_ROUTES_API_KEY');
+    if (!key) {
+      throw new Error(
+        'Missing GOOGLE_ROUTES_API_KEY environment variable. ' +
+        'Please configure in Backend/.env for local development or ' +
+        'set as Cloud Functions secret for production deployment.'
+      );
+    }
+    return key;
+  }
+
+  /**
+   * Get Google Routes API key without throwing (for optional features)
+   */
+  get googleRoutesApiKeyOptional(): string | null {
+    return this.get('GOOGLE_ROUTES_API_KEY') || null;
+  }
 }

@@ -8,12 +8,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.data.model.shipper.ProfileAction
 import com.example.foodapp.pages.shipper.profile.components.ProfileMenuCard
 import com.example.foodapp.pages.shipper.profile.state.ProfileViewModel
+import com.example.foodapp.pages.shipper.theme.ShipperColors
 
 @Composable
 fun ProfileScreen(
@@ -33,7 +33,7 @@ fun ProfileScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(ShipperColors.Background)
     ) {
         Column(
             modifier = Modifier
@@ -44,7 +44,7 @@ fun ProfileScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             ProfileMenuCard(
-                title = "TÀI KHOẢN",
+                title = "Tài khoản",
                 items = uiState.accountItems,
                 onItemClick = {
                     when (it) {
@@ -58,7 +58,7 @@ fun ProfileScreen(
                 }
             )
             ProfileMenuCard(
-                title = "CÀI ĐẶT",
+                title = "Cài đặt",
                 items = uiState.settingsItems,
                 onItemClick = {
                     when (it) {
@@ -71,7 +71,7 @@ fun ProfileScreen(
                 }
             )
             ProfileMenuCard(
-                title = "KHÁC",
+                title = "Khác",
                 items = uiState.otherItems,
                 onItemClick = {
                     if (it == ProfileAction.HELP) onHelp()
@@ -80,4 +80,3 @@ fun ProfileScreen(
         }
     }
 }
-

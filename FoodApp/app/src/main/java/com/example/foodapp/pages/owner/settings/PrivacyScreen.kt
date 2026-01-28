@@ -21,17 +21,9 @@ import androidx.navigation.NavHostController
 fun PrivacyScreen(navController: NavHostController) {
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text("Chính sách bảo mật", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    titleContentColor = MaterialTheme.colorScheme.onBackground
-                )
+            SettingsTopBar(
+                title = "Chính sách bảo mật",
+                onBackClick = { navController.popBackStack() }
             )
         }
     ) { padding ->

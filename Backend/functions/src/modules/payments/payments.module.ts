@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { PaymentsController } from './controllers';
 import { PaymentsRepository } from './repositories';
@@ -6,7 +6,7 @@ import { PAYMENTS_REPOSITORY_TOKEN } from './interfaces';
 import { OrdersModule } from '../orders/orders.module';
 
 @Module({
-  imports: [OrdersModule],
+  imports: [forwardRef(() => OrdersModule)],
   controllers: [PaymentsController],
   providers: [
     PaymentsService,

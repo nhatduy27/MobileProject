@@ -23,6 +23,11 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { PaymentsModule } from './modules/payments/payments.module';
 import { WalletsModule } from './modules/wallets/wallets.module';
 import { ChatbotModule } from './modules/chatbot/chatbot.module';
+import { BuyersModule } from './modules/buyers/buyers.module';
+import { ChatModule } from './modules/chat/chat.module';
+import { RevenueModule } from './modules/revenue/revenue.module';
+import { GpsModule } from './modules/gps/gps.module';
+import { DeliveryPointsModule } from './modules/delivery-points/delivery-points.module';
 
 @Module({
   imports: [
@@ -54,6 +59,8 @@ import { ChatbotModule } from './modules/chatbot/chatbot.module';
     CartModule,
     OrdersModule,
     VouchersModule,
+    BuyersModule,
+    RevenueModule,
 
     // EPIC 05: Notifications (CORE)
     NotificationsModule,
@@ -64,6 +71,14 @@ import { ChatbotModule } from './modules/chatbot/chatbot.module';
 
     // AI Features
     ChatbotModule,
+
+    // Chat
+    ChatModule,
+    // Shared Master Data
+    DeliveryPointsModule,
+
+    // GPS / Shipper Route Optimization ✅
+    GpsModule,
   ],
 })
 export class AppModule {}

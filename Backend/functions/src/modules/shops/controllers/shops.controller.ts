@@ -52,6 +52,8 @@ export class ShopsController {
               closeTime: '21:00',
               shipFeePerOrder: 5000,
               minOrderAmount: 20000,
+              logoUrl: 'https://...',
+              coverImageUrl: 'https://...',
             },
           ],
           total: 15,

@@ -19,6 +19,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "seed:categories": "ts-node scripts/seed-categories.ts",
+    "seed:delivery-points": "ts-node src/scripts/seed-delivery-points.ts",
+    "seed:delivery-points:pinpoint": "ts-node src/scripts/seed-delivery-points-pinpoint.ts",
     "admin:create": "ts-node scripts/create-admin.ts",
     "admin:set-role": "ts-node scripts/set-admin-role.ts"
   },
@@ -30,7 +32,7 @@
     "@nestjs/common": "^11.1.11",
     "@nestjs/core": "^11.1.11",
     "@nestjs/platform-express": "^11.1.11",
-    "@nestjs/swagger": "^11.2.4",
+    "@nestjs/swagger": "^11.2.5",
     "@sendgrid/mail": "^8.1.6",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",

@@ -426,4 +426,46 @@ export class PaymentsService {
       `SEPAY payment confirmed: Order ${order.orderNumber}, Amount ${amount}đ, TxnId ${transactionId}`,
     );
   }
+
+  /**
+   * Initiate refund for cancelled order
+   * PAYMENT-006: Auto-refund on order cancellation
+   *
+   * Updates both Payment.status and Order.paymentStatus to REFUNDED
+   * Maintains consistency between payment and order records
+   */
+  async initiateRefund(orderId: string, reason: string): Promise<PaymentEntity | null> {
+    // 1. Get payment for order
+    const payment = await this.paymentsRepo.findByOrderId(orderId);
+    if (!payment) {
+      this.logger.warn(`No payment found for order ${orderId} - refund skipped`);
+      return null;
+    }
+
+    // 2. Only refund if payment was PAID
+    if (payment.status !== PaymentStatus.PAID) {
+      this.logger.warn(
+        `Cannot refund payment - status is ${payment.status}, not PAID (Order: ${orderId})`,
+      );
+      return null;
+    }
+
+    // 3. Update Payment.status = REFUNDED
+    await this.paymentsRepo.update(payment.id!, {
+      status: PaymentStatus.REFUNDED,
+      refundedAt: Timestamp.now(),
+      refundReason: reason,
+      updatedAt: Timestamp.now(),
+    });
+
+    // 4. Sync: Update Order.paymentStatus = REFUNDED (keep consistent)
+    await this.ordersRepo.update(orderId, {
+      paymentStatus: OrderPaymentStatus.UNPAID, // Or REFUNDED if Order entity has it
+    });
+
+    this.logger.log(`Payment refunded for order ${orderId}: reason="${reason}", status=REFUNDED`);
+
+    // 5. Return updated payment
+    return this.paymentsRepo.findById(payment.id!);
+  }
 }

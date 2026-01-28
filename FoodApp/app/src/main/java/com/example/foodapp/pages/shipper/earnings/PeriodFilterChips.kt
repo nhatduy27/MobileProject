@@ -9,11 +9,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodapp.data.model.shipper.EarningsPeriod
+import com.example.foodapp.pages.shipper.theme.ShipperColors
+
 @Composable
 fun PeriodFilterChips(
     selectedPeriod: EarningsPeriod,
@@ -47,13 +48,13 @@ fun PeriodChip(
         modifier = modifier
             .height(36.dp)
             .background(
-                color = if (isSelected) Color(0xFFFF6B35) else Color.White,
-                shape = RoundedCornerShape(18.dp)
+                color = if (isSelected) ShipperColors.Primary else ShipperColors.Surface,
+                shape = RoundedCornerShape(10.dp)
             )
             .border(
                 width = if (isSelected) 0.dp else 1.dp,
-                color = if (isSelected) Color.Transparent else Color(0xFFE0E0E0),
-                shape = RoundedCornerShape(18.dp)
+                color = if (isSelected) ShipperColors.Primary else ShipperColors.BorderLight,
+                shape = RoundedCornerShape(10.dp)
             )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
@@ -61,8 +62,8 @@ fun PeriodChip(
         Text(
             text = text,
             fontSize = 13.sp,
-            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-            color = if (isSelected) Color.White else Color(0xFF757575)
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+            color = if (isSelected) ShipperColors.Surface else ShipperColors.TextSecondary
         )
     }
 }

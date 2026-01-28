@@ -44,7 +44,14 @@ fun PersonalInfoScreen(
         uri?.let { viewModel.uploadAvatar(context, it) }
     }
 
-    Scaffold { padding ->
+    Scaffold(
+        topBar = {
+            SettingsTopBar(
+                title = "Thông tin cá nhân",
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+    ) { padding ->
         Box(
             modifier = Modifier
                 .fillMaxSize()

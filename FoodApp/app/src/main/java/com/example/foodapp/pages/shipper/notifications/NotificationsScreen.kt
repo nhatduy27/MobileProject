@@ -7,10 +7,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.pages.shipper.theme.ShipperColors
 
 @Composable
 fun NotificationsScreen() {
@@ -70,14 +70,14 @@ fun NotificationsScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(ShipperColors.Background)
     ) {
         if (unreadCount > 0) {
             Text(
                 text = "$unreadCount thông báo chưa đọc",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color(0xFFFF6B35),
+                color = ShipperColors.Primary,
                 modifier = Modifier.padding(16.dp).padding(bottom = 0.dp)
             )
         }

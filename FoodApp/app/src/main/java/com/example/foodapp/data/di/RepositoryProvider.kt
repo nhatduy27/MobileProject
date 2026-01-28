@@ -214,6 +214,16 @@ object RepositoryProvider {
         )
     }
     
+    // ==================== OWNER REVIEW REPOSITORY ====================
+    
+    fun getReviewRepository(): com.example.foodapp.data.repository.owner.base.OwnerReviewRepository {
+        return com.example.foodapp.data.repository.owner.reviews.RealReviewRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.owner.ReviewApiService::class.java
+            )
+        )
+    }
+    
     // ==================== USER PROFILE REPOSITORY ====================
     
     fun getUserProfileRepository(): com.example.foodapp.data.repository.user.base.UserProfileRepository {
@@ -243,4 +253,23 @@ object RepositoryProvider {
         throw NotImplementedError("Backend chưa setup API Service")
     }
     */
+    // ==================== SHIPPER ORDER REPOSITORY ====================
+
+    fun getShipperOrderRepository(): com.example.foodapp.data.repository.shipper.base.ShipperOrderRepository {
+        return com.example.foodapp.data.repository.shipper.orders.RealShipperOrderRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.shipper.ShipperApiService::class.java
+            )
+        )
+    }
+    
+    // ==================== SHIPPER APPLICATION REPOSITORY ====================
+    
+    fun getShipperApplicationRepository(): com.example.foodapp.data.repository.shipper.application.ShipperApplicationRepository {
+        return com.example.foodapp.data.repository.shipper.application.RealShipperApplicationRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.shipper.ShipperApplicationApiService::class.java
+            )
+        )
+    }
 }

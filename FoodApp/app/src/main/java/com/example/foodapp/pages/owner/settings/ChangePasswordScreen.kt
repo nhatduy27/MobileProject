@@ -42,6 +42,12 @@ fun ChangePasswordScreen(navController: NavHostController) {
     var isLoading by remember { mutableStateOf(false) }
 
     Scaffold(
+        topBar = {
+            SettingsTopBar(
+                title = "Đổi mật khẩu",
+                onBackClick = { navController.popBackStack() }
+            )
+        }
     ) { padding ->
         Column(
             modifier = Modifier

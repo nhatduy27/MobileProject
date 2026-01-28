@@ -4,48 +4,50 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.pages.shipper.theme.ShipperColors
 
 @Composable
 fun HelpScreen() {
     val categories = listOf(
         HelpCategory(
             "1",
-            "🚀",
+            "rocket",
             "Bắt đầu với FoodApp",
             "Hướng dẫn cho người mới",
             emptyList()
         ),
         HelpCategory(
             "2",
-            "📦",
+            "package",
             "Quản lý đơn hàng",
             "Nhận, giao và hoàn thành đơn",
             emptyList()
         ),
         HelpCategory(
             "3",
-            "💰",
+            "wallet",
             "Thu nhập & Thanh toán",
             "Cách tính phí và nhận tiền",
             emptyList()
         ),
         HelpCategory(
             "4",
-            "⚙️",
+            "settings",
             "Cài đặt tài khoản",
             "Quản lý thông tin cá nhân",
             emptyList()
         ),
         HelpCategory(
             "5",
-            "❓",
+            "help",
             "Khác",
             "Các câu hỏi khác",
             emptyList()
@@ -74,7 +76,7 @@ fun HelpScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF5F5F5))
+            .background(ShipperColors.Background)
     ) {
         Column(
             modifier = Modifier
@@ -89,8 +91,8 @@ fun HelpScreen() {
             Text(
                 text = "Danh mục trợ giúp",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A1A),
+                fontWeight = FontWeight.SemiBold,
+                color = ShipperColors.TextPrimary,
                 modifier = Modifier.padding(top = 8.dp)
             )
 
@@ -101,8 +103,8 @@ fun HelpScreen() {
             Text(
                 text = "Câu hỏi thường gặp",
                 fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A1A),
+                fontWeight = FontWeight.SemiBold,
+                color = ShipperColors.TextPrimary,
                 modifier = Modifier.padding(top = 8.dp)
             )
 
