@@ -142,25 +142,38 @@ object RepositoryProvider {
     // ==================== OWNER REVENUE REPOSITORY ====================
     
     fun getRevenueRepository(): OwnerRevenueRepository {
-        return if (USE_MOCK) {
-            MockRevenueRepository()
-        } else {
-            // TODO: Khi backend ready, uncomment dòng dưới
-            // RealRevenueRepository(getOwnerApiService())
-            MockRevenueRepository()
-        }
+        // Keep mock for legacy use - use getRealRevenueRepository for API
+        return MockRevenueRepository()
+    }
+    
+    /**
+     * Real Revenue Repository - kết nối API
+     */
+    fun getRealRevenueRepository(): com.example.foodapp.data.repository.owner.revenue.RealRevenueRepository {
+        return com.example.foodapp.data.repository.owner.revenue.RealRevenueRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.owner.RevenueApiService::class.java
+            )
+        )
     }
     
     // ==================== OWNER CUSTOMER REPOSITORY ====================
     
     fun getCustomerRepository(): OwnerCustomerRepository {
-        return if (USE_MOCK) {
-            MockCustomerRepository()
-        } else {
-            // TODO: Khi backend ready, uncomment dòng dưới
-            // RealCustomerRepository(getOwnerApiService())
-            MockCustomerRepository()
-        }
+        // Keep mock for legacy use - use getBuyerRepository for API
+        return MockCustomerRepository()
+    }
+    
+    /**
+     * Real Buyer Repository - kết nối API
+     * Tương đương với Customer nhưng dùng API thật
+     */
+    fun getBuyerRepository(): com.example.foodapp.data.repository.owner.buyer.RealBuyerRepository {
+        return com.example.foodapp.data.repository.owner.buyer.RealBuyerRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.owner.BuyerApiService::class.java
+            )
+        )
     }
     
     // ==================== OWNER SHIPPER REPOSITORY ====================

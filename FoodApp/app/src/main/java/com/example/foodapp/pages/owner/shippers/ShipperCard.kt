@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.foodapp.data.model.owner.shipper.*
+import com.example.foodapp.pages.owner.theme.OwnerColors
+import com.example.foodapp.pages.owner.theme.OwnerDimens
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -35,9 +37,9 @@ fun ShipperCard(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(2.dp),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface),
+        elevation = CardDefaults.cardElevation(OwnerDimens.CardElevation.dp),
+        shape = RoundedCornerShape(OwnerDimens.CardRadiusLarge.dp)
     ) {
         Column(
             modifier = Modifier
@@ -62,7 +64,7 @@ fun ShipperCard(
                             modifier = Modifier
                                 .size(56.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFFF5F5F5)),
+                                .background(OwnerColors.SurfaceVariant),
                             contentScale = ContentScale.Crop
                         )
                         // Status dot
@@ -86,12 +88,12 @@ fun ShipperCard(
                             text = shipper.name,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF1A1A1A)
+                            color = OwnerColors.TextPrimary
                         )
                         Text(
                             text = shipper.phone ?: "",
                             fontSize = 14.sp,
-                            color = Color(0xFF757575)
+                            color = OwnerColors.TextSecondary
                         )
                     }
                 }
@@ -101,13 +103,13 @@ fun ShipperCard(
                     onClick = { showRemoveDialog = true },
                     modifier = Modifier
                         .size(36.dp)
-                        .background(Color(0xFFFFEBEE), RoundedCornerShape(8.dp)),
+                        .background(OwnerColors.ErrorLight, RoundedCornerShape(8.dp)),
                     enabled = !isProcessing
                 ) {
                     Icon(
                         Icons.Default.PersonRemove,
                         contentDescription = "Remove",
-                        tint = Color(0xFFF44336),
+                        tint = OwnerColors.Error,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -147,7 +149,7 @@ fun ShipperCard(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
+                    .background(OwnerColors.SurfaceVariant, RoundedCornerShape(12.dp))
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
@@ -159,7 +161,7 @@ fun ShipperCard(
                     Icon(
                         Icons.Default.DirectionsBike,
                         contentDescription = null,
-                        tint = Color(0xFFFF6B35),
+                        tint = OwnerColors.Primary,
                         modifier = Modifier.size(20.dp)
                     )
                     Column {
@@ -167,12 +169,12 @@ fun ShipperCard(
                             getVehicleTypeName(shipper.shipperInfo?.vehicleType ?: VehicleType.MOTORBIKE),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
-                            color = Color(0xFF1A1A1A)
+                            color = OwnerColors.TextPrimary
                         )
                         Text(
                             shipper.shipperInfo?.vehicleNumber ?: "",
                             fontSize = 12.sp,
-                            color = Color(0xFF757575)
+                            color = OwnerColors.TextSecondary
                         )
                     }
                 }
@@ -182,7 +184,7 @@ fun ShipperCard(
                 if (currentOrders.isNotEmpty()) {
                     Box(
                         modifier = Modifier
-                            .background(Color(0xFFFF6B35), RoundedCornerShape(12.dp))
+                            .background(OwnerColors.Primary, RoundedCornerShape(12.dp))
                             .padding(horizontal = 10.dp, vertical = 4.dp)
                     ) {
                         Text(
@@ -204,13 +206,13 @@ fun ShipperCard(
                 Icon(
                     Icons.Default.CalendarToday,
                     contentDescription = null,
-                    tint = Color(0xFF757575),
+                    tint = OwnerColors.TextSecondary,
                     modifier = Modifier.size(14.dp)
                 )
                 Text(
                     "Tham gia: ${formatDate(shipper.shipperInfo?.joinedAt ?: "")}",
                     fontSize = 12.sp,
-                    color = Color(0xFF757575)
+                    color = OwnerColors.TextSecondary
                 )
             }
         }
@@ -224,7 +226,7 @@ fun ShipperCard(
                 Icon(
                     Icons.Default.Warning,
                     contentDescription = null,
-                    tint = Color(0xFFF44336),
+                    tint = OwnerColors.Error,
                     modifier = Modifier.size(48.dp)
                 )
             },
@@ -237,7 +239,7 @@ fun ShipperCard(
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             "⚠️ Shipper này đang có ${dialogCurrentOrders.size} đơn hàng chưa hoàn thành!",
-                            color = Color(0xFFF44336),
+                            color = OwnerColors.Error,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -250,7 +252,7 @@ fun ShipperCard(
                         onRemove()
                         showRemoveDialog = false
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336))
+                    colors = ButtonDefaults.buttonColors(containerColor = OwnerColors.Error)
                 ) {
                     Text("Xóa")
                 }
@@ -268,13 +270,13 @@ fun ShipperCard(
 private fun ShipperStatusBadge(status: ShipperStatus) {
     val (gradient, text) = when (status) {
         ShipperStatus.AVAILABLE -> Brush.horizontalGradient(
-            colors = listOf(Color(0xFF4CAF50), Color(0xFF66BB6A))
+            colors = listOf(OwnerColors.Success, Color(0xFF66BB6A))
         ) to "Sẵn sàng"
         ShipperStatus.BUSY -> Brush.horizontalGradient(
-            colors = listOf(Color(0xFFFF9800), Color(0xFFFFB74D))
+            colors = listOf(OwnerColors.Warning, Color(0xFFFFB74D))
         ) to "Đang giao hàng"
         ShipperStatus.OFFLINE -> Brush.horizontalGradient(
-            colors = listOf(Color(0xFF9E9E9E), Color(0xFFBDBDBD))
+            colors = listOf(OwnerColors.TextTertiary, OwnerColors.BorderLight)
         ) to "Offline"
     }
 
@@ -328,21 +330,21 @@ private fun StatBox(
                 value,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFF1A1A1A)
+                color = OwnerColors.TextPrimary
             )
             Text(
                 label,
                 fontSize = 11.sp,
-                color = Color(0xFF757575)
+                color = OwnerColors.TextSecondary
             )
         }
     }
 }
 
 private fun getStatusColor(status: ShipperStatus): Color = when (status) {
-    ShipperStatus.AVAILABLE -> Color(0xFF4CAF50)
-    ShipperStatus.BUSY -> Color(0xFFFF9800)
-    ShipperStatus.OFFLINE -> Color(0xFF9E9E9E)
+    ShipperStatus.AVAILABLE -> OwnerColors.Success
+    ShipperStatus.BUSY -> OwnerColors.Warning
+    ShipperStatus.OFFLINE -> OwnerColors.TextTertiary
 }
 
 private fun getVehicleTypeName(type: VehicleType): String = when (type) {

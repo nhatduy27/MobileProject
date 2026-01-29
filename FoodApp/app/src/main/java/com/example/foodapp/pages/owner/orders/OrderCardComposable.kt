@@ -19,14 +19,16 @@ import androidx.compose.ui.unit.sp
 import com.example.foodapp.data.model.owner.order.ShopOrder
 import com.example.foodapp.data.model.owner.order.ShopOrderStatus
 import com.example.foodapp.data.model.owner.order.PaymentStatus
+import com.example.foodapp.pages.owner.theme.OwnerColors
+import com.example.foodapp.pages.owner.theme.OwnerDimens
 
 @Composable
 fun OrderFilterChip(text: String, isSelected: Boolean, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (isSelected) Color(0xFFFF6B35) else Color.White,
-            contentColor = if (isSelected) Color.White else Color(0xFFFF6B35)
+            containerColor = if (isSelected) OwnerColors.Primary else OwnerColors.Surface,
+            contentColor = if (isSelected) OwnerColors.Surface else OwnerColors.Primary
         ),
         border = if (!isSelected) ButtonDefaults.outlinedButtonBorder else null,
         shape = RoundedCornerShape(20.dp),
@@ -74,29 +76,29 @@ fun OrderStatCard(title: String, value: String, color: Color, modifier: Modifier
 }
 
 /**
- * Get status color
+ * Get status color (synchronized with Shipper theme)
  */
 fun getStatusColor(status: ShopOrderStatus): Color {
     return when (status) {
-        ShopOrderStatus.PENDING -> Color(0xFFFFA500)    // Orange
-        ShopOrderStatus.CONFIRMED -> Color(0xFF2196F3)  // Blue
-        ShopOrderStatus.PREPARING -> Color(0xFF9C27B0)  // Purple
-        ShopOrderStatus.READY -> Color(0xFF4CAF50)      // Green
-        ShopOrderStatus.SHIPPING -> Color(0xFF00BCD4)   // Cyan
-        ShopOrderStatus.DELIVERED -> Color(0xFF607D8B)  // Grey
-        ShopOrderStatus.CANCELLED -> Color(0xFFF44336) // Red
+        ShopOrderStatus.PENDING -> OwnerColors.StatusPending
+        ShopOrderStatus.CONFIRMED -> OwnerColors.StatusConfirmed
+        ShopOrderStatus.PREPARING -> OwnerColors.StatusPreparing
+        ShopOrderStatus.READY -> OwnerColors.StatusReady
+        ShopOrderStatus.SHIPPING -> OwnerColors.StatusShipping
+        ShopOrderStatus.DELIVERED -> OwnerColors.StatusDelivered
+        ShopOrderStatus.CANCELLED -> OwnerColors.StatusCancelled
     }
 }
 
 /**
- * Get payment status color
+ * Get payment status color (synchronized with Shipper theme)
  */
 fun getPaymentStatusColor(status: PaymentStatus): Color {
     return when (status) {
-        PaymentStatus.UNPAID -> Color(0xFFF44336)      // Red
-        PaymentStatus.PROCESSING -> Color(0xFFFFA500)  // Orange
-        PaymentStatus.PAID -> Color(0xFF4CAF50)        // Green
-        PaymentStatus.REFUNDED -> Color(0xFF9E9E9E)    // Grey
+        PaymentStatus.UNPAID -> OwnerColors.PaymentUnpaid
+        PaymentStatus.PROCESSING -> OwnerColors.PaymentProcessing
+        PaymentStatus.PAID -> OwnerColors.PaymentPaid
+        PaymentStatus.REFUNDED -> OwnerColors.PaymentRefunded
     }
 }
 
@@ -110,12 +112,12 @@ fun OrderCard(
     
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = OwnerDimens.CardElevation.dp),
+        shape = RoundedCornerShape(OwnerDimens.CardRadius.dp),
         onClick = onClick
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(modifier = Modifier.fillMaxWidth().padding(OwnerDimens.CardPadding.dp)) {
             // Header: Order number + Status badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -126,7 +128,7 @@ fun OrderCard(
                     text = order.orderNumber,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1A1A1A)
+                    color = OwnerColors.TextPrimary
                 )
                 Surface(
                     color = statusColor.copy(alpha = 0.1f),
@@ -153,14 +155,14 @@ fun OrderCard(
                     Icon(
                         Icons.Default.Person,
                         contentDescription = null,
-                        tint = Color(0xFF757575),
+                        tint = OwnerColors.TextSecondary,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = customer.displayName ?: "Khách hàng",
                         fontSize = 14.sp,
-                        color = Color(0xFF333333),
+                        color = OwnerColors.TextPrimary,
                         fontWeight = FontWeight.Medium
                     )
                     customer.phone?.let { phone ->
@@ -168,14 +170,14 @@ fun OrderCard(
                         Icon(
                             Icons.Default.Phone,
                             contentDescription = null,
-                            tint = Color(0xFF757575),
+                            tint = OwnerColors.TextSecondary,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = phone,
                             fontSize = 13.sp,
-                            color = Color(0xFF666666)
+                            color = OwnerColors.TextSecondary
                         )
                     }
                 }
@@ -191,14 +193,14 @@ fun OrderCard(
                     Icon(
                         Icons.Default.LocationOn,
                         contentDescription = null,
-                        tint = Color(0xFF757575),
+                        tint = OwnerColors.TextSecondary,
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = address.getDisplayAddress(),
                         fontSize = 13.sp,
-                        color = Color(0xFF666666),
+                        color = OwnerColors.TextSecondary,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -211,14 +213,14 @@ fun OrderCard(
             Text(
                 text = order.getItemsDisplayText(),
                 fontSize = 13.sp,
-                color = Color(0xFF555555),
+                color = OwnerColors.TextSecondary,
                 maxLines = 3,
                 overflow = TextOverflow.Ellipsis,
                 lineHeight = 18.sp
             )
 
             Spacer(modifier = Modifier.height(12.dp))
-            HorizontalDivider(color = Color(0xFFEEEEEE))
+            HorizontalDivider(color = OwnerColors.BorderLight)
             Spacer(modifier = Modifier.height(12.dp))
 
             // Footer: Time, Payment status, Price
@@ -231,14 +233,14 @@ fun OrderCard(
                     Icon(
                         Icons.Default.Schedule,
                         contentDescription = null,
-                        tint = Color(0xFF999999),
+                        tint = OwnerColors.TextTertiary,
                         modifier = Modifier.size(14.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = order.getDisplayTime(),
                         fontSize = 12.sp,
-                        color = Color(0xFF999999)
+                        color = OwnerColors.TextTertiary
                     )
                     
                     Spacer(modifier = Modifier.width(12.dp))
@@ -262,7 +264,7 @@ fun OrderCard(
                     text = "%,d₫".format(order.total),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFF6B35)
+                    color = OwnerColors.Primary
                 )
             }
 
@@ -274,7 +276,7 @@ fun OrderCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50)
+                        containerColor = OwnerColors.Success
                     ),
                     contentPadding = PaddingValues(vertical = 8.dp)
                 ) {

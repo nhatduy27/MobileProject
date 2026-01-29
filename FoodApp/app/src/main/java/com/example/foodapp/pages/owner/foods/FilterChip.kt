@@ -20,6 +20,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.pages.owner.theme.OwnerColors
 
 @Composable
 fun FoodFilterTabs(
@@ -32,7 +33,7 @@ fun FoodFilterTabs(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White) // Nền trắng sạch
+            .background(OwnerColors.Surface) // Nền trắng sạch
             .horizontalScroll(scrollState) // Cho phép cuộn ngang
             .padding(vertical = 12.dp, horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp) // Khoảng cách giữa các chip
@@ -55,16 +56,16 @@ fun FilterChip(
 ) {
     // Animation màu sắc mượt mà (300ms)
     val backgroundColor by animateColorAsState(
-        targetValue = if (isSelected) Color(0xFFFF6B35) else Color.White,
+        targetValue = if (isSelected) OwnerColors.Primary else OwnerColors.Surface,
         animationSpec = tween(durationMillis = 300, easing = LinearEasing),
         label = "bgColor"
     )
     val contentColor by animateColorAsState(
-        targetValue = if (isSelected) Color.White else Color(0xFF616161),
+        targetValue = if (isSelected) OwnerColors.Surface else OwnerColors.TextSecondary,
         label = "textColor"
     )
     val borderColor by animateColorAsState(
-        targetValue = if (isSelected) Color(0xFFFF6B35) else Color(0xFFE0E0E0),
+        targetValue = if (isSelected) OwnerColors.Primary else OwnerColors.Divider,
         label = "borderColor"
     )
 

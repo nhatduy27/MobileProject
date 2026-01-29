@@ -45,14 +45,15 @@ import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util.*
 import com.example.foodapp.pages.owner.notifications.NotificationBell
+import com.example.foodapp.pages.owner.theme.OwnerColors
+import com.example.foodapp.pages.owner.theme.OwnerDimens
 
-// Colors
-private val OrangeAccent = Color(0xFFFF6B35)
-private val GreenActive = Color(0xFF4CAF50)
-private val RedInactive = Color(0xFFF44336)
-private val YellowWarning = Color(0xFFFFA500)
-private val BlueInfo = Color(0xFF2196F3)
-private val PurplePrimary = Color(0xFF9C27B0)
+// Colors - Now using OwnerColors
+private val GreenActive = OwnerColors.Success
+private val RedInactive = OwnerColors.Error
+private val YellowWarning = OwnerColors.Warning
+private val BlueInfo = OwnerColors.Info
+private val PurplePrimary = OwnerColors.Primary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,14 +100,14 @@ fun VouchersScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { vouchersViewModel.showCreateDialog() },
-                containerColor = OrangeAccent,
-                contentColor = Color.White
+                containerColor = OwnerColors.Primary,
+                contentColor = OwnerColors.Surface
             ) {
                 Icon(Icons.Default.Add, contentDescription = "Thêm voucher")
             }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Color(0xFFF5F5F5)
+        containerColor = OwnerColors.Background
     ) { paddingValues ->
         PullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
@@ -130,7 +131,7 @@ fun VouchersScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = OrangeAccent)
+                            CircularProgressIndicator(color = OwnerColors.Primary)
                         }
                     }
                     filteredVouchers.isEmpty() -> {
@@ -183,10 +184,10 @@ fun VouchersScreen(
                 ) {
                     Card(
                         shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color.White)
+                        colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface)
                     ) {
                         Box(modifier = Modifier.padding(24.dp)) {
-                            CircularProgressIndicator(color = OrangeAccent)
+                            CircularProgressIndicator(color = OwnerColors.Primary)
                         }
                     }
                 }
@@ -244,7 +245,7 @@ fun VouchersSearchHeader(
         modifier = Modifier
             .fillMaxWidth()
             .height(64.dp)
-            .background(Color.White)
+            .background(OwnerColors.Surface)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -260,14 +261,14 @@ fun VouchersSearchHeader(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color(0xFF1A1A1A))
+                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = OwnerColors.TextPrimary)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Quản lý Voucher",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1A1A)
+                        color = OwnerColors.TextPrimary
                     )
                 }
                 
@@ -277,10 +278,10 @@ fun VouchersSearchHeader(
                 IconButton(
                     onClick = { isSearchActive = true },
                     modifier = Modifier
-                        .background(Color(0xFFF5F5F5), CircleShape)
+                        .background(OwnerColors.SurfaceVariant, CircleShape)
                         .size(40.dp)
                 ) {
-                    Icon(Icons.Default.Search, contentDescription = "Search", tint = Color(0xFF1A1A1A))
+                    Icon(Icons.Default.Search, contentDescription = "Search", tint = OwnerColors.TextPrimary)
                 }
             }
         }
@@ -296,7 +297,7 @@ fun VouchersSearchHeader(
                         isSearchActive = false 
                         onQueryChange("")
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF1A1A1A))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = OwnerColors.TextPrimary)
                     }
                     TextField(
                         value = query,
@@ -305,14 +306,14 @@ fun VouchersSearchHeader(
                             .weight(1f)
                             .height(50.dp)
                             .focusRequester(focusRequester),
-                        placeholder = { Text("Tìm mã voucher, tên...", color = Color.Gray, fontSize = 14.sp) },
+                        placeholder = { Text("Tìm mã voucher, tên...", color = OwnerColors.TextTertiary, fontSize = 14.sp) },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFFF5F5F5),
                             unfocusedContainerColor = Color(0xFFF5F5F5),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
-                            cursorColor = OrangeAccent
+                            cursorColor = OwnerColors.Primary
                         ),
                         shape = CircleShape,
                         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Search),
@@ -320,7 +321,7 @@ fun VouchersSearchHeader(
                         trailingIcon = {
                             if (query.isNotEmpty()) {
                                 IconButton(onClick = { onQueryChange("") }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Clear", tint = Color.Gray)
+                                    Icon(Icons.Default.Close, contentDescription = "Clear", tint = OwnerColors.TextTertiary)
                                 }
                             }
                         }
@@ -365,8 +366,8 @@ fun VoucherFilterChip(
         onClick = onClick,
         label = { Text(text, fontSize = 13.sp) },
         colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = OrangeAccent,
-            selectedLabelColor = Color.White
+            selectedContainerColor = OwnerColors.Primary,
+            selectedLabelColor = OwnerColors.Surface
         ),
         shape = RoundedCornerShape(20.dp)
     )
@@ -411,7 +412,7 @@ fun VoucherStatCard(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface)
     ) {
         Column(
             modifier = Modifier
@@ -429,7 +430,7 @@ fun VoucherStatCard(
             Text(
                 text = title,
                 fontSize = 11.sp,
-                color = Color(0xFF666666),
+                color = OwnerColors.TextSecondary,
                 textAlign = TextAlign.Center
             )
         }
@@ -465,8 +466,8 @@ fun VoucherCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = OwnerDimens.CardElevation.dp)
     ) {
         Column(
             modifier = Modifier
@@ -482,12 +483,12 @@ fun VoucherCard(
                 // Code badge
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = OrangeAccent.copy(alpha = 0.1f)
+                    color = OwnerColors.Primary.copy(alpha = 0.1f)
                 ) {
                     Text(
                         text = voucher.code,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        color = OrangeAccent,
+                        color = OwnerColors.Primary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -516,7 +517,7 @@ fun VoucherCard(
                     text = voucher.name,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF1A1A1A),
+                    color = OwnerColors.TextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -527,7 +528,7 @@ fun VoucherCard(
                 Text(
                     text = voucher.description,
                     fontSize = 13.sp,
-                    color = Color(0xFF666666),
+                    color = OwnerColors.TextSecondary,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -575,13 +576,13 @@ fun VoucherCard(
                     icon = Icons.Default.Schedule,
                     label = "Hiệu lực",
                     value = formatDateRange(voucher.validFrom, voucher.validTo),
-                    color = Color(0xFF666666)
+                    color = OwnerColors.TextSecondary
                 )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Divider(color = Color(0xFFEEEEEE))
+            Divider(color = OwnerColors.Divider)
 
             Spacer(modifier = Modifier.height(12.dp))
 
@@ -658,12 +659,12 @@ fun VoucherInfoItem(
             Text(
                 text = label,
                 fontSize = 10.sp,
-                color = Color(0xFF999999)
+                color = OwnerColors.TextTertiary
             )
             Text(
                 text = value,
                 fontSize = 12.sp,
-                color = Color(0xFF1A1A1A),
+                color = OwnerColors.TextPrimary,
                 fontWeight = FontWeight.Medium
             )
         }
@@ -691,19 +692,19 @@ fun EmptyVouchersView(
             text = "Chưa có voucher nào",
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF666666)
+            color = OwnerColors.TextSecondary
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Tạo voucher để thu hút khách hàng",
             fontSize = 14.sp,
-            color = Color(0xFF999999),
+            color = OwnerColors.TextTertiary,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = onCreateClick,
-            colors = ButtonDefaults.buttonColors(containerColor = OrangeAccent),
+            colors = ButtonDefaults.buttonColors(containerColor = OwnerColors.Primary),
             shape = RoundedCornerShape(12.dp)
         ) {
             Icon(Icons.Default.Add, contentDescription = null)
