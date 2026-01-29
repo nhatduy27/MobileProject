@@ -7,6 +7,7 @@ import {
   MinLength,
   Matches,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateShopDto {
@@ -52,12 +53,14 @@ export class CreateShopDto {
   closeTime: string;
 
   @ApiProperty({ example: 5000, description: 'Phí ship (VNĐ), tối thiểu 3,000đ' })
-  @IsNumber()
+  @Transform(({ value }) => Number(value))
+  @IsNumber({}, { message: 'shipFeePerOrder phải là số' })
   @Min(3000, { message: 'Phí ship tối thiểu 3,000đ' })
   shipFeePerOrder: number;
 
   @ApiProperty({ example: 20000, description: 'Đơn hàng tối thiểu (VNĐ)' })
-  @IsNumber()
+  @Transform(({ value }) => Number(value))
+  @IsNumber({}, { message: 'minOrderAmount phải là số' })
   @Min(10000, { message: 'Đơn tối thiểu phải từ 10,000đ' })
   minOrderAmount: number;
 

@@ -33,11 +33,14 @@ export class FirestoreConversationsRepository implements IConversationsRepositor
     return this.findById(id);
   }
 
+
   async listByUser(
     userId: string,
     limit: number = 20,
     startAfter?: string,
   ): Promise<{ items: ConversationEntity[]; hasMore: boolean; nextCursor?: string }> {
+    console.log(`📨 [ConversationsRepo] listByUser called for userId: ${userId}`);
+    
     let query = this.collection
       .where('participants', 'array-contains', userId)
       .orderBy('lastMessageAt', 'desc')
@@ -50,14 +53,20 @@ export class FirestoreConversationsRepository implements IConversationsRepositor
       }
     }
 
-    const snapshot = await query.get();
-    const docs = snapshot.docs;
+    try {
+      const snapshot = await query.get();
+      const docs = snapshot.docs;
+      console.log(`📨 [ConversationsRepo] Found ${docs.length} documents for userId: ${userId}`);
 
-    const hasMore = docs.length > limit;
-    const items = docs.slice(0, limit).map((doc) => this.mapDocToEntity(doc));
-    const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].id : undefined;
+      const hasMore = docs.length > limit;
+      const items = docs.slice(0, limit).map((doc) => this.mapDocToEntity(doc));
+      const nextCursor = hasMore && items.length > 0 ? items[items.length - 1].id : undefined;
 
-    return { items, hasMore, nextCursor };
+      return { items, hasMore, nextCursor };
+    } catch (error) {
+      console.error(`📨 [ConversationsRepo] Error querying conversations for userId: ${userId}`, error);
+      throw error;
+    }
   }
 
   async create(data: CreateConversationData): Promise<ConversationEntity> {

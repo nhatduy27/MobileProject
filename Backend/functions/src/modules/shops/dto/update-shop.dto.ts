@@ -7,6 +7,7 @@ import {
   Matches,
   IsOptional,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export class UpdateShopDto {
@@ -53,13 +54,15 @@ export class UpdateShopDto {
 
   @ApiPropertyOptional({ example: 5000, description: 'Phí ship (VNĐ), tối thiểu 3,000đ' })
   @IsOptional()
-  @IsNumber()
+  @Transform(({ value }) => (value !== undefined && value !== '' ? Number(value) : undefined))
+  @IsNumber({}, { message: 'shipFeePerOrder phải là số' })
   @Min(3000, { message: 'Phí ship tối thiểu 3,000đ' })
   shipFeePerOrder?: number;
 
   @ApiPropertyOptional({ example: 20000, description: 'Đơn hàng tối thiểu (VNĐ)' })
   @IsOptional()
-  @IsNumber()
+  @Transform(({ value }) => (value !== undefined && value !== '' ? Number(value) : undefined))
+  @IsNumber({}, { message: 'minOrderAmount phải là số' })
   @Min(10000, { message: 'Đơn tối thiểu phải từ 10,000đ' })
   minOrderAmount?: number;
 

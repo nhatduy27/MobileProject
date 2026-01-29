@@ -52,9 +52,12 @@ class ChatRepository(
      */
     suspend fun listConversations(limit: Int? = null, cursor: String? = null): Result<PaginatedConversationsResponse> {
         return try {
-            Log.d(TAG, "🔄 Loading conversations...")
+            Log.d(TAG, "🔄 Loading conversations... limit=$limit, cursor=$cursor")
+            Log.d(TAG, "🔄 Calling API: GET chat/conversations")
             
             val response = apiService.listConversations(limit, cursor)
+            
+            Log.d(TAG, "🔄 API Response code: ${response.code()}")
             
             if (response.isSuccessful) {
                 val body = response.body()
@@ -62,6 +65,7 @@ class ChatRepository(
                     Log.d(TAG, "✅ Loaded ${body.items.size} conversations")
                     Result.success(body)
                 } else {
+                    Log.d(TAG, "⚠️ Response body is null, returning empty list")
                     Result.success(PaginatedConversationsResponse())
                 }
             } else {

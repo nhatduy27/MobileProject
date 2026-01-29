@@ -142,12 +142,17 @@ export class ChatService {
     query: ListConversationsQueryDto,
   ): Promise<{ items: ConversationWithParticipantInfo[]; hasMore: boolean; nextCursor?: string }> {
     const { limit = 20, startAfter } = query;
+    this.logger.log(`📨 Listing conversations for userId: ${userId}, limit: ${limit}, startAfter: ${startAfter}`);
+    
     const result = await this.conversationsRepo.listByUser(userId, limit, startAfter);
+    this.logger.log(`📨 Found ${result.items.length} raw conversations for user ${userId}`);
     
     // Enrich conversations with participant info
     const enrichedItems = await Promise.all(
       result.items.map(async (conv) => this.enrichConversationWithParticipantInfo(conv, userId))
     );
+    
+    this.logger.log(`📨 Returning ${enrichedItems.length} enriched conversations`);
     
     return {
       items: enrichedItems,

@@ -27,6 +27,7 @@ class OwnerConversationsViewModel : ViewModel() {
     val uiState: StateFlow<OwnerConversationsUiState> = _uiState.asStateFlow()
     
     init {
+        Log.d(TAG, "🚀 OwnerConversationsViewModel INIT - calling loadConversations()")
         loadConversations()
     }
     

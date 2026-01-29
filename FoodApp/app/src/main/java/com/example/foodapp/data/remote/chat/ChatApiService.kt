@@ -27,7 +27,7 @@ interface ChatApiService {
     @GET("chat/conversations")
     suspend fun listConversations(
         @Query("limit") limit: Int? = null,
-        @Query("cursor") cursor: String? = null
+        @Query("startAfter") cursor: String? = null
     ): Response<PaginatedConversationsResponse>
     
     /**
