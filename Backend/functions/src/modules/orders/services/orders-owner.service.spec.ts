@@ -12,6 +12,7 @@ import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { NotificationsService } from '../../notifications/services/notifications.service';
 import { USERS_REPOSITORY } from '../../users/interfaces';
 import { BuyersStatsService } from '../../buyers/services/buyers-stats.service';
+import { ShopsService } from '../../shops/services/shops.service';
 import { OrderEntity, OrderStatus, PaymentStatus } from '../entities';
 
 describe('OrdersService - Owner Flow', () => {
@@ -169,6 +170,13 @@ describe('OrdersService - Owner Flow', () => {
           useValue: {
             processOrderPayout: jest.fn().mockResolvedValue(undefined),
             updateBalance: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: ShopsService,
+          useValue: {
+            updateShopStats: jest.fn().mockResolvedValue(undefined),
+            getMyShop: jest.fn(),
           },
         },
       ],

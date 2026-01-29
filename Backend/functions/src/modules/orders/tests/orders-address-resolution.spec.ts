@@ -12,6 +12,7 @@ import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { WalletsService } from '../../wallets/wallets.service';
 import { PaymentsService } from '../../payments/payments.service';
 import { BuyersStatsService } from '../../buyers/services/buyers-stats.service';
+import { ShopsService } from '../../shops/services/shops.service';
 
 describe('OrdersService - Address Resolution', () => {
   let service: OrdersService;
@@ -94,6 +95,13 @@ describe('OrdersService - Address Resolution', () => {
             incrementOrderCount: jest.fn().mockResolvedValue(undefined),
             updateTotalSpent: jest.fn().mockResolvedValue(undefined),
             updateBuyerStatsOnDelivery: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: ShopsService,
+          useValue: {
+            updateShopStats: jest.fn().mockResolvedValue(undefined),
+            getMyShop: jest.fn(),
           },
         },
       ],

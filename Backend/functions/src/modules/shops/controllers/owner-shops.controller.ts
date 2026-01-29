@@ -258,10 +258,41 @@ export class OwnerShopsController {
   @Get('dashboard')
   @ApiOperation({
     summary: 'Get shop dashboard',
-    description: 'Get shop analytics including revenue, orders, top products, and recent orders',
+    description: `Get shop analytics including revenue, orders, top products, and recent orders.
+    
+    BEHAVIOR:
+    - When from/to parameters are provided (both required):
+      * "today" = orders delivered on the 'to' date
+      * "thisWeek" = orders delivered in the 7 days ending on 'to' date
+      * "thisMonth" = orders delivered from 1st of 'to' month to 'to' date
+      * All time buckets are clamped within [from, to] range
+    - When from/to are NOT provided:
+      * Time buckets calculated relative to server's current time
+    
+    TIMESTAMP RULES:
+    - Revenue/orderCount use deliveredAt (when order was delivered)
+    - Only DELIVERED orders count toward revenue/orderCount/topProducts
+    - ordersByStatus counts all orders (by createdAt)
+    - recentOrders sorted by createdAt desc (shows order activity)
+    - pendingOrders counts orders with status in [PENDING, CONFIRMED, PREPARING, READY, SHIPPING] created within "today" bucket
+    
+    DATE FORMAT: YYYY-MM-DD (e.g., 2026-01-01)
+    `,
   })
-  @ApiQuery({ name: 'from', required: false, type: String, example: '2026-01-01' })
-  @ApiQuery({ name: 'to', required: false, type: String, example: '2026-01-31' })
+  @ApiQuery({ 
+    name: 'from', 
+    required: false, 
+    type: String, 
+    example: '2026-01-01',
+    description: 'Start date (YYYY-MM-DD). Must be provided with "to" parameter.'
+  })
+  @ApiQuery({ 
+    name: 'to', 
+    required: false, 
+    type: String, 
+    example: '2026-01-31',
+    description: 'End date (YYYY-MM-DD). Must be provided with "from" parameter. Time buckets anchor to this date.'
+  })
   @ApiResponse({
     status: 200,
     description: 'Shop analytics',

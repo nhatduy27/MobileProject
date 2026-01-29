@@ -13,6 +13,7 @@ import { OrderEntity, OrderStatus, PaymentStatus } from '../entities';
 import { Timestamp } from 'firebase-admin/firestore';
 import { WalletsService } from '../../wallets/wallets.service';
 import { BuyersStatsService } from '../../buyers/services/buyers-stats.service';
+import { ShopsService } from '../../shops/services/shops.service';
 
 describe('OrdersService - Owner List DTO Mapping', () => {
   let service: OrdersService;
@@ -82,6 +83,13 @@ describe('OrdersService - Owner List DTO Mapping', () => {
             incrementOrderCount: jest.fn().mockResolvedValue(undefined),
             updateTotalSpent: jest.fn().mockResolvedValue(undefined),
             updateBuyerStatsOnDelivery: jest.fn().mockResolvedValue(undefined),
+          },
+        },
+        {
+          provide: ShopsService,
+          useValue: {
+            updateShopStats: jest.fn().mockResolvedValue(undefined),
+            getMyShop: jest.fn(),
           },
         },
       ],

@@ -17,6 +17,7 @@ import { FirebaseService } from '../../../core/firebase/firebase.service';
 import { USERS_REPOSITORY } from '../../users/interfaces';
 import { NotificationsService } from '../../notifications/services/notifications.service';
 import { BuyersStatsService } from '../../buyers/services/buyers-stats.service';
+import { ShopsService } from '../../shops/services/shops.service';
 import { OrderStatus, PaymentStatus, OrderEntity } from '../entities';
 import { Timestamp } from 'firebase-admin/firestore';
 
@@ -106,6 +107,13 @@ describe('OrdersService - Shipper Flow (Phase 2)', () => {
         {
           provide: 'SHOPS_REPOSITORY',
           useValue: {},
+        },
+        {
+          provide: ShopsService,
+          useValue: {
+            updateShopStats: jest.fn().mockResolvedValue(undefined),
+            getMyShop: jest.fn(),
+          },
         },
         {
           provide: 'IShippersRepository',
