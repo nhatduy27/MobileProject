@@ -1,6 +1,5 @@
 package com.example.foodapp.pages.client.components.payment
 
-
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -79,10 +78,10 @@ fun PaymentMethodSection(
                 )
 
                 PaymentMethodItem(
-                    title = "Ví điện tử MoMo",
-                    description = "Thanh toán an toàn qua MoMo",
-                    icon = Icons.Filled.AccountBalanceWallet,
-                    iconColor = Color(0xFFAE2070),
+                    title = "Thanh toán bằng tài khoản ngân hàng",
+                    description = "Chuyển khoản qua ngân hàng/Ví điện tử",
+                    icon = Icons.Filled.AccountBalance,
+                    iconColor = Color(0xFF2196F3), // Màu xanh ngân hàng
                     isSelected = selectedMethod == 1,
                     onClick = { onMethodSelected(1) }
                 )

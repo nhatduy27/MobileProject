@@ -334,9 +334,8 @@ fun FoodAppNavHost(
                 shopId = shopId,
                 onBackClick = { navController.navigateUp() },
                 onChatCreated = { shopId, conversationId, shopName ->
+                    navController.navigate(Screen.Chat.createRoute(conversationId))
 
-                    //val encodedShopName = URLEncoder.encode(shopName, "UTF-8")
-                    //navController.navigate("chat_detail/$conversationId?shopId=$shopId&shopName=$encodedShopName")
                 }
             )
         }
