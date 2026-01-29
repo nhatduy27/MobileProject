@@ -8,6 +8,7 @@ data class SettingItem(
     val icon: ImageVector,
     val hasSwitch: Boolean = false,
     val isEnabled: Boolean = false,
+    val isDisabled: Boolean = false, // Đánh dấu tính năng chưa phát triển (sẽ làm mờ UI)
     val onClick: (() -> Unit)? = null
 )
 
