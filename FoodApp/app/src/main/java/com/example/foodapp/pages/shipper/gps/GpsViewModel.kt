@@ -59,6 +59,16 @@ class GpsViewModel : ViewModel() {
     }
     
     /**
+     * Refresh all data - call when entering GPS screen
+     */
+    fun refreshData() {
+        Log.d(TAG, "Refreshing GPS data...")
+        // Clear old trip first to ensure fresh state
+        _uiState.update { it.copy(currentTrip = null) }
+        loadInitialData()
+    }
+    
+    /**
      * Load available READY orders that can be added to a trip
      */
     fun loadAvailableOrders() {
@@ -136,7 +146,8 @@ class GpsViewModel : ViewModel() {
     }
     
     /**
-     * Load active trip (PENDING or STARTED)
+     * Load active trip (PENDING or STARTED only)
+     * Clears currentTrip if no active trip found
      */
     fun loadActiveTrip() {
         viewModelScope.launch {
@@ -144,19 +155,38 @@ class GpsViewModel : ViewModel() {
             gpsRepository.getMyTrips(status = TripStatus.STARTED, page = 1, limit = 1)
                 .onSuccess { data ->
                     if (data.items.isNotEmpty()) {
-                        _uiState.update { it.copy(currentTrip = data.items.first()) }
-                        Log.d(TAG, "Found active STARTED trip")
-                        return@launch
+                        val trip = data.items.first()
+                        // Only set if trip is truly active
+                        if (trip.status == TripStatus.STARTED) {
+                            _uiState.update { it.copy(currentTrip = trip) }
+                            Log.d(TAG, "Found active STARTED trip: ${trip.id}")
+                            return@launch
+                        }
                     }
                     
                     // Then check for PENDING trips
                     gpsRepository.getMyTrips(status = TripStatus.PENDING, page = 1, limit = 1)
                         .onSuccess { pendingData ->
                             if (pendingData.items.isNotEmpty()) {
-                                _uiState.update { it.copy(currentTrip = pendingData.items.first()) }
-                                Log.d(TAG, "Found active PENDING trip")
+                                val trip = pendingData.items.first()
+                                if (trip.status == TripStatus.PENDING) {
+                                    _uiState.update { it.copy(currentTrip = trip) }
+                                    Log.d(TAG, "Found active PENDING trip: ${trip.id}")
+                                }
+                            } else {
+                                // No active trip found - clear currentTrip
+                                Log.d(TAG, "No active trip found, clearing currentTrip")
+                                _uiState.update { it.copy(currentTrip = null) }
                             }
                         }
+                        .onFailure {
+                            // On error, still clear to avoid stale data
+                            _uiState.update { it.copy(currentTrip = null) }
+                        }
+                }
+                .onFailure {
+                    // On error, clear to avoid stale data
+                    _uiState.update { it.copy(currentTrip = null) }
                 }
         }
     }
@@ -198,6 +228,7 @@ class GpsViewModel : ViewModel() {
     
     /**
      * Create optimized trip from selected orders
+     * First accepts all selected orders, then creates the trip
      */
     fun createTrip(origin: TripLocation = DEFAULT_ORIGIN) {
         val selectedIds = _uiState.value.selectedOrderIds.toList()
@@ -215,28 +246,75 @@ class GpsViewModel : ViewModel() {
         viewModelScope.launch {
             _uiState.update { it.copy(isCreatingTrip = true, errorMessage = null) }
             
+            // Step 1: Accept all selected orders first
+            Log.d(TAG, "Accepting ${selectedIds.size} orders before creating trip...")
+            val acceptedOrderIds = mutableListOf<String>()
+            val failedOrders = mutableListOf<Pair<String, String>>() // orderId to error message
+            
+            for (orderId in selectedIds) {
+                orderRepository.acceptOrder(orderId)
+                    .onSuccess { order ->
+                        Log.d(TAG, "Order accepted: ${order.id}")
+                        acceptedOrderIds.add(order.id)
+                    }
+                    .onFailure { e ->
+                        Log.e(TAG, "Failed to accept order $orderId: ${e.message}")
+                        failedOrders.add(orderId to (e.message ?: "Unknown error"))
+                    }
+            }
+            
+            // Check if any orders were accepted
+            if (acceptedOrderIds.isEmpty()) {
+                val errorMsg = if (failedOrders.isNotEmpty()) {
+                    "Không thể nhận đơn: ${failedOrders.first().second}"
+                } else {
+                    "Không thể nhận các đơn hàng đã chọn"
+                }
+                _uiState.update { 
+                    it.copy(isCreatingTrip = false, errorMessage = errorMsg)
+                }
+                return@launch
+            }
+            
+            // Log partial success if some failed
+            if (failedOrders.isNotEmpty()) {
+                Log.w(TAG, "Some orders failed to accept: ${failedOrders.map { it.first }}")
+            }
+            
+            // Step 2: Create trip with successfully accepted orders
+            Log.d(TAG, "Creating trip with ${acceptedOrderIds.size} accepted orders...")
             gpsRepository.createOptimizedTrip(
-                orderIds = selectedIds,
+                orderIds = acceptedOrderIds,
                 origin = origin
             ).onSuccess { trip ->
                 Log.d(TAG, "Trip created: ${trip.id}")
+                val successMsg = if (failedOrders.isNotEmpty()) {
+                    "Đã tạo lộ trình với ${trip.totalBuildings} điểm (${failedOrders.size} đơn không nhận được)"
+                } else {
+                    "Đã nhận ${acceptedOrderIds.size} đơn và tạo lộ trình với ${trip.totalBuildings} điểm dừng"
+                }
                 _uiState.update { 
                     it.copy(
                         currentTrip = trip,
                         isCreatingTrip = false,
                         selectedOrderIds = emptySet(),
-                        successMessage = "Đã tạo lộ trình với ${trip.totalBuildings} điểm dừng",
+                        successMessage = successMsg,
                         navigateToTripDetail = trip.id
                     )
                 }
+                // Reload available orders to reflect accepted ones
+                loadAvailableOrders()
             }.onFailure { e ->
                 Log.e(TAG, "Failed to create trip", e)
                 _uiState.update { 
                     it.copy(
                         isCreatingTrip = false,
-                        errorMessage = e.message
+                        errorMessage = "Đã nhận đơn nhưng tạo lộ trình thất bại: ${e.message}"
                     )
                 }
+                // Reload to show current state
+                loadAvailableOrders()
+                loadShippingOrders()
             }
         }
     }
@@ -300,14 +378,16 @@ class GpsViewModel : ViewModel() {
                     Log.d(TAG, "Trip finished: ${updatedTrip.id}, orders delivered: $ordersDelivered")
                     _uiState.update { 
                         it.copy(
-                            currentTrip = updatedTrip,
+                            // Clear currentTrip after finishing to avoid showing completed trip
+                            currentTrip = null,
                             isFinishingTrip = false,
                             ordersDeliveredCount = ordersDelivered,
                             successMessage = "Hoàn thành! Đã giao $ordersDelivered đơn hàng"
                         )
                     }
-                    // Reload orders
+                    // Reload orders and shipping orders
                     loadAvailableOrders()
+                    loadShippingOrders()
                 }
                 .onFailure { e ->
                     Log.e(TAG, "Failed to finish trip", e)

@@ -41,6 +41,11 @@ fun GpsScreen(
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableIntStateOf(0) }
     
+    // Refresh data when screen is displayed
+    LaunchedEffect(Unit) {
+        viewModel.refreshData()
+    }
+    
     // Handle success messages
     LaunchedEffect(uiState.successMessage) {
         uiState.successMessage?.let { message ->

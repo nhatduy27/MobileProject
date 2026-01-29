@@ -2,6 +2,9 @@ package com.example.foodapp.data.remote.shipper
 
 import com.example.foodapp.data.model.shipper.order.WrappedPaginatedOrdersResponse
 import com.example.foodapp.data.model.shipper.order.WrappedShipperOrderResponse
+import com.example.foodapp.data.model.shipper.removal.CreateRemovalRequestDto
+import com.example.foodapp.data.model.shipper.removal.WrappedRemovalRequestListResponse
+import com.example.foodapp.data.model.shipper.removal.WrappedRemovalRequestResponse
 import com.example.foodapp.data.remote.shipper.response.GoOnlineResponse
 import com.example.foodapp.data.remote.shipper.response.GoOfflineResponse
 import retrofit2.Response
@@ -47,5 +50,19 @@ interface ShipperApiService {
     // Shipper goes offline - unsubscribe from topic
     @DELETE("shippers/notifications/online")
     suspend fun goOffline(): Response<GoOfflineResponse>
+    
+    // ==================== REMOVAL REQUESTS ====================
+    
+    // Create a removal request to leave a shop
+    @POST("shippers/removal-requests")
+    suspend fun createRemovalRequest(
+        @Body dto: CreateRemovalRequestDto
+    ): Response<WrappedRemovalRequestResponse>
+    
+    // List shipper's removal requests
+    @GET("shippers/removal-requests")
+    suspend fun getMyRemovalRequests(
+        @Query("status") status: String? = null
+    ): Response<WrappedRemovalRequestListResponse>
 }
 
