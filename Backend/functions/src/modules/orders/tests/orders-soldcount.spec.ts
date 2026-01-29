@@ -138,7 +138,7 @@ describe('OrdersService - Product soldCount Updates', () => {
           useValue: mockShippersRepository,
         },
         {
-          provide: 'ADDRESSES_REPOSITORY',
+          provide: 'IAddressesRepository',
           useValue: {},
         },
         {

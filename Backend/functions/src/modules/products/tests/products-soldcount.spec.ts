@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ProductsService } from '../services/products.service';
 import { IProductsRepository } from '../interfaces';
+import { ShopsService } from '../../shops/services/shops.service';
+import { StorageService } from '../../../shared/services/storage.service';
+import { CategoriesService } from '../../categories/categories.service';
 
 describe('ProductsService - soldCount Operations', () => {
   let service: ProductsService;
@@ -20,15 +23,15 @@ describe('ProductsService - soldCount Operations', () => {
           useValue: mockRepository,
         },
         {
-          provide: 'ShopsService',
+          provide: ShopsService,
           useValue: {},
         },
         {
-          provide: 'StorageService',
+          provide: StorageService,
           useValue: {},
         },
         {
-          provide: 'CategoriesService',
+          provide: CategoriesService,
           useValue: {},
         },
       ],

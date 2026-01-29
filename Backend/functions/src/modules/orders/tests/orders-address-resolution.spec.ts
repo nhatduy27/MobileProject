@@ -13,6 +13,7 @@ import { WalletsService } from '../../wallets/wallets.service';
 import { PaymentsService } from '../../payments/payments.service';
 import { BuyersStatsService } from '../../buyers/services/buyers-stats.service';
 import { ShopsService } from '../../shops/services/shops.service';
+import { ProductsService } from '../../products/services';
 
 describe('OrdersService - Address Resolution', () => {
   let service: OrdersService;
