@@ -1,675 +1,547 @@
-# Shops Module Guide - KTX Delivery Backend
+# Shops Module Guide - Backend (Extended)
 
-> **Module:** Shop Management  
-> **Base Path:** `/shops`  
-> **Status:** ✅ IMPLEMENTED
+> Module: Shop Management (Owner + Customer)
+> Base Paths:
+> - Owner: `/owner/shop`
+> - Public: `/shops`
+> Status: Implemented
 
 ---
 
 ## 1. Overview
 
-Module Shops quản lý toàn bộ thông tin, đăng ký, cập nhật, và vận hành shop trong hệ thống:
+Module Shops quan ly thong tin shop, van hanh cua hang, va cho phep khach duyet danh sach shop.
+Tai lieu nay mo ta day du luong nghiep vu, validation, error codes, va cach test de phu hop voi code backend hien tai.
 
-| Feature         | Endpoints | Description                       |
-|-----------------|-----------|-----------------------------------|
-| Register        | 1         | Đăng ký shop mới                  |
-| Get/List        | 2         | Lấy thông tin, danh sách shop     |
-| Update          | 1         | Cập nhật thông tin shop           |
-| Owner Approval  | 1         | Chủ shop duyệt shipper            |
-| Revenue         | 1         | Xem doanh thu shop                |
-| Products        | N/A       | Quản lý sản phẩm (module riêng)   |
+### 1.1 Feature Matrix
 
-**Total: 5+ endpoints**
+| Feature | Endpoint | Description |
+|---|---|---|
+| Owner create shop | `POST /owner/shop` | Tao shop moi (1 owner = 1 shop) |
+| Owner get shop | `GET /owner/shop` | Lay thong tin shop cua owner |
+| Owner update shop | `PUT /owner/shop` | Cap nhat thong tin shop + anh |
+| Owner toggle open/close | `PUT /owner/shop/status` | Mo/dong shop |
+| Owner dashboard | `GET /owner/shop/dashboard` | Doanh thu + thong ke |
+| Public list shops | `GET /shops` | Danh sach shop (pagination/search) |
+| Public shop detail | `GET /shops/{id}` | Chi tiet shop |
 
----
+### 1.2 Scope / Not In Scope
 
-## 1.1 Data Models
+- San pham, danh gia, va danh sach shipper thuoc module khac (Products, Reviews, Shippers).
+- Shops module chi tra ve thong tin shop va thong ke (dashboard) cho owner.
 
-### Shop Entity
-```json
-{
-  "id": "shop_abc123",
-  "name": "Hiệp Thập Cẩm",
-  "ownerId": "owner_123",
-  "address": "Tòa B5, KTX Khu B",
-  "phone": "0901234567",
-  "status": "ACTIVE", // ACTIVE | INACTIVE | DELETED
-  "avatarUrl": "...",
-  "rating": 4.8,
-  "totalRatings": 120,
-  "createdAt": "2026-01-29T10:00:00Z",
-  "updatedAt": "2026-01-29T12:00:00Z"
-}
-```
-
-### Owner Entity (liên kết shop)
-```json
-{
-  "id": "owner_123",
-  "displayName": "Nguyễn Văn Chủ",
-  "email": "owner1@test.com",
-  "role": "OWNER",
-  "shopId": "shop_abc123"
-}
-```
-
-### ShopStatus Enum
-| Status   | Ý nghĩa                |
-|----------|------------------------|
-| ACTIVE   | Shop hoạt động         |
-| INACTIVE | Shop tạm ngưng         |
-
-  ## 2. API Endpoints Reference
-
-  ### 2.1. Register Shop (Owner)
-  ```http
-  POST /api/shops
-  Authorization: Bearer <ID_TOKEN>
-  Content-Type: application/json
-
-  {
-    "name": "Hiệp Thập Cẩm",
-    "address": "Tòa B5, KTX Khu B",
-    "phone": "0901234567"
-  }
-  ```
-  **Response:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      "id": "shop_abc123",
-      "name": "Hiệp Thập Cẩm",
-      "ownerId": "owner_123"
-    }
-  }
-  ```
-  **Validation:**
-  - Owner chưa có shop
-  - Tên shop không trùng
-  - Địa chỉ, phone hợp lệ
-
-  ---
-
-  ### 2.2. Get Shop List (Public)
-  ```http
-  GET /api/shops?page=1&limit=20&search=hiệp
-  ```
-  **Response:**
-  ```json
-  {
-    "success": true,
-    "data": [
-      {
-        "id": "shop_abc123",
-        "name": "Hiệp Thập Cẩm",
-        "address": "Tòa B5, KTX Khu B",
-        "rating": 4.8
-      }
-    ],
-    "pagination": { "page": 1, "limit": 20, "total": 5 }
-  }
-  ```
-
-  ---
-
-  ### 2.3. Get Shop Detail (Public)
-  ```http
-  GET /api/shops/{id}
-  ```
-  **Response:**
-  ```json
-  {
-    "success": true,
-    "data": {
-      "id": "shop_abc123",
-      "name": "Hiệp Thập Cẩm",
-      "address": "Tòa B5, KTX Khu B",
-      "products": [...],
-      "reviews": [...]
-    }
-  }
-  ```
-
-  ---
-
-  ### 2.4. Update Shop (Owner)
-  ```http
-  PUT /api/shops/{id}
-  Authorization: Bearer <ID_TOKEN>
-  Content-Type: application/json
-  {
-    "name": "Hiệp Thập Cẩm 2",
-    "address": "Tòa B6, KTX Khu B",
-    "phone": "0901234568"
-  }
-  ```
-  **Validation:**
-  - Chỉ owner shop được update
-  - Không update khi status = DELETED
-
-  ---
-
-  ### 2.5. Approve Shipper (Owner)
-  ```http
-  PATCH /api/shipper-applications/{id}/approve
-  Authorization: Bearer <ID_TOKEN>
-  ```
-  **Response:**
-  ```json
-  {
-    "success": true,
-    "data": { "shipperId": "shipper_123", "shopId": "shop_abc123" }
-  }
-  ```
-
-  ---
-
-  ### 2.6. Delete Shop (Owner)
-  ```http
-  DELETE /api/shops/{id}
-  Authorization: Bearer <ID_TOKEN>
-  ```
-  **Validation:**
-  - Không còn đơn hàng đang xử lý
-  - Chỉ owner được xóa
-
-  ---
-
-  ### 2.7. Get Shop Revenue (Owner)
-  ```http
-  GET /api/shops/{id}/revenue?period=month
-  Authorization: Bearer <ID_TOKEN>
-  ```
-  **Response:**
-  ```json
-  {
-    "today": 550000,
-    "month": 12000000,
-    "year": 25000000,
-    "all": 25000000,
-    "dailyBreakdown": [ ... ]
-  }
-  ```
-
-  ---
-
-### Liên kết Product/Order/Review
-- Shop có nhiều Product (products[])
-- Shop có nhiều Order (orders[])
-- Shop có nhiều Review (reviews[])
-
----
-
-## 1.2 Backend Flow
-
-### Tạo shop mới
-1. Owner đăng nhập, gọi POST /shops
-2. Backend kiểm tra owner đã có shop chưa
-3. Validate tên, địa chỉ, phone, trùng tên
-4. Tạo shop, gán shopId cho owner
-5. Trả về thông tin shop
-
-### Cập nhật shop
-1. Owner gọi PUT /shops/{id}
-2. Backend kiểm tra quyền owner, validate input
-3. Cập nhật thông tin shop
-
-### Xoá shop (nếu có)
-1. Kiểm tra không còn đơn hàng đang xử lý
-2. Đánh dấu status = DELETED
-
-
-  ---
-
-### Chủ shop duyệt shipper
-
-  ### 4.1. Shop Registration Flow
-  1. Owner đăng nhập → vào màn hình "Tạo Shop"
-  2. Nhập tên, địa chỉ, SĐT → Submit
-  3. Backend validate, tạo shop, trả về thông tin
-  4. Chuyển sang màn hình quản lý shop
-
-  ### 4.2. Shop Management Flow
-  1. Owner vào "Quản lý Shop"
-  2. Xem danh sách sản phẩm, đơn hàng, doanh thu
-  3. Cập nhật thông tin shop, duyệt shipper
-  4. Xem đánh giá, phản hồi khách hàng
-
-  ### 4.3. UI Mockup: Shop Home
-  ```
-  ┌───────────────────────────────┐
-  │  [Tạo Shop]                   │
-  │  Nhập tên, địa chỉ, SĐT       │
-  │  [Submit]                     │
-  │  → [Shop Home]                │
-  │  [Cập nhật Shop]              │
-  │  [Duyệt Shipper]              │
-  │  [Xem doanh thu]              │
-  │  [Xem đánh giá]               │
-  └───────────────────────────────┘
-  ```
-
-  ### 4.4. UI Mockup: Shop List
-  ```
-  ┌───────────────────────────────┐
-  │  Danh sách Shop               │
-  │  ───────────────────────────  │
-  │  Hiệp Thập Cẩm                │
-  │  Tòa B5, KTX Khu B            │
-  │  ⭐ 4.8 (120 đánh giá)         │
-  │  [Xem chi tiết]               │
-  └───────────────────────────────┘
-  ```
-
-  ---
-
-1. Owner gọi PATCH /shipper-applications/{id}/approve
-
-  | Code        | Status | Message                        | Mô tả                        |
-  |-------------|--------|--------------------------------|------------------------------|
-  | SHOP_001    | 409    | Shop name already exists       | Trùng tên shop               |
-  | SHOP_002    | 403    | Not owner of this shop         | Không phải chủ shop          |
-  | SHOP_003    | 404    | Shop not found                 | Shop không tồn tại           |
-  | SHOP_004    | 409    | Shop has active orders         | Không thể xoá shop           |
-  | SHOP_005    | 400    | Invalid phone/address/name     | Validate input               |
-
-  **Negative Test Checklist:**
-  - [ ] Tạo shop trùng tên
-  - [ ] Cập nhật shop không phải owner
-  - [ ] Xoá shop khi còn đơn hàng
-  - [ ] Gọi API với status = DELETED
-  - [ ] Gọi API khi shop INACTIVE
-
-  ---
-
-2. Backend kiểm tra quyền owner, trạng thái đơn
-
-  - [ ] Đăng ký shop mới (role OWNER)
-  - [ ] Lấy danh sách shop
-  - [ ] Lấy thông tin shop cụ thể
-  - [ ] Cập nhật thông tin shop
-  - [ ] Chủ shop duyệt shipper
-  - [ ] Test cập nhật shop không phải owner (bắt lỗi 403)
-  - [ ] Test tạo shop trùng tên (bắt lỗi 409)
-  - [ ] Test xóa shop khi còn đơn hàng (bắt lỗi 409)
-
-  ### cURL Example
-  ```bash
-  # Lấy danh sách shop
-  curl -X GET http://localhost:3000/api/shops
-
-  # Đăng ký shop
-  curl -X POST http://localhost:3000/api/shops \
-    -H "Authorization: Bearer <ID_TOKEN>" \
-    -H "Content-Type: application/json" \
-    -d '{"name":"Hiệp Thập Cẩm","address":"Tòa B5, KTX Khu B","phone":"0901234567"}'
-
-  # Cập nhật shop
-  curl -X PUT http://localhost:3000/api/shops/shop_abc123 \
-    -H "Authorization: Bearer <ID_TOKEN>" \
-    -H "Content-Type: application/json" \
-    -d '{"name":"Hiệp Thập Cẩm 2","address":"Tòa B6, KTX Khu B","phone":"0901234568"}'
-  ```
-
-  ---
-
-3. Gán shipper vào shop
-
-  - Chỉ OWNER mới được tạo/cập nhật shop
-  - Một owner chỉ có 1 shop
-  - Validate phone, address, name khi tạo/cập nhật
-  - Không cho phép xoá shop nếu còn đơn hàng đang xử lý
-  - Không cho phép cập nhật shop khi status = DELETED
-  - Khi tích hợp frontend:
-    - Luôn kiểm tra trạng thái shop, quyền owner
-    - Hiển thị rõ các trạng thái: ACTIVE, INACTIVE, DELETED
-    - Khi cập nhật shop, validate input phía client trước khi gửi API
-    - Khi hiển thị rating, lấy từ trường shop.rating, shop.totalRatings
-
-  ---
-
-
-
-  **Q: Một owner có thể tạo nhiều shop không?**
-  A: Không. Mỗi owner chỉ có 1 shop.
-
-  **Q: Shop bị xoá có khôi phục được không?**
-  A: Không. Shop DELETED sẽ bị ẩn hoàn toàn.
-
-  **Q: Làm sao lấy doanh thu shop?**
-  A: Gọi GET /api/shops/{id}/revenue với Bearer token owner.
-
-  **Q: Shop có thể tạm ngưng hoạt động không?**
-  A: Có. Đổi status = INACTIVE, khách không đặt được hàng.
-
-  **Q: Làm sao xem đánh giá shop?**
-  A: Gọi GET /api/reviews/shop/{shopId} (public).
-
-  **Q: Shop có thể đổi owner không?**
-  A: Hiện tại không hỗ trợ chuyển owner.
-
-  **Q: Khi nào shop bị xoá vĩnh viễn?**
-  A: Khi owner xoá và không còn đơn hàng active.
-
-  ---
-
----
-
-  - [PRODUCT_REVIEWS_AND_SHIPPER_REMOVAL_GUIDE.md](PRODUCT_REVIEWS_AND_SHIPPER_REMOVAL_GUIDE.md) — Đánh giá shop, quản lý shipper rời shop
-  - [USER_GUIDE.md](USER_GUIDE.md) — Quản lý chủ shop
-  - [ADMIN_GUIDE.md](ADMIN_GUIDE.md) — Quản trị viên duyệt shop
-  - [AUTH_GUIDE.md](AUTH_GUIDE.md) — Đăng nhập, xác thực
-  - [SHIPPER_REVENUE_API_GUIDE.md](SHIPPER_REVENUE_API_GUIDE.md) — Doanh thu shipper
-
-  ---
-
-
-  Gặp vấn đề? Kiểm tra:
-  1. Backend logs: Terminal đang chạy `npm start`
-  2. Firebase Console: Authentication & Firestore tabs
-  3. Swagger docs: http://localhost:3000/api/docs
-  4. Issue tracker: GitHub repository
 ---
 
 ## 2. Data Models
 
-### Shop Entity
+### 2.1 Shop Entity (Firestore)
+
 ```json
 {
-  "id": "shop_abc123",
-  "name": "Hiệp Thập Cẩm",
-  "ownerId": "owner_123",
-  "address": "Tòa B5, KTX Khu B",
+  "id": "shop_abc",
+  "ownerId": "uid_owner",
+  "ownerName": "Nguyen Van A",
+  "name": "Quan Pho Viet",
+  "description": "Pho ngon nhat KTX",
+  "address": "Toa A, Tang 1",
   "phone": "0901234567",
-  "status": "ACTIVE", // ACTIVE | INACTIVE | DELETED
-  "avatarUrl": "...",
-  "createdAt": "2026-01-29T10:00:00Z",
-  "updatedAt": "2026-01-29T12:00:00Z"
+  "coverImageUrl": "https://...",
+  "logoUrl": "https://...",
+  "openTime": "07:00",
+  "closeTime": "21:00",
+  "shipFeePerOrder": 5000,
+  "minOrderAmount": 20000,
+  "isOpen": true,
+  "status": "OPEN",
+  "rating": 4.5,
+  "totalRatings": 50,
+  "totalOrders": 150,
+  "totalRevenue": 10000000,
+  "subscription": {
+    "status": "TRIAL",
+    "startDate": "2026-01-11T10:00:00.000Z",
+    "trialEndDate": "2026-01-18T10:00:00.000Z",
+    "currentPeriodEnd": "2026-01-18T10:00:00.000Z",
+    "nextBillingDate": null,
+    "autoRenew": true
+  },
+  "createdAt": "2026-01-11T10:00:00.000Z",
+  "updatedAt": "2026-01-11T10:00:00.000Z"
 }
 ```
 
+### 2.2 ShopStatus Enum
+
+| Status | Y nghia |
+|---|---|
+| OPEN | Shop dang hoat dong |
+| CLOSED | Shop tam dong |
+| SUSPENDED | Shop bi admin khoa |
+
+### 2.3 SubscriptionStatus Enum
+
+| Status | Y nghia |
+|---|---|
+| TRIAL | Dung thu 7 ngay |
+| ACTIVE | Dang tra phi |
+| EXPIRED | Het han |
+| SUSPENDED | Bi khoa |
+
+### 2.4 Customer View Entities
+
+Public endpoints khong tra ve toan bo fields. Du lieu tra ve gom:
+
+- `GET /shops`: id, name, description, address, rating, totalRatings, isOpen,
+  openTime, closeTime, shipFeePerOrder, minOrderAmount, logoUrl, coverImageUrl
+- `GET /shops/{id}`: tuong tu tren, co them phone, totalOrders, ownerId, ownerName
+
 ---
 
-## 3. Authentication
+## 3. Authentication & Authorization
 
-Tất cả endpoints (trừ GET /shops) yêu cầu Firebase ID Token:
+### 3.1 Owner endpoints
+
+Yeu cau Firebase ID Token + role OWNER:
 
 ```http
 Authorization: Bearer <firebase-id-token>
 ```
 
+Ap dung cho:
+- `POST /owner/shop`
+- `GET /owner/shop`
+- `PUT /owner/shop`
+- `PUT /owner/shop/status`
+- `GET /owner/shop/dashboard`
+
+### 3.2 Public endpoints
+
+Khong can auth:
+- `GET /shops`
+- `GET /shops/{id}`
+
 ---
 
-## 4. API Endpoints Reference
+## 4. Business Rules (Chuan theo code)
 
-### 4.1. Đăng ký shop mới
+1) **1 Owner = 1 Shop**
+- Kiem tra truoc khi tao shop.
+- Neu da co shop, tra ve `SHOP_001` (409).
+
+2) **Operating hours**
+- `openTime` phai truoc `closeTime`.
+- Sai gio tra ve `SHOP_002` (400).
+
+3) **Toggle status**
+- Chi duoc mo shop neu subscription status la TRIAL hoac ACTIVE.
+- Neu khong, tra ve `SHOP_004` (400).
+
+4) **Upload images**
+- Tao shop bat buoc `coverImage` va `logo`.
+- Update shop co the upload lai tung anh.
+- Chi chap nhan JPG/JPEG/PNG, size toi da 5MB/anh.
+
+5) **Shop visibility**
+- `GET /shops` va `GET /shops/{id}` phu hop cho customer (loai bo sensitive fields).
+
+---
+
+## 5. API Endpoints (Owner)
+
+### 5.1 Create Shop
+
 ```http
-POST /api/shops
+POST /owner/shop
 Authorization: Bearer <ID_TOKEN>
-Content-Type: application/json
-{
-  "name": "Hiệp Thập Cẩm",
-  "address": "Tòa B5, KTX Khu B",
-  "phone": "0901234567"
-}
+Content-Type: multipart/form-data
+
+Fields:
+- name (string)
+- description (string)
+- address (string)
+- phone (string)
+- openTime (HH:mm)
+- closeTime (HH:mm)
+- shipFeePerOrder (number)
+- minOrderAmount (number)
+- coverImage (file)  // required
+- logo (file)        // required
 ```
 
-**Response:**
+**Success Response (201) - Example**
 ```json
 {
   "success": true,
   "data": {
     "id": "shop_abc123",
-    "name": "Hiệp Thập Cẩm",
-    "ownerId": "owner_123"
+    "ownerId": "uid_owner",
+    "ownerName": "Nguyen Van A",
+    "name": "Quan Pho Viet",
+    "description": "Pho ngon nhat KTX",
+    "address": "Toa A, Tang 1",
+    "phone": "0901234567",
+    "coverImageUrl": "https://...",
+    "logoUrl": "https://...",
+    "openTime": "07:00",
+    "closeTime": "21:00",
+    "shipFeePerOrder": 5000,
+    "minOrderAmount": 20000,
+    "isOpen": false,
+    "status": "OPEN",
+    "rating": 0,
+    "totalRatings": 0,
+    "totalOrders": 0,
+    "totalRevenue": 0,
+    "subscription": {
+      "status": "TRIAL",
+      "startDate": "2026-01-11T10:00:00.000Z",
+      "trialEndDate": "2026-01-18T10:00:00.000Z",
+      "currentPeriodEnd": "2026-01-18T10:00:00.000Z",
+      "nextBillingDate": null,
+      "autoRenew": true
+    },
+    "createdAt": "2026-01-11T10:00:00.000Z",
+    "updatedAt": "2026-01-11T10:00:00.000Z"
   }
 }
 ```
 
-### 4.2. Lấy danh sách shop
+**Error Cases**
+- `SHOP_001` (409): Owner da co shop
+- `SHOP_002` (400): Gio dong cua phai sau gio mo cua
+- Upload image fail: 400 (message tuong ung)
+
+### 5.2 Get My Shop
+
 ```http
-GET /api/shops
+GET /owner/shop
+Authorization: Bearer <ID_TOKEN>
 ```
 
-**Response:**
+**Success Response (200)**
+- Tra ve `ShopEntity` day du.
+
+**Error**
+- `SHOP_003` (404): Owner chua co shop
+
+### 5.3 Update Shop
+
+```http
+PUT /owner/shop
+Authorization: Bearer <ID_TOKEN>
+Content-Type: multipart/form-data
+
+Fields (optional):
+- name, description, address, phone, openTime, closeTime,
+  shipFeePerOrder, minOrderAmount
+- coverImage (file, optional)
+- logo (file, optional)
+```
+
+**Response (200)**
+```json
+{
+  "message": "Cap nhat shop thanh cong"
+}
+```
+
+**Rules**
+- Neu update time, `openTime < closeTime`.
+- Image validation nhu create.
+
+### 5.4 Toggle Shop Status
+
+```http
+PUT /owner/shop/status
+Authorization: Bearer <ID_TOKEN>
+Content-Type: application/json
+
+{
+  "isOpen": true
+}
+```
+
+**Response (200)**
+```json
+{ "message": "Mo shop thanh cong" }
+```
+
+**Error**
+- `SHOP_004` (400): Subscription chua active/trial.
+
+### 5.5 Owner Dashboard (Analytics)
+
+```http
+GET /owner/shop/dashboard?from=2026-01-01&to=2026-01-31
+Authorization: Bearer <ID_TOKEN>
+```
+
+**Behavior**
+- Khi co `from` + `to` (bat buoc di cung nhau):
+  - today = don giao trong ngay `to`
+  - thisWeek = 7 ngay ket thuc tai `to`
+  - thisMonth = tu ngay 1 cua thang `to` den `to`
+  - moi bucket clamp theo [from, to]
+- Khi khong co `from`/`to`:
+  - Tinh theo thoi gian hien tai server
+- Revenue/orderCount dua tren `DELIVERED` orders (deliveredAt)
+- ordersByStatus dua tren createdAt
+- recentOrders sort createdAt desc
+- pendingOrders = don pending/confirmed/preparing/ready/shipping tao trong bucket "today"
+
+**Response Example**
+```json
+{
+  "success": true,
+  "data": {
+    "today": { "revenue": 500000, "orderCount": 25, "avgOrderValue": 20000, "pendingOrders": 3 },
+    "thisWeek": { "revenue": 2500000, "orderCount": 120, "avgOrderValue": 20833 },
+    "thisMonth": { "revenue": 10000000, "orderCount": 500 },
+    "ordersByStatus": {
+      "PENDING": 3, "CONFIRMED": 5, "PREPARING": 2, "READY": 1,
+      "DELIVERING": 4, "COMPLETED": 140, "CANCELLED": 5
+    },
+    "topProducts": [
+      { "id": "prod_1", "name": "Com suon", "soldCount": 50, "revenue": 1750000 }
+    ],
+    "recentOrders": [
+      { "id": "order_1", "orderNumber": "ORD-20260111-001", "status": "COMPLETED", "total": 50000, "createdAt": "2026-01-11T10:00:00.000Z" }
+    ]
+  }
+}
+```
+
+---
+
+## 6. API Endpoints (Public)
+
+### 6.1 List Shops
+
+```http
+GET /shops?page=1&limit=20&status=OPEN&search=pho
+```
+
+**Query Params**
+- `page` (default 1)
+- `limit` (default 20)
+- `status` (OPEN/CLOSED/SUSPENDED)
+- `search` (keyword)
+
+**Response Example**
 ```json
 {
   "success": true,
   "data": {
     "shops": [
       {
-        "id": "shop_abc123",
-        "name": "Hiệp Thập Cẩm",
-        "address": "Tòa B5, KTX Khu B"
+        "id": "shop_abc",
+        "name": "Quan Pho Viet",
+        "description": "Pho ngon nhat KTX",
+        "address": "Toa A, Tang 1",
+        "rating": 4.5,
+        "totalRatings": 50,
+        "isOpen": true,
+        "openTime": "07:00",
+        "closeTime": "21:00",
+        "shipFeePerOrder": 5000,
+        "minOrderAmount": 20000,
+        "logoUrl": "https://...",
+        "coverImageUrl": "https://..."
       }
-    ]
+    ],
+    "total": 15,
+    "page": 1,
+    "limit": 20
   }
 }
 ```
 
-### 4.3. Lấy thông tin shop cụ thể
+### 6.2 Shop Detail
+
 ```http
-GET /api/shops/{id}
+GET /shops/{id}
 ```
 
-### 4.4. Cập nhật thông tin shop
-```http
-PUT /api/shops/{id}
-Authorization: Bearer <ID_TOKEN>
-Content-Type: application/json
+**Response Example**
+```json
 {
-  "name": "Hiệp Thập Cẩm - Update",
-  "address": "Tòa B5, KTX Khu B",
-  "phone": "0901234567"
+  "success": true,
+  "data": {
+    "id": "shop_abc",
+    "name": "Quan Pho Viet",
+    "description": "Pho ngon nhat KTX",
+    "address": "Toa A, Tang 1",
+    "phone": "0901234567",
+    "coverImageUrl": "https://...",
+    "logoUrl": "https://...",
+    "rating": 4.5,
+    "totalRatings": 50,
+    "isOpen": true,
+    "openTime": "07:00",
+    "closeTime": "21:00",
+    "shipFeePerOrder": 5000,
+    "minOrderAmount": 20000,
+    "totalOrders": 150,
+    "ownerId": "owner_123",
+    "ownerName": "Nguyen Van A"
+  }
 }
 ```
 
-### 4.5. Chủ shop duyệt shipper
+**Error**
+- `SHOP_005` (404): Shop not found
+
+---
+
+## 7. Shipper Approval (Owner) - Thuoc Shippers Module
+
+Phe duyet shipper khong thuoc Shops module. Dung endpoint:
+
 ```http
-PATCH /api/shipper-applications/{id}/approve
+POST /owner/shippers/applications/{id}/approve
 Authorization: Bearer <ID_TOKEN>
 ```
 
----
-
-## 5. Owner & Shop Status
-
-- **role: "OWNER"**: Có thể tạo/cập nhật shop, duyệt shipper, xem doanh thu shop.
-- **shop.status**:
-  - `ACTIVE`: Shop hoạt động bình thường
-  - `INACTIVE`: Shop tạm ngưng
-  - `DELETED`: Shop đã xoá
+Cac endpoint lien quan:
+- `GET /owner/shippers/applications`
+- `POST /owner/shippers/applications/{id}/reject`
+- `GET /owner/shippers`
+- `DELETE /owner/shippers/{id}`
 
 ---
 
-## 6. Testing Checklist
+## 8. Error Codes (Shops)
 
-## 6.1. Testing Checklist
-
-- [ ] Đăng ký shop mới (role OWNER)
-- [ ] Lấy danh sách shop
-- [ ] Lấy thông tin shop cụ thể
-- [ ] Cập nhật thông tin shop
-- [ ] Chủ shop duyệt shipper
-- [ ] Test cập nhật shop không phải owner (bắt lỗi 403)
-- [ ] Test tạo shop trùng tên (bắt lỗi 409)
-- [ ] Test xóa shop khi còn đơn hàng (bắt lỗi 409)
-
-## 6.2. Testing với Swagger UI
-
-1. Mở http://localhost:3000/api/docs
-2. Click Authorize, nhập Bearer <ID_TOKEN>
-3. Test lần lượt các endpoint:
-  - POST /shops
-  - GET /shops
-  - GET /shops/{id}
-  - PUT /shops/{id}
-  - PATCH /shipper-applications/{id}/approve
-4. Xem response, kiểm tra trạng thái, message, error code
-
-## 6.3. Test Accounts (mẫu)
-
-| Email           | Password   | Role   | Status  | Note         |
-|-----------------|------------|--------|---------|--------------|
-| owner1@test.com | Test123!   | OWNER  | ACTIVE  | Chủ shop     |
-| admin1@test.com | Test123!   | ADMIN  | ACTIVE  | Quản trị viên|
-
-> Xem thêm: [TEST_ACCOUNTS.md](TEST_ACCOUNTS.md)
-
-- [ ] Đăng ký shop mới (role OWNER)
-- [ ] Lấy danh sách shop
-- [ ] Lấy thông tin shop cụ thể
-- [ ] Cập nhật thông tin shop
-- [ ] Chủ shop duyệt shipper
-- [ ] Test cập nhật shop không phải owner (bắt lỗi 403)
-- [ ] Test tạo shop trùng tên (bắt lỗi 409)
+| Code | Status | Message (summary) | Mo ta |
+|---|---|---|---|
+| SHOP_001 | 409 | Owner already has a shop | Moi owner chi co 1 shop |
+| SHOP_002 | 400 | Close time must be after open time | Sai gio mo/dong |
+| SHOP_003 | 404 | Owner has no shop | Chua tao shop |
+| SHOP_004 | 400 | Subscription not active | Khong the mo shop |
+| SHOP_005 | 404 | Shop not found | Khong tim thay shop |
+| SHOP_006 | 403 | Not owner of this shop | Khong co quyen |
 
 ---
 
-## 7. Testing với cURL
+## 9. Validation & Constraints
+
+### 9.1 Time Rules
+- Dinh dang gio: `HH:mm`
+- `openTime < closeTime`
+
+### 9.2 Image Rules
+- JPG/JPEG/PNG
+- Toi da 5MB/anh
+- Create bat buoc ca 2 anh
+
+### 9.3 Business Rules
+- 1 owner = 1 shop
+- Chi mo shop khi subscription ACTIVE/TRIAL
+
+---
+
+## 10. Negative Test Cases
+
+- Tao shop trung ten owner -> `SHOP_001` (409)
+- Tao shop gio sai -> `SHOP_002` (400)
+- Get my shop khi chua tao -> `SHOP_003` (404)
+- Toggle open khi subscription EXPIRED -> `SHOP_004` (400)
+- Get shop detail voi id sai -> `SHOP_005` (404)
+- Update shop khi khong phai owner -> `SHOP_006` (403)
+
+---
+
+## 11. Testing With cURL
 
 ```bash
-# Đăng ký shop mới
-curl -X POST http://localhost:3000/api/shops \
+# Create shop (multipart)
+curl -X POST http://localhost:3000/owner/shop \
+  -H "Authorization: Bearer <token>" \
+  -F "name=Quan Pho Viet" \
+  -F "description=Pho ngon nhat KTX" \
+  -F "address=Toa A, Tang 1" \
+  -F "phone=0901234567" \
+  -F "openTime=07:00" \
+  -F "closeTime=21:00" \
+  -F "shipFeePerOrder=5000" \
+  -F "minOrderAmount=20000" \
+  -F "coverImage=@cover.jpg" \
+  -F "logo=@logo.jpg"
+
+# Get my shop
+curl -X GET http://localhost:3000/owner/shop \
+  -H "Authorization: Bearer <token>"
+
+# Update shop (optional images)
+curl -X PUT http://localhost:3000/owner/shop \
+  -H "Authorization: Bearer <token>" \
+  -F "name=Quan Pho Viet Updated" \
+  -F "coverImage=@new_cover.jpg"
+
+# Toggle status
+curl -X PUT http://localhost:3000/owner/shop/status \
   -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
-  -d '{"name":"Hiệp Thập Cẩm","address":"Tòa B5, KTX Khu B","phone":"0901234567"}'
+  -d '{"isOpen": true}'
 
-# Lấy danh sách shop
-curl -X GET http://localhost:3000/api/shops
+# Dashboard
+curl -X GET "http://localhost:3000/owner/shop/dashboard?from=2026-01-01&to=2026-01-31" \
+  -H "Authorization: Bearer <token>"
 
-# Lấy thông tin shop cụ thể
-curl -X GET http://localhost:3000/api/shops/shop_abc123
+# Public list
+curl -X GET "http://localhost:3000/shops?page=1&limit=20&search=pho"
 
-# Cập nhật shop
-curl -X PUT http://localhost:3000/api/shops/shop_abc123 \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Hiệp Thập Cẩm - Update","address":"Tòa B5, KTX Khu B","phone":"0901234567"}'
+# Public detail
+curl -X GET "http://localhost:3000/shops/shop_abc"
 ```
 
 ---
 
-## 8. Negative Test Cases
+## 12. UI/UX Notes (Owner App)
 
-## 8.1. Error Codes
+### 12.1 Create Shop Flow
+1. Owner dang nhap -> vao man "Tao Shop"
+2. Nhap thong tin + upload 2 anh
+3. Submit -> backend tao shop
+4. Redirect sang man quan ly shop
 
-| Code        | Status | Message                        | Mô tả                        |
-|-------------|--------|--------------------------------|------------------------------|
-| SHOP_001    | 409    | Shop name already exists       | Trùng tên shop               |
-| SHOP_002    | 403    | Not owner of this shop         | Không phải chủ shop          |
-| SHOP_003    | 404    | Shop not found                 | Shop không tồn tại           |
-| SHOP_004    | 409    | Shop has active orders         | Không thể xoá shop           |
-| SHOP_005    | 400    | Invalid phone/address/name     | Validate input               |
-
----
-
-- Tạo shop trùng tên → 409 Conflict
-- Cập nhật shop không phải owner → 403 Forbidden
-- Lấy shop không tồn tại → 404 Not Found
+### 12.2 Manage Shop Flow
+1. Owner vao "Quan ly Shop"
+2. Xem thong tin, doanh thu, thong ke
+3. Cap nhat thong tin/anh
+4. Mo/dong shop
 
 ---
 
-## 9. UI/UX Mockup & Logic
+## 13. FAQ
 
-### 9.1. UI State Table
+**Q: Mot owner co the tao nhieu shop khong?**  
+A: Khong. Moi owner chi co 1 shop.
 
-| Trạng thái | UI/UX | Quyền truy cập |
-|------------|-------|----------------|
-| ACTIVE     | Home shop, quản lý    | Đầy đủ quyền owner |
-| INACTIVE   | Thông báo tạm ngưng   | Chỉ xem, không chỉnh sửa |
-| DELETED    | Ẩn khỏi danh sách     | Không truy cập |
+**Q: Shop bi khoa co the mo lai khong?**  
+A: Chi mo duoc neu subscription TRIAL/ACTIVE va khong bi admin SUSPENDED.
 
-### 9.2. UI Mockup: Shop Home
+**Q: Co endpoint xoa shop khong?**  
+A: Khong. Hien tai khong co delete trong shops module.
 
-```
-┌───────────────────────────────┐
-│  [Tạo Shop]                   │
-│  Nhập tên, địa chỉ, SĐT       │
-│  [Submit]                     │
-│  → [Shop Home]                │
-│  [Cập nhật Shop]              │
-│  [Duyệt Shipper]              │
-│  [Xem doanh thu]              │
-└───────────────────────────────┘
-```
-
-### 9.3. UI Mockup: Shop List
-
-```
-┌───────────────────────────────┐
-│  Danh sách Shop               │
-│  ───────────────────────────  │
-│  Hiệp Thập Cẩm                │
-│  Tòa B5, KTX Khu B            │
-│  ⭐ 4.8 (120 đánh giá)         │
-│  [Xem chi tiết]               │
-└───────────────────────────────┘
-```
-
-```
-┌───────────────────────────────┐
-│  [Tạo Shop]                   │
-│  Nhập tên, địa chỉ, SĐT       │
-│  [Submit]                     │
-│  → [Shop Home]                │
-│  [Cập nhật Shop]              │
-│  [Duyệt Shipper]              │
-└───────────────────────────────┘
-```
+**Q: Doanh thu lay o dau?**  
+A: `GET /owner/shop/dashboard` (chi tinh don DELIVERED).
 
 ---
 
-## 10. Security & Best Practices
+## 14. Related Files
 
-- Chỉ OWNER mới được tạo/cập nhật shop
-- Một owner chỉ có 1 shop
-- Validate phone, address, name khi tạo/cập nhật
-- Không cho phép xoá shop nếu còn đơn hàng đang xử lý
-- Không cho phép cập nhật shop khi status = DELETED
-- Khi tích hợp frontend:
-  - Luôn kiểm tra trạng thái shop, quyền owner
-  - Hiển thị rõ các trạng thái: ACTIVE, INACTIVE, DELETED
-  - Khi cập nhật shop, validate input phía client trước khi gửi API
-  - Khi hiển thị rating, lấy từ trường shop.rating, shop.totalRatings
-
-- Chỉ OWNER mới được tạo/cập nhật shop
-- Một owner chỉ có 1 shop
-- Validate phone, address, name khi tạo/cập nhật
-- Không cho phép xoá shop nếu còn đơn hàng đang xử lý
+- `D:\MobileProject\Backend\functions\src\modules\shops\controllers\owner-shops.controller.ts`
+- `D:\MobileProject\Backend\functions\src\modules\shops\controllers\shops.controller.ts`
+- `D:\MobileProject\Backend\functions\src\modules\shops\services\shops.service.ts`
+- `D:\MobileProject\Backend\functions\src\modules\shops\entities\shop.entity.ts`
+- `D:\MobileProject\Backend\functions\src\modules\shippers\owner-shippers.controller.ts`
 
 ---
 
-## 11. FAQ
+## 15. Troubleshooting
 
-**Q: Một owner có thể có nhiều shop không?**  
-A: Không. Mỗi owner chỉ có 1 shop.
-
-**Q: Shop có thể bị xoá không?**  
-A: Có, nhưng chỉ khi không còn đơn hàng đang xử lý.
-
-**Q: Có thể đổi owner cho shop không?**  
-A: Hiện tại chưa hỗ trợ chuyển quyền owner.
-
----
-
-## 12. Related Files
-
-- [shops.controller.ts](../../Backend/functions/src/modules/shops/shops.controller.ts)
-- [shops.service.ts](../../Backend/functions/src/modules/shops/shops.service.ts)
-- [shop.entity.ts](../../Backend/functions/src/modules/shops/entities/shop.entity.ts)
-- [owner-shippers.controller.ts](../../Backend/functions/src/modules/shippers/owner-shippers.controller.ts)
-
-- [PRODUCT_REVIEWS_AND_SHIPPER_REMOVAL_GUIDE.md](PRODUCT_REVIEWS_AND_SHIPPER_REMOVAL_GUIDE.md) — Đánh giá shop, quản lý shipper rời shop
-- [USER_GUIDE.md](USER_GUIDE.md) — Quản lý chủ shop
-
----
-
-## 13. Support
-
-Gặp vấn đề? Check:
-1. Backend logs: Terminal đang chạy `npm start`
-2. Firebase Console: Firestore & Authentication
+1. Backend logs: terminal dang chay `npm start`
+2. Firebase console: Firestore + Auth
 3. Swagger docs: http://localhost:3000/api/docs
 4. Issue tracker: GitHub repository
