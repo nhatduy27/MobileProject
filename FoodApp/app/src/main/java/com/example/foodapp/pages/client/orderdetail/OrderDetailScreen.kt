@@ -1,6 +1,7 @@
 package com.example.foodapp.pages.client.orderdetail
 
-
+import android.content.Context
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,11 +21,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.data.remote.client.response.review.ProductReviewRequest
+import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.example.foodapp.data.remote.client.response.order.OrderApiModel
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
+
+// ============== DATA CLASSES ==============
+
+data class TimelineStep(
+    val status: String,
+    val label: String,
+    val icon: ImageVector,
+    val timestamp: String?
+)
+
+// ============== ORDER DETAIL SCREEN ==============
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,9 +51,36 @@ fun OrderDetailScreen(
     val viewModel: OrderDetailViewModel = viewModel(factory = OrderDetailViewModel.factory(context))
     val orderDetailState by viewModel.orderDetailState.observeAsState(OrderDetailState.Idle)
     val cancelOrderState by viewModel.cancelOrderState.observeAsState(CancelOrderState.Idle)
+    val reviewState by viewModel.reviewState.observeAsState(ReviewState.Idle)
     val currentOrder by viewModel.currentOrder.observeAsState()
+    val hasReviewed by viewModel.hasReviewed.observeAsState(false)
 
     var showCancelDialog by remember { mutableStateOf(false) }
+    var showReviewDialog by remember { mutableStateOf(false) }
+    var showReviewSuccessDialog by remember { mutableStateOf(false) }
+
+    // Review dialog state
+    var shopRating by remember { mutableIntStateOf(0) }
+    var shopComment by remember { mutableStateOf("") }
+    var shipperRating by remember { mutableIntStateOf(0) }
+    var shipperComment by remember { mutableStateOf("") }
+    val productReviews = remember { mutableStateMapOf<String, ProductReviewUI>() }
+
+    // Initialize product reviews when order loads
+    LaunchedEffect(currentOrder) {
+        currentOrder?.let { order ->
+            order.items.forEach { item ->
+                if (!productReviews.containsKey(item.productId)) {
+                    productReviews[item.productId] = ProductReviewUI(
+                        productId = item.productId,
+                        productName = item.productName,
+                        rating = 0,
+                        comment = ""
+                    )
+                }
+            }
+        }
+    }
 
     // Load order detail when screen opens
     LaunchedEffect(orderId) {
@@ -50,7 +91,34 @@ fun OrderDetailScreen(
     LaunchedEffect(cancelOrderState) {
         when (cancelOrderState) {
             is CancelOrderState.Success -> {
+                // Đóng dialog hủy nếu đang mở
+                showCancelDialog = false
+                // Refresh lại order detail
+                viewModel.fetchOrderDetail(orderId)
                 viewModel.resetCancelState()
+            }
+            else -> {}
+        }
+    }
+
+    // Handle review state
+    LaunchedEffect(reviewState) {
+        when (reviewState) {
+            is ReviewState.Success -> {
+                // Đóng dialog đánh giá
+                showReviewDialog = false
+                // Chờ một chút để đảm bảo dialog đã đóng
+                delay(100)
+                // Hiển thị dialog thành công
+                showReviewSuccessDialog = true
+                // Refresh lại order detail để cập nhật trạng thái đã đánh giá
+                viewModel.fetchOrderDetail(orderId)
+                // Reset review state
+                viewModel.resetReviewState()
+            }
+            is ReviewState.Error -> {
+                // Không cần đóng dialog review ở đây, để người dùng có thể thử lại
+                // Dialog lỗi sẽ được hiển thị trong ReviewDialog
             }
             else -> {}
         }
@@ -66,7 +134,7 @@ fun OrderDetailScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { // <- Đang sử dụng callback onBack
+                    IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Quay lại"
@@ -94,7 +162,25 @@ fun OrderDetailScreen(
                     currentOrder?.let { order ->
                         OrderDetailContent(
                             order = order,
-                            onCancelOrder = { showCancelDialog = true }
+                            hasReviewed = hasReviewed,
+                            onCancelOrder = { showCancelDialog = true },
+                            onReviewOrder = {
+                                // Reset all review states
+                                shopRating = 0
+                                shopComment = ""
+                                shipperRating = 0
+                                shipperComment = ""
+                                productReviews.clear()
+                                order.items.forEach { item ->
+                                    productReviews[item.productId] = ProductReviewUI(
+                                        productId = item.productId,
+                                        productName = item.productName,
+                                        rating = 0,
+                                        comment = ""
+                                    )
+                                }
+                                showReviewDialog = true
+                            }
                         )
                     }
                 }
@@ -121,12 +207,28 @@ fun OrderDetailScreen(
                     CircularProgressIndicator(color = Color.White)
                 }
             }
+
+            // Review loading overlay
+            if (reviewState is ReviewState.Loading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.5f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = Color.White)
+                }
+            }
         }
 
         // Cancel Dialog
         if (showCancelDialog) {
             AlertDialog(
-                onDismissRequest = { showCancelDialog = false },
+                onDismissRequest = {
+                    if (cancelOrderState !is CancelOrderState.Loading) {
+                        showCancelDialog = false
+                    }
+                },
                 title = {
                     Text(
                         text = "Hủy đơn hàng",
@@ -140,35 +242,126 @@ fun OrderDetailScreen(
                     TextButton(
                         onClick = {
                             viewModel.cancelOrder(orderId)
-                            showCancelDialog = false
-                        }
+                        },
+                        enabled = cancelOrderState !is CancelOrderState.Loading
                     ) {
-                        Text("Hủy đơn", color = Color(0xFFF44336))
+                        if (cancelOrderState is CancelOrderState.Loading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = Color(0xFFF44336),
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Hủy đơn", color = Color(0xFFF44336))
+                        }
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showCancelDialog = false }) {
+                    TextButton(
+                        onClick = {
+                            if (cancelOrderState !is CancelOrderState.Loading) {
+                                showCancelDialog = false
+                            }
+                        },
+                        enabled = cancelOrderState !is CancelOrderState.Loading
+                    ) {
                         Text("Đóng")
                     }
                 }
             )
         }
 
-        // Cancel error dialog
-        if (cancelOrderState is CancelOrderState.Error) {
+        // Review Dialog
+        if (showReviewDialog) {
+            EnhancedReviewDialog(
+                currentOrder = currentOrder,
+                isLoading = reviewState is ReviewState.Loading,
+                shopRating = shopRating,
+                shopComment = shopComment,
+                shipperRating = shipperRating,
+                shipperComment = shipperComment,
+                productReviews = productReviews,
+                onShopRatingChange = { rating ->
+                    shopRating = rating
+                },
+                onShopCommentChange = { comment ->
+                    shopComment = comment
+                },
+                onShipperRatingChange = { rating ->
+                    shipperRating = rating
+                },
+                onShipperCommentChange = { comment ->
+                    shipperComment = comment
+                },
+                onProductRatingChange = { productId, rating ->
+                    productReviews[productId] = productReviews[productId]?.copy(rating = rating)
+                        ?: return@EnhancedReviewDialog
+                },
+                onProductCommentChange = { productId, comment ->
+                    productReviews[productId] = productReviews[productId]?.copy(comment = comment)
+                        ?: return@EnhancedReviewDialog
+                },
+                onSubmit = { shopRating, shopComment, shipperRating, shipperComment, productReviews ->
+                    // Convert to request format
+                    val productReviewRequests = productReviews.values.map { review ->
+                        com.example.foodapp.data.remote.client.response.review.ProductReviewRequest(
+                            productId = review.productId,
+                            rating = review.rating,
+                            comment = if (review.comment.isNotBlank()) review.comment else ""
+                        )
+                    }
+
+                    viewModel.createOrderReview(
+                        orderId = orderId,
+                        shopRating = shopRating,
+                        shopComment = if (shopComment.isNotBlank()) shopComment else null,
+                        productReviews = productReviewRequests
+                    )
+                },
+                onDismiss = {
+                    showReviewDialog = false
+                    viewModel.resetReviewState()
+                },
+                errorMessage = if (reviewState is ReviewState.Error)
+                    (reviewState as ReviewState.Error).message
+                else null
+            )
+        }
+
+        // Review Success Dialog
+        if (showReviewSuccessDialog) {
             AlertDialog(
-                onDismissRequest = { viewModel.resetCancelState() },
+                onDismissRequest = {
+                    showReviewSuccessDialog = false
+                },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = Color(0xFF4CAF50),
+                        modifier = Modifier.size(48.dp)
+                    )
+                },
                 title = {
                     Text(
-                        text = "Lỗi",
-                        fontWeight = FontWeight.Bold
+                        text = "Thành công!",
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4CAF50)
                     )
                 },
                 text = {
-                    Text((cancelOrderState as CancelOrderState.Error).message)
+                    Text("Đánh giá của bạn đã được gửi thành công.")
                 },
                 confirmButton = {
-                    TextButton(onClick = { viewModel.resetCancelState() }) {
+                    Button(
+                        onClick = {
+                            showReviewSuccessDialog = false
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50)
+                        )
+                    ) {
                         Text("Đóng")
                     }
                 }
@@ -178,10 +371,383 @@ fun OrderDetailScreen(
 }
 
 @Composable
+fun ProductReviewRequest(productId: String, rating: Int, comment: String?) {
+    TODO("Not yet implemented")
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EnhancedReviewDialog(
+    currentOrder: OrderApiModel?,
+    isLoading: Boolean,
+    shopRating: Int,
+    shopComment: String,
+    shipperRating: Int,
+    shipperComment: String,
+    productReviews: Map<String, ProductReviewUI>,
+    onShopRatingChange: (Int) -> Unit,
+    onShopCommentChange: (String) -> Unit,
+    onShipperRatingChange: (Int) -> Unit,
+    onShipperCommentChange: (String) -> Unit,
+    onProductRatingChange: (String, Int) -> Unit,
+    onProductCommentChange: (String, String) -> Unit,
+    onSubmit: (Int, String, Int, String, Map<String, ProductReviewUI>) -> Unit,
+    onDismiss: () -> Unit,
+    errorMessage: String? = null
+) {
+    var showValidationError by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
+
+    Dialog(
+        onDismissRequest = {
+            if (!isLoading) {
+                onDismiss()
+            }
+        }
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 600.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.White
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Đánh giá đơn hàng",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+
+                    IconButton(
+                        onClick = {
+                            if (!isLoading) {
+                                onDismiss()
+                            }
+                        },
+                        enabled = !isLoading
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = "Đóng")
+                    }
+                }
+
+                // Error message (if any)
+                errorMessage?.let {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFFFFEBEE)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Error,
+                                contentDescription = null,
+                                tint = Color(0xFFF44336),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = it,
+                                fontSize = 14.sp,
+                                color = Color(0xFFF44336),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+
+                // Shop Rating Section
+                ReviewSection(
+                    title = "Đánh giá cửa hàng",
+                    subtitle = "Bạn hài lòng với cửa hàng này không?",
+                    currentRating = shopRating,
+                    currentComment = shopComment,
+                    onRatingChange = onShopRatingChange,
+                    onCommentChange = onShopCommentChange,
+                    isLoading = isLoading
+                )
+
+                // Shipper Rating Section
+                ReviewSection(
+                    title = "Đánh giá người giao hàng",
+                    subtitle = "Người giao hàng thế nào?",
+                    currentRating = shipperRating,
+                    currentComment = shipperComment,
+                    onRatingChange = onShipperRatingChange,
+                    onCommentChange = onShipperCommentChange,
+                    isLoading = isLoading,
+                    showOptional = true
+                )
+
+                // Product Reviews Section
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        text = "Đánh giá từng món",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Black
+                    )
+
+                    currentOrder?.items?.forEach { item ->
+                        val productReview = productReviews[item.productId] ?: return@forEach
+
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(8.dp),
+                            color = Color(0xFFF5F5F5)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Text(
+                                    text = item.productName,
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.Black
+                                )
+
+                                // Star rating for product
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    for (i in 1..5) {
+                                        IconButton(
+                                            onClick = {
+                                                if (!isLoading) {
+                                                    onProductRatingChange(item.productId, i)
+                                                }
+                                            },
+                                            enabled = !isLoading,
+                                            modifier = Modifier.size(36.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Star,
+                                                contentDescription = "$i sao",
+                                                modifier = Modifier.size(32.dp),
+                                                tint = if (i <= productReview.rating) Color(0xFFFFD700) else Color.LightGray
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // Product comment
+                                OutlinedTextField(
+                                    value = productReview.comment,
+                                    onValueChange = {
+                                        if (!isLoading) {
+                                            onProductCommentChange(item.productId, it)
+                                        }
+                                    },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    placeholder = {
+                                        Text("Nhận xét về món ăn...")
+                                    },
+                                    colors = TextFieldDefaults.colors(
+                                        focusedContainerColor = Color.White,
+                                        unfocusedContainerColor = Color.White,
+                                        focusedIndicatorColor = Color(0xFF4CAF50),
+                                        unfocusedIndicatorColor = Color.LightGray
+                                    ),
+                                    shape = RoundedCornerShape(8.dp),
+                                    maxLines = 2,
+                                    enabled = !isLoading
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Validation error
+                if (showValidationError) {
+                    Text(
+                        text = "Vui lòng đánh giá shop và tất cả sản phẩm",
+                        fontSize = 14.sp,
+                        color = Color.Red
+                    )
+                }
+
+                // Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Cancel button
+                    OutlinedButton(
+                        onClick = {
+                            if (!isLoading) {
+                                onDismiss()
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isLoading,
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = Color.Gray
+                        ),
+                        border = BorderStroke(1.dp, Color.LightGray)
+                    ) {
+                        Text("Hủy")
+                    }
+
+                    // Submit button
+                    Button(
+                        onClick = {
+                            // Validate
+                            val hasShopRating = shopRating > 0
+                            val hasAllProductRatings = productReviews.values.all { it.rating > 0 }
+
+                            if (!hasShopRating || !hasAllProductRatings) {
+                                showValidationError = true
+                            } else {
+                                showValidationError = false
+                                onSubmit(shopRating, shopComment, shipperRating, shipperComment, productReviews)
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = !isLoading,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF4CAF50)
+                        )
+                    ) {
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Text("Gửi đánh giá")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ReviewSection(
+    title: String,
+    subtitle: String,
+    currentRating: Int,
+    currentComment: String,
+    onRatingChange: (Int) -> Unit,
+    onCommentChange: (String) -> Unit,
+    isLoading: Boolean,
+    showOptional: Boolean = false
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text(
+                    text = title,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+                Text(
+                    text = subtitle,
+                    fontSize = 14.sp,
+                    color = Color.DarkGray
+                )
+            }
+
+            if (showOptional) {
+                Text(
+                    text = "(Tùy chọn)",
+                    fontSize = 12.sp,
+                    color = Color.Gray,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                )
+            }
+        }
+
+        // Star rating
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            for (i in 1..5) {
+                IconButton(
+                    onClick = {
+                        if (!isLoading) {
+                            onRatingChange(i)
+                        }
+                    },
+                    enabled = !isLoading,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = "$i sao",
+                        modifier = Modifier.size(40.dp),
+                        tint = if (i <= currentRating) Color(0xFFFFD700) else Color.LightGray
+                    )
+                }
+            }
+        }
+
+        // Comment
+        OutlinedTextField(
+            value = currentComment,
+            onValueChange = {
+                if (!isLoading) {
+                    onCommentChange(it)
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = {
+                if (showOptional) {
+                    Text("Nhận xét (tùy chọn)...")
+                } else {
+                    Text("Nhận xét về cửa hàng...")
+                }
+            },
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.White,
+                unfocusedContainerColor = Color.White,
+                focusedIndicatorColor = Color(0xFF4CAF50),
+                unfocusedIndicatorColor = Color.LightGray
+            ),
+            shape = RoundedCornerShape(8.dp),
+            maxLines = 2,
+            enabled = !isLoading
+        )
+    }
+}
+
+@Composable
 fun OrderDetailContent(
     order: OrderApiModel,
-    onCancelOrder: () -> Unit
+    hasReviewed: Boolean,
+    onCancelOrder: () -> Unit,
+    onReviewOrder: () -> Unit
 ) {
+    val canReview = order.status == "DELIVERED" && !hasReviewed
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -218,30 +784,91 @@ fun OrderDetailContent(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Cancel Button (only show if order can be cancelled)
-        if (order.status == "PENDING" || order.status == "CONFIRMED") {
-            Button(
-                onClick = onCancelOrder,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFF44336)
-                ),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Close,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Hủy đơn hàng",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
+        // Action Buttons
+        Column(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Review Button (only show if order is delivered and not reviewed yet)
+            if (canReview) {
+                Button(
+                    onClick = onReviewOrder,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFFF9800)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Star,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Đánh giá đơn hàng",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            // Already Reviewed Button (show if order is delivered and already reviewed)
+            if (order.status == "DELIVERED" && hasReviewed) {
+                OutlinedButton(
+                    onClick = {},
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    enabled = false,
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color(0xFF4CAF50)
+                    ),
+                    border = BorderStroke(1.dp, Color(0xFF4CAF50))
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = Color(0xFF4CAF50),
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Đã đánh giá",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4CAF50)
+                    )
+                }
+            }
+
+            // Cancel Button (only show if order can be cancelled)
+            if (order.status == "PENDING" || order.status == "CONFIRMED") {
+                Button(
+                    onClick = onCancelOrder,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFFF44336)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Hủy đơn hàng",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
 
@@ -291,13 +918,6 @@ fun OrderStatusTimeline(order: OrderApiModel) {
         }
     }
 }
-
-data class TimelineStep(
-    val status: String,
-    val label: String,
-    val icon: ImageVector,
-    val timestamp: String?
-)
 
 @Composable
 fun TimelineItem(

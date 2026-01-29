@@ -325,5 +325,15 @@ object RepositoryProvider {
             )
         )
     }
+    
+    // ==================== CHATBOT REPOSITORY ====================
+    
+    fun getChatbotRepository(): com.example.foodapp.data.repository.chatbot.ChatbotRepository {
+        return com.example.foodapp.data.repository.chatbot.ChatbotRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.chatbot.ChatbotApiService::class.java
+            )
+        )
+    }
 }
 

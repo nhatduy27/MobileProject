@@ -40,4 +40,9 @@ interface ProfileApiService {
     suspend fun uploadAvatar(
         @Part avatar: MultipartBody.Part
     ): Response<UploadAvatarResponse>
+
+    @GET("delivery-points")
+    suspend fun getPickupPoints(
+        @Header("Authorization") token: String,
+    ): Response<PickupPointsResponse>
 }

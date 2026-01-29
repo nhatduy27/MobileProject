@@ -38,6 +38,7 @@ import com.example.foodapp.pages.shipper.gps.TripDetailScreen
 import com.example.foodapp.pages.shipper.gps.TripHistoryScreen
 import com.example.foodapp.pages.shipper.gps.DeliveryMapScreen
 import com.example.foodapp.pages.shipper.removal.RemovalRequestScreen
+import com.example.foodapp.pages.shipper.chatbot.ShipperChatbotScreen
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import androidx.navigation.compose.rememberNavController
@@ -253,6 +254,15 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                         scope.launch { drawerState.close() }
                     }
                 )
+                DrawerMenuItem(
+                    icon = Icons.Outlined.SmartToy,
+                    title = "Trợ lý AI",
+                    isSelected = currentScreen == "chatbot",
+                    onClick = {
+                        currentScreen = "chatbot"
+                        scope.launch { drawerState.close() }
+                    }
+                )
                 
                 Spacer(modifier = Modifier.weight(1f))
                 
@@ -323,6 +333,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                                     currentScreen == "settings" -> "Cài đặt"
                                     currentScreen == "notifications" -> "Thông báo"
                                     currentScreen == "help" -> "Trợ giúp & Hỗ trợ"
+                                    currentScreen == "chatbot" -> "Trợ lý AI"
                                     else -> "FoodApp Shipper"
                                 },
                                 fontWeight = FontWeight.SemiBold,
@@ -422,6 +433,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                             onBack = { currentScreen = "home" },
                             showTopBar = false
                         )
+                        "chatbot" -> ShipperChatbotScreen()
                         "gps" -> {
                             when (currentGpsRoute) {
                                 "trip_detail" -> TripDetailScreen(

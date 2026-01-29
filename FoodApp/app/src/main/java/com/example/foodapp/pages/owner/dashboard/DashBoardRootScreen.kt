@@ -27,6 +27,8 @@ import com.example.foodapp.pages.owner.shippers.ShippersScreen
 import com.example.foodapp.pages.owner.vouchers.VouchersScreen
 // Import ReviewsScreen
 import com.example.foodapp.pages.owner.reviews.ReviewsScreen
+// Import ChatbotScreen
+import com.example.foodapp.pages.owner.chatbot.ChatbotScreen
 // Import NotificationBell
 import com.example.foodapp.pages.owner.notifications.NotificationBell
 // Import SettingsScreen
@@ -233,6 +235,15 @@ fun DashBoardRootScreen(navController: NavHostController) {
                         scope.launch { drawerState.close() }
                     }
 
+                    DrawerItem(
+                        text = "Trợ lý AI", 
+                        iconRes = R.drawable.ic_chat,
+                        isSelected = currentScreen == "chatbot"
+                    ) {
+                        currentScreen = "chatbot"
+                        scope.launch { drawerState.close() }
+                    }
+
                     Divider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha=0.3f))
 
                     DrawerItem(
@@ -263,7 +274,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
         Scaffold(
             topBar = {
                 // Show TopBar for screens that don't have their own TopBar
-                if (currentScreen != "dashboard" && currentScreen != "orders" && currentScreen != "foods" && currentScreen != "shippers" && currentScreen != "vouchers" && currentScreen != "customers" && currentScreen != "reviews") {
+                if (currentScreen != "dashboard" && currentScreen != "orders" && currentScreen != "foods" && currentScreen != "shippers" && currentScreen != "vouchers" && currentScreen != "customers" && currentScreen != "reviews" && currentScreen != "chatbot") {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -315,6 +326,9 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     "revenue" -> RevenueScreen()
                     "reviews" -> ReviewsScreen(
                         shopId = shopState.shopId,
+                        onMenuClick = { scope.launch { drawerState.open() } }
+                    )
+                    "chatbot" -> ChatbotScreen(
                         onMenuClick = { scope.launch { drawerState.open() } }
                     )
                     "settings" -> SettingsNavHost(

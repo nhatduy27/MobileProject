@@ -1,10 +1,16 @@
 package com.example.foodapp.pages.client.profile
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ChatBubbleOutline
+import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material.icons.outlined.RateReview
+import androidx.compose.material.icons.outlined.ShoppingBag
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -24,7 +30,9 @@ fun UserProfileScreen(
     onBackClick: () -> Unit = {},
     onUserInfoClick: () -> Unit = {},
     onChangePasswordClick: () -> Unit = {},
-    onOrderButtonClick: () -> Unit = {}
+    onOrderButtonClick: () -> Unit = {},
+    onReviewsButtonClick: () -> Unit = {},
+    onChatsButtonClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val viewModel: ProfileViewModel = viewModel(
@@ -259,7 +267,7 @@ fun UserProfileScreen(
     }
 
     Scaffold(
-        containerColor = Color.White,
+        containerColor = Color(0xFFF5F5F5),
         topBar = {
             ProfileTopBar(
                 onBackClick = onBackClick,
@@ -285,14 +293,12 @@ fun UserProfileScreen(
                         user = state.user,
                         addresses = state.addresses,
                         modifier = Modifier
-                            .background(Color.White)
                             .fillMaxSize()
                             .padding(padding)
                             .verticalScroll(rememberScrollState()),
                         onUserInfoClick = onUserInfoClick,
                         onAddAddressClick = { showAddAddressDialog = true },
                         onEditAddressClick = { addressId ->
-                            // Tìm địa chỉ theo ID và hiển thị dialog chỉnh sửa
                             val address = state.addresses.find { it.id == addressId }
                             if (address != null) {
                                 addressToEdit = address
@@ -308,7 +314,9 @@ fun UserProfileScreen(
                             addressToSetDefault = addressId
                             showSetDefaultConfirmDialog = true
                         },
-                        onOrderButtonClick = onOrderButtonClick
+                        onOrderButtonClick = onOrderButtonClick,
+                        onReviewsButtonClick = onReviewsButtonClick,
+                        onChatsButtonClick = onChatsButtonClick // Thêm callback
                     )
                 }
                 is ProfileState.Idle -> {
@@ -332,20 +340,31 @@ fun ProfileContent(
     onChangePasswordClick: () -> Unit,
     onDeleteAddressClick: (String) -> Unit,
     onSetDefaultAddressClick: (String) -> Unit,
-    onOrderButtonClick: () -> Unit
+    onOrderButtonClick: () -> Unit,
+    onReviewsButtonClick: () -> Unit,
+    onChatsButtonClick: () -> Unit // Thêm tham số
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(vertical = 8.dp)
+            .background(Color(0xFFF5F5F5))
+            .padding(vertical = 12.dp)
     ) {
-        // BUTTON ĐƠN MUA
-        OrderButtonSection(onOrderButtonClick = onOrderButtonClick)
+        // SECTION: Đơn hàng & Đánh giá & Chat
+        ActionButtonsSection(
+            onOrderButtonClick = onOrderButtonClick,
+            onReviewsButtonClick = onReviewsButtonClick,
+            onChatsButtonClick = onChatsButtonClick // Truyền callback
+        )
 
-        // BUTTON THÔNG TIN NGƯỜI DÙNG
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // SECTION: Thông tin người dùng
         UserInfoButtonSection(onUserInfoClick = onUserInfoClick)
 
-        // Địa chỉ - Chỉ hiển thị nếu có địa chỉ
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // SECTION: Địa chỉ
         if (addresses.isNotEmpty()) {
             AddressCard(
                 addresses = addresses,
@@ -358,7 +377,9 @@ fun ProfileContent(
             EmptyAddressCard(onAddClick = onAddAddressClick)
         }
 
-        // Các chức năng
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // SECTION: Cài đặt
         SettingsCard(
             onChangePasswordClick = onChangePasswordClick
         )
@@ -368,12 +389,117 @@ fun ProfileContent(
 }
 
 @Composable
+fun ActionButtonsSection(
+    onOrderButtonClick: () -> Unit,
+    onReviewsButtonClick: () -> Unit,
+    onChatsButtonClick: () -> Unit // Thêm tham số
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Button Đơn mua
+            ProfileActionItem(
+                onClick = onOrderButtonClick,
+                icon = Icons.Outlined.ShoppingBag, // Icon cho đơn hàng
+                iconTint = Color(0xFFFBBB00),
+                title = "Đơn mua",
+                showDivider = true
+            )
+
+            // Button Đoạn chat
+            ProfileActionItem(
+                onClick = onChatsButtonClick,
+                icon = Icons.Outlined.ChatBubbleOutline,
+                iconTint = Color(0xFFFBBB00),
+                title = "Đoạn chat",
+                showDivider = true
+            )
+
+            // Button Đánh giá
+            ProfileActionItem(
+                onClick = onReviewsButtonClick,
+                icon = Icons.Outlined.RateReview,
+                iconTint = Color(0xFFFBBB00),
+                title = "Đánh giá của tôi",
+                showDivider = false
+            )
+        }
+    }
+}
+
+@Composable
+fun ProfileActionItem(
+    onClick: () -> Unit,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconTint: Color,
+    title: String,
+    showDivider: Boolean
+) {
+    Column(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = title,
+                    tint = iconTint,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Black
+                )
+            }
+            Icon(
+                imageVector = Icons.Outlined.ChevronRight,
+                contentDescription = "Xem chi tiết",
+                tint = Color.Gray,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        if (showDivider) {
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                thickness = 0.5.dp,
+                color = Color(0xFFE0E0E0)
+            )
+        }
+    }
+}
+
+@Composable
 fun LoadingScreen(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        CircularProgressIndicator()
+        CircularProgressIndicator(
+            color = Color(0xFFFBBB00)
+        )
     }
 }
 
@@ -397,7 +523,10 @@ fun ErrorScreen(
 
         Button(
             onClick = onRetryClick,
-            modifier = Modifier.padding(top = 16.dp)
+            modifier = Modifier.padding(top = 16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFFFBBB00)
+            )
         ) {
             Text("Thử lại")
         }
