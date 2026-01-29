@@ -22,6 +22,7 @@ object ShipperColors {
     val TextSecondary = Color(0xFF6B7280)    // Medium gray - secondary text
     val TextTertiary = Color(0xFF9CA3AF)     // Light gray - hints/captions
     val TextOnPrimary = Color(0xFFFFFFFF)    // White text on primary
+    val OnPrimary = Color(0xFFFFFFFF)        // Alias for TextOnPrimary
     
     // Status Colors
     val Success = Color(0xFF10B981)          // Green

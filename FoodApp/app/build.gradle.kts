@@ -65,6 +65,14 @@ dependencies {
 // Google Services Auth API
     implementation("com.google.android.gms:play-services-base:18.2.0")
 
+    // Google Maps for Jetpack Compose
+    implementation("com.google.maps.android:maps-compose:2.15.0")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    // Google Location Services for real-time GPS tracking
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    // For decoding polylines
+    implementation("com.google.maps.android:android-maps-utils:3.5.3")
+
     implementation("com.google.firebase:firebase-analytics")
     // LiveData với Compose
     implementation("androidx.compose.runtime:runtime-livedata:1.5.4")

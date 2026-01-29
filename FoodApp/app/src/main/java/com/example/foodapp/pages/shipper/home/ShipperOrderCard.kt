@@ -28,7 +28,9 @@ fun ShipperOrderCard(
     order: ShipperOrder,
     onAccept: () -> Unit = {},
     onClick: () -> Unit = {},
-    showAcceptButton: Boolean = true
+    onViewMap: () -> Unit = {},
+    showAcceptButton: Boolean = true,
+    showMapButton: Boolean = false
 ) {
     Card(
         modifier = Modifier
@@ -204,6 +206,28 @@ fun ShipperOrderCard(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("NHẬN ĐƠN", fontWeight = FontWeight.SemiBold)
+                }
+            }
+            
+            // View Map Button for SHIPPING orders
+            if (showMapButton && order.status == "SHIPPING") {
+                Spacer(modifier = Modifier.height(14.dp))
+                OutlinedButton(
+                    onClick = onViewMap,
+                    modifier = Modifier.fillMaxWidth().height(46.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = ShipperColors.Primary
+                    ),
+                    border = BorderStroke(1.5.dp, ShipperColors.Primary)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Map,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("XEM BẢN ĐỒ GIAO HÀNG", fontWeight = FontWeight.SemiBold)
                 }
             }
         }

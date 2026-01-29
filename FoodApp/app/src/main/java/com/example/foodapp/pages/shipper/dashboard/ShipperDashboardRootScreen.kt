@@ -33,6 +33,10 @@ import com.example.foodapp.pages.shipper.home.ShipperHomeScreen
 import com.example.foodapp.pages.shipper.notifications.NotificationsScreen
 import com.example.foodapp.pages.shipper.settings.ShipperSettingsNavHost
 import com.example.foodapp.pages.shipper.theme.ShipperColors
+import com.example.foodapp.pages.shipper.gps.GpsScreen
+import com.example.foodapp.pages.shipper.gps.TripDetailScreen
+import com.example.foodapp.pages.shipper.gps.TripHistoryScreen
+import com.example.foodapp.pages.shipper.gps.DeliveryMapScreen
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import androidx.navigation.compose.rememberNavController
@@ -79,6 +83,8 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
     val scope = rememberCoroutineScope()
     var currentScreen by remember { mutableStateOf("home") }
     var currentSettingsRoute by remember { mutableStateOf("settings_main") }
+    var currentGpsRoute by remember { mutableStateOf("gps_main") }
+    var currentTripId by remember { mutableStateOf<String?>(null) }
     
     // User profile state
     var userProfile by remember { mutableStateOf<UserProfile?>(null) }
@@ -201,6 +207,16 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                     }
                 )
                 DrawerMenuItem(
+                    icon = Icons.Outlined.Route,
+                    title = "Lộ trình giao hàng",
+                    isSelected = currentScreen == "gps",
+                    onClick = {
+                        currentScreen = "gps"
+                        currentGpsRoute = "gps_main"
+                        scope.launch { drawerState.close() }
+                    }
+                )
+                DrawerMenuItem(
                     icon = Icons.Outlined.Description,
                     title = "Đơn ứng tuyển",
                     isSelected = currentScreen == "applications",
@@ -260,6 +276,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
             Scaffold(
                 topBar = {
                     val isInSettingsChild = currentScreen == "settings" && currentSettingsRoute != "settings_main"
+                    val isInGpsChild = currentScreen == "gps" && currentGpsRoute != "gps_main"
                     TopAppBar(
                         title = {
                             Text(
@@ -278,10 +295,20 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                                             else -> "Cài đặt"
                                         }
                                     }
+                                    currentScreen == "gps" && currentGpsRoute != "gps_main" -> {
+                                        when (currentGpsRoute) {
+                                            "trip_detail" -> "Chi tiết lộ trình"
+                                            "trip_history" -> "Lịch sử chuyến đi"
+                                            "delivery_map" -> "Bản đồ giao hàng"
+                                            "delivery_map_from_home" -> "Bản đồ giao hàng"
+                                            else -> "Lộ trình giao hàng"
+                                        }
+                                    }
                                     currentScreen == "home" -> "Trang chủ"
                                     currentScreen == "earnings" -> "Thu nhập của tôi"
                                     currentScreen == "history" -> "Lịch sử giao hàng"
                                     currentScreen == "applications" -> "Đơn ứng tuyển"
+                                    currentScreen == "gps" -> "Lộ trình giao hàng"
                                     currentScreen == "settings" -> "Cài đặt"
                                     currentScreen == "notifications" -> "Thông báo"
                                     currentScreen == "help" -> "Trợ giúp & Hỗ trợ"
@@ -300,6 +327,23 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                                         tint = ShipperColors.TextPrimary
                                     )
                                 }
+                            } else if (isInGpsChild) {
+                                IconButton(onClick = { 
+                                    if (currentGpsRoute == "delivery_map_from_home") {
+                                        currentScreen = "home"
+                                        currentGpsRoute = "gps_main"
+                                        currentTripId = null
+                                    } else {
+                                        currentGpsRoute = "gps_main"
+                                        currentTripId = null
+                                    }
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.ArrowBack,
+                                        contentDescription = "Quay lại",
+                                        tint = ShipperColors.TextPrimary
+                                    )
+                                }
                             } else {
                                 IconButton(onClick = { scope.launch { drawerState.open() } }) {
                                     Icon(
@@ -311,7 +355,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                             }
                         },
                         actions = {
-                            if (!isInSettingsChild) {
+                            if (!isInSettingsChild && !isInGpsChild) {
                                 IconButton(onClick = {
                                     currentScreen = "notifications"
                                 }) {
@@ -338,6 +382,11 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                             onOrderClick = { orderId ->
                                 navController.navigate("shipper_order_detail/$orderId")
                             },
+                            onViewMap = { orderId ->
+                                currentTripId = orderId
+                                currentGpsRoute = "delivery_map_from_home"
+                                currentScreen = "gps"
+                            },
                             onApplyShipper = {
                                 navController.navigate("shipper_apply")
                             }
@@ -358,6 +407,61 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                         )
                         "notifications" -> NotificationsScreen()
                         "help" -> HelpScreen()
+                        "gps" -> {
+                            when (currentGpsRoute) {
+                                "trip_detail" -> TripDetailScreen(
+                                    tripId = currentTripId ?: "",
+                                    onBack = {
+                                        currentGpsRoute = "gps_main"
+                                        currentTripId = null
+                                    },
+                                    onNavigateToMap = { tripId ->
+                                        currentTripId = tripId
+                                        currentGpsRoute = "delivery_map"
+                                    }
+                                )
+                                "delivery_map" -> DeliveryMapScreen(
+                                    tripId = currentTripId ?: "",
+                                    onBack = {
+                                        currentGpsRoute = "trip_detail"
+                                    },
+                                    onFinish = {
+                                        currentGpsRoute = "gps_main"
+                                        currentTripId = null
+                                    }
+                                )
+                                "delivery_map_from_home" -> DeliveryMapScreen(
+                                    tripId = currentTripId ?: "",
+                                    isOrderId = true,  // When coming from home, we pass orderId
+                                    onBack = {
+                                        currentScreen = "home"
+                                        currentGpsRoute = "gps_main"
+                                        currentTripId = null
+                                    },
+                                    onFinish = {
+                                        currentScreen = "home"
+                                        currentGpsRoute = "gps_main"
+                                        currentTripId = null
+                                    }
+                                )
+                                "trip_history" -> TripHistoryScreen(
+                                    onBack = { currentGpsRoute = "gps_main" },
+                                    onNavigateToTripDetail = { tripId ->
+                                        currentTripId = tripId
+                                        currentGpsRoute = "trip_detail"
+                                    }
+                                )
+                                else -> GpsScreen(
+                                    onNavigateToTripDetail = { tripId ->
+                                        currentTripId = tripId
+                                        currentGpsRoute = "trip_detail"
+                                    },
+                                    onNavigateToTripHistory = {
+                                        currentGpsRoute = "trip_history"
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
             }

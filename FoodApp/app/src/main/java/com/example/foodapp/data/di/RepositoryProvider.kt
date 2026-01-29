@@ -285,4 +285,25 @@ object RepositoryProvider {
             )
         )
     }
+    
+    // ==================== SHIPPER GPS REPOSITORY ====================
+    
+    fun getGpsRepository(): com.example.foodapp.data.repository.shipper.base.GpsRepository {
+        return com.example.foodapp.data.repository.shipper.gps.RealGpsRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.shipper.GpsApiService::class.java
+            )
+        )
+    }
+    
+    // ==================== SHIPPER WALLET REPOSITORY ====================
+    
+    fun getWalletRepository(): com.example.foodapp.data.repository.shipper.base.ShipperWalletRepository {
+        return com.example.foodapp.data.repository.shipper.wallet.RealShipperWalletRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.shipper.wallet.WalletApiService::class.java
+            )
+        )
+    }
 }
+

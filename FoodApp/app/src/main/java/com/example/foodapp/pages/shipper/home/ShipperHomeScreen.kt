@@ -28,6 +28,7 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 @Composable
 fun ShipperHomeScreen(
     onOrderClick: (String) -> Unit = {},
+    onViewMap: (String) -> Unit = {},
     onApplyShipper: () -> Unit = {},
     viewModel: ShipperHomeViewModel = viewModel()
 ) {
@@ -113,7 +114,9 @@ fun ShipperHomeScreen(
                         isLoading = uiState.isLoadingAvailable,
                         onRefresh = { viewModel.loadAvailableOrders() },
                         onAccept = { order -> viewModel.acceptOrder(order.id) },
-                        onViewDetail = { order -> onOrderClick(order.id) }
+                        onViewDetail = { order -> onOrderClick(order.id) },
+                        onViewMap = { },
+                        isMyOrder = false
                     )
                 } else {
                     OrdersList(
@@ -122,6 +125,7 @@ fun ShipperHomeScreen(
                         onRefresh = { viewModel.loadMyOrders() },
                         onAccept = { },
                         onViewDetail = { order -> onOrderClick(order.id) },
+                        onViewMap = { order -> onViewMap(order.id) },
                         isMyOrder = true
                     )
                 }
@@ -236,6 +240,7 @@ fun OrdersList(
     onRefresh: () -> Unit,
     onAccept: (ShipperOrder) -> Unit,
     onViewDetail: (ShipperOrder) -> Unit,
+    onViewMap: (ShipperOrder) -> Unit = {},
     isMyOrder: Boolean = false
 ) {
     val pullToRefreshState = rememberPullToRefreshState()
@@ -278,7 +283,9 @@ fun OrdersList(
                         order = order,
                         onAccept = { onAccept(order) },
                         onClick = { onViewDetail(order) },
-                        showAcceptButton = !isMyOrder
+                        onViewMap = { onViewMap(order) },
+                        showAcceptButton = !isMyOrder,
+                        showMapButton = isMyOrder
                     )
                 }
             }

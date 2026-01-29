@@ -117,6 +117,7 @@ data class DeliveryAddressDto(
     val label: String? = null,
     val fullAddress: String? = null,
     val building: String? = null,
+    val buildingCode: String? = null,  // Building code for GPS (e.g., "A1", "B2")
     val room: String? = null,
     val note: String? = null,
     // Legacy format support

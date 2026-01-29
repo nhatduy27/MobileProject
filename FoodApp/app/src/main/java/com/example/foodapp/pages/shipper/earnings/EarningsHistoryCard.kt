@@ -1,21 +1,30 @@
 package com.example.foodapp.pages.shipper.earnings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.foodapp.data.model.shipper.EarningsData
+import com.example.foodapp.data.model.shipper.wallet.LedgerEntry
+import com.example.foodapp.data.model.shipper.wallet.LedgerType
 import com.example.foodapp.pages.shipper.theme.ShipperColors
 
+
+/**
+ * Card hiển thị mỗi giao dịch trong lịch sử
+ */
 @Composable
-fun EarningsHistoryCard(earnings: EarningsData) {
+fun LedgerEntryCard(entry: LedgerEntry) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = ShipperColors.Surface),
@@ -29,43 +38,99 @@ fun EarningsHistoryCard(earnings: EarningsData) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(
-                    text = earnings.date,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = ShipperColors.TextPrimary
-                )
-                Row(
-                    modifier = Modifier.padding(top = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                // Icon theo loại giao dịch
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (entry.isIncome()) 
+                                ShipperColors.SuccessLight 
+                            else 
+                                ShipperColors.ErrorLight
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "${earnings.totalOrders} đơn",
-                        fontSize = 12.sp,
-                        color = ShipperColors.TextSecondary
+                    Icon(
+                        imageVector = when (entry.type) {
+                            LedgerType.ORDER_PAYOUT -> Icons.Outlined.ShoppingBag
+                            LedgerType.WITHDRAWAL -> Icons.Outlined.AccountBalanceWallet
+                            LedgerType.ADJUSTMENT -> Icons.Outlined.Tune
+                        },
+                        contentDescription = null,
+                        tint = if (entry.isIncome()) ShipperColors.Success else ShipperColors.Error,
+                        modifier = Modifier.size(22.dp)
                     )
-                    if (earnings.bonusEarnings > 0) {
+                }
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = entry.getDisplayDescription(),
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = ShipperColors.TextPrimary,
+                        maxLines = 1
+                    )
+                    
+                    Row(
+                        modifier = Modifier.padding(top = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = " • ",
+                            text = formatDateTime(entry.createdAt),
                             fontSize = 12.sp,
                             color = ShipperColors.TextSecondary
                         )
-                        Text(
-                            text = "+${"%,d".format(earnings.bonusEarnings)}đ thưởng",
-                            fontSize = 12.sp,
-                            color = ShipperColors.Success
-                        )
+                        
+                        entry.orderNumber?.let { orderNum ->
+                            Text(
+                                text = " • #$orderNum",
+                                fontSize = 12.sp,
+                                color = ShipperColors.TextTertiary
+                            )
+                        }
                     }
                 }
             }
-
-            Text(
-                text = "%,dđ".format(earnings.totalEarnings),
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = ShipperColors.Primary
-            )
+            
+            // Số tiền
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = entry.getFormattedAmount(),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = if (entry.isIncome()) ShipperColors.Success else ShipperColors.Error
+                )
+                
+                // Số dư sau giao dịch
+                Text(
+                    text = "Còn lại: ${String.format("%,d", entry.balanceAfter)}đ",
+                    fontSize = 11.sp,
+                    color = ShipperColors.TextTertiary
+                )
+            }
         }
+    }
+}
+
+/**
+ * Format datetime from FirebaseTimestamp millis
+ */
+private fun formatDateTime(timestamp: com.example.foodapp.data.model.shipper.wallet.FirebaseTimestamp?): String {
+    if (timestamp == null) return ""
+    
+    return try {
+        val date = java.util.Date(timestamp.toMillis())
+        val outputFormat = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+        outputFormat.timeZone = java.util.TimeZone.getDefault()
+        outputFormat.format(date)
+    } catch (e: Exception) {
+        ""
     }
 }
