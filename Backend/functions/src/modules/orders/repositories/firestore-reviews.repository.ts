@@ -119,6 +119,67 @@ export class FirestoreReviewsRepository implements IReviewsRepository {
     return { avgRating, totalReviews: ratings.length };
   }
 
+  /**
+   * Find reviews containing a specific product
+   * Since productReviews is an array, we need to filter in-memory
+   */
+  async findByProductId(
+    productId: string,
+    options: { page?: number; limit?: number } = {},
+  ): Promise<{ reviews: Array<{ review: ReviewEntity; productReview: any }>; total: number }> {
+    const { page = 1, limit = 20 } = options;
+
+    // Query all reviews that have productReviews array
+    // Note: Firestore doesn't support querying array item properties directly,
+    // so we need to filter in-memory
+    const snapshot = await this.firestore
+      .collection(this.collection)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    // Filter reviews containing this productId
+    const matchingReviews: Array<{ review: ReviewEntity; productReview: any }> = [];
+    
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      const productReviews = data.productReviews || [];
+      
+      const productReview = productReviews.find(
+        (pr: any) => pr.productId === productId,
+      );
+      
+      if (productReview) {
+        matchingReviews.push({
+          review: this.mapToEntity({ id: doc.id, ...data }),
+          productReview,
+        });
+      }
+    }
+
+    const total = matchingReviews.length;
+    const start = (page - 1) * limit;
+    const paginatedReviews = matchingReviews.slice(start, start + limit);
+
+    return { reviews: paginatedReviews, total };
+  }
+
+  /**
+   * Get product rating stats from all reviews
+   */
+  async getProductStats(productId: string): Promise<{ avgRating: number; totalReviews: number }> {
+    const { reviews } = await this.findByProductId(productId, { limit: 1000 });
+
+    if (reviews.length === 0) {
+      return { avgRating: 0, totalReviews: 0 };
+    }
+
+    const ratings = reviews.map((r) => r.productReview.rating);
+    const sum = ratings.reduce((a, b) => a + b, 0);
+    const avgRating = Math.round((sum / ratings.length) * 10) / 10;
+
+    return { avgRating, totalReviews: ratings.length };
+  }
+
   private mapToEntity(data: FirebaseFirestore.DocumentData): ReviewEntity {
     return {
       id: data.id,
@@ -128,6 +189,7 @@ export class FirestoreReviewsRepository implements IReviewsRepository {
       shopId: data.shopId,
       rating: data.rating,
       comment: data.comment,
+      productReviews: data.productReviews,
       ownerReply: data.ownerReply,
       ownerRepliedAt: data.ownerRepliedAt?.toDate?.().toISOString?.() || data.ownerRepliedAt,
       createdAt: data.createdAt?.toDate?.().toISOString?.() || data.createdAt,

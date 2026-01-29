@@ -5,29 +5,50 @@ import {
   ConflictException,
   BadRequestException,
   ForbiddenException,
+  Logger,
 } from '@nestjs/common';
 import { FirestoreReviewsRepository } from '../repositories/firestore-reviews.repository';
-import { ReviewEntity } from '../entities/review.entity';
+import { ReviewEntity, ProductReview } from '../entities/review.entity';
 import { OrdersService } from './orders.service';
 import { ShopsService } from '../../shops/services/shops.service';
+import { ProductsService } from '../../products/services/products.service';
+import { ProductReviewDto } from '../dto/create-review.dto';
 
 export const REVIEWS_REPOSITORY = 'REVIEWS_REPOSITORY';
 
+/**
+ * Response type for product rating updates
+ */
+export interface ProductRatingUpdate {
+  productId: string;
+  productName: string;
+  newRating: number;
+  totalRatings: number;
+}
+
 @Injectable()
 export class ReviewsService {
+  private readonly logger = new Logger(ReviewsService.name);
+
   constructor(
     @Inject(REVIEWS_REPOSITORY)
     private readonly reviewsRepository: FirestoreReviewsRepository,
     private readonly ordersService: OrdersService,
     private readonly shopsService: ShopsService,
+    private readonly productsService: ProductsService,
   ) {}
 
   /**
    * Create a review for an order
+   * Supports both shop-level rating and individual product ratings
+   * 
    * Validation:
    * - Order must exist and be DELIVERED
    * - Customer must own the order
    * - Order must not already have a review
+   * - Product IDs in productReviews must match order items
+   * 
+   * @returns Review entity and product rating updates
    */
   async createReview(
     customerId: string,
@@ -35,7 +56,11 @@ export class ReviewsService {
     orderId: string,
     rating: number,
     comment?: string,
-  ): Promise<ReviewEntity> {
+    productReviews?: ProductReviewDto[],
+  ): Promise<{
+    review: ReviewEntity;
+    productRatingsUpdated?: ProductRatingUpdate[];
+  }> {
     // Validate rating
     if (rating < 1 || rating > 5) {
       throw new BadRequestException({
@@ -83,7 +108,45 @@ export class ReviewsService {
       });
     }
 
-    
+    // Build order product ID set for validation
+    const orderProductIds = new Set(order.items.map((item) => item.productId));
+    const orderProductNameMap = new Map(
+      order.items.map((item) => [item.productId, item.productName]),
+    );
+
+    // Validate and enrich product reviews
+    let enrichedProductReviews: ProductReview[] | undefined;
+    if (productReviews && productReviews.length > 0) {
+      // Check for duplicate productIds in productReviews
+      const reviewProductIds = productReviews.map((pr) => pr.productId);
+      const uniqueProductIds = new Set(reviewProductIds);
+      if (reviewProductIds.length !== uniqueProductIds.size) {
+        throw new BadRequestException({
+          code: 'REVIEW_008',
+          message: 'Không thể đánh giá cùng một sản phẩm nhiều lần trong một review',
+          statusCode: 400,
+        });
+      }
+
+      // Validate each productId exists in order items
+      for (const pr of productReviews) {
+        if (!orderProductIds.has(pr.productId)) {
+          throw new BadRequestException({
+            code: 'REVIEW_009',
+            message: `Sản phẩm ${pr.productId} không có trong đơn hàng`,
+            statusCode: 400,
+          });
+        }
+      }
+
+      // Enrich with product names
+      enrichedProductReviews = productReviews.map((pr) => ({
+        productId: pr.productId,
+        productName: orderProductNameMap.get(pr.productId) || 'Unknown',
+        rating: pr.rating,
+        comment: pr.comment,
+      }));
+    }
 
     // Create review
     const review = await this.reviewsRepository.create({
@@ -93,12 +156,101 @@ export class ReviewsService {
       shopId: order.shopId,
       rating,
       comment,
+      productReviews: enrichedProductReviews,
     });
 
     // Update shop stats
     await this.updateShopStats(order.shopId);
 
-    return review;
+    // Update product ratings and collect results
+    let productRatingsUpdated: ProductRatingUpdate[] | undefined;
+    if (enrichedProductReviews && enrichedProductReviews.length > 0) {
+      productRatingsUpdated = [];
+      
+      for (const productReview of enrichedProductReviews) {
+        try {
+          const updatedStats = await this.updateProductRating(
+            productReview.productId,
+            productReview.rating,
+          );
+          
+          if (updatedStats) {
+            productRatingsUpdated.push({
+              productId: productReview.productId,
+              productName: productReview.productName,
+              newRating: updatedStats.rating,
+              totalRatings: updatedStats.totalRatings,
+            });
+          }
+        } catch (error) {
+          // Log error but don't fail the whole review
+          this.logger.warn(
+            `Failed to update rating for product ${productReview.productId}: ${error}`,
+          );
+        }
+      }
+    }
+
+    return {
+      review,
+      productRatingsUpdated:
+        productRatingsUpdated && productRatingsUpdated.length > 0
+          ? productRatingsUpdated
+          : undefined,
+    };
+  }
+
+  /**
+   * Update product rating with incremental calculation
+   * Formula: newAvg = (oldAvg * totalRatings + newRating) / (totalRatings + 1)
+   * 
+   * @returns Updated rating stats or null if product not found
+   */
+  private async updateProductRating(
+    productId: string,
+    newRating: number,
+  ): Promise<{ rating: number; totalRatings: number } | null> {
+    try {
+      // Get current product stats
+      const product = await this.productsService.findOne(productId);
+      if (!product) {
+        this.logger.warn(`Product ${productId} not found when updating rating`);
+        return null;
+      }
+
+      // Calculate new average
+      const currentRating = product.rating || 0;
+      const currentCount = product.totalRatings || 0;
+
+      let newAvgRating: number;
+      let newTotalRatings: number;
+
+      if (currentCount === 0) {
+        newAvgRating = newRating;
+        newTotalRatings = 1;
+      } else {
+        newAvgRating =
+          (currentRating * currentCount + newRating) / (currentCount + 1);
+        newTotalRatings = currentCount + 1;
+      }
+
+      // Round to 1 decimal place
+      newAvgRating = Math.round(newAvgRating * 10) / 10;
+
+      // Update product stats
+      await this.productsService.updateProductStats(productId, {
+        rating: newAvgRating,
+        totalRatings: newTotalRatings,
+      });
+
+      return {
+        rating: newAvgRating,
+        totalRatings: newTotalRatings,
+      };
+    } catch (error) {
+      this.logger.error(`Error updating product rating for ${productId}:`, error);
+      throw error;
+    }
   }
 
   /**
@@ -115,6 +267,54 @@ export class ReviewsService {
       reviews,
       total,
       avgRating: stats.avgRating,
+    };
+  }
+
+  /**
+   * Get reviews for a specific product (public)
+   * Returns reviews that contain ratings for this product
+   */
+  async getProductReviews(
+    productId: string,
+    options: { page?: number; limit?: number } = {},
+  ): Promise<{
+    reviews: Array<{
+      reviewId: string;
+      customerName: string;
+      rating: number;
+      comment?: string;
+      createdAt: any;
+    }>;
+    total: number;
+    avgRating: number;
+    totalRatings: number;
+  }> {
+    const { reviews, total } = await this.reviewsRepository.findByProductId(
+      productId,
+      options,
+    );
+
+    // Map to simplified response for product reviews
+    const productReviews = reviews.map((r) => ({
+      reviewId: r.review.id || '',
+      customerName: r.review.customerName || 'Khách hàng',
+      rating: r.productReview.rating as number,
+      comment: r.productReview.comment as string | undefined,
+      createdAt: r.review.createdAt,
+    }));
+
+    // Calculate average rating
+    let avgRating = 0;
+    if (productReviews.length > 0) {
+      const sum = productReviews.reduce((acc, r) => acc + r.rating, 0);
+      avgRating = Math.round((sum / productReviews.length) * 10) / 10;
+    }
+
+    return {
+      reviews: productReviews,
+      total,
+      avgRating,
+      totalRatings: total,
     };
   }
 

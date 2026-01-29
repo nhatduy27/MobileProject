@@ -1,4 +1,5 @@
 export * from './create-order.dto';
+export * from './create-review.dto';
 export * from './order-filter.dto';
 export * from './order-list-item.dto';
 export * from './order-customer-snapshot.dto';

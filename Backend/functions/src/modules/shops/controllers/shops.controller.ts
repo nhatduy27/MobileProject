@@ -110,6 +110,8 @@ export class ShopsController {
           rating: 4.5,
           totalRatings: 50,
           totalOrders: 150,
+          ownerId: 'owner_123',
+          ownerName: 'Nguyễn Văn A',
         },
       },
     },

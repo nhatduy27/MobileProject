@@ -313,6 +313,7 @@ export class FirestoreOrdersRepository implements IOrdersRepository {
       items: data.items || [],
       subtotal: data.subtotal,
       shipFee: data.shipFee,
+      shipperPayout: data.shipperPayout, // Internal shipper payout amount
       discount: data.discount,
       voucherCode: data.voucherCode ?? null,
       voucherId: data.voucherId ?? null,

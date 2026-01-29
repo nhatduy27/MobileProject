@@ -162,16 +162,43 @@ export class WalletsService {
         const ownerWalletDoc = await transaction.get(ownerWalletRef);
         const shipperWalletDoc = await transaction.get(shipperWalletRef);
 
+        // Auto-create owner wallet if not exists
+        let ownerWallet: WalletEntity;
         if (!ownerWalletDoc.exists) {
-          throw new NotFoundException(`Owner wallet ${ownerWalletId} not found`);
+          this.logger.log(`Auto-creating owner wallet ${ownerWalletId} for payout`);
+          ownerWallet = {
+            id: ownerWalletId,
+            userId: ownerId,
+            type: WalletType.OWNER,
+            balance: 0,
+            totalEarned: 0,
+            totalWithdrawn: 0,
+            createdAt: Timestamp.now() as any,
+            updatedAt: Timestamp.now() as any,
+          };
+          transaction.set(ownerWalletRef, ownerWallet);
+        } else {
+          ownerWallet = ownerWalletDoc.data() as WalletEntity;
         }
 
+        // Auto-create shipper wallet if not exists
+        let shipperWallet: WalletEntity;
         if (!shipperWalletDoc.exists) {
-          throw new NotFoundException(`Shipper wallet ${shipperWalletId} not found`);
+          this.logger.log(`Auto-creating shipper wallet ${shipperWalletId} for payout`);
+          shipperWallet = {
+            id: shipperWalletId,
+            userId: shipperId,
+            type: WalletType.SHIPPER,
+            balance: 0,
+            totalEarned: 0,
+            totalWithdrawn: 0,
+            createdAt: Timestamp.now() as any,
+            updatedAt: Timestamp.now() as any,
+          };
+          transaction.set(shipperWalletRef, shipperWallet);
+        } else {
+          shipperWallet = shipperWalletDoc.data() as WalletEntity;
         }
-
-        const ownerWallet = ownerWalletDoc.data() as WalletEntity;
-        const shipperWallet = shipperWalletDoc.data() as WalletEntity;
 
         // Calculate new balances
         const ownerBalanceBefore = ownerWallet.balance;

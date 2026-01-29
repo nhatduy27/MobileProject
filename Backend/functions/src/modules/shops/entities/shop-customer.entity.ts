@@ -22,11 +22,13 @@ export class ShopCustomerEntity {
 /**
  * Shop Customer Detail Entity
  * For public customer detail view
- * Includes additional fields like phone, images, totalOrders
+ * Includes additional fields like phone, images, totalOrders, ownerId, ownerName
  */
 export class ShopCustomerDetailEntity extends ShopCustomerEntity {
   phone: string;
   coverImageUrl?: string;
   logoUrl?: string;
   totalOrders: number;
+  ownerId: string;
+  ownerName: string;
 }

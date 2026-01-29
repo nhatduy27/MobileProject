@@ -28,6 +28,7 @@ import { ChatModule } from './modules/chat/chat.module';
 import { RevenueModule } from './modules/revenue/revenue.module';
 import { GpsModule } from './modules/gps/gps.module';
 import { DeliveryPointsModule } from './modules/delivery-points/delivery-points.module';
+import { ShipperRemovalRequestsModule } from './modules/shipper-removal-requests/shipper-removal-requests.module';
 
 @Module({
   imports: [
@@ -79,6 +80,9 @@ import { DeliveryPointsModule } from './modules/delivery-points/delivery-points.
 
     // GPS / Shipper Route Optimization ✅
     GpsModule,
+
+    // Shipper Features
+    ShipperRemovalRequestsModule,
   ],
 })
 export class AppModule {}

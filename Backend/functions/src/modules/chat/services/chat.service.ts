@@ -13,7 +13,7 @@ import {
   IMessagesRepository,
   MESSAGES_REPOSITORY,
 } from '../interfaces';
-import { ConversationEntity, MessageEntity, MessageStatus } from '../entities';
+import { ConversationEntity, ConversationWithParticipantInfo, MessageEntity, MessageStatus } from '../entities';
 import {
   CreateConversationDto,
   SendMessageDto,
@@ -81,11 +81,12 @@ export class ChatService {
   /**
    * Create or get existing conversation (idempotent).
    * Returns existing conversation if found, creates new one if not.
+   * Response includes other participant info for better UX.
    */
   async getOrCreateConversation(
     userId: string,
     dto: CreateConversationDto,
-  ): Promise<ConversationEntity> {
+  ): Promise<ConversationWithParticipantInfo> {
     const { participantId } = dto;
 
     // Validate: cannot chat with yourself
@@ -96,25 +97,29 @@ export class ChatService {
     const conversationId = this.generateConversationId(userId, participantId);
 
     // Check if conversation already exists
-    const existing = await this.conversationsRepo.findById(conversationId);
-    if (existing) {
+    let conversation = await this.conversationsRepo.findById(conversationId);
+    
+    if (!conversation) {
+      // Create new conversation
+      this.logger.log(`Creating new conversation: ${conversationId}`);
+      conversation = await this.conversationsRepo.create({
+        id: conversationId,
+        participants: [userId, participantId],
+      });
+    } else {
       this.logger.debug(`Conversation ${conversationId} already exists`);
-      return existing;
     }
 
-    // Create new conversation
-    this.logger.log(`Creating new conversation: ${conversationId}`);
-    return this.conversationsRepo.create({
-      id: conversationId,
-      participants: [userId, participantId],
-    });
+    // Enrich with participant info
+    return this.enrichConversationWithParticipantInfo(conversation, userId);
   }
 
   /**
    * Get conversation by ID.
    * Validates that user is a participant.
+   * Returns enriched data with other participant info.
    */
-  async getConversation(userId: string, conversationId: string): Promise<ConversationEntity> {
+  async getConversation(userId: string, conversationId: string): Promise<ConversationWithParticipantInfo> {
     // Validate user is participant
     if (!this.isParticipant(conversationId, userId)) {
       throw new ForbiddenException('You are not a participant in this conversation');
@@ -125,18 +130,80 @@ export class ChatService {
       throw new NotFoundException('Conversation not found');
     }
 
-    return conversation;
+    return this.enrichConversationWithParticipantInfo(conversation, userId);
   }
 
   /**
    * List conversations for a user with pagination.
+   * Returns enriched data with other participant's info (name, avatar, role, shopName)
    */
   async listConversations(
     userId: string,
     query: ListConversationsQueryDto,
-  ): Promise<{ items: ConversationEntity[]; hasMore: boolean; nextCursor?: string }> {
+  ): Promise<{ items: ConversationWithParticipantInfo[]; hasMore: boolean; nextCursor?: string }> {
     const { limit = 20, startAfter } = query;
-    return this.conversationsRepo.listByUser(userId, limit, startAfter);
+    const result = await this.conversationsRepo.listByUser(userId, limit, startAfter);
+    
+    // Enrich conversations with participant info
+    const enrichedItems = await Promise.all(
+      result.items.map(async (conv) => this.enrichConversationWithParticipantInfo(conv, userId))
+    );
+    
+    return {
+      items: enrichedItems,
+      hasMore: result.hasMore,
+      nextCursor: result.nextCursor,
+    };
+  }
+
+  /**
+   * Enrich a conversation with the other participant's info
+   */
+  private async enrichConversationWithParticipantInfo(
+    conversation: ConversationEntity,
+    currentUserId: string,
+  ): Promise<ConversationWithParticipantInfo> {
+    const otherParticipantId = this.getOtherParticipant(conversation.id, currentUserId);
+    
+    // Fetch user info from Firestore
+    const db = this.firebaseApp.firestore();
+    const userDoc = await db.collection('users').doc(otherParticipantId).get();
+    const userData = userDoc.exists ? userDoc.data() : null;
+    
+    // If user is OWNER, try to get shop info
+    let shopName: string | undefined;
+    let shopId: string | undefined;
+    
+    if (userData?.role === 'OWNER') {
+      // Find shop owned by this user
+      const shopsSnapshot = await db
+        .collection('shops')
+        .where('ownerId', '==', otherParticipantId)
+        .limit(1)
+        .get();
+      
+      if (!shopsSnapshot.empty) {
+        const shopData = shopsSnapshot.docs[0].data();
+        shopName = shopData.name;
+        shopId = shopsSnapshot.docs[0].id;
+      }
+    } else if (userData?.role === 'SHIPPER' && userData?.shipperInfo?.shopId) {
+      // For shipper, get shop they work for
+      shopId = userData.shipperInfo.shopId;
+      shopName = userData.shipperInfo.shopName;
+    }
+    
+    return {
+      ...conversation,
+      otherParticipant: {
+        id: otherParticipantId,
+        displayName: userData?.displayName || userData?.name || 'Unknown User',
+        avatarUrl: userData?.avatarUrl || userData?.photoUrl,
+        role: userData?.role || 'CUSTOMER',
+        shopName,
+        shopId,
+      },
+    };
   }
 
   /**

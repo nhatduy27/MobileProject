@@ -17,6 +17,21 @@ export interface ConversationEntity {
   updatedAt: Date;
 }
 
+/**
+ * Extended Conversation with participant details
+ * Used in list conversations response for better UX
+ */
+export interface ConversationWithParticipantInfo extends ConversationEntity {
+  otherParticipant: {
+    id: string;
+    displayName: string;
+    avatarUrl?: string;
+    role: string; // CUSTOMER | OWNER | SHIPPER
+    shopName?: string; // For OWNER role - tên shop
+    shopId?: string; // For OWNER/SHIPPER role
+  };
+}
+
 export interface CreateConversationData {
   id: string;
   participants: string[];

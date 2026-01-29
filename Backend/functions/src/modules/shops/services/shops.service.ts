@@ -298,6 +298,8 @@ export class ShopsService {
       shipFeePerOrder: shop.shipFeePerOrder,
       minOrderAmount: shop.minOrderAmount,
       totalOrders: shop.totalOrders,
+      ownerId: shop.ownerId,
+      ownerName: shop.ownerName,
     };
   }
 
@@ -339,4 +341,51 @@ export class ShopsService {
   ): Promise<void> {
     await this.shopsRepository.updateStats(shopId, stats);
   }
+
+  /**
+   * ADMIN: Recompute shop stats from orders and reviews
+   * Idempotent: safe to call multiple times
+   * Used for backfilling/repairing stats after migration or bug fixes
+   *
+   * @param shopId Shop ID to recompute
+   * @param ordersRepo Orders repository (injected for flexibility in testing)
+   * @param reviewsRepo Reviews repository
+   * @returns Updated shop stats
+   */
+  async recomputeShopStats(
+    shopId: string,
+    ordersRepo: any,
+    reviewsRepo: any,
+  ): Promise<{ totalOrders: number; totalRevenue: number; rating: number; totalRatings: number }> {
+    // 1. Recompute order stats: count DELIVERED orders and sum revenue
+    const deliveredOrdersSnapshot = await ordersRepo
+      .query()
+      .where('shopId', '==', shopId)
+      .where('status', '==', 'DELIVERED')
+      .get();
+
+    const totalOrders = deliveredOrdersSnapshot.size;
+    const totalRevenue = deliveredOrdersSnapshot.docs.reduce(
+      (sum: number, doc: any) => sum + (doc.data().total || 0),
+      0,
+    );
+
+    // 2. Recompute rating stats: count reviews and calculate average
+    const reviewsSnapshot = await reviewsRepo.query().where('shopId', '==', shopId).get();
+    const totalReviews = reviewsSnapshot.size;
+    const ratings = reviewsSnapshot.docs.map((doc: any) => doc.data().rating || 0);
+    const rating =
+      ratings.length > 0 ? Math.round((ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length) * 10) / 10 : 0;
+
+    // 3. Update shop doc with all stats
+    await this.updateShopStats(shopId, {
+      totalOrders,
+      totalRevenue,
+      rating,
+      totalRatings: totalReviews,
+    });
+
+    return { totalOrders, totalRevenue, rating, totalRatings: totalReviews };
+  }
 }
+
