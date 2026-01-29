@@ -306,7 +306,10 @@ fun DashBoardRootScreen(navController: NavHostController) {
 
                     "orders" -> OrdersScreen(onMenuClick = { scope.launch { drawerState.open() } })
                     "foods" -> FoodsScreen(onMenuClick = { scope.launch { drawerState.open() } })
-                    "shippers" -> ShippersScreen(onMenuClick = { scope.launch { drawerState.open() } })
+                    "shippers" -> ShippersScreen(
+                        onMenuClick = { scope.launch { drawerState.open() } },
+                        shopId = shopState.shopId
+                    )
                     "vouchers" -> VouchersScreen(onMenuClick = { scope.launch { drawerState.open() } })
                     "customers" -> CustomerScreenMain(onMenuClick = { scope.launch { drawerState.open() } }) 
                     "revenue" -> RevenueScreen()

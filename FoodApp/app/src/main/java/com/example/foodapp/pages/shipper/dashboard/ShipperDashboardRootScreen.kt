@@ -37,6 +37,7 @@ import com.example.foodapp.pages.shipper.gps.GpsScreen
 import com.example.foodapp.pages.shipper.gps.TripDetailScreen
 import com.example.foodapp.pages.shipper.gps.TripHistoryScreen
 import com.example.foodapp.pages.shipper.gps.DeliveryMapScreen
+import com.example.foodapp.pages.shipper.removal.RemovalRequestScreen
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import androidx.navigation.compose.rememberNavController
@@ -226,6 +227,15 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                     }
                 )
                 DrawerMenuItem(
+                    icon = Icons.Outlined.ExitToApp,
+                    title = "Yêu cầu rời shop",
+                    isSelected = currentScreen == "removal_requests",
+                    onClick = {
+                        currentScreen = "removal_requests"
+                        scope.launch { drawerState.close() }
+                    }
+                )
+                DrawerMenuItem(
                     icon = Icons.Outlined.Settings,
                     title = "Cài đặt",
                     isSelected = currentScreen == "settings",
@@ -308,6 +318,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                                     currentScreen == "earnings" -> "Thu nhập của tôi"
                                     currentScreen == "history" -> "Lịch sử giao hàng"
                                     currentScreen == "applications" -> "Đơn ứng tuyển"
+                                    currentScreen == "removal_requests" -> "Yêu cầu rời shop"
                                     currentScreen == "gps" -> "Lộ trình giao hàng"
                                     currentScreen == "settings" -> "Cài đặt"
                                     currentScreen == "notifications" -> "Thông báo"
@@ -407,6 +418,10 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                         )
                         "notifications" -> NotificationsScreen()
                         "help" -> HelpScreen()
+                        "removal_requests" -> RemovalRequestScreen(
+                            onBack = { currentScreen = "home" },
+                            showTopBar = false
+                        )
                         "gps" -> {
                             when (currentGpsRoute) {
                                 "trip_detail" -> TripDetailScreen(

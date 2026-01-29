@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
@@ -20,22 +21,33 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.data.model.owner.shipper.ApplicationStatus
+import com.example.foodapp.data.model.owner.removal.OwnerRemovalRequest
+import com.example.foodapp.data.model.owner.removal.OwnerRemovalRequestStatus
+import com.example.foodapp.data.model.owner.removal.OwnerRemovalRequestType
 import com.example.foodapp.pages.owner.theme.OwnerColors
 import com.example.foodapp.pages.owner.theme.OwnerDimens
+import java.text.SimpleDateFormat
+import java.util.*
 
 /**
  * Màn hình quản lý Shipper
- * 2 tabs: Applications (Đơn xin làm shipper) và Active Shippers (Shipper đang hoạt động)
+ * 3 tabs: Applications (Đơn xin làm shipper), Active Shippers (Shipper đang hoạt động), Removal Requests (Yêu cầu rời shop)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShippersScreen(
     onMenuClick: () -> Unit,
+    shopId: String? = null,
     viewModel: ShippersViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val stats = remember(uiState.applications, uiState.shippers) {
+    val stats = remember(uiState.applications, uiState.shippers, uiState.removalRequests) {
         viewModel.getStats()
+    }
+    
+    // Set shopId khi có
+    LaunchedEffect(shopId) {
+        shopId?.let { viewModel.setShopId(it) }
     }
 
     // Snackbar
@@ -55,6 +67,17 @@ fun ShippersScreen(
             viewModel.clearSuccess()
         }
     }
+    
+    // Reject Dialog
+    if (uiState.showRejectDialog) {
+        RejectRemovalRequestDialog(
+            reason = uiState.rejectionReason,
+            onReasonChange = viewModel::onRejectionReasonChanged,
+            onDismiss = viewModel::dismissRejectDialog,
+            onConfirm = viewModel::rejectRemovalRequest,
+            isProcessing = uiState.isProcessing
+        )
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -73,11 +96,12 @@ fun ShippersScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // Tabs
-            TabRow(
+            // Tabs - 3 tabs now
+            ScrollableTabRow(
                 selectedTabIndex = uiState.selectedTab,
                 containerColor = OwnerColors.Surface,
-                contentColor = OwnerColors.Primary
+                contentColor = OwnerColors.Primary,
+                edgePadding = 0.dp
             ) {
                 Tab(
                     selected = uiState.selectedTab == 0,
@@ -85,7 +109,7 @@ fun ShippersScreen(
                     text = {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                "Đơn xin làm shipper",
+                                "Đơn ứng tuyển",
                                 fontWeight = if (uiState.selectedTab == 0) FontWeight.Bold else FontWeight.Normal
                             )
                             if (stats.pendingApplications > 0) {
@@ -105,16 +129,37 @@ fun ShippersScreen(
                     onClick = { viewModel.onTabSelected(1) },
                     text = {
                         Text(
-                            "Shipper hoạt động",
+                            "Shipper",
                             fontWeight = if (uiState.selectedTab == 1) FontWeight.Bold else FontWeight.Normal
                         )
+                    }
+                )
+                Tab(
+                    selected = uiState.selectedTab == 2,
+                    onClick = { viewModel.onTabSelected(2) },
+                    text = {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                "Yêu cầu rời",
+                                fontWeight = if (uiState.selectedTab == 2) FontWeight.Bold else FontWeight.Normal
+                            )
+                            if (stats.pendingRemovalRequests > 0) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Badge(
+                                    containerColor = OwnerColors.Warning,
+                                    contentColor = OwnerColors.Surface
+                                ) {
+                                    Text("${stats.pendingRemovalRequests}")
+                                }
+                            }
+                        }
                     }
                 )
             }
 
             // Content
             Box(modifier = Modifier.fillMaxSize()) {
-                if (uiState.isLoading && (uiState.applications.isEmpty() && uiState.shippers.isEmpty())) {
+                if (uiState.isLoading && (uiState.applications.isEmpty() && uiState.shippers.isEmpty() && uiState.removalRequests.isEmpty())) {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -133,6 +178,11 @@ fun ShippersScreen(
                             stats = stats
                         )
                         1 -> ShippersTab(
+                            viewModel = viewModel,
+                            uiState = uiState,
+                            stats = stats
+                        )
+                        2 -> RemovalRequestsTab(
                             viewModel = viewModel,
                             uiState = uiState,
                             stats = stats
@@ -405,4 +455,419 @@ private fun FilterChipStatus(
             selectedBorderColor = OwnerColors.Primary
         )
     )
+}
+
+// ==================== REMOVAL REQUESTS TAB ====================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RemovalRequestsTab(
+    viewModel: ShippersViewModel,
+    uiState: ShipperUiState,
+    stats: ShipperStats
+) {
+    val filteredRequests = remember(uiState.removalRequests, uiState.searchQuery) {
+        viewModel.getFilteredRemovalRequests()
+    }
+
+    PullToRefreshBox(
+        isRefreshing = uiState.isRefreshing,
+        onRefresh = { viewModel.loadRemovalRequests(refresh = true) },
+        modifier = Modifier.fillMaxSize()
+    ) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            // Stats
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    StatsCard(
+                        title = "Tổng yêu cầu",
+                        value = stats.totalRemovalRequests.toString(),
+                        color = OwnerColors.Info,
+                        modifier = Modifier.weight(1f)
+                    )
+                    StatsCard(
+                        title = "Chờ xử lý",
+                        value = stats.pendingRemovalRequests.toString(),
+                        color = OwnerColors.Warning,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            // Filter chips
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChipStatus(
+                        label = "Tất cả",
+                        isSelected = uiState.selectedRemovalStatus == null,
+                        onClick = { viewModel.onRemovalStatusFilterChanged(null) }
+                    )
+                    FilterChipStatus(
+                        label = "Chờ xử lý",
+                        isSelected = uiState.selectedRemovalStatus == OwnerRemovalRequestStatus.PENDING,
+                        onClick = { viewModel.onRemovalStatusFilterChanged(OwnerRemovalRequestStatus.PENDING) }
+                    )
+                    FilterChipStatus(
+                        label = "Đã duyệt",
+                        isSelected = uiState.selectedRemovalStatus == OwnerRemovalRequestStatus.APPROVED,
+                        onClick = { viewModel.onRemovalStatusFilterChanged(OwnerRemovalRequestStatus.APPROVED) }
+                    )
+                    FilterChipStatus(
+                        label = "Đã từ chối",
+                        isSelected = uiState.selectedRemovalStatus == OwnerRemovalRequestStatus.REJECTED,
+                        onClick = { viewModel.onRemovalStatusFilterChanged(OwnerRemovalRequestStatus.REJECTED) }
+                    )
+                }
+            }
+
+            // Empty state
+            if (filteredRequests.isEmpty() && !uiState.isLoading) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                Icons.Outlined.ExitToApp,
+                                contentDescription = null,
+                                modifier = Modifier.size(64.dp),
+                                tint = OwnerColors.BorderLight
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = if (uiState.searchQuery.isNotEmpty())
+                                    "Không tìm thấy yêu cầu nào"
+                                else
+                                    "Chưa có yêu cầu rời shop nào",
+                                fontSize = 16.sp,
+                                color = OwnerColors.TextSecondary
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Removal requests list
+            items(filteredRequests, key = { it.id }) { request ->
+                RemovalRequestCard(
+                    request = request,
+                    onApprove = { viewModel.approveRemovalRequest(request.id) },
+                    onReject = { viewModel.showRejectRemovalDialog(request.id) },
+                    isProcessing = uiState.isProcessing
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RemovalRequestCard(
+    request: OwnerRemovalRequest,
+    onApprove: () -> Unit,
+    onReject: () -> Unit,
+    isProcessing: Boolean
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface),
+        elevation = CardDefaults.cardElevation(2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            // Header row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Shipper info
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Avatar placeholder
+                    Surface(
+                        shape = CircleShape,
+                        color = OwnerColors.Primary.copy(alpha = 0.1f),
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                Icons.Filled.Person,
+                                contentDescription = null,
+                                tint = OwnerColors.Primary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            request.shipperName,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp,
+                            color = OwnerColors.TextPrimary
+                        )
+                        request.shipperPhone?.let { phone ->
+                            Text(
+                                phone,
+                                fontSize = 13.sp,
+                                color = OwnerColors.TextSecondary
+                            )
+                        }
+                    }
+                }
+                
+                // Status badge
+                RemovalStatusBadge(status = request.status)
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Type row
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    when (request.type) {
+                        OwnerRemovalRequestType.QUIT -> Icons.Outlined.ExitToApp
+                        OwnerRemovalRequestType.TRANSFER -> Icons.Outlined.SwapHoriz
+                    },
+                    contentDescription = null,
+                    tint = OwnerColors.TextSecondary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    request.getTypeDisplayName(),
+                    fontSize = 14.sp,
+                    color = OwnerColors.TextSecondary
+                )
+            }
+            
+            // Reason
+            if (!request.reason.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = OwnerColors.Background),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        "Lý do: ${request.reason}",
+                        modifier = Modifier.padding(10.dp),
+                        fontSize = 13.sp,
+                        color = OwnerColors.TextSecondary
+                    )
+                }
+            }
+            
+            // Rejection reason (if rejected)
+            if (request.status == OwnerRemovalRequestStatus.REJECTED && !request.rejectionReason.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = OwnerColors.Error.copy(alpha = 0.1f)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        "Lý do từ chối: ${request.rejectionReason}",
+                        modifier = Modifier.padding(10.dp),
+                        fontSize = 13.sp,
+                        color = OwnerColors.Error
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Date
+            Text(
+                "Ngày tạo: ${formatRemovalDate(request.createdAt)}",
+                fontSize = 12.sp,
+                color = OwnerColors.TextTertiary
+            )
+            
+            // Action buttons (only for pending)
+            if (request.status == OwnerRemovalRequestStatus.PENDING) {
+                Spacer(modifier = Modifier.height(12.dp))
+                HorizontalDivider(color = OwnerColors.Divider)
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onReject,
+                        enabled = !isProcessing,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = OwnerColors.Error
+                        ),
+                        border = androidx.compose.foundation.BorderStroke(
+                            width = 1.dp,
+                            color = if (!isProcessing) OwnerColors.Error else OwnerColors.Error.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Icon(
+                            Icons.Outlined.Close,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Từ chối")
+                    }
+                    
+                    Button(
+                        onClick = onApprove,
+                        enabled = !isProcessing,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = OwnerColors.Success
+                        )
+                    ) {
+                        if (isProcessing) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(
+                                Icons.Outlined.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Chấp nhận")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RemovalStatusBadge(status: OwnerRemovalRequestStatus) {
+    val (backgroundColor, textColor, text) = when (status) {
+        OwnerRemovalRequestStatus.PENDING -> Triple(
+            OwnerColors.Warning.copy(alpha = 0.15f),
+            OwnerColors.Warning,
+            "Chờ xử lý"
+        )
+        OwnerRemovalRequestStatus.APPROVED -> Triple(
+            OwnerColors.Success.copy(alpha = 0.15f),
+            OwnerColors.Success,
+            "Đã chấp nhận"
+        )
+        OwnerRemovalRequestStatus.REJECTED -> Triple(
+            OwnerColors.Error.copy(alpha = 0.15f),
+            OwnerColors.Error,
+            "Đã từ chối"
+        )
+    }
+    
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = backgroundColor
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium,
+            color = textColor
+        )
+    }
+}
+
+@Composable
+private fun RejectRemovalRequestDialog(
+    reason: String,
+    onReasonChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit,
+    isProcessing: Boolean
+) {
+    AlertDialog(
+        onDismissRequest = { if (!isProcessing) onDismiss() },
+        title = { 
+            Text(
+                "Từ chối yêu cầu rời shop",
+                fontWeight = FontWeight.Bold
+            ) 
+        },
+        text = {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    "Vui lòng nhập lý do từ chối yêu cầu rời shop của shipper:",
+                    color = OwnerColors.TextSecondary
+                )
+                
+                OutlinedTextField(
+                    value = reason,
+                    onValueChange = onReasonChange,
+                    label = { Text("Lý do từ chối") },
+                    placeholder = { Text("Nhập lý do...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3,
+                    enabled = !isProcessing
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                enabled = !isProcessing && reason.isNotBlank(),
+                colors = ButtonDefaults.buttonColors(containerColor = OwnerColors.Error)
+            ) {
+                if (isProcessing) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        color = Color.White,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text("Từ chối")
+                }
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isProcessing
+            ) {
+                Text("Hủy")
+            }
+        }
+    )
+}
+
+// Helper function
+private fun formatRemovalDate(dateString: String?): String {
+    if (dateString.isNullOrBlank()) return ""
+    return try {
+        val inputFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+        val outputFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        val date = inputFormat.parse(dateString)
+        date?.let { outputFormat.format(it) } ?: dateString
+    } catch (e: Exception) {
+        dateString.take(10)
+    }
 }

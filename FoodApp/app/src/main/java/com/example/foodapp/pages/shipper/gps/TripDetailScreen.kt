@@ -56,11 +56,16 @@ fun TripDetailScreen(
         }
     }
     
-    // Handle messages
+    // Handle messages and navigation
     LaunchedEffect(uiState.successMessage) {
         uiState.successMessage?.let { message ->
             Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
             viewModel.clearSuccessMessage()
+            
+            // Navigate back when trip is completed or cancelled
+            if (message.contains("Hoàn thành") || message.contains("hủy")) {
+                onBack()
+            }
         }
     }
     

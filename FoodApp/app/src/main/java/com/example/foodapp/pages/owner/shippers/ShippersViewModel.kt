@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.di.RepositoryProvider
 import com.example.foodapp.data.model.owner.shipper.*
+import com.example.foodapp.data.model.owner.removal.OwnerRemovalRequestStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +23,10 @@ class ShippersViewModel : ViewModel() {
     }
 
     private val repository = RepositoryProvider.getOwnerShipperRepository()
+    private val removalRepository = RepositoryProvider.getOwnerRemovalRequestRepository()
+    
+    // Shop ID - cần được set từ ngoài hoặc lấy từ profile
+    private var currentShopId: String? = null
 
     private val _uiState = MutableStateFlow(ShipperUiState())
     val uiState: StateFlow<ShipperUiState> = _uiState.asStateFlow()
@@ -30,15 +35,24 @@ class ShippersViewModel : ViewModel() {
         loadApplications()
         loadShippers()
     }
+    
+    /**
+     * Set shop ID cho việc load removal requests
+     */
+    fun setShopId(shopId: String) {
+        currentShopId = shopId
+        // Load removal requests khi có shopId
+        loadRemovalRequests()
+    }
 
     // ==================== TAB SELECTION ====================
 
     fun onTabSelected(tabIndex: Int) {
         _uiState.update { it.copy(selectedTab = tabIndex) }
-        if (tabIndex == 0) {
-            loadApplications(refresh = true)
-        } else {
-            loadShippers(refresh = true)
+        when (tabIndex) {
+            0 -> loadApplications(refresh = true)
+            1 -> loadShippers(refresh = true)
+            2 -> loadRemovalRequests(refresh = true)
         }
     }
 
@@ -204,6 +218,143 @@ class ShippersViewModel : ViewModel() {
         }
     }
 
+    // ==================== REMOVAL REQUESTS ====================
+    
+    fun loadRemovalRequests(refresh: Boolean = false) {
+        val shopId = currentShopId ?: run {
+            Log.w(TAG, "⚠️ No shopId set, cannot load removal requests")
+            return
+        }
+        
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = !refresh,
+                    isRefreshing = refresh,
+                    errorMessage = null
+                )
+            }
+            
+            val status = _uiState.value.selectedRemovalStatus
+            val result = removalRepository.getShopRemovalRequests(shopId, status)
+            
+            result.onSuccess { requests ->
+                Log.d(TAG, "✅ Loaded ${requests.size} removal requests")
+                _uiState.update {
+                    it.copy(
+                        removalRequests = requests,
+                        isLoading = false,
+                        isRefreshing = false
+                    )
+                }
+            }.onFailure { error ->
+                Log.e(TAG, "❌ Failed to load removal requests", error)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isRefreshing = false,
+                        errorMessage = "Không thể tải yêu cầu rời shop: ${error.message}"
+                    )
+                }
+            }
+        }
+    }
+    
+    fun onRemovalStatusFilterChanged(status: OwnerRemovalRequestStatus?) {
+        _uiState.update { it.copy(selectedRemovalStatus = status) }
+        loadRemovalRequests(refresh = true)
+    }
+    
+    fun approveRemovalRequest(requestId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isProcessing = true, errorMessage = null) }
+            
+            val result = removalRepository.approveRequest(requestId)
+            
+            result.onSuccess { updatedRequest ->
+                Log.d(TAG, "✅ Removal request approved: ${updatedRequest.id}")
+                _uiState.update {
+                    it.copy(
+                        isProcessing = false,
+                        successMessage = "Đã chấp nhận yêu cầu rời shop"
+                    )
+                }
+                loadRemovalRequests(refresh = true)
+                loadShippers(refresh = true) // Reload shippers as one may have left
+            }.onFailure { error ->
+                Log.e(TAG, "❌ Failed to approve removal request", error)
+                _uiState.update {
+                    it.copy(
+                        isProcessing = false,
+                        errorMessage = "Không thể chấp nhận yêu cầu: ${error.message}"
+                    )
+                }
+            }
+        }
+    }
+    
+    fun showRejectRemovalDialog(requestId: String) {
+        _uiState.update {
+            it.copy(
+                showRejectDialog = true,
+                rejectingRequestId = requestId,
+                rejectionReason = ""
+            )
+        }
+    }
+    
+    fun dismissRejectDialog() {
+        _uiState.update {
+            it.copy(
+                showRejectDialog = false,
+                rejectingRequestId = null,
+                rejectionReason = ""
+            )
+        }
+    }
+    
+    fun onRejectionReasonChanged(reason: String) {
+        _uiState.update { it.copy(rejectionReason = reason) }
+    }
+    
+    fun rejectRemovalRequest() {
+        val requestId = _uiState.value.rejectingRequestId ?: return
+        val reason = _uiState.value.rejectionReason
+        
+        if (reason.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "Vui lòng nhập lý do từ chối") }
+            return
+        }
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(isProcessing = true, errorMessage = null) }
+            
+            val result = removalRepository.rejectRequest(requestId, reason)
+            
+            result.onSuccess { updatedRequest ->
+                Log.d(TAG, "✅ Removal request rejected: ${updatedRequest.id}")
+                _uiState.update {
+                    it.copy(
+                        isProcessing = false,
+                        showRejectDialog = false,
+                        rejectingRequestId = null,
+                        rejectionReason = "",
+                        successMessage = "Đã từ chối yêu cầu rời shop"
+                    )
+                }
+                loadRemovalRequests(refresh = true)
+            }.onFailure { error ->
+                Log.e(TAG, "❌ Failed to reject removal request", error)
+                _uiState.update {
+                    it.copy(
+                        isProcessing = false,
+                        errorMessage = "Không thể từ chối yêu cầu: ${error.message}"
+                    )
+                }
+            }
+        }
+    }
+
     // ==================== SEARCH & FILTER ====================
 
     fun onSearchQueryChanged(query: String) {
@@ -239,6 +390,20 @@ class ShippersViewModel : ViewModel() {
             }
         }
     }
+    
+    fun getFilteredRemovalRequests(): List<com.example.foodapp.data.model.owner.removal.OwnerRemovalRequest> {
+        val state = _uiState.value
+        val query = state.searchQuery.trim()
+        
+        return if (query.isBlank()) {
+            state.removalRequests
+        } else {
+            state.removalRequests.filter {
+                it.shipperName.contains(query, ignoreCase = true) ||
+                (it.shipperPhone?.contains(query, ignoreCase = true) == true)
+            }
+        }
+    }
 
     // ==================== STATISTICS ====================
 
@@ -249,7 +414,9 @@ class ShippersViewModel : ViewModel() {
             pendingApplications = state.applications.count { it.status == ApplicationStatus.PENDING },
             totalShippers = state.shippers.size,
             availableShippers = state.shippers.count { it.shipperInfo?.status == ShipperStatus.AVAILABLE },
-            busyShippers = state.shippers.count { it.shipperInfo?.status == ShipperStatus.BUSY }
+            busyShippers = state.shippers.count { it.shipperInfo?.status == ShipperStatus.BUSY },
+            totalRemovalRequests = state.removalRequests.size,
+            pendingRemovalRequests = state.removalRequests.count { it.status == OwnerRemovalRequestStatus.PENDING }
         )
     }
 
@@ -264,10 +431,10 @@ class ShippersViewModel : ViewModel() {
     }
 
     fun refreshCurrentTab() {
-        if (_uiState.value.selectedTab == 0) {
-            loadApplications(refresh = true)
-        } else {
-            loadShippers(refresh = true)
+        when (_uiState.value.selectedTab) {
+            0 -> loadApplications(refresh = true)
+            1 -> loadShippers(refresh = true)
+            2 -> loadRemovalRequests(refresh = true)
         }
     }
 }
