@@ -15,6 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.pages.owner.theme.OwnerColors
 
 data class StatCardData(val label: String, val value: String, val color: Color)
 
@@ -27,10 +28,10 @@ fun CustomerStats(
 ) {
     val scrollState = rememberScrollState()
     val stats = listOf(
-        StatCardData("Tổng số", totalCustomers.toString(), Color(0xFFFF6B35)),
-        StatCardData("VIP", vipCustomers.toString(), Color(0xFFFFD700)),
-        StatCardData("Thường xuyên", regularCustomers.toString(), Color(0xFF4CAF50)),
-        StatCardData("Mới", newCustomers.toString(), Color(0xFF2196F3))
+        StatCardData("Tổng số", totalCustomers.toString(), OwnerColors.Primary),
+        StatCardData("VIP", vipCustomers.toString(), OwnerColors.Warning),
+        StatCardData("Thường xuyên", regularCustomers.toString(), OwnerColors.Success),
+        StatCardData("Mới", newCustomers.toString(), OwnerColors.Info)
     )
 
     Row(

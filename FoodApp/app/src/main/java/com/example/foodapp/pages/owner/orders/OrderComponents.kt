@@ -16,6 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodapp.data.model.owner.order.*
+import com.example.foodapp.pages.owner.theme.OwnerColors
+import com.example.foodapp.pages.owner.theme.OwnerDimens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +35,7 @@ fun OrderDetailBottomSheet(
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = Color.White,
+        containerColor = OwnerColors.Surface,
         dragHandle = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -44,7 +46,7 @@ fun OrderDetailBottomSheet(
                     modifier = Modifier
                         .width(40.dp)
                         .height(4.dp)
-                        .background(Color(0xFFDDDDDD), RoundedCornerShape(2.dp))
+                        .background(OwnerColors.BorderLight, RoundedCornerShape(2.dp))
                 )
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -65,7 +67,7 @@ fun OrderDetailBottomSheet(
                     text = order.orderNumber,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A)
+                    color = OwnerColors.TextPrimary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Surface(
@@ -134,23 +136,23 @@ fun OrderDetailBottomSheet(
                                 text = item.productName,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = Color(0xFF333333)
+                                color = OwnerColors.TextPrimary
                             )
                             Text(
                                 text = "x${item.quantity} × %,d₫".format(item.price),
                                 fontSize = 12.sp,
-                                color = Color(0xFF888888)
+                                color = OwnerColors.TextTertiary
                             )
                         }
                         Text(
                             text = "%,d₫".format(item.subtotal),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF333333)
+                            color = OwnerColors.TextPrimary
                         )
                     }
                     if (item != order.items.last()) {
-                        HorizontalDivider(color = Color(0xFFF0F0F0))
+                        HorizontalDivider(color = OwnerColors.BorderLight)
                     }
                 }
             }
@@ -165,7 +167,7 @@ fun OrderDetailBottomSheet(
                     SummaryRow("Giảm giá", -order.discount, isDiscount = true)
                 }
                 HorizontalDivider(
-                    color = Color(0xFFE0E0E0),
+                    color = OwnerColors.Divider,
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Row(
@@ -176,13 +178,13 @@ fun OrderDetailBottomSheet(
                         text = "Tổng cộng",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1A1A)
+                        color = OwnerColors.TextPrimary
                     )
                     Text(
                         text = "%,d₫".format(order.total),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFFF6B35)
+                        color = OwnerColors.Primary
                     )
                 }
                 
@@ -195,13 +197,13 @@ fun OrderDetailBottomSheet(
                     Text(
                         text = "Phương thức",
                         fontSize = 13.sp,
-                        color = Color(0xFF888888)
+                        color = OwnerColors.TextTertiary
                     )
                     Text(
                         text = order.paymentMethod.displayName,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF333333)
+                        color = OwnerColors.TextPrimary
                     )
                 }
                 Row(
@@ -211,7 +213,7 @@ fun OrderDetailBottomSheet(
                     Text(
                         text = "Trạng thái",
                         fontSize = 13.sp,
-                        color = Color(0xFF888888)
+                        color = OwnerColors.TextTertiary
                     )
                     val paymentColor = getPaymentStatusColor(order.paymentStatus)
                     Text(
@@ -263,7 +265,7 @@ fun OrderDetailBottomSheet(
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = Color(0xFFF44336)
+                                contentColor = OwnerColors.Error
                             ),
                             contentPadding = PaddingValues(vertical = 14.dp)
                         ) {
@@ -289,10 +291,10 @@ fun OrderDetailBottomSheet(
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = when (action) {
-                                    OrderAction.CONFIRM -> Color(0xFF4CAF50)
-                                    OrderAction.PREPARING -> Color(0xFF9C27B0)
-                                    OrderAction.READY -> Color(0xFF2196F3)
-                                    OrderAction.CANCEL -> Color(0xFFF44336)
+                                    OrderAction.CONFIRM -> OwnerColors.Success
+                                    OrderAction.PREPARING -> OwnerColors.StatusPreparing
+                                    OrderAction.READY -> OwnerColors.StatusReady
+                                    OrderAction.CANCEL -> OwnerColors.Error
                                 }
                             ),
                             contentPadding = PaddingValues(vertical = 14.dp)
@@ -324,8 +326,8 @@ private fun SectionCard(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFF8F8F8)),
+        shape = RoundedCornerShape(OwnerDimens.CardRadius.dp),
+        colors = CardDefaults.cardColors(containerColor = OwnerColors.SurfaceVariant),
         elevation = CardDefaults.cardElevation(0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
@@ -333,7 +335,7 @@ private fun SectionCard(
                 text = title,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF666666)
+                color = OwnerColors.TextSecondary
             )
             Spacer(modifier = Modifier.height(12.dp))
             content()
@@ -356,7 +358,7 @@ private fun InfoRow(
         Icon(
             icon,
             contentDescription = null,
-            tint = Color(0xFF999999),
+            tint = OwnerColors.TextTertiary,
             modifier = Modifier.size(18.dp)
         )
         Spacer(modifier = Modifier.width(10.dp))
@@ -364,12 +366,12 @@ private fun InfoRow(
             Text(
                 text = label,
                 fontSize = 11.sp,
-                color = Color(0xFF999999)
+                color = OwnerColors.TextTertiary
             )
             Text(
                 text = value,
                 fontSize = 14.sp,
-                color = Color(0xFF333333)
+                color = OwnerColors.TextPrimary
             )
         }
     }
@@ -390,12 +392,12 @@ private fun SummaryRow(
         Text(
             text = label,
             fontSize = 14.sp,
-            color = Color(0xFF666666)
+            color = OwnerColors.TextSecondary
         )
         Text(
             text = if (isDiscount) "-%,d₫".format(-amount) else "%,d₫".format(amount),
             fontSize = 14.sp,
-            color = if (isDiscount) Color(0xFF4CAF50) else Color(0xFF333333)
+            color = if (isDiscount) OwnerColors.Success else OwnerColors.TextPrimary
         )
     }
 }

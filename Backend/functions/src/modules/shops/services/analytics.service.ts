@@ -71,7 +71,7 @@ export class AnalyticsService {
     // Aggregate today stats
     const todayRevenue = todayOrders
       .filter((o) => o.status === 'COMPLETED')
-      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+      .reduce((sum, o) => sum + (o.total || 0), 0);
     const todayOrderCount = todayOrders.filter((o) => o.status === 'COMPLETED').length;
     const todayPendingOrders = todayOrders.filter(
       (o) => o.status === 'PENDING' || o.status === 'PREPARING',
@@ -80,13 +80,13 @@ export class AnalyticsService {
     // Aggregate week stats
     const weekRevenue = weekOrders
       .filter((o) => o.status === 'COMPLETED')
-      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+      .reduce((sum, o) => sum + (o.total || 0), 0);
     const weekOrderCount = weekOrders.filter((o) => o.status === 'COMPLETED').length;
 
     // Aggregate month stats
     const monthRevenue = monthOrders
       .filter((o) => o.status === 'COMPLETED')
-      .reduce((sum, o) => sum + (o.totalAmount || 0), 0);
+      .reduce((sum, o) => sum + (o.total || 0), 0);
     const monthOrderCount = monthOrders.filter((o) => o.status === 'COMPLETED').length;
 
     // Get top 5 products
@@ -112,7 +112,7 @@ export class AnalyticsService {
         id: o.id,
         orderNumber: o.orderNumber,
         status: o.status,
-        total: o.totalAmount,
+        total: o.total || 0,
         createdAt: o.createdAt?.toDate?.().toISOString() || '',
       }));
 

@@ -15,12 +15,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.foodapp.data.di.RepositoryProvider
 import com.example.foodapp.pages.shipper.theme.ShipperColors
 import kotlinx.coroutines.launch
 
+/**
+ * Màn hình cài đặt thông báo cho Shipper
+ * API có sẵn:
+ * - POST /api/shippers/notifications/online - Bật nhận đơn (subscribe to topic)
+ * - DELETE /api/shippers/notifications/online - Tắt nhận đơn (unsubscribe from topic)
+ */
 @Composable
 fun NotificationSettingsScreen(
     onSave: () -> Unit = {},
@@ -32,12 +39,6 @@ fun NotificationSettingsScreen(
     
     var isOnline by remember { mutableStateOf(false) }
     var isTogglingOnline by remember { mutableStateOf(false) }
-    
-    var orderNoti by remember { mutableStateOf(true) }
-    var promoNoti by remember { mutableStateOf(true) }
-    var systemNoti by remember { mutableStateOf(false) }
-    var sound by remember { mutableStateOf(true) }
-    var vibrate by remember { mutableStateOf(true) }
     
     fun toggleOnlineStatus() {
         scope.launch {
@@ -70,61 +71,88 @@ fun NotificationSettingsScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Online Status Card
+        // Online Status Card - Đây là tính năng chính có API
         Card(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(
                 containerColor = if (isOnline) ShipperColors.SuccessLight else ShipperColors.Surface
             ),
-            elevation = CardDefaults.cardElevation(2.dp)
+            elevation = CardDefaults.cardElevation(4.dp)
         ) {
             Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                modifier = Modifier.padding(24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Header
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Icon(
-                        imageVector = if (isOnline) Icons.Outlined.Wifi else Icons.Outlined.WifiOff,
-                        contentDescription = null,
-                        tint = if (isOnline) ShipperColors.Success else ShipperColors.TextSecondary
-                    )
-                    Text(
-                        "Trạng thái hoạt động", 
-                        fontWeight = FontWeight.SemiBold, 
-                        fontSize = 15.sp, 
-                        color = ShipperColors.TextPrimary
-                    )
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (isOnline) ShipperColors.Success.copy(alpha = 0.15f) 
+                               else ShipperColors.TextTertiary.copy(alpha = 0.15f),
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = if (isOnline) Icons.Outlined.Wifi else Icons.Outlined.WifiOff,
+                                contentDescription = null,
+                                tint = if (isOnline) ShipperColors.Success else ShipperColors.TextSecondary,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                    Column {
+                        Text(
+                            "Nhận đơn hàng", 
+                            fontWeight = FontWeight.Bold, 
+                            fontSize = 18.sp, 
+                            color = ShipperColors.TextPrimary
+                        )
+                        Text(
+                            "Quản lý trạng thái hoạt động",
+                            fontSize = 13.sp,
+                            color = ShipperColors.TextSecondary
+                        )
+                    }
                 }
                 
+                HorizontalDivider(color = ShipperColors.Divider)
+                
+                // Status Toggle
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            if (isOnline) "Đang hoạt động" else "Ngoại tuyến",
-                            fontWeight = FontWeight.Medium,
-                            fontSize = 14.sp,
+                            if (isOnline) "Đang hoạt động" else "Tạm nghỉ",
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 16.sp,
                             color = if (isOnline) ShipperColors.Success else ShipperColors.TextSecondary
                         )
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            if (isOnline) "Bạn sẽ nhận thông báo đơn hàng mới" 
-                            else "Bật để nhận đơn hàng mới",
-                            fontSize = 12.sp,
-                            color = ShipperColors.TextSecondary
+                            if (isOnline) 
+                                "Bạn sẽ nhận được thông báo khi có đơn hàng mới từ cửa hàng" 
+                            else 
+                                "Bật để nhận thông báo đơn hàng mới",
+                            fontSize = 13.sp,
+                            color = ShipperColors.TextSecondary,
+                            lineHeight = 18.sp
                         )
                     }
                     
+                    Spacer(modifier = Modifier.width(16.dp))
+                    
                     if (isTogglingOnline) {
                         CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(32.dp),
                             color = ShipperColors.Primary,
-                            strokeWidth = 2.dp
+                            strokeWidth = 3.dp
                         )
                     } else {
                         Switch(
@@ -142,141 +170,55 @@ fun NotificationSettingsScreen(
             }
         }
         
-        // Notification Types Card
+        // Info Card
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = ShipperColors.Surface),
-            elevation = CardDefaults.cardElevation(2.dp)
+            colors = CardDefaults.cardColors(containerColor = ShipperColors.InfoLight),
+            elevation = CardDefaults.cardElevation(0.dp)
         ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+            Row(
+                modifier = Modifier.padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        Icons.Outlined.Notifications,
-                        contentDescription = null,
-                        tint = ShipperColors.Primary,
-                        modifier = Modifier.size(20.dp)
-                    )
+                Icon(
+                    Icons.Outlined.Info,
+                    contentDescription = null,
+                    tint = ShipperColors.Info,
+                    modifier = Modifier.size(20.dp)
+                )
+                Column {
                     Text(
-                        "Loại thông báo", 
-                        fontWeight = FontWeight.SemiBold, 
-                        fontSize = 15.sp, 
-                        color = ShipperColors.TextPrimary
+                        "Về tính năng này",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 14.sp,
+                        color = ShipperColors.Info
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        "Khi bật \"Đang hoạt động\", bạn sẽ được đăng ký nhận thông báo đẩy từ cửa hàng mà bạn đang làm việc. Mỗi khi có đơn hàng sẵn sàng để giao, bạn sẽ nhận được thông báo ngay lập tức.",
+                        fontSize = 13.sp,
+                        color = ShipperColors.TextSecondary,
+                        lineHeight = 18.sp
                     )
                 }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                NotificationToggleRow("Đơn hàng mới", orderNoti) { orderNoti = it }
-                HorizontalDivider(color = ShipperColors.Divider)
-                NotificationToggleRow("Khuyến mãi & Ưu đãi", promoNoti) { promoNoti = it }
-                HorizontalDivider(color = ShipperColors.Divider)
-                NotificationToggleRow("Thông báo hệ thống", systemNoti) { systemNoti = it }
-            }
-        }
-        
-        // Sound & Vibration Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = ShipperColors.Surface),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        Icons.Outlined.VolumeUp,
-                        contentDescription = null,
-                        tint = ShipperColors.Primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        "Âm thanh & Rung", 
-                        fontWeight = FontWeight.SemiBold, 
-                        fontSize = 15.sp, 
-                        color = ShipperColors.TextPrimary
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                NotificationToggleRow("Âm thanh thông báo", sound) { sound = it }
-                HorizontalDivider(color = ShipperColors.Divider)
-                NotificationToggleRow("Rung khi nhận thông báo", vibrate) { vibrate = it }
             }
         }
         
         Spacer(modifier = Modifier.weight(1f))
         
-        // Buttons
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            OutlinedButton(
-                onClick = onCancel,
-                modifier = Modifier.weight(1f).height(48.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = ShipperColors.TextSecondary
-                )
-            ) {
-                Text("Hủy")
-            }
-            Button(
-                onClick = {
-                    Toast.makeText(context, "Lưu thành công!", Toast.LENGTH_SHORT).show()
-                    onSave()
-                },
-                modifier = Modifier.weight(1f).height(48.dp),
-                shape = RoundedCornerShape(10.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = ShipperColors.Primary)
-            ) {
-                Text("Lưu", fontWeight = FontWeight.SemiBold)
-            }
-        }
-    }
-}
-
-@Composable
-private fun NotificationToggleRow(
-    label: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            label,
-            color = ShipperColors.TextPrimary,
-            fontSize = 14.sp
-        )
-        Switch(
-            checked = checked, 
-            onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = ShipperColors.Surface,
-                checkedTrackColor = ShipperColors.Primary,
-                uncheckedThumbColor = ShipperColors.Surface,
-                uncheckedTrackColor = ShipperColors.TextTertiary
+        // Back Button
+        OutlinedButton(
+            onClick = onCancel,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = ShipperColors.TextSecondary
             )
-        )
+        ) {
+            Text("Quay lại", fontWeight = FontWeight.Medium)
+        }
     }
 }

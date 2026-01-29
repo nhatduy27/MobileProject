@@ -87,13 +87,15 @@ fun SettingsScreen(
             subtitle = "Tăng cường bảo mật tài khoản",
             icon = Icons.Outlined.Security,
             hasSwitch = true,
-            isEnabled = false
+            isEnabled = false,
+            isDisabled = true // Tính năng chưa phát triển
         ),
         SettingItem(
             title = "Lịch sử đăng nhập",
             subtitle = "Xem các phiên đăng nhập gần đây",
             icon = Icons.Outlined.History,
-            onClick = { navController.navigate("login_history") }
+            onClick = { navController.navigate("login_history") },
+            isDisabled = true // Tính năng chưa phát triển
         )
     )
 

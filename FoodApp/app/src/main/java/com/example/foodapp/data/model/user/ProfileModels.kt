@@ -142,7 +142,12 @@ data class SettingsResponse(
 )
 
 data class AvatarUploadResponse(
-    @SerializedName("avatarUrl") val avatarUrl: String
+    @SerializedName("success") val success: Boolean? = null,
+    @SerializedName("data") val data: AvatarData? = null
+)
+
+data class AvatarData(
+    @SerializedName("avatarUrl") val avatarUrl: String? = null
 )
 
 data class MessageResponse(

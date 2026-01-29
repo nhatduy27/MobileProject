@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.model.shared.auth.ApiResult
 import com.example.foodapp.data.repository.shared.AuthRepository
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -92,7 +93,7 @@ class ChangePasswordViewModel : ViewModel() {
             _uiState.value = _uiState.value.copy(isLoading = true, error = null, successMessage = null)
 
             try {
-                // Get current user token
+                // Get current user
                 val currentUser = FirebaseAuth.getInstance().currentUser
                 if (currentUser == null) {
                     _uiState.value = _uiState.value.copy(
@@ -102,7 +103,32 @@ class ChangePasswordViewModel : ViewModel() {
                     return@launch
                 }
 
-                // Get ID token
+                val email = currentUser.email
+                if (email == null) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "Không tìm thấy email, vui lòng đăng nhập lại"
+                    )
+                    return@launch
+                }
+
+                // Step 1: Verify old password by reauthenticating
+                Log.d("ChangePasswordVM", "🔄 Verifying current password...")
+                val credential = EmailAuthProvider.getCredential(email, state.currentPassword)
+                
+                try {
+                    currentUser.reauthenticate(credential).await()
+                    Log.d("ChangePasswordVM", "✅ Current password verified")
+                } catch (e: Exception) {
+                    Log.e("ChangePasswordVM", "❌ Reauthentication failed: ${e.message}")
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        error = "Mật khẩu hiện tại không đúng"
+                    )
+                    return@launch
+                }
+
+                // Step 2: Get ID token for API call
                 val token = currentUser.getIdToken(true).await().token
                 if (token == null) {
                     _uiState.value = _uiState.value.copy(
@@ -114,7 +140,7 @@ class ChangePasswordViewModel : ViewModel() {
 
                 Log.d("ChangePasswordVM", "🔄 Calling change password API...")
                 
-                // Call API to change password
+                // Step 3: Call API to change password
                 val result = authRepository.changePassword(
                     accessToken = token,
                     oldPassword = state.currentPassword,

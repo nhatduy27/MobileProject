@@ -40,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.pages.owner.notifications.NotificationBell
+import com.example.foodapp.pages.owner.theme.OwnerColors
+import com.example.foodapp.pages.owner.theme.OwnerDimens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,7 +75,7 @@ fun OrdersScreen(
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = Color(0xFFF5F5F5)
+        containerColor = OwnerColors.Background
     ) { paddingValues ->
         PullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
@@ -97,7 +99,7 @@ fun OrdersScreen(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            CircularProgressIndicator(color = Color(0xFFFF6B35))
+                            CircularProgressIndicator(color = OwnerColors.Primary)
                         }
                     }
                     filteredOrders.isEmpty() -> {
@@ -155,7 +157,7 @@ fun OrdersScreen(
                         colors = CardDefaults.cardColors(containerColor = Color.White)
                     ) {
                         Box(modifier = Modifier.padding(24.dp)) {
-                            CircularProgressIndicator(color = Color(0xFFFF6B35))
+                            CircularProgressIndicator(color = OwnerColors.Primary)
                         }
                     }
                 }
@@ -202,13 +204,13 @@ fun EmptyOrdersView(onRefresh: () -> Unit) {
             text = "Chưa có đơn hàng nào",
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium,
-            color = Color(0xFF666666)
+            color = OwnerColors.TextSecondary
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = "Đơn hàng mới sẽ xuất hiện ở đây",
             fontSize = 14.sp,
-            color = Color(0xFF999999),
+            color = OwnerColors.TextTertiary,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(24.dp))
@@ -234,19 +236,19 @@ fun OrdersStatsRow(total: Int, pending: Int, preparing: Int) {
         OrderStatCard(
             title = "Tổng đơn",
             value = total.toString(),
-            color = Color(0xFF2196F3),
+            color = OwnerColors.Info,
             modifier = Modifier.weight(1f)
         )
         OrderStatCard(
             title = "Chờ xác nhận",
             value = pending.toString(),
-            color = Color(0xFFFFA500),
+            color = OwnerColors.Warning,
             modifier = Modifier.weight(1f)
         )
         OrderStatCard(
             title = "Đang làm",
             value = preparing.toString(),
-            color = Color(0xFF9C27B0),
+            color = OwnerColors.StatusPreparing,
             modifier = Modifier.weight(1f)
         )
     }
@@ -295,7 +297,7 @@ fun OrdersSearchHeader(
         modifier = Modifier
             .fillMaxWidth()
             .height(64.dp)
-            .background(Color.White)
+            .background(OwnerColors.Surface)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -311,14 +313,14 @@ fun OrdersSearchHeader(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color(0xFF1A1A1A))
+                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = OwnerColors.TextPrimary)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Quản lý đơn hàng",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1A1A),
+                        color = OwnerColors.TextPrimary,
                         modifier = Modifier.weight(1f)
                     )
                     
@@ -328,10 +330,10 @@ fun OrdersSearchHeader(
                     IconButton(
                         onClick = { isSearchActive = true },
                         modifier = Modifier
-                            .background(Color(0xFFF5F5F5), CircleShape)
+                            .background(OwnerColors.SurfaceVariant, CircleShape)
                             .size(40.dp)
                     ) {
-                        Icon(Icons.Default.Search, contentDescription = "Search", tint = Color(0xFF1A1A1A))
+                        Icon(Icons.Default.Search, contentDescription = "Search", tint = OwnerColors.TextPrimary)
                     }
                 }
             }
@@ -348,7 +350,7 @@ fun OrdersSearchHeader(
                         isSearchActive = false 
                         onQueryChange("")
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF1A1A1A))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = OwnerColors.TextPrimary)
                     }
                     TextField(
                         value = query,
@@ -364,7 +366,7 @@ fun OrdersSearchHeader(
                             unfocusedContainerColor = Color(0xFFF5F5F5),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
-                            cursorColor = Color(0xFFFF6B35)
+                            cursorColor = OwnerColors.Primary
                         ),
                         shape = CircleShape,
                         keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Search),
@@ -412,7 +414,7 @@ fun CancelOrderDialog(
         confirmButton = {
             Button(
                 onClick = { onConfirm(reason.ifBlank { null }) },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336))
+                colors = ButtonDefaults.buttonColors(containerColor = OwnerColors.Error)
             ) {
                 Text("Hủy đơn")
             }

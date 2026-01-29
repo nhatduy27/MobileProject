@@ -54,68 +54,6 @@ fun ShipperSettingsScreen(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Online Status Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (uiState.isOnline) ShipperColors.SuccessLight else ShipperColors.Surface
-            ),
-            elevation = CardDefaults.cardElevation(2.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Text(
-                    "Trạng thái hoạt động", 
-                    fontWeight = FontWeight.SemiBold, 
-                    fontSize = 14.sp, 
-                    color = ShipperColors.TextSecondary
-                )
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(
-                            if (uiState.isOnline) "Đang hoạt động" else "Ngoại tuyến",
-                            fontWeight = FontWeight.SemiBold,
-                            fontSize = 16.sp,
-                            color = if (uiState.isOnline) ShipperColors.Success else ShipperColors.TextSecondary
-                        )
-                        Text(
-                            if (uiState.isOnline) "Bạn sẽ nhận thông báo đơn hàng mới" 
-                            else "Bật để nhận đơn hàng mới",
-                            fontSize = 13.sp,
-                            color = ShipperColors.TextSecondary
-                        )
-                    }
-                    
-                    if (uiState.isTogglingOnline) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            color = ShipperColors.Primary,
-                            strokeWidth = 2.dp
-                        )
-                    } else {
-                        Switch(
-                            checked = uiState.isOnline, 
-                            onCheckedChange = { viewModel.toggleOnlineStatus() },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = ShipperColors.Surface,
-                                checkedTrackColor = ShipperColors.Success,
-                                uncheckedThumbColor = ShipperColors.Surface,
-                                uncheckedTrackColor = ShipperColors.ToggleOff
-                            )
-                        )
-                    }
-                }
-            }
-        }
-        
         // Account Section
         SettingSection(
             title = "Tài khoản",

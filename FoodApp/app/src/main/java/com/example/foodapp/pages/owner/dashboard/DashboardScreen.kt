@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.data.model.owner.*
 import com.example.foodapp.pages.owner.notifications.NotificationBell
+import com.example.foodapp.pages.owner.theme.OwnerColors
+import com.example.foodapp.pages.owner.theme.OwnerDimens
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -34,7 +36,7 @@ fun DashboardScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFFF8F9FA)) // Lighter gray background
+            .background(OwnerColors.Background)
     ) {
         // Header
         DashboardHeaderNew(onMenuClick)
@@ -45,7 +47,7 @@ fun DashboardScreen(
             }
         } else if (uiState.error != null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Lỗi: ${uiState.error}", color = Color.Red, modifier = Modifier.padding(16.dp))
+                Text(text = "Lỗi: ${uiState.error}", color = OwnerColors.Error, modifier = Modifier.padding(16.dp))
             }
         } else {
             val data = uiState.data
@@ -57,49 +59,57 @@ fun DashboardScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
-                    // 1. Overview Cards (Grid 2x2)
-                    Text("Tổng quan hôm nay", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    // 1. Overview Cards (Grid 2x2) - Hiển thị dữ liệu tháng này
+                    Text("Tổng quan tháng này", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = OwnerColors.TextPrimary)
+                    
+                    // Tính tổng đơn từ ordersByStatus
+                    val totalOrders = data.ordersByStatus.values.sum()
+                    val pendingOrders = (data.ordersByStatus["PENDING"] ?: 0) + 
+                                       (data.ordersByStatus["CONFIRMED"] ?: 0) + 
+                                       (data.ordersByStatus["PREPARING"] ?: 0)
+                    val completedOrders = data.ordersByStatus["COMPLETED"] ?: 0
+                    
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             ModernStatCard(
-                                title = "Doanh thu",
-                                value = formatCurrency(data.today.revenue ?: 0.0),
+                                title = "Doanh thu tháng",
+                                value = formatCurrency(data.thisMonth.revenue),
                                 icon = Icons.Default.AttachMoney,
-                                color = Color(0xFF4CAF50),
+                                color = OwnerColors.Success,
                                 modifier = Modifier.weight(1f)
                             )
                             ModernStatCard(
-                                title = "Đơn hàng",
-                                value = "${data.today.orderCount ?: 0}",
+                                title = "Tổng đơn hàng",
+                                value = "$totalOrders",
                                 icon = Icons.Default.Receipt,
-                                color = Color(0xFF2196F3),
+                                color = OwnerColors.Info,
                                 modifier = Modifier.weight(1f)
                             )
                         }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             ModernStatCard(
-                                title = "Đang chờ",
-                                value = "${data.today.pendingOrders ?: 0}",
+                                title = "Đang xử lý",
+                                value = "$pendingOrders",
                                 icon = Icons.Default.HourglassEmpty,
-                                color = Color(0xFFFF9800),
+                                color = OwnerColors.Warning,
                                 modifier = Modifier.weight(1f)
                             )
                             ModernStatCard(
-                                title = "Trung bình",
-                                value = formatCurrency(data.today.avgOrderValue ?: 0.0),
-                                icon = Icons.Default.ShowChart,
-                                color = Color(0xFF9C27B0),
+                                title = "Hoàn thành",
+                                value = "$completedOrders",
+                                icon = Icons.Default.CheckCircle,
+                                color = OwnerColors.StatusDelivered,
                                 modifier = Modifier.weight(1f)
                             )
                         }
                     }
                     
                     // 2. Orders Status Distribution (Chart)
-                    Text("Phân bố trạng thái đơn", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Text("Phân bố trạng thái đơn", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = OwnerColors.TextPrimary)
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(2.dp)
+                        colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface),
+                        shape = RoundedCornerShape(OwnerDimens.CardRadiusLarge.dp),
+                        elevation = CardDefaults.cardElevation(OwnerDimens.CardElevation.dp)
                     ) {
                         Row(
                             modifier = Modifier
@@ -126,11 +136,11 @@ fun DashboardScreen(
                     }
 
                     // 3. Top Products (With Bar)
-                    Text("Top món bán chạy", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Text("Top món bán chạy", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = OwnerColors.TextPrimary)
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(2.dp)
+                        colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface),
+                        shape = RoundedCornerShape(OwnerDimens.CardRadiusLarge.dp),
+                        elevation = CardDefaults.cardElevation(OwnerDimens.CardElevation.dp)
                     ) {
                         Column(Modifier.padding(16.dp)) {
                             if (data.topProducts.isEmpty()) {
@@ -138,7 +148,7 @@ fun DashboardScreen(
                                     modifier = Modifier.fillMaxWidth().padding(32.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text("Chưa có dữ liệu", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                                    Text("Chưa có dữ liệu", style = MaterialTheme.typography.bodyMedium, color = OwnerColors.TextSecondary)
                                 }
                             } else {
                                 val maxRevenue = data.topProducts.maxOfOrNull { it.revenue } ?: 1.0
@@ -152,15 +162,15 @@ fun DashboardScreen(
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
                                             Text(product.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
-                                            Text(formatCurrency(product.revenue), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
+                                            Text(formatCurrency(product.revenue), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = OwnerColors.Success)
                                         }
                                         Spacer(Modifier.height(4.dp))
-                                        HorizontalBar(value = progress, color = Color(0xFF2196F3))
+                                        HorizontalBar(value = progress, color = OwnerColors.Primary)
                                         Spacer(Modifier.height(4.dp))
-                                        Text("${product.soldCount} đã bán", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                                        Text("${product.soldCount} đã bán", style = MaterialTheme.typography.labelSmall, color = OwnerColors.TextSecondary)
                                     }
                                     if (index < data.topProducts.size - 1 && index < 4) {
-                                        Divider(color = Color(0xFFEEEEEE), modifier = Modifier.padding(vertical = 4.dp))
+                                        Divider(color = OwnerColors.BorderLight, modifier = Modifier.padding(vertical = 4.dp))
                                     }
                                 }
                             }
@@ -168,11 +178,11 @@ fun DashboardScreen(
                     }
 
                     // 4. Recent Orders
-                    Text("Đơn hàng gần đây", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Text("Đơn hàng gần đây", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = OwnerColors.TextPrimary)
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = Color.White),
-                        shape = RoundedCornerShape(16.dp),
-                        elevation = CardDefaults.cardElevation(2.dp)
+                        colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface),
+                        shape = RoundedCornerShape(OwnerDimens.CardRadiusLarge.dp),
+                        elevation = CardDefaults.cardElevation(OwnerDimens.CardElevation.dp)
                     ) {
                         Column(Modifier.padding(16.dp)) {
                              if (data.recentOrders.isEmpty()) {
@@ -180,7 +190,7 @@ fun DashboardScreen(
                                     modifier = Modifier.fillMaxWidth().padding(32.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text("Chưa có đơn hàng", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                                    Text("Chưa có đơn hàng", style = MaterialTheme.typography.bodyMedium, color = OwnerColors.TextSecondary)
                                 }
                             } else {
                                 data.recentOrders.forEachIndexed { index, order ->
@@ -191,15 +201,15 @@ fun DashboardScreen(
                                     ) {
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Box(
-                                                modifier = Modifier.size(40.dp).background(Color(0xFFEEEEEE), CircleShape),
+                                                modifier = Modifier.size(40.dp).background(OwnerColors.BorderLight, CircleShape),
                                                 contentAlignment = Alignment.Center
                                             ) {
-                                                Icon(Icons.Default.ShoppingBag, contentDescription = null, tint = Color.Gray, modifier = Modifier.size(20.dp))
+                                                Icon(Icons.Default.ShoppingBag, contentDescription = null, tint = OwnerColors.TextSecondary, modifier = Modifier.size(20.dp))
                                             }
                                             Spacer(Modifier.width(12.dp))
                                             Column {
                                                 Text(order.orderNumber, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-                                                Text(formatDate(order.createdAt), fontSize = 12.sp, color = Color.Gray)
+                                                Text(formatDate(order.createdAt), fontSize = 12.sp, color = OwnerColors.TextSecondary)
                                             }
                                         }
                                         Column(horizontalAlignment = Alignment.End) {
@@ -209,7 +219,7 @@ fun DashboardScreen(
                                         }
                                     }
                                     if (index < data.recentOrders.lastIndex) {
-                                        Divider(color = Color(0xFFF5F5F5))
+                                        Divider(color = OwnerColors.BorderLight)
                                     }
                                 }
                             }
@@ -220,7 +230,7 @@ fun DashboardScreen(
                 }
             } else {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Không có dữ liệu", color = Color.Gray)
+                    Text("Không có dữ liệu", color = OwnerColors.TextSecondary)
                 }
             }
         }
@@ -230,7 +240,7 @@ fun DashboardScreen(
 @Composable
 fun DashboardHeaderNew(onMenuClick: () -> Unit) {
     Surface(
-        color = Color.White,
+        color = OwnerColors.Surface,
         shadowElevation = 4.dp
     ) {
         Row(
@@ -241,7 +251,7 @@ fun DashboardHeaderNew(onMenuClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onMenuClick) {
-                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = Color.Black)
+                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = OwnerColors.TextPrimary)
             }
             Spacer(Modifier.width(8.dp))
             Text(
@@ -263,7 +273,7 @@ fun LegendItem(label: String, color: Color, count: Int) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
             Box(Modifier.size(10.dp).background(color, CircleShape))
             Spacer(Modifier.width(8.dp))
-            Text(text = label, style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+            Text(text = label, style = MaterialTheme.typography.bodyMedium, color = OwnerColors.TextSecondary)
             Spacer(Modifier.width(4.dp))
             Text(text = "($count)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
         }

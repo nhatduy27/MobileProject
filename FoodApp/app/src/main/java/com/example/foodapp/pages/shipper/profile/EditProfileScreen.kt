@@ -1,9 +1,14 @@
 package com.example.foodapp.pages.shipper.profile
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -12,12 +17,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.example.foodapp.pages.shipper.theme.ShipperColors
 
 @Composable
@@ -27,6 +35,13 @@ fun EditProfileScreen(
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+
+    // Image picker launcher
+    val imagePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.uploadAvatar(context, it) }
+    }
 
     // Show toast for success message
     LaunchedEffect(uiState.successMessage) {
@@ -77,22 +92,46 @@ fun EditProfileScreen(
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Surface(
-                    modifier = Modifier.size(88.dp),
-                    shape = RoundedCornerShape(44.dp),
-                    color = ShipperColors.Primary
+                // Avatar with clickable to change
+                Box(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .background(ShipperColors.Primary)
+                        .clickable { imagePickerLauncher.launch("image/*") },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
+                    if (uiState.avatarUrl.isNotEmpty()) {
+                        AsyncImage(
+                            model = uiState.avatarUrl,
+                            contentDescription = "Avatar",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
                         Text(
-                            text = uiState.displayName.firstOrNull()?.toString() ?: "S",
-                            fontSize = 36.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            text = uiState.displayName.firstOrNull()?.uppercase() ?: "S",
+                            fontSize = 40.sp,
+                            fontWeight = FontWeight.Bold,
                             color = ShipperColors.Surface
                         )
                     }
                 }
+                
                 Spacer(modifier = Modifier.height(12.dp))
-                TextButton(onClick = { /* TODO: Upload avatar */ }) {
+                
+                TextButton(
+                    onClick = { imagePickerLauncher.launch("image/*") },
+                    enabled = !uiState.isSaving
+                ) {
+                    if (uiState.isSaving) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = ShipperColors.Primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
                     Text("Thay đổi ảnh đại diện", color = ShipperColors.Primary)
                 }
             }
@@ -133,23 +172,6 @@ fun EditProfileScreen(
                     onValueChange = { viewModel.updatePhone(it) },
                     enabled = uiState.isEditing,
                     icon = Icons.Outlined.Phone
-                )
-                HorizontalDivider(color = ShipperColors.Divider)
-                ProfileField(
-                    label = "Địa chỉ",
-                    value = uiState.address,
-                    onValueChange = { viewModel.updateAddress(it) },
-                    enabled = uiState.isEditing,
-                    icon = Icons.Outlined.LocationOn,
-                    singleLine = false
-                )
-                HorizontalDivider(color = ShipperColors.Divider)
-                ProfileField(
-                    label = "Loại phương tiện",
-                    value = uiState.vehicleType,
-                    onValueChange = { viewModel.updateVehicleType(it) },
-                    enabled = uiState.isEditing,
-                    icon = Icons.Outlined.DirectionsBike
                 )
             }
         }

@@ -1,5 +1,6 @@
 package com.example.foodapp.pages.owner.dashboard
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.di.RepositoryProvider
@@ -10,6 +11,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 class DashboardViewModel : ViewModel() {
+
+    companion object {
+        private const val TAG = "DashboardVM"
+    }
 
     // Lấy repository từ RepositoryProvider
     private val repository = RepositoryProvider.getDashboardRepository()
@@ -23,11 +28,20 @@ class DashboardViewModel : ViewModel() {
 
     fun loadData() {
         viewModelScope.launch {
+            Log.d(TAG, "Loading dashboard data...")
             _uiState.update { it.copy(isLoading = true, error = null) }
             
             val result = repository.getShopAnalytics() // Default: query all/current period logic
             
             result.onSuccess { data ->
+                Log.d(TAG, "Data loaded successfully!")
+                Log.d(TAG, "Today revenue: ${data.today.revenue}")
+                Log.d(TAG, "Today orderCount: ${data.today.orderCount}")
+                Log.d(TAG, "Recent orders: ${data.recentOrders.size}")
+                data.recentOrders.firstOrNull()?.let {
+                    Log.d(TAG, "First order: ${it.orderNumber}, total: ${it.total}")
+                }
+                
                 _uiState.update { 
                     it.copy(
                         isLoading = false, 
@@ -35,6 +49,7 @@ class DashboardViewModel : ViewModel() {
                     ) 
                 }
             }.onFailure { error ->
+                Log.e(TAG, "Error loading data: ${error.message}", error)
                 _uiState.update { 
                     it.copy(
                         isLoading = false, 

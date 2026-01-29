@@ -14,31 +14,33 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.foodapp.data.model.owner.TopProduct
+import com.example.foodapp.data.model.owner.revenue.TopProductData
+import com.example.foodapp.pages.owner.theme.OwnerColors
+import com.example.foodapp.pages.owner.theme.OwnerDimens
 
 @Composable
-fun TopProductCard(product: TopProduct) {
+fun TopProductCard(product: TopProductData) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = OwnerDimens.CardElevation.dp),
+        shape = RoundedCornerShape(OwnerDimens.CardRadius.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(OwnerDimens.CardPadding.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Rank medal with background
             Surface(
                 modifier = Modifier.size(40.dp),
-                shape = RoundedCornerShape(10.dp),
+                shape = RoundedCornerShape(OwnerDimens.ButtonRadius.dp),
                 color = when (product.rank) {
                     "🥇" -> Color(0xFFFFF3E0)
                     "🥈" -> Color(0xFFECEFF1)
                     "🥉" -> Color(0xFFFFEBEE)
-                    else -> Color(0xFFF5F5F5)
+                    else -> OwnerColors.SurfaceVariant
                 }
             ) {
                 Box(
@@ -60,16 +62,16 @@ fun TopProductCard(product: TopProduct) {
                 Text(
                     text = product.name,
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A)
+                    fontWeight = FontWeight.SemiBold,
+                    color = OwnerColors.TextPrimary
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "${product.quantity} phần • ${"%,d".format(product.unitPrice)}đ/phần",
+                    text = "${product.quantity} phần • ${product.unitPriceFormatted}đ/phần",
                     fontSize = 12.sp,
-                    color = Color(0xFF757575)
+                    color = OwnerColors.TextSecondary
                 )
             }
 
@@ -77,7 +79,7 @@ fun TopProductCard(product: TopProduct) {
                 text = product.totalRevenue,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFFF6B35)
+                color = OwnerColors.Primary
             )
         }
     }

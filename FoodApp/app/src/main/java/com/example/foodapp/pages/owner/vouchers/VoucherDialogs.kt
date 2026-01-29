@@ -16,13 +16,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.foodapp.data.model.owner.voucher.*
+import com.example.foodapp.pages.owner.theme.OwnerColors
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-private val OrangeAccent = Color(0xFFFF6B35)
 
 /**
  * Dialog to create a new voucher
@@ -60,7 +60,7 @@ fun CreateVoucherDialog(
                 .fillMaxWidth()
                 .fillMaxHeight(0.9f),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface)
         ) {
             Column(
                 modifier = Modifier
@@ -72,7 +72,7 @@ fun CreateVoucherDialog(
                     text = "Tạo Voucher Mới",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A)
+                    color = OwnerColors.TextPrimary
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -104,7 +104,7 @@ fun CreateVoucherDialog(
                         text = "Loại voucher",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF666666)
+                        color = OwnerColors.TextSecondary
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -117,8 +117,8 @@ fun CreateVoucherDialog(
                                 label = { Text(type.displayName(), fontSize = 12.sp) },
                                 modifier = Modifier.weight(1f),
                                 colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = OrangeAccent,
-                                    selectedLabelColor = Color.White
+                                    selectedContainerColor = OwnerColors.Primary,
+                                    selectedLabelColor = OwnerColors.Surface
                                 )
                             )
                         }
@@ -202,7 +202,7 @@ fun CreateVoucherDialog(
                         text = "Thời hạn hiệu lực",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF666666)
+                        color = OwnerColors.TextSecondary
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -298,7 +298,7 @@ fun CreateVoucherDialog(
                             onCreate(request)
                         },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = OrangeAccent),
+                        colors = ButtonDefaults.buttonColors(containerColor = OwnerColors.Primary),
                         shape = RoundedCornerShape(12.dp),
                         enabled = !isLoading
                     ) {
@@ -370,7 +370,7 @@ fun EditVoucherDialog(
         Card(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+            colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface)
         ) {
             Column(
                 modifier = Modifier
@@ -382,7 +382,7 @@ fun EditVoucherDialog(
                     text = "Chỉnh sửa Voucher",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A)
+                    color = OwnerColors.TextPrimary
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -390,12 +390,12 @@ fun EditVoucherDialog(
                 // Voucher code display
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = OrangeAccent.copy(alpha = 0.1f)
+                    color = OwnerColors.Primary.copy(alpha = 0.1f)
                 ) {
                     Text(
                         text = voucher.code,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        color = OrangeAccent,
+                        color = OwnerColors.Primary,
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
@@ -406,7 +406,7 @@ fun EditVoucherDialog(
                 Text(
                     text = "Lưu ý: Chỉ có thể sửa một số trường nhất định",
                     fontSize = 12.sp,
-                    color = Color(0xFF999999)
+                    color = OwnerColors.TextTertiary
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -446,7 +446,7 @@ fun EditVoucherDialog(
                         text = "Ngày hết hạn",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFF666666)
+                        color = OwnerColors.TextSecondary
                     )
                     OutlinedButton(
                         onClick = { showToDatePicker = true },
@@ -505,7 +505,7 @@ fun EditVoucherDialog(
                             onSave(request)
                         },
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = OrangeAccent),
+                        colors = ButtonDefaults.buttonColors(containerColor = OwnerColors.Primary),
                         shape = RoundedCornerShape(12.dp),
                         enabled = !isLoading
                     ) {
@@ -555,12 +555,12 @@ fun DeleteVoucherDialog(
                 Spacer(modifier = Modifier.height(12.dp))
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = OrangeAccent.copy(alpha = 0.1f)
+                    color = OwnerColors.Primary.copy(alpha = 0.1f)
                 ) {
                     Text(
                         text = voucher.code,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                        color = OrangeAccent,
+                        color = OwnerColors.Primary,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -569,7 +569,7 @@ fun DeleteVoucherDialog(
                     Text(
                         text = voucher.name,
                         fontSize = 14.sp,
-                        color = Color(0xFF666666)
+                        color = OwnerColors.TextSecondary
                     )
                 }
             }
@@ -577,7 +577,7 @@ fun DeleteVoucherDialog(
         confirmButton = {
             Button(
                 onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336))
+                colors = ButtonDefaults.buttonColors(containerColor = OwnerColors.Error)
             ) {
                 Text("Xóa")
             }

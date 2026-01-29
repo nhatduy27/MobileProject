@@ -7,33 +7,34 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.foodapp.data.model.owner.RevenueStat
+import com.example.foodapp.data.model.owner.revenue.KpiStat
+import com.example.foodapp.pages.owner.theme.OwnerColors
+import com.example.foodapp.pages.owner.theme.OwnerDimens
 
 @Composable
-fun RevenueStatCard(stat: RevenueStat) {
+fun RevenueStatCard(stat: KpiStat) {
     Card(
         modifier = Modifier
             .width(170.dp)
             .height(130.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = OwnerDimens.CardElevation.dp),
+        shape = RoundedCornerShape(OwnerDimens.CardRadiusLarge.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(OwnerDimens.CardPadding.dp),
             verticalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
                 text = stat.title,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Medium,
-                color = Color(0xFF757575),
+                color = OwnerColors.TextSecondary,
                 maxLines = 1
             )
 
@@ -53,7 +54,7 @@ fun RevenueStatCard(stat: RevenueStat) {
                     text = stat.subtitle,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Medium,
-                    color = if (stat.subtitle.startsWith("↑")) Color(0xFF4CAF50) else Color(0xFF999999),
+                    color = if (stat.subtitle.startsWith("↑")) OwnerColors.Success else OwnerColors.TextTertiary,
                     maxLines = 2,
                     lineHeight = 14.sp
                 )

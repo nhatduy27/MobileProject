@@ -20,10 +20,13 @@ fun SettingItemCard(
     onSwitchChanged: ((Boolean) -> Unit)? = null
 ) {
     var switchState by remember { mutableStateOf(item.isEnabled) }
+    
+    // Opacity cho item bị disabled (chưa phát triển)
+    val contentAlpha = if (item.isDisabled) 0.4f else 1f
 
     Surface(
-        onClick = { if (!item.hasSwitch && item.onClick != null) item.onClick.invoke() },
-        enabled = (!item.hasSwitch && item.onClick != null),
+        onClick = { if (!item.hasSwitch && item.onClick != null && !item.isDisabled) item.onClick.invoke() },
+        enabled = (!item.hasSwitch && item.onClick != null && !item.isDisabled),
         color = MaterialTheme.colorScheme.surface,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -36,14 +39,14 @@ fun SettingItemCard(
             // Icon Background
             Surface(
                 shape = androidx.compose.foundation.shape.CircleShape,
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f * contentAlpha),
                 modifier = Modifier.size(40.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = item.icon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = contentAlpha),
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -58,14 +61,14 @@ fun SettingItemCard(
                 Text(
                     text = item.title,
                     style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = contentAlpha)
                 )
 
                 item.subtitle?.let {
                     Text(
-                        text = it,
+                        text = if (item.isDisabled) "$it (Sắp ra mắt)" else it,
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = contentAlpha)
                     )
                 }
             }
@@ -74,24 +77,30 @@ fun SettingItemCard(
             if (item.hasSwitch) {
                 Switch(
                     checked = switchState,
-                    onCheckedChange = {
-                        switchState = it
-                        onSwitchChanged?.invoke(it)
+                    onCheckedChange = if (item.isDisabled) null else { newValue ->
+                        switchState = newValue
+                        onSwitchChanged?.invoke(newValue)
                     },
+                    enabled = !item.isDisabled,
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = Color.White,
                         checkedTrackColor = MaterialTheme.colorScheme.primary,
                         uncheckedThumbColor = MaterialTheme.colorScheme.outline,
-                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        disabledCheckedThumbColor = Color.White.copy(alpha = 0.5f),
+                        disabledCheckedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f),
+                        disabledUncheckedThumbColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
+                        disabledUncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
                     )
                 )
             } else {
                 Icon(
                     imageVector = androidx.compose.material.icons.Icons.Default.KeyboardArrowRight,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha=0.5f)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f * contentAlpha)
                 )
             }
         }
     }
 }
+

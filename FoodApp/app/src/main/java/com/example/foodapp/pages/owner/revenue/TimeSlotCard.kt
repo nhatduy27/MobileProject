@@ -10,31 +10,32 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.foodapp.data.model.owner.TimeSlotRevenue
+import com.example.foodapp.data.model.owner.revenue.TimeSlotData
+import com.example.foodapp.pages.owner.theme.OwnerColors
+import com.example.foodapp.pages.owner.theme.OwnerDimens
 
 @Composable
-fun TimeSlotCard(timeSlot: TimeSlotRevenue) {
+fun TimeSlotCard(timeSlot: TimeSlotData) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = OwnerDimens.CardElevation.dp),
+        shape = RoundedCornerShape(OwnerDimens.CardRadius.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(OwnerDimens.CardPadding.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Emoji icon with background
             Surface(
                 modifier = Modifier.size(48.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = Color(0xFFFFF3ED)
+                shape = RoundedCornerShape(OwnerDimens.CardRadius.dp),
+                color = OwnerColors.PrimaryLight
             ) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -55,8 +56,8 @@ fun TimeSlotCard(timeSlot: TimeSlotRevenue) {
                 Text(
                     text = timeSlot.title,
                     fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF1A1A1A)
+                    fontWeight = FontWeight.SemiBold,
+                    color = OwnerColors.TextPrimary
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
@@ -64,7 +65,7 @@ fun TimeSlotCard(timeSlot: TimeSlotRevenue) {
                 Text(
                     text = "${timeSlot.ordersCount} đơn hàng • ${timeSlot.percentage}% tổng doanh thu",
                     fontSize = 12.sp,
-                    color = Color(0xFF757575)
+                    color = OwnerColors.TextSecondary
                 )
             }
 
@@ -72,7 +73,7 @@ fun TimeSlotCard(timeSlot: TimeSlotRevenue) {
                 text = timeSlot.amount,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color(0xFFFF6B35)
+                color = OwnerColors.Primary
             )
         }
     }
