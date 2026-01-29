@@ -1,15 +1,26 @@
 package com.example.foodapp.pages.client.components.home
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.animation.*
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -18,20 +29,8 @@ import androidx.navigation.NavHostController
 import com.example.foodapp.data.model.shared.category.Category
 import com.example.foodapp.data.model.shared.product.Product
 import com.example.foodapp.pages.client.home.*
-import androidx.compose.animation.*
-import androidx.compose.animation.core.*
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserHomeContent(
     navController: NavHostController,
@@ -55,7 +54,8 @@ fun UserHomeContent(
     onLoadMore: () -> Unit,
     onFilterByCategory: (String?) -> Unit,
     onPageChange: (Int) -> Unit,
-    onShopViewClick: () -> Unit
+    onShopViewClick: () -> Unit,
+    onChatBotClick: () -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
     var selectedCategory by remember { mutableStateOf<String?>(null) }
@@ -69,7 +69,20 @@ fun UserHomeContent(
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
-        bottomBar = { UserBottomNav(navController = navController, onProfileClick = onProfileClick) }
+        bottomBar = { UserBottomNav(navController = navController, onProfileClick = onProfileClick) },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onChatBotClick,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = Color.White,
+                modifier = Modifier.padding(bottom = 70.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Chat,
+                    contentDescription = "Chat với bot hỗ trợ"
+                )
+            }
+        }
     ) { padding ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
@@ -99,7 +112,6 @@ fun UserHomeContent(
                 )
             }
 
-            // Button xem tất cả cửa hàng - nhỏ gọn với nền cam
             item(span = { GridItemSpan(2) }) {
                 ShopViewButton(onClick = onShopViewClick)
             }
@@ -108,7 +120,7 @@ fun UserHomeContent(
                 SearchStatusSection(
                     isSearching = isSearching,
                     searchQuery = searchQuery,
-                    resultCount = if(productState is ProductState.Success) products.size else 0,
+                    resultCount = if (productState is ProductState.Success) products.size else 0,
                     onClearSearch = onClearSearch
                 )
             }
@@ -119,7 +131,7 @@ fun UserHomeContent(
                     searchQuery = searchQuery,
                     selectedCategory = selectedCategory,
                     categoryMap = categoryMap,
-                    resultCount = if(productState is ProductState.Success) products.size else 0,
+                    resultCount = if (productState is ProductState.Success) products.size else 0,
                     onClearSearch = onClearSearch,
                     onClearFilter = {
                         selectedCategory = null
@@ -138,7 +150,6 @@ fun UserHomeContent(
                 onRefresh = onRefresh
             )
 
-            // Phân trang
             if (!isSearching && totalPages > 1 && totalItems > 0) {
                 item(span = { GridItemSpan(2) }) {
                     PaginationSection(
@@ -166,7 +177,7 @@ private fun ShopViewButton(onClick: () -> Unit) {
             .height(48.dp),
         shape = RoundedCornerShape(12.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = Color(0xFFFF6B35), // Cam
+            containerColor = Color(0xFFFF6B35),
             contentColor = Color.White
         ),
         elevation = ButtonDefaults.buttonElevation(
@@ -394,7 +405,6 @@ fun PaginationSection(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Info header
             Surface(
                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
                 shape = RoundedCornerShape(10.dp)
@@ -408,13 +418,11 @@ fun PaginationSection(
                 )
             }
 
-            // Page navigation
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Previous button
                 IconButton(
                     onClick = { onPageChange(currentPage - 1) },
                     enabled = currentPage > 1,
@@ -444,7 +452,6 @@ fun PaginationSection(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Page numbers
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     verticalAlignment = Alignment.CenterVertically
@@ -502,7 +509,6 @@ fun PaginationSection(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Next button
                 IconButton(
                     onClick = { onPageChange(currentPage + 1) },
                     enabled = currentPage < totalPages,
@@ -534,7 +540,6 @@ fun PaginationSection(
     }
 }
 
-// Hàm helper không thay đổi
 private fun generatePageNumbers(currentPage: Int, totalPages: Int): List<String> {
     return when {
         totalPages <= 7 -> {

@@ -441,4 +441,61 @@ class ProfileRepository {
             }
         }
     }
+
+
+    suspend fun getPickupPoints(token: String): ApiResult<List<PickupPointDTO>> {
+        return withContext(Dispatchers.IO) {
+            try {
+
+                val response = profileService.getPickupPoints("Bearer $token")
+
+                if (response.isSuccessful) {
+                    val pickupResponse = response.body()
+
+                    if (pickupResponse != null) {
+
+                        if (pickupResponse.success) {
+                            val pickupPoints = pickupResponse.data ?: emptyList()
+
+                            // Debug log để kiểm tra dữ liệu
+                            pickupPoints.forEachIndexed { index, point ->
+                                println("DEBUG: [Repository] Pickup point $index: id=${point.id}, buildingCode=${point.buildingCode}, name=${point.name}, note=${point.note}")
+                            }
+
+                            ApiResult.Success(pickupPoints)
+                        } else {
+                            println("DEBUG: [Repository] Get pickup points failed")
+                            ApiResult.Failure(Exception("Lấy danh sách điểm giao hàng thất bại"))
+                        }
+                    } else {
+                        println("DEBUG: [Repository] Get pickup points response body is null")
+                        ApiResult.Failure(Exception("Không có phản hồi từ server"))
+                    }
+                } else {
+                    val errorCode = response.code()
+                    val errorBody = response.errorBody()?.string()
+                    println("DEBUG: [Repository] Get Pickup Points API Error - $errorCode: $errorBody")
+
+                    val errorMessage = when (errorCode) {
+                        401 -> "Token không hợp lệ hoặc đã hết hạn"
+                        403 -> "Không có quyền truy cập"
+                        404 -> "Không tìm thấy endpoint"
+                        500 -> "Lỗi server, vui lòng thử lại sau"
+                        else -> "Lỗi $errorCode: ${errorBody ?: response.message()}"
+                    }
+                    ApiResult.Failure(Exception(errorMessage))
+                }
+            } catch (e: IOException) {
+                println("DEBUG: [Repository] Get Pickup Points IOException: ${e.message}")
+                ApiResult.Failure(Exception("Lỗi kết nối khi lấy danh sách điểm giao hàng: ${e.message}"))
+            } catch (e: HttpException) {
+                println("DEBUG: [Repository] Get Pickup Points HttpException: ${e.code()} - ${e.message()}")
+                ApiResult.Failure(Exception("Lỗi server khi lấy danh sách điểm giao hàng: ${e.code()} - ${e.message()}"))
+            } catch (e: Exception) {
+                println("DEBUG: [Repository] Get Pickup Points Exception: ${e.message}")
+                e.printStackTrace()
+                ApiResult.Failure(Exception("Lỗi không xác định khi lấy danh sách điểm giao hàng: ${e.message}"))
+            }
+        }
+    }
 }

@@ -21,6 +21,7 @@ import com.example.foodapp.authentication.login.LoginScreen
 import com.example.foodapp.authentication.otpverification.OtpVerificationScreen
 import com.example.foodapp.authentication.roleselection.RoleSelectionScreen
 import com.example.foodapp.pages.client.voucherhistory.VoucherHistoryScreen
+import com.example.foodapp.pages.client.chatbox.ChatBotScreen
 import com.example.foodapp.authentication.signup.SignUpScreen
 import com.example.foodapp.data.model.shared.product.Product
 import com.example.foodapp.data.remote.client.response.order.OrderApiModel
@@ -32,6 +33,7 @@ import com.example.foodapp.pages.client.cart.CartScreen
 import com.example.foodapp.pages.client.favorites.FavoritesScreen
 import com.example.foodapp.pages.client.home.UserHomeScreen
 import com.example.foodapp.pages.client.notifications.NotificationsScreen
+import com.example.foodapp.pages.client.review.MyReviewsScreen
 import com.example.foodapp.pages.client.payment.PaymentScreen
 import com.example.foodapp.pages.client.productdetail.UserProductDetailScreen
 import com.example.foodapp.pages.client.userInfo.UserInfoScreen
@@ -40,6 +42,8 @@ import com.example.foodapp.pages.client.orderdetail.OrderDetailScreen
 import com.example.foodapp.pages.client.ordersuccess.OrderSuccessScreen
 import com.example.foodapp.pages.client.setting.SettingsScreen
 import com.example.foodapp.pages.client.order.OrderScreen
+import com.example.foodapp.pages.client.listchat.ConversationsScreen
+import com.example.foodapp.pages.client.chat.ChatScreen
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.launch
@@ -70,7 +74,13 @@ sealed class Screen(val route: String) {
 
     object UserInfo : Screen("user_info")
     object ShopList : Screen("shop_list")
+    object ChatBot : Screen("chat_bot")
     object VoucherHistory : Screen("voucher_history")
+    object ReviewHistory : Screen("review_history")
+    object ListChat : Screen ("list_chat")
+    object Chat : Screen("chat/{conversationId}") {
+        fun createRoute(conversationId: String) = "chat/$conversationId"
+    }
 
     object UserProductDetail : Screen ("product_detail/{productId}") {
         fun createRoute(productId: String) = "product_detail/$productId"
@@ -122,7 +132,6 @@ fun FoodAppNavHost(
         coroutineScope.launch {
             val isLoggedIn = authManager.isUserLoggedIn()
             if (isLoggedIn) {
-                // SỬA: Dùng getValidToken() để tự động refresh nếu cần
                 val token = authManager.getValidToken()
                 if (token != null) {
                     val userId = authManager.getCurrentUserId()
@@ -275,6 +284,9 @@ fun FoodAppNavHost(
                 onProfileClick = { navController.navigate(Screen.UserProfile.route) },
                 onShopViewClick = {
                     navController.navigate(Screen.ShopList.route)
+                },
+                onChatBotClick = {
+                    navController.navigate(Screen.ChatBot.route)
                 }
             )
         }
@@ -314,8 +326,25 @@ fun FoodAppNavHost(
             arguments = listOf(navArgument("shopId") { type = NavType.StringType })
         ) { backStackEntry ->
             val shopId = backStackEntry.arguments?.getString("shopId") ?: ""
+
             ShopDetailScreen(
                 shopId = shopId,
+                onBackClick = { navController.navigateUp() },
+                onChatCreated = { shopId, conversationId, shopName ->
+
+                    //val encodedShopName = URLEncoder.encode(shopName, "UTF-8")
+                    //navController.navigate("chat_detail/$conversationId?shopId=$shopId&shopName=$encodedShopName")
+                }
+            )
+        }
+
+        composable(
+            route = Screen.Chat.route,
+            arguments = listOf(navArgument("conversationId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val conversationId = backStackEntry.arguments?.getString("conversationId") ?: ""
+            ChatScreen(
+                conversationId = conversationId,
                 onBackClick = { navController.navigateUp() }
             )
         }
@@ -440,7 +469,35 @@ fun FoodAppNavHost(
                 },
                 onUserInfoClick = {
                     navController.navigate(Screen.UserInfo.route)
+                },
+                onReviewsButtonClick = {
+                    navController.navigate(Screen.ReviewHistory.route)
+                },
+                onChatsButtonClick = {
+                    navController.navigate(Screen.ListChat.route)
                 }
+
+            )
+        }
+
+        composable(Screen.ListChat.route) {
+            ConversationsScreen(
+                onBackClick = { navController.navigateUp() },
+                onConversationClick = { conversationId ->
+                    navController.navigate(Screen.Chat.createRoute(conversationId))
+                }
+            )
+        }
+
+        composable(Screen.ReviewHistory.route) {
+            MyReviewsScreen(
+                onBackClick = { navController.navigateUp() }
+            )
+        }
+
+        composable(Screen.ChatBot.route) {
+            ChatBotScreen(
+                navController = navController
             )
         }
 

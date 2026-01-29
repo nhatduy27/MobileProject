@@ -15,6 +15,7 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -28,6 +29,14 @@ import com.example.foodapp.ui.theme.FoodAppTheme
 import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
+
+// ============== COLOR SCHEME ==============
+private val OrangePrimary = Color(0xFFFF6B35)
+private val OrangeLight = Color(0xFFFF8C61)
+private val OrangeDark = Color(0xFFE55A2B)
+private val OrangeBackground = Color(0xFFFFF5F0)
+private val OrangeSurface = Color(0xFFFFE8DC)
+private val OrangeAccent = Color(0xFFFFAB8C)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -59,8 +68,9 @@ fun VoucherHistoryScreen(
                     title = {
                         Text(
                             text = "Lịch sử Voucher",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
                     },
                     navigationIcon = {
@@ -71,7 +81,7 @@ fun VoucherHistoryScreen(
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
                                 contentDescription = "Quay lại",
-                                tint = MaterialTheme.colorScheme.onSurface
+                                tint = Color.White
                             )
                         }
                     },
@@ -84,17 +94,20 @@ fun VoucherHistoryScreen(
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(20.dp),
                                     strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = Color.White
                                 )
                             } else {
                                 Icon(
                                     Icons.Default.Refresh,
                                     contentDescription = "Làm mới",
-                                    tint = MaterialTheme.colorScheme.primary
+                                    tint = Color.White
                                 )
                             }
                         }
-                    }
+                    },
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = OrangePrimary
+                    )
                 )
             }
         ) { paddingValues ->
@@ -102,7 +115,7 @@ fun VoucherHistoryScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .background(MaterialTheme.colorScheme.background)
+                    .background(OrangeBackground)
             ) {
                 when (historyState) {
                     VoucherHistoryState.Idle -> {
@@ -119,12 +132,15 @@ fun VoucherHistoryScreen(
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 CircularProgressIndicator(
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = OrangePrimary,
+                                    strokeWidth = 3.dp,
+                                    modifier = Modifier.size(48.dp)
                                 )
                                 Text(
                                     text = "Đang tải lịch sử...",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = OrangeDark,
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
                         }
@@ -141,12 +157,20 @@ fun VoucherHistoryScreen(
                                 verticalArrangement = Arrangement.spacedBy(24.dp),
                                 modifier = Modifier.padding(horizontal = 32.dp)
                             ) {
-                                Icon(
-                                    Icons.Default.ErrorOutline,
-                                    contentDescription = "Lỗi",
-                                    modifier = Modifier.size(64.dp),
-                                    tint = MaterialTheme.colorScheme.error
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(96.dp)
+                                        .clip(RoundedCornerShape(24.dp))
+                                        .background(OrangeSurface),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.ErrorOutline,
+                                        contentDescription = "Lỗi",
+                                        modifier = Modifier.size(56.dp),
+                                        tint = OrangePrimary
+                                    )
+                                }
 
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -154,14 +178,14 @@ fun VoucherHistoryScreen(
                                 ) {
                                     Text(
                                         text = "Đã xảy ra lỗi",
-                                        style = MaterialTheme.typography.titleMedium,
+                                        style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.error
+                                        color = OrangeDark
                                     )
                                     Text(
                                         text = errorMessage,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                        color = Color.Gray,
                                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                     )
                                 }
@@ -169,10 +193,20 @@ fun VoucherHistoryScreen(
                                 Button(
                                     onClick = { viewModel.refresh() },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary
-                                    )
+                                        containerColor = OrangePrimary
+                                    ),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.6f)
+                                        .height(48.dp)
                                 ) {
-                                    Text("Thử lại")
+                                    Icon(
+                                        Icons.Default.Refresh,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Thử lại", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                                 }
                             }
                         }
@@ -185,15 +219,27 @@ fun VoucherHistoryScreen(
                         ) {
                             Column(
                                 horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(20.dp),
                                 modifier = Modifier.padding(horizontal = 32.dp)
                             ) {
-                                Icon(
-                                    Icons.Default.History,
-                                    contentDescription = "Không có lịch sử",
-                                    modifier = Modifier.size(80.dp),
-                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                                )
+                                Box(
+                                    modifier = Modifier
+                                        .size(120.dp)
+                                        .clip(RoundedCornerShape(28.dp))
+                                        .background(
+                                            Brush.verticalGradient(
+                                                colors = listOf(OrangeSurface, OrangeBackground)
+                                            )
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        Icons.Default.History,
+                                        contentDescription = "Không có lịch sử",
+                                        modifier = Modifier.size(72.dp),
+                                        tint = OrangeAccent
+                                    )
+                                }
 
                                 Column(
                                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -201,14 +247,14 @@ fun VoucherHistoryScreen(
                                 ) {
                                     Text(
                                         text = "Chưa có lịch sử sử dụng",
-                                        style = MaterialTheme.typography.titleMedium,
+                                        style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                                        color = OrangeDark
                                     )
                                     Text(
                                         text = "Các voucher bạn đã sử dụng sẽ xuất hiện tại đây",
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                        color = Color.Gray,
                                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                                     )
                                 }
@@ -216,11 +262,21 @@ fun VoucherHistoryScreen(
                                 Button(
                                     onClick = { viewModel.refresh() },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary
+                                        containerColor = OrangePrimary
                                     ),
-                                    modifier = Modifier.padding(top = 8.dp)
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.6f)
+                                        .height(48.dp)
+                                        .padding(top = 8.dp)
                                 ) {
-                                    Text("Làm mới")
+                                    Icon(
+                                        Icons.Default.Refresh,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Làm mới", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
                                 }
                             }
                         }
@@ -276,44 +332,59 @@ private fun SuccessContent(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                containerColor = Color.White
             ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-            shape = RoundedCornerShape(12.dp)
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            shape = RoundedCornerShape(16.dp)
         ) {
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "Số lần đã dùng",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = totalItems.toString(),
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-
-                if (totalPages > 1) {
-                    Badge(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    ) {
-                        Text(
-                            text = "Trang $currentPage/$totalPages",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontSize = 12.sp
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(OrangePrimary, OrangeLight)
                         )
+                    )
+                    .padding(horizontal = 20.dp, vertical = 16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "TỔNG SỐ LẦN SỬ DỤNG",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.White.copy(alpha = 0.9f),
+                            letterSpacing = 0.5.sp
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = totalItems.toString(),
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White,
+                            fontSize = 36.sp
+                        )
+                    }
+
+                    if (totalPages > 1) {
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = Color.White.copy(alpha = 0.25f),
+                            modifier = Modifier.padding(4.dp)
+                        ) {
+                            Text(
+                                text = "Trang $currentPage/$totalPages",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            )
+                        }
                     }
                 }
             }
@@ -329,7 +400,8 @@ private fun SuccessContent(
             ) {
                 Text(
                     text = "Không có dữ liệu",
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    color = Color.Gray,
+                    fontSize = 16.sp
                 )
             }
         } else {
@@ -339,7 +411,7 @@ private fun SuccessContent(
                     .fillMaxSize()
                     .weight(1f),
                 contentPadding = PaddingValues(vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(historyItems) { historyItem ->
                     VoucherHistoryItem(
@@ -359,15 +431,16 @@ private fun SuccessContent(
                         ) {
                             if (isLoadingMore) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.primary
+                                    modifier = Modifier.size(32.dp),
+                                    strokeWidth = 3.dp,
+                                    color = OrangePrimary
                                 )
                             } else if (hasMore) {
                                 Text(
                                     text = "Kéo xuống để tải thêm...",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = OrangeAccent,
+                                    fontWeight = FontWeight.Medium
                                 )
                             }
                         }
@@ -383,11 +456,27 @@ private fun SuccessContent(
                                 .padding(vertical = 24.dp),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = "Đã hiển thị tất cả lịch sử",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Divider(
+                                    modifier = Modifier.width(40.dp),
+                                    color = OrangeAccent.copy(alpha = 0.5f),
+                                    thickness = 1.dp
+                                )
+                                Text(
+                                    text = " Đã hiển thị tất cả ",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = OrangeAccent,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                )
+                                Divider(
+                                    modifier = Modifier.width(40.dp),
+                                    color = OrangeAccent.copy(alpha = 0.5f),
+                                    thickness = 1.dp
+                                )
+                            }
                         }
                     }
                 }
@@ -405,136 +494,170 @@ private fun VoucherHistoryItem(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = Color.White
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
-        shape = RoundedCornerShape(12.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
-            // Header with code and discount
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+            // Header với gradient cam
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(OrangeSurface, OrangeBackground)
+                        )
+                    )
+                    .padding(16.dp)
             ) {
-                // Voucher Code
                 Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(40.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "V",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column {
-                        Text(
-                            text = historyItem.code,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = formatShortDate(historyItem.createdAt),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    }
-                }
-
-                // Discount Amount
-                Text(
-                    text = formatCurrency(historyItem.discountAmount),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Details
-            Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Order Info
-                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Receipt,
-                        contentDescription = "Đơn hàng",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Đơn hàng: ${formatId(historyItem.orderId)}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-
-                // Shop Info (chỉ hiển thị nếu có shopId)
-                if (historyItem.shopId.isNotBlank()) {
+                    // Voucher Code
                     Row(
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Store,
-                            contentDescription = "Cửa hàng",
-                            modifier = Modifier.size(16.dp),
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(
+                                    Brush.linearGradient(
+                                        colors = listOf(OrangePrimary, OrangeLight)
+                                    )
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ConfirmationNumber,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        Column {
+                            Text(
+                                text = historyItem.code,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = OrangeDark,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                fontSize = 16.sp
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = formatShortDate(historyItem.createdAt),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.Gray,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+
+                    // Discount Amount
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = OrangePrimary,
+                        shadowElevation = 2.dp
+                    ) {
                         Text(
-                            text = "Cửa hàng: ${formatId(historyItem.shopId)}",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            text = formatCurrency(historyItem.discountAmount),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color.White,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                            fontSize = 15.sp
                         )
                     }
+                }
+            }
+
+            // Details với divider
+            Divider(color = OrangeSurface, thickness = 1.dp)
+
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Order Info
+                DetailRow(
+                    icon = Icons.Default.Receipt,
+                    label = "Đơn hàng",
+                    value = formatId(historyItem.orderId)
+                )
+
+                // Shop Info
+                if (historyItem.shopId.isNotBlank()) {
+                    DetailRow(
+                        icon = Icons.Default.Store,
+                        label = "Cửa hàng",
+                        value = formatId(historyItem.shopId)
+                    )
                 }
 
                 // Time
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AccessTime,
-                        contentDescription = "Thời gian",
-                        modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = formatFullDate(historyItem.createdAt),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
-                    )
-                }
+                DetailRow(
+                    icon = Icons.Default.AccessTime,
+                    label = "Thời gian",
+                    value = formatFullDate(historyItem.createdAt)
+                )
             }
+        }
+    }
+}
+
+@Composable
+private fun DetailRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier
+                .size(32.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(OrangeSurface),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp),
+                tint = OrangePrimary
+            )
+        }
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelSmall,
+                color = Color.Gray,
+                fontSize = 12.sp
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.DarkGray,
+                fontWeight = FontWeight.Medium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                fontSize = 14.sp
+            )
         }
     }
 }

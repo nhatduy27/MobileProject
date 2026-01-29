@@ -111,6 +111,9 @@ data class GetShopDetailRequest(
 /**
  * Chi tiết shop model từ API response
  */
+/**
+ * Chi tiết shop model từ API response - SỬA LẠI
+ */
 data class ShopDetailApiModel(
     @SerializedName("id")
     val id: String = "",
@@ -133,42 +136,51 @@ data class ShopDetailApiModel(
     @SerializedName("logoUrl")
     val logoUrl: String = "",
 
-    @SerializedName("openTime")
-    val openTime: String = "",
-
-    @SerializedName("closeTime")
-    val closeTime: String = "",
-
-    // SỬA: Đổi tên field để khớp với API response
-    @SerializedName("shipFeePerOrder")
-    val shipFeePerOrder: Int = 0,
-
-    // SỬA: Đổi tên field để khớp với API response
-    @SerializedName("minOrderAmount")
-    val minOrderAmount: Int = 0,
-
-    @SerializedName("isOpen")
-    val isOpen: Boolean = false,
-
     @SerializedName("rating")
     val rating: Double = 0.0,
 
     @SerializedName("totalRatings")
-    val totalRatings: Int = 0,
+    val totalRatings: Int = 0, // JSON: 10 (Int)
+
+    @SerializedName("isOpen")
+    val isOpen: Boolean = false, // JSON: true
+
+    @SerializedName("openTime")
+    val openTime: String = "", // JSON: "07:00"
+
+    @SerializedName("closeTime")
+    val closeTime: String = "", // JSON: "21:00"
+
+    @SerializedName("shipFeePerOrder")
+    val shipFeePerOrder: Int = 0, // JSON: 5000 (Int)
+
+    @SerializedName("minOrderAmount")
+    val minOrderAmount: Int = 0,
 
     @SerializedName("totalOrders")
-    val totalOrders: Int = 0
+    val totalOrders: Int = 0,
+
+    @SerializedName("ownerId")
+    val ownerId: String = "",
+
+    @SerializedName("ownerName")
+    val ownerName: String = "",
+
+
 )
 
 /**
- * Response model wrapper cho API get shop details (thành công)
+ * Response model wrapper cho API get shop details
  */
 data class GetShopDetailResponse(
     @SerializedName("success")
-    val success: Boolean = false,
+    val success: Boolean = false, // JSON: true
 
     @SerializedName("data")
-    val data: ShopDetailApiModel? = null
+    val data: ShopDetailApiModel? = null,
+
+    @SerializedName("timestamp")
+    val timestamp: String? = null // JSON: "2026-01-29T10:21:45.369Z"
 )
 
 /**

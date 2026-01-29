@@ -1,9 +1,9 @@
 package com.example.foodapp.pages.client.components.profile
 
-
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -13,12 +13,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.livedata.observeAsState
 import com.example.foodapp.data.remote.client.response.profile.AddressResponse
+import com.example.foodapp.pages.client.profile.ProfileViewModel
 import com.example.foodapp.pages.client.profile.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditAddressDialog(
     address: AddressResponse,
@@ -28,15 +30,37 @@ fun EditAddressDialog(
 ) {
     // State cho form địa chỉ
     var label by remember { mutableStateOf(address.label ?: "") }
-    var fullAddress by remember { mutableStateOf(address.fullAddress ?: "") }
-    var building by remember { mutableStateOf(address.building ?: "") }
+    var selectedBuilding by remember { mutableStateOf(address.building) }
     var room by remember { mutableStateOf(address.room ?: "") }
     var note by remember { mutableStateOf(address.note ?: "") }
     var isDefault by remember { mutableStateOf(address.isDefault ?: false) }
 
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
+    // Observe pickup points từ ViewModel
+    val pickupPointsState by viewModel.pickupPointsState.observeAsState()
+    val pickupPoints by viewModel.pickupPoints.observeAsState(emptyList())
+
     val isLoading = updateAddressState is UpdateAddressState.Loading
+
+    // Tìm pickup point được chọn
+    val selectedPickupPoint = selectedBuilding?.let { buildingCode ->
+        pickupPoints.find { it.buildingCode == buildingCode }
+    }
+
+    // Khởi tạo room từ fullAddress nếu chưa có
+    LaunchedEffect(Unit) {
+        viewModel.fetchPickupPoints()
+
+        // Parse room từ fullAddress (nếu chưa có room)
+        if (room.isEmpty() && address.fullAddress?.contains("Phòng") == true) {
+            val roomPattern = "Phòng\\s*(\\d+)".toRegex(RegexOption.IGNORE_CASE)
+            val match = roomPattern.find(address.fullAddress ?: "")
+            match?.groupValues?.get(1)?.let { roomNumber ->
+                room = "Phòng $roomNumber"
+            }
+        }
+    }
 
     AlertDialog(
         onDismissRequest = {
@@ -89,57 +113,217 @@ fun EditAddressDialog(
                     }
                 )
 
-                // Full Address field
-                OutlinedTextField(
-                    value = fullAddress,
-                    onValueChange = { fullAddress = it },
-                    label = { Text("Địa chỉ đầy đủ") },
-                    placeholder = { Text("Nhập số nhà, tên đường, phường, quận, thành phố") },
-                    leadingIcon = {
-                        Icon(Icons.Filled.LocationOn, contentDescription = null)
-                    },
+                // Building field - DROPDOWN thay vì EditText
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading,
-                    singleLine = false,
-                    minLines = 3,
-                    maxLines = 4,
-                    isError = fullAddress.isBlank(),
-                    supportingText = {
-                        if (fullAddress.isBlank()) {
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = "Tòa nhà *",
+                        fontSize = 14.sp,
+                        color = if (selectedBuilding == null && !isLoading) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
+                    )
+
+                    // Loading state
+                    if (pickupPointsState is PickupPointsState.Loading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    shape = MaterialTheme.shapes.small
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp
+                                )
+                                Text("Đang tải danh sách tòa nhà...")
+                            }
+                        }
+                    }
+                    // Error state
+                    else if (pickupPointsState is PickupPointsState.Error) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.errorContainer,
+                                    shape = MaterialTheme.shapes.small
+                                )
+                                .clickable(enabled = !isLoading) {
+                                    viewModel.fetchPickupPoints()
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
                             Text(
-                                text = "Vui lòng nhập địa chỉ đầy đủ",
-                                color = MaterialTheme.colorScheme.error
+                                text = "Lỗi: ${(pickupPointsState as PickupPointsState.Error).message}",
+                                color = MaterialTheme.colorScheme.error,
+                                fontSize = 14.sp
                             )
                         }
                     }
-                )
+                    // Success state - Dropdown menu
+                    else if (pickupPoints.isNotEmpty()) {
+                        var expanded by remember { mutableStateOf(false) }
 
-                // Building field
-                OutlinedTextField(
-                    value = building,
-                    onValueChange = { building = it },
-                    label = { Text("Tòa nhà/Chung cư") },
-                    placeholder = { Text("VD: Tòa nhà A, Chung cư B") },
-                    leadingIcon = {
-                        Icon(Icons.Filled.Apartment, contentDescription = null)
-                    },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading,
-                    singleLine = true
-                )
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = { expanded = it && !isLoading },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            OutlinedTextField(
+                                value = selectedPickupPoint?.name ?: selectedBuilding ?: "",
+                                onValueChange = { },
+                                label = { Text("Chọn tòa nhà") },
+                                leadingIcon = {
+                                    Icon(Icons.Filled.Apartment, contentDescription = null)
+                                },
+                                trailingIcon = {
+                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                                },
+                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(),
+                                readOnly = true,
+                                enabled = !isLoading,
+                                isError = selectedBuilding == null && !isLoading,
+                                supportingText = {
+                                    if (selectedBuilding == null && !isLoading) {
+                                        Text(
+                                            text = "Vui lòng chọn tòa nhà",
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    } else if (selectedBuilding != null && selectedPickupPoint == null) {
+                                        Text(
+                                            text = "Tòa nhà không còn tồn tại, vui lòng chọn lại",
+                                            color = MaterialTheme.colorScheme.error
+                                        )
+                                    }
+                                }
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                pickupPoints.forEach { point ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Column {
+                                                Text(
+                                                    text = point.name,
+                                                    fontWeight = FontWeight.Medium
+                                                )
+                                                point.note?.let { noteText ->
+                                                    Text(
+                                                        text = noteText,
+                                                        fontSize = 12.sp,
+                                                        color = Color.Gray
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        onClick = {
+                                            selectedBuilding = point.buildingCode
+                                            expanded = false
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    // Empty state
+                    else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.surfaceVariant,
+                                    shape = MaterialTheme.shapes.small
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Không có tòa nhà nào",
+                                color = Color.Gray,
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+
+                    // Thông tin chi tiết của tòa nhà đã chọn
+                    selectedPickupPoint?.let { point ->
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "Thông tin tòa nhà:",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "Mã: ${point.buildingCode}",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                Text(
+                                    text = "Tên: ${point.name}",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                                point.note?.let { noteText ->
+                                    Text(
+                                        text = "Ghi chú: $noteText",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Room field
                 OutlinedTextField(
                     value = room,
                     onValueChange = { room = it },
-                    label = { Text("Phòng/Số căn hộ") },
+                    label = { Text("Phòng/Số căn hộ *") },
                     placeholder = { Text("VD: Phòng 101, Căn hộ 302") },
                     leadingIcon = {
                         Icon(Icons.Filled.DoorFront, contentDescription = null)
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading,
-                    singleLine = true
+                    enabled = !isLoading && selectedBuilding != null,
+                    singleLine = true,
+                    isError = room.isBlank(),
+                    supportingText = {
+                        if (room.isBlank()) {
+                            Text(
+                                text = "Vui lòng nhập số phòng",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
                 )
 
                 // Note field
@@ -157,6 +341,44 @@ fun EditAddressDialog(
                     minLines = 2,
                     maxLines = 3
                 )
+
+                // Xem trước địa chỉ đầy đủ
+                selectedPickupPoint?.let { point ->
+                    if (room.isNotEmpty()) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(
+                                    text = "Địa chỉ đầy đủ sẽ là:",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                Text(
+                                    text = "${point.name}, $room",
+                                    fontSize = 14.sp,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    fontWeight = FontWeight.Medium
+                                )
+                                note.takeIf { it.isNotEmpty() }?.let { noteText ->
+                                    Text(
+                                        text = "Ghi chú: $noteText",
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Checkbox for default address
                 Row(
@@ -194,8 +416,13 @@ fun EditAddressDialog(
                         return@TextButton
                     }
 
-                    if (fullAddress.isBlank()) {
-                        errorMessage = "Vui lòng nhập địa chỉ đầy đủ"
+                    if (selectedBuilding == null) {
+                        errorMessage = "Vui lòng chọn tòa nhà"
+                        return@TextButton
+                    }
+
+                    if (room.isBlank()) {
+                        errorMessage = "Vui lòng nhập số phòng"
                         return@TextButton
                     }
 
@@ -206,15 +433,17 @@ fun EditAddressDialog(
                         viewModel.updateAddress(
                             addressId = addressId,
                             label = label,
-                            fullAddress = fullAddress,
-                            building = building.takeIf { it.isNotBlank() },
-                            room = room.takeIf { it.isNotBlank() },
+                            buildingCode = selectedBuilding!!,
+                            room = room,
                             note = note.takeIf { it.isNotBlank() },
                             isDefault = isDefault
                         )
                     }
                 },
-                enabled = !isLoading && label.isNotBlank() && fullAddress.isNotBlank()
+                enabled = !isLoading &&
+                        label.isNotBlank() &&
+                        selectedBuilding != null &&
+                        room.isNotBlank()
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(

@@ -293,3 +293,32 @@ data class UploadAvatarResponse(
     @SerializedName("avatarUrl")
     val avatarUrl: String
 )
+
+
+
+// ========== PICKUP POINTS RESPONSE ==========
+data class PickupPointsResponse(
+    @SerializedName("success")
+    val success: Boolean,
+
+    @SerializedName("data")
+    val data: List<PickupPointDTO>? = null,
+
+    @SerializedName("timestamp")
+    val timestamp: String? = null
+)
+
+// ========== PICKUP POINT DTO ==========
+data class PickupPointDTO(
+    @SerializedName("id")
+    val id: String,
+
+    @SerializedName("buildingCode")
+    val buildingCode: String,
+
+    @SerializedName("name")
+    val name: String,
+
+    @SerializedName("note")
+    val note: String? = null
+)
