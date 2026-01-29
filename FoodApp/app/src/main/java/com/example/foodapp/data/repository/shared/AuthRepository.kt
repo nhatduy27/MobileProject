@@ -2,8 +2,11 @@
 
 package com.example.foodapp.data.repository.shared
 
+import android.util.Log
+import com.example.foodapp.data.model.client.Client
 import com.example.foodapp.data.remote.api.ApiClient
 import com.example.foodapp.data.model.shared.auth.*
+import com.example.foodapp.data.remote.shared.GoogleAuthRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
@@ -85,40 +88,79 @@ class AuthRepository {
     }
 
     // ============== GOOGLE SIGN-IN ==============
+    // ============== GOOGLE SIGN-IN (FIXED) ==============
+    // ============== GOOGLE SIGN-IN (FIXED & CLEAN) ==============
     suspend fun signInWithGoogle(
         idToken: String,
         role: String? = null
-    ): ApiResult<AuthData> {
+    ): ApiResult<Client> {
         return try {
             withContext(Dispatchers.IO) {
                 val request = GoogleAuthRequest(idToken, role)
-                val response = apiService.googleLogin(request)
+
+
+                val response = apiService.googleLoginRaw(request)
+
 
                 if (response.isSuccessful) {
-                    val apiResponse = response.body()
-                    if (apiResponse != null && apiResponse.success) {
-                        val authData = apiResponse.data
-                        if (authData != null && authData.isValid) {
-                            ApiResult.Success(authData)
-                        } else {
-                            ApiResult.Failure(Exception("Không nhận được thông tin từ Google"))
-                        }
-                    } else {
-                        val errorMessage = apiResponse?.message ?: "Đăng nhập Google thất bại"
-                        ApiResult.Failure(Exception(errorMessage))
+                    val body = response.body()
+
+
+                    if (body == null) {
+                        return@withContext ApiResult.Failure(
+                            Exception("Không nhận được dữ liệu từ server")
+                        )
                     }
+
+                    // ⭐ LẤY USER TỪ body.data.user (CẤU TRÚC MỚI)
+                    val user = body.data?.user
+
+                    Log.d("AuthRepository", "🔍 User object: $user")
+
+                    if (user == null) {
+                        Log.e("AuthRepository", "❌ User object là null")
+                        return@withContext ApiResult.Failure(
+                            Exception("Thông tin người dùng không tồn tại")
+                        )
+                    }
+
+                    Log.d("AuthRepository", "✅ User ID: ${user.id}, Email: ${user.email}")
+
+                    // Tạo Client object
+                    val client = Client.fromGoogleAuth(
+                        userId = user.id,
+                        email = user.email,
+                        displayName = user.displayName,
+                        photoUrl = user.photoUrl,
+                        role = user.role,
+                        emailVerified = user.emailVerified
+                    )
+
+                    Log.d("AuthRepository", "✅ Client created: ${client.id}")
+                    ApiResult.Success(client)
                 } else {
-                    handleHttpError(response)
+                    // Xử lý lỗi HTTP
+                    val errorBody = response.errorBody()?.string() ?: "No error body"
+                    Log.e("AuthRepository", "❌ HTTP Error ${response.code()}: $errorBody")
+
+                    ApiResult.Failure(
+                        Exception("Đăng nhập thất bại: HTTP ${response.code()}")
+                    )
                 }
             }
         } catch (e: HttpException) {
+            Log.e("AuthRepository", "❌ HttpException", e)
             ApiResult.Failure(Exception("Lỗi kết nối: ${e.message}"))
         } catch (e: IOException) {
+            Log.e("AuthRepository", "❌ IOException", e)
             ApiResult.Failure(Exception("Lỗi mạng: ${e.message}"))
         } catch (e: Exception) {
+            Log.e("AuthRepository", "❌ Exception", e)
             ApiResult.Failure(Exception("Lỗi không xác định: ${e.message}"))
         }
     }
+
+
 
     // ============== RESET PASSWORD ==============
     suspend fun resetPassword(

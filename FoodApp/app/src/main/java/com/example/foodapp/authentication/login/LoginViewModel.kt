@@ -6,6 +6,7 @@ import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.example.foodapp.data.model.client.Client
 import com.example.foodapp.data.model.shared.auth.*
 import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
 import com.example.foodapp.data.repository.shared.AuthRepository
@@ -16,6 +17,8 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.messaging.FirebaseMessaging
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +27,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.delay
 
-
 class LoginViewModel(
     private val repository: UserFirebaseRepository,
     private val authRepository: AuthRepository,
@@ -32,9 +34,8 @@ class LoginViewModel(
     private val context: Context
 ) : ViewModel() {
 
-    // Thêm AuthManager
     private val authManager = AuthManager(context)
-
+    private val firebaseAuth = FirebaseAuth.getInstance()
     private var googleSignInClient: GoogleSignInClient? = null
 
     // State flows
@@ -49,10 +50,10 @@ class LoginViewModel(
 
     // ============= GOOGLE SIGN-IN =============
 
-
     fun initializeGoogleSignIn(client: GoogleSignInClient) {
         this.googleSignInClient = client
     }
+
     fun getGoogleSignInIntent() = googleSignInClient?.signInIntent
 
     /**
@@ -93,59 +94,89 @@ class LoginViewModel(
     }
 
     private suspend fun handleGoogleAccount(account: GoogleSignInAccount) {
-        val idToken = account.idToken
+        val googleIdToken = account.idToken
 
-        if (idToken == null) {
+        if (googleIdToken == null) {
             _googleLogInState.value = GoogleLogInState.Error(
                 "Không thể lấy ID Token từ Google",
                 "MISSING_TOKEN"
             )
             return
         }
-        signInWithGoogleToken(idToken)
+
+        Log.d("LoginViewModel", "📱 Google ID Token: ${googleIdToken.take(20)}...")
+        Log.d("LoginViewModel", "📧 Google Account Email: ${account.email}")
+
+        try {
+            // 1. Sign in với Firebase để lấy Firebase ID token
+            val credential = GoogleAuthProvider.getCredential(googleIdToken, null)
+            val authResult = firebaseAuth.signInWithCredential(credential).await()
+
+            // 2. Lấy Firebase ID token
+            val tokenResult = authResult.user?.getIdToken(true)?.await()
+            val firebaseIdToken = tokenResult?.token
+
+            if (firebaseIdToken == null) {
+                _googleLogInState.value = GoogleLogInState.Error(
+                    "Không thể lấy Firebase ID token",
+                    "FIREBASE_TOKEN_ERROR"
+                )
+                return
+            }
+
+            Log.d("LoginViewModel", "✅ Firebase ID token: ${firebaseIdToken.take(20)}...")
+            Log.d("LoginViewModel", "👤 Firebase User UID: ${authResult.user?.uid}")
+
+            // 3. Gửi Firebase ID token lên backend của bạn
+            signInWithGoogleToken(firebaseIdToken, "CUSTOMER")
+
+        } catch (e: Exception) {
+            Log.e("LoginViewModel", "❌ Lỗi xác thực Firebase", e)
+            _googleLogInState.value = GoogleLogInState.Error(
+                "Lỗi xác thực Firebase: ${e.message ?: "Không rõ nguyên nhân"}",
+                "FIREBASE_AUTH_ERROR"
+            )
+        }
     }
 
-    private suspend fun signInWithGoogleToken(idToken: String) {
+    private suspend fun signInWithGoogleToken(firebaseIdToken: String, role: String = "CUSTOMER") {
         try {
-            val result = authRepository.signInWithGoogle(idToken)
+            // Gọi repository với Firebase ID token
+            val result = authRepository.signInWithGoogle(firebaseIdToken, role)
 
             when (result) {
                 is ApiResult.Success -> {
-                    // result.data bây giờ là AuthData (trực tiếp)
-                    val authData = result.data
+                    val client = result.data
 
-                    if (authData.isValid) {
-                        val userInfo = authData.user
+                    // Lưu thông tin user từ Client
+                    authManager.saveUserInfo(
+                        userId = client.id,
+                        email = client.email,
+                        name = client.fullName ?: client.email.split("@")[0],
+                        role = client.role ?: role,
+                        status = "ACTIVE"
+                    )
 
-                        // Lưu thông tin user
-                        authManager.saveUserInfo(
-                            userId = userInfo.id,
-                            email = userInfo.email,
-                            name = userInfo.displayName,
-                            role = userInfo.role,
-                            status = userInfo.status
-                        )
+                    // Lưu Firebase token
+                    authManager.saveFirebaseToken(firebaseIdToken)
 
-                        // Xử lý custom token để sign in Firebase
-                        handleGoogleCustomToken(authData.customToken, userInfo)
+                    // Cập nhật state thành công
+                    updateGoogleSignInSuccess(client, role)
 
-                    } else {
-                        _googleLogInState.value = GoogleLogInState.Error(
-                            "Dữ liệu người dùng không hợp lệ",
-                            "INVALID_USER_DATA"
-                        )
-                    }
+                    Log.d("LoginViewModel", "✅ Google Sign-In thành công: ${client.email}")
                 }
 
                 is ApiResult.Failure -> {
-                    val errorMsg = parseGoogleErrorMessage(result.exception)
+                    val errorMsg = parseGoogleApiErrorMessage(result.exception)
                     _googleLogInState.value = GoogleLogInState.Error(
                         errorMsg.first,
                         errorMsg.second
                     )
+                    Log.e("LoginViewModel", "❌ Google Sign-In thất bại: ${result.exception.message}")
                 }
             }
         } catch (e: Exception) {
+            Log.e("LoginViewModel", "❌ Lỗi kết nối API", e)
             _googleLogInState.value = GoogleLogInState.Error(
                 "Lỗi kết nối: ${e.message ?: "Vui lòng thử lại sau"}",
                 "NETWORK_ERROR"
@@ -153,53 +184,34 @@ class LoginViewModel(
         }
     }
 
-    private fun handleGoogleCustomToken(customToken: String, userInfo: UserInfo) {
-        authManager.signInWithCustomToken(customToken) { isSuccessful, idToken, error ->
-            if (isSuccessful) {
-                if (!idToken.isNullOrEmpty()) {
-                    authManager.saveFirebaseToken(idToken)
-                    Log.d("LoginViewModel", "✅ Đã lưu Firebase token: ${idToken.take(10)}...")
+    private fun updateGoogleSignInSuccess(client: Client, role: String) {
+        _googleLogInState.value = GoogleLogInState.Success(
+            userId = client.id,
+            email = client.email,
+            displayName = client.fullName ?: client.email.split("@")[0],
+            role = client.role ?: role
+        )
+        _existAccountState.value = true
 
-                    // Cập nhật token cho ApiClient ngay lập tức
-                    updateApiClientToken(idToken)
-                }
-
-                // Cập nhật state
-                _googleLogInState.value = GoogleLogInState.Success(
-                    userId = userInfo.id,
-                    email = userInfo.email,
-                    displayName = userInfo.displayName,
-                    role = userInfo.role
-                )
-                _existAccountState.value = true
-
-                // GỌI ĐĂNG KÝ DEVICE TOKEN (sau khi đã cập nhật token)
-                delayAndRegisterDeviceToken()
-
-            } else {
-                // Vẫn coi là thành công vì đã có user info
-                _googleLogInState.value = GoogleLogInState.Success(
-                    userId = userInfo.id,
-                    email = userInfo.email,
-                    displayName = userInfo.displayName,
-                    role = userInfo.role
-                )
-                _existAccountState.value = true
-            }
+        // Cập nhật ApiClient token
+        val currentToken = authManager.getCurrentToken()
+        if (!currentToken.isNullOrEmpty()) {
+            updateApiClientToken(currentToken)
         }
-    }
 
-    /**
-     * Xử lý lỗi từ Google Sign-In
-     */
-    private fun handleGoogleSignInError(exception: ApiException) {
-        val (errorMessage, errorCode) = parseGoogleApiException(exception)
-        _googleLogInState.value = GoogleLogInState.Error(errorMessage, errorCode)
+        // Đăng ký device token
+        delayAndRegisterDeviceToken()
     }
 
     /**
      * Parse lỗi từ Google ApiException
      */
+    private fun handleGoogleSignInError(exception: ApiException) {
+        val (errorMessage, errorCode) = parseGoogleApiException(exception)
+        _googleLogInState.value = GoogleLogInState.Error(errorMessage, errorCode)
+        Log.e("LoginViewModel", "❌ Google Sign-In API Error: $errorCode - $errorMessage")
+    }
+
     private fun parseGoogleApiException(exception: ApiException): Pair<String, String> {
         return when (exception.statusCode) {
             4 -> Pair("Không thể kết nối đến Google", "NETWORK_ERROR")
@@ -208,27 +220,33 @@ class LoginViewModel(
             10 -> Pair("Tài khoản không hợp lệ", "INVALID_ACCOUNT")
             13 -> Pair("Timeout", "TIMEOUT")
             14 -> Pair("Yêu cầu đăng nhập lại", "SIGN_IN_REQUIRED")
-            16 -> Pair("Đã hủy", "CANCELLED")
+            16 -> Pair("Đăng nhập bị hủy", "CANCELLED")
             17 -> Pair("API không khả dụng", "API_UNAVAILABLE")
-            12501 -> Pair("Đăng nhập bị hủy", "SIGN_IN_CANCELLED")
+            12501 -> Pair("Đăng nhập Google bị hủy", "SIGN_IN_CANCELLED")
             12502 -> Pair("Đăng nhập hiện tại đang chờ", "IN_PROGRESS")
-            else -> Pair("Đăng nhập Google thất bại: ${exception.message}", "UNKNOWN")
+            else -> Pair("Đăng nhập Google thất bại: ${exception.message}", "UNKNOWN_ERROR")
         }
     }
 
     /**
-     * Parse thông báo lỗi từ API Google
+     * Parse thông báo lỗi từ API Google Sign-In
      */
-    private fun parseGoogleErrorMessage(exception: Exception): Pair<String, String> {
+    private fun parseGoogleApiErrorMessage(exception: Exception): Pair<String, String> {
         val message = exception.message ?: "Đăng nhập Google thất bại"
 
         return when {
-            message.contains("401", ignoreCase = true) ->
-                Pair("Token Google không hợp lệ hoặc đã hết hạn", "INVALID_TOKEN")
+            message.contains("Firebase ID token has incorrect", ignoreCase = true) ->
+                Pair("Token không hợp lệ. Vui lòng thử lại", "INVALID_FIREBASE_TOKEN")
             message.contains("id-token-expired", ignoreCase = true) ->
-                Pair("Token Google đã hết hạn. Vui lòng đăng nhập lại", "TOKEN_EXPIRED")
+                Pair("Token đã hết hạn. Vui lòng đăng nhập lại", "TOKEN_EXPIRED")
             message.contains("invalid-id-token", ignoreCase = true) ->
-                Pair("Token Google không hợp lệ", "INVALID_TOKEN")
+                Pair("Token không hợp lệ", "INVALID_TOKEN")
+            message.contains("400", ignoreCase = true) ->
+                Pair("Yêu cầu không hợp lệ", "BAD_REQUEST")
+            message.contains("401", ignoreCase = true) ->
+                Pair("Token không hợp lệ hoặc đã hết hạn", "UNAUTHORIZED")
+            message.contains("429", ignoreCase = true) ->
+                Pair("Quá nhiều yêu cầu. Vui lòng thử lại sau", "TOO_MANY_REQUESTS")
             message.contains("Network", ignoreCase = true) ->
                 Pair("Lỗi mạng. Vui lòng kiểm tra kết nối", "NETWORK_ERROR")
             message.contains("Timeout", ignoreCase = true) ->
@@ -244,15 +262,16 @@ class LoginViewModel(
      */
     fun signOutGoogle() {
         googleSignInClient?.signOut()?.addOnCompleteListener {
-            // Clear user info
+            firebaseAuth.signOut()
             authManager.clearAuthData()
-
             _googleLogInState.value = GoogleLogInState.Idle
             _existAccountState.value = null
+            Log.d("LoginViewModel", "✅ Đã đăng xuất Google")
         }
     }
 
-    // -------------------ĐĂNG NHẬP BẰNG EMAIL/PASSWORD -----------------------
+    // ============= ĐĂNG NHẬP EMAIL/PASSWORD =============
+
     fun login(email: String, password: String) {
         when (val validation = validateInput(email, password)) {
             is ValidationResult.Error -> {
@@ -271,7 +290,6 @@ class LoginViewModel(
 
                 when (result) {
                     is ApiResult.Success -> {
-                        // result.data bây giờ là AuthData (trực tiếp)
                         val authData = result.data
 
                         if (authData.isValid) {
@@ -327,8 +345,6 @@ class LoginViewModel(
                 if (!idToken.isNullOrEmpty()) {
                     authManager.saveFirebaseToken(idToken)
                     Log.d("LoginViewModel", "✅ Đã lưu Firebase token: ${idToken.take(10)}...")
-
-                    // Cập nhật token cho ApiClient ngay lập tức
                     updateApiClientToken(idToken)
                 }
 
@@ -339,12 +355,9 @@ class LoginViewModel(
                     role = userInfo.role
                 )
                 _existAccountState.value = true
-
-                // GỌI ĐĂNG KÝ DEVICE TOKEN (sau khi đã cập nhật token)
                 delayAndRegisterDeviceToken()
 
             } else {
-                // Vẫn coi là thành công vì đã có user info
                 _logInState.value = LogInState.Success(
                     userId = userInfo.id,
                     email = userInfo.email,
@@ -352,6 +365,7 @@ class LoginViewModel(
                     role = userInfo.role
                 )
                 _existAccountState.value = true
+                delayAndRegisterDeviceToken()
             }
         }
     }
@@ -361,14 +375,8 @@ class LoginViewModel(
      */
     private fun updateApiClientToken(token: String) {
         try {
-            // Lưu vào SharedPreferences
             val sharedPref = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
             sharedPref.edit().putString("firebase_id_token", token).apply()
-
-            // Đồng thời, tạo một static method trong ApiClient để update token
-            // Nếu chưa có, bạn cần thêm vào ApiClient:
-            // ApiClient.updateCurrentToken(token)
-
             Log.d("LoginViewModel", "💾 Đã cập nhật token cho ApiClient: ${token.take(10)}...")
         } catch (e: Exception) {
             Log.e("LoginViewModel", "❌ Lỗi khi cập nhật token: ${e.message}")
@@ -380,24 +388,18 @@ class LoginViewModel(
      */
     private fun delayAndRegisterDeviceToken() {
         viewModelScope.launch {
-            // Đợi 1 giây để đảm bảo token đã được cập nhật trong ApiClient
             delay(1000)
             registerDeviceTokenForUser()
         }
     }
 
-
     private fun registerDeviceTokenForUser() {
         viewModelScope.launch {
             try {
-                // Lấy FCM token
                 val fcmToken = FirebaseMessaging.getInstance().token.await()
-
-                // Device info
                 val deviceModel = android.os.Build.MODEL
                 val osVersion = android.os.Build.VERSION.RELEASE
 
-                // Gọi API đăng ký token
                 val result = notificationRepository.registerDeviceToken(
                     token = fcmToken,
                     platform = "android",
@@ -407,14 +409,15 @@ class LoginViewModel(
 
                 when (result) {
                     is com.example.foodapp.data.remote.client.response.notification.ApiResult.Success -> {
+                        Log.d("LoginViewModel", "✅ Đã đăng ký device token")
                     }
                     is com.example.foodapp.data.remote.client.response.notification.ApiResult.Failure -> {
-                        result.exception.printStackTrace()
+                        Log.e("LoginViewModel", "❌ Lỗi đăng ký device token", result.exception)
                     }
                     else -> {}
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("LoginViewModel", "❌ Lỗi khi lấy FCM token", e)
             }
         }
     }
@@ -468,3 +471,5 @@ class LoginViewModel(
         }
     }
 }
+
+// ============= SEALED CLASSES =============

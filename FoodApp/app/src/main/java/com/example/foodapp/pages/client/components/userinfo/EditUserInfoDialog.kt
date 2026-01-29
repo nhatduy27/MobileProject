@@ -17,7 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.foodapp.data.model.Client
+import com.example.foodapp.data.model.client.Client
 import com.example.foodapp.pages.client.userInfo.UpdateUserInfoState
 import com.example.foodapp.pages.client.userInfo.UserInfoViewModel
 

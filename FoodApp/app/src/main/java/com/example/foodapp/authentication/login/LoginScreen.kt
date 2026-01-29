@@ -48,10 +48,14 @@ fun LoginScreen(
     )
 
     LaunchedEffect(Unit) {
+        // Sử dụng đúng Web Client ID từ google-services.json
         val WEB_CLIENT_ID = "884959847866-5qiurc00ii1pnrs1dtou2kvau5oa9s96.apps.googleusercontent.com"
+
+
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(WEB_CLIENT_ID)
+            .requestIdToken(WEB_CLIENT_ID)  // ← ĐÚNG RỒI!
             .requestEmail()
+            .requestProfile()  // Thêm dòng này để lấy profile info
             .build()
 
         val googleSignInClient = GoogleSignIn.getClient(context, gso)

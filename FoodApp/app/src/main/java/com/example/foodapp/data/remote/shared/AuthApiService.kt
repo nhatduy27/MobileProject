@@ -24,6 +24,58 @@ data class SetRoleResponse(
     val role: String
 )
 
+
+data class GoogleAuthRequest(
+    @SerializedName("idToken")
+    val idToken: String,
+
+    @SerializedName("role")
+    val role: String? = null
+)
+
+data class GoogleUserDto(
+    @SerializedName("id")
+    val id: String,
+
+    @SerializedName("email")
+    val email: String,
+
+    @SerializedName("displayName")
+    val displayName: String,
+
+    @SerializedName("photoUrl")
+    val photoUrl: String?,
+
+    @SerializedName("role")
+    val role: String,
+
+    @SerializedName("status")
+    val status: String,
+
+    @SerializedName("emailVerified")
+    val emailVerified: Boolean
+)
+
+// ⭐ THÊM DATA WRAPPER
+data class GoogleAuthData(
+    @SerializedName("user")
+    val user: GoogleUserDto,
+
+    @SerializedName("isNewUser")
+    val isNewUser: Boolean
+)
+
+// ⭐ UPDATE RESPONSE STRUCTURE
+data class GoogleAuthResponse(
+    @SerializedName("success")
+    val success: Boolean,
+
+    @SerializedName("data")
+    val data: GoogleAuthData,  // ⬅️ Thay đổi từ user thành data
+
+    @SerializedName("timestamp")
+    val timestamp: String? = null
+)
 interface AuthApiService {
     // REGISTER - Trả về ApiResponse<AuthData>
     @POST("auth/register")
@@ -39,12 +91,13 @@ interface AuthApiService {
         @Body request: LoginRequest
     ): Response<ApiResponse<AuthData>>
 
-    // GOOGLE SIGN-IN - Trả về ApiResponse<AuthData>
+
     @POST("auth/google")
     @Headers("Content-Type: application/json")
-    suspend fun googleLogin(
+    suspend fun googleLoginRaw(
         @Body request: GoogleAuthRequest
-    ): Response<ApiResponse<AuthData>>
+    ): Response<GoogleAuthResponse>
+
 
     // RESET PASSWORD - Trả về SimpleResponse
     @POST("auth/reset-password")

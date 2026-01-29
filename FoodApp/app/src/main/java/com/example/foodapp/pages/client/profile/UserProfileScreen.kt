@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.foodapp.data.model.Client
+import com.example.foodapp.data.model.client.Client
 import com.example.foodapp.data.remote.client.response.profile.AddressResponse
 import com.example.foodapp.pages.client.components.profile.*
 import kotlinx.coroutines.launch

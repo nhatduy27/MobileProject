@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import com.example.foodapp.data.model.Client
+import com.example.foodapp.data.model.client.Client
 import com.example.foodapp.data.remote.client.response.profile.ApiResult
 import com.example.foodapp.data.remote.client.response.profile.UpdateProfileRequest
 import com.example.foodapp.data.repository.client.profile.ProfileRepository

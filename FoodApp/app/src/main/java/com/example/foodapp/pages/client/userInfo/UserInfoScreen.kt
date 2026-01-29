@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import com.example.foodapp.data.model.Client
+import com.example.foodapp.data.model.client.Client
 import com.example.foodapp.pages.client.components.profile.EditUserInfoDialog
 import kotlinx.coroutines.launch
 import java.io.File

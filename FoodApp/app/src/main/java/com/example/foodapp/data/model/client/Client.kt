@@ -1,4 +1,4 @@
-package com.example.foodapp.data.model
+package com.example.foodapp.data.model.client
 
 import com.example.foodapp.data.remote.client.response.profile.UserProfileData
 import com.example.foodapp.data.model.client.DeliveryAddress
@@ -20,6 +20,33 @@ data class Client(
 
     companion object {
         private val dateParser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+
+
+        /**
+         * Convert từ GoogleAuthResponse sang Client
+         * Dùng ngay sau khi đăng nhập Google
+         */
+        fun fromGoogleAuth(
+            userId: String,
+            email: String,
+            displayName: String?,
+            photoUrl: String?,
+            role: String?,
+            emailVerified: Boolean
+        ): Client {
+            return Client(
+                id = userId,
+                fullName = displayName ?: "",
+                email = email,
+                isVerify = emailVerified,
+                role = role ?: "user",
+                imageAvatar = photoUrl ?: "",
+                createdAt = System.currentTimeMillis(),
+                updatedAt = System.currentTimeMillis(),
+                addresses = emptyList()
+            )
+        }
+
 
         /**
          * Convert từ API response sang Client

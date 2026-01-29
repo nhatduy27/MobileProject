@@ -2,7 +2,7 @@ package com.example.foodapp.data.repository.firebase
 
 import android.content.Context
 import com.example.foodapp.R
-import com.example.foodapp.data.model.Client
+import com.example.foodapp.data.model.client.Client
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
