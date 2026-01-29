@@ -48,6 +48,7 @@ fun NotificationsScreen(
     val currentNotifications by viewModel.currentNotifications.observeAsState()
     val unreadCount by viewModel.unreadCount.observeAsState(0)
     val markReadState by viewModel.markReadState.observeAsState()
+    val markAllReadState by viewModel.markAllReadState.observeAsState()
 
     // Local state
     var selectedFilter by remember { mutableStateOf(NotificationFilter.ALL) }
@@ -63,6 +64,16 @@ fun NotificationsScreen(
             is MarkReadState.Success -> {
                 delay(2000)
                 viewModel.resetMarkReadState()
+            }
+            else -> {}
+        }
+    }
+
+    LaunchedEffect(markAllReadState) {
+        when (markAllReadState) {
+            is MarkAllReadState.Success -> {
+                delay(2000)
+                viewModel.resetMarkAllReadState()
             }
             else -> {}
         }
@@ -243,6 +254,30 @@ fun NotificationsScreen(
                             }
                         }
 
+                        // Mark all as read button
+                        IconButton(
+                            onClick = { viewModel.markAllNotificationsAsRead() },
+                            enabled = unreadCount > 0 && markAllReadState !is MarkAllReadState.Loading
+                        ) {
+                            if (markAllReadState is MarkAllReadState.Loading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.5.dp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Default.DoneAll,
+                                    contentDescription = "Đánh dấu tất cả đã đọc",
+                                    tint = if (unreadCount > 0) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
+                                )
+                            }
+                        }
+
                         // Refresh button
                         IconButton(
                             onClick = { viewModel.refreshNotifications() },
@@ -406,7 +441,7 @@ fun NotificationsScreen(
                                         notification = notification,
                                         onNotificationClick = {
                                             // Xử lý khi click vào thông báo
-                                            //viewModel.markAsRead(notification.id ?: "")
+                                          notification.id?.let { viewModel.markNotificationAsRead(it) }
                                         }
                                     )
                                 }
@@ -455,6 +490,62 @@ fun NotificationsScreen(
                     }
                     is MarkReadState.Error -> {
                         val error = (markReadState as MarkReadState.Error).message
+                        Snackbar(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.shadow(8.dp, RoundedCornerShape(12.dp))
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Error,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Lỗi: $error", fontWeight = FontWeight.Medium)
+                            }
+                        }
+                    }
+                    else -> {}
+                }
+            }
+
+            // Hiển thị Snackbar khi đánh dấu tất cả đã đọc
+            AnimatedVisibility(
+                visible = markAllReadState is MarkAllReadState.Success || markAllReadState is MarkAllReadState.Error,
+                enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 72.dp)
+                    .padding(horizontal = 16.dp)
+            ) {
+                when (markAllReadState) {
+                    is MarkAllReadState.Success -> {
+                        Snackbar(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.shadow(8.dp, RoundedCornerShape(12.dp))
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.DoneAll,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Đã đánh dấu tất cả đã đọc", fontWeight = FontWeight.Medium)
+                            }
+                        }
+                    }
+                    is MarkAllReadState.Error -> {
+                        val error = (markAllReadState as MarkAllReadState.Error).message
                         Snackbar(
                             containerColor = MaterialTheme.colorScheme.errorContainer,
                             contentColor = MaterialTheme.colorScheme.onErrorContainer,
