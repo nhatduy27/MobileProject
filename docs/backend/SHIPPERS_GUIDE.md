@@ -1,528 +1,565 @@
+# Shippers Module Guide - Backend (Extended)
 
-# Shippers Module Guide - KTX Delivery Backend
-
-> **Module:** Shipper Registration & Management  
-> **Base Path:** `/shipper-applications`  
-> **Status:** ✅ IMPLEMENTED
+> Module: Shipper Applications, Owner Review, Shipper Notifications
+> Base Paths:
+> - Public shipper apply: `/shipper-applications`
+> - Owner manage shippers: `/owner/shippers`
+> - Shipper notifications: `/shippers/notifications`
+> Status: Implemented
 
 ---
 
 ## 1. Overview
 
-Module Shippers quản lý toàn bộ quy trình đăng ký, duyệt và vận hành shipper:
+Shippers module quan ly quy trinh apply lam shipper, owner duyet/tu choi, danh sach shipper thuoc shop, va thong bao online/offline cua shipper. Tai lieu nay da can chinh theo code backend hien tai (controllers + service + DTO).
 
-| Feature | Endpoints | Description |
-|---------|-----------|-------------|
-| Register | 1 | Đăng ký tài khoản SHIPPER |
-| Apply | 2 | Nộp đơn, xem trạng thái đơn |
-| Cancel | 1 | Hủy đơn PENDING |
-| Owner Review | 3 | Xem, duyệt, từ chối đơn |
-| Notifications | 1 | Nhận thông báo duyệt/từ chối |
+### 1.1 Feature Matrix
 
-**Total: 8 endpoints**
+| Feature | Endpoint | Description |
+|---|---|---|
+| Apply shipper | `POST /shipper-applications` | Shipper nop don (multipart + 3 anh) |
+| My applications | `GET /shipper-applications/me` | Xem danh sach don cua minh |
+| Cancel application | `DELETE /shipper-applications/{id}` | Huy don (chi PENDING) |
+| Owner list applications | `GET /owner/shippers/applications` | Xem danh sach don (filter status) |
+| Owner approve | `POST /owner/shippers/applications/{id}/approve` | Duyet don |
+| Owner reject | `POST /owner/shippers/applications/{id}/reject` | Tu choi don |
+| Owner list shippers | `GET /owner/shippers` | Danh sach shipper cua shop |
+| Owner remove shipper | `DELETE /owner/shippers/{id}` | Xoa shipper khoi shop |
+| Shipper go online | `POST /shippers/notifications/online` | Subscribe topic nhan ORDER_READY |
+| Shipper go offline | `DELETE /shippers/notifications/online` | Unsubscribe topic |
+
+### 1.2 Scope / Not In Scope
+
+- Dang ky tai khoan SHIPPER nam trong Auth module.
+- Doanh thu shipper nam trong Wallet/Revenue module.
+- GPS/Trip la module khac (tham khao docs rieng neu can).
 
 ---
 
-## 1.1 Data Models
+## 2. Data Models
 
-### Shipper Entity
+### 2.1 Shipper Application Entity
+
 ```json
 {
-  "id": "user_abc123",
-  "displayName": "Nguyễn Văn A",
-  "phone": "+84901234567",
-  "role": "SHIPPER",
-  "shipperInfo": {
-    "shopId": "shop_xyz",
-    "shopName": "Hiệp Thập Cẩm",
-    "vehicleType": "MOTORBIKE",
-    "vehicleNumber": "59A1-12345",
-    "status": "AVAILABLE", // AVAILABLE | BUSY | OFFLINE
-    "isOnline": false,
-    "rating": 5.0,
-    "totalDeliveries": 0,
-    "currentOrders": [],
-    "joinedAt": "2026-01-29T10:00:00Z"
-  },
-  "avatarUrl": "..."
-}
-```
-
-### Shipper Application Entity
-```json
-{
-  "id": "app_123",
-  "userId": "user_abc123",
-  "userName": "Nguyễn Văn A",
-  "shopId": "shop_xyz",
-  "shopName": "Hiệp Thập Cẩm",
+  "id": "app_abc123",
+  "userId": "uid_123",
+  "userName": "Nguyen Van A",
+  "userPhone": "0901234567",
+  "userAvatar": "https://...",
+  "shopId": "shop_abc",
+  "shopName": "Quan A Map",
   "vehicleType": "MOTORBIKE",
-  "vehicleNumber": "59A1-12345",
-  "idCardNumber": "012345678901",
-  "idCardFrontUrl": "...",
-  "idCardBackUrl": "...",
-  "driverLicenseUrl": "...",
-  "message": "Tôi muốn làm shipper",
-  "status": "PENDING", // PENDING | APPROVED | REJECTED
-  "createdAt": "2026-01-29T10:00:00Z",
-  "reviewedBy": "owner_123",
-  "reviewedAt": "2026-01-29T12:00:00Z",
-  "rejectionReason": "Thiếu bằng lái xe"
+  "vehicleNumber": "59X1-12345",
+  "idCardNumber": "079202012345",
+  "idCardFrontUrl": "https://...",
+  "idCardBackUrl": "https://...",
+  "driverLicenseUrl": "https://...",
+  "message": "Toi muon lam shipper...",
+  "status": "PENDING",
+  "reviewedBy": "owner_uid_123",
+  "reviewedAt": "2026-01-13T10:00:00Z",
+  "rejectReason": "Khong du dieu kien",
+  "createdAt": "2026-01-13T10:00:00Z"
 }
 ```
 
-### Notification Example
+### 2.2 Shipper Entity
+
 ```json
 {
-  "userId": "user_abc123",
-  "title": "Application Approved",
-  "body": "Your application to be a shipper for Hiệp Thập Cẩm has been approved!",
-  "type": "SHIPPER_APPLICATION_APPROVED",
-  "data": {
-    "applicationId": "app_123",
-    "shopId": "shop_xyz"
-  },
-  "createdAt": "2026-01-29T12:01:00Z"
+  "id": "uid_123",
+  "name": "Nguyen Van A",
+  "phone": "0901234567",
+  "avatar": "https://...",
+  "shipperInfo": {
+    "shopId": "shop_abc",
+    "shopName": "Quan A Map",
+    "vehicleType": "MOTORBIKE",
+    "vehicleNumber": "59X1-12345",
+    "status": "AVAILABLE",
+    "rating": 4.8,
+    "totalDeliveries": 150,
+    "currentOrders": ["order_1", "order_2"],
+    "joinedAt": "2026-01-13T10:00:00Z"
+  }
 }
 ```
 
-### Trip & TripOrder (GPS Module Integration)
-```json
-{
-  "id": "trip_123",
-  "shipperId": "user_abc123",
-  "orders": [
-    {
-      "orderId": "order_1",
-      "buildingCode": "B5",
-      "stopIndex": 1,
-      "tripDeliveryStatus": "SHIPPING" // SHIPPING | DELIVERED
-    },
-    {
-      "orderId": "order_2",
-      "buildingCode": "A2",
-      "stopIndex": 2,
-      "tripDeliveryStatus": "PENDING"
-    }
-  ],
-  "route": {
-    "distance": 2.5,
-    "duration": 18,
-    "polyline": "..."
-  },
-  "status": "STARTED" // PENDING | STARTED | FINISHED | CANCELLED
-}
-```
+### 2.3 Enums
 
-> Xem thêm: [GPS_FRONTEND_INTEGRATION_GUIDE.md](GPS_FRONTEND_INTEGRATION_GUIDE.md)
+**ApplicationStatus**
+- PENDING
+- APPROVED
+- REJECTED
+
+**VehicleType**
+- MOTORBIKE
+- CAR
+- BICYCLE
+
+**ShipperStatus**
+- AVAILABLE
+- BUSY
+- OFFLINE
 
 ---
 
-## 2. Role & Trạng thái Shipper
+## 3. Authentication & Authorization
 
-- **role: "SHIPPER"**: Có thể truy cập các API dành cho shipper, nhưng chưa chắc đã được gán vào shop nào.
-- **shipperInfo.shopId**:
-  - `null`: Chưa được duyệt vào shop nào, cần nộp đơn.
-  - `"xxx"`: Đã được duyệt, có thể nhận đơn giao hàng.
-- **Trạng thái đơn**: `PENDING`, `APPROVED`, `REJECTED`
+### 3.1 Auth required
 
----
-
-## 3. Authentication
-
-Tất cả endpoints (trừ đăng ký) yêu cầu Firebase ID Token:
+Tat ca endpoints trong module deu can Firebase ID Token:
 
 ```http
 Authorization: Bearer <firebase-id-token>
 ```
 
----
+### 3.2 Role rules
 
-## 4. Shipper Registration Flow
-
-### 4.1 Đăng ký tài khoản
-
-```http
-POST /api/auth/register
-Content-Type: application/json
-{
-  "email": "shipper@example.com",
-  "password": "matkhau123",
-  "displayName": "Nguyễn Văn A",
-  "phone": "0901234567",
-  "role": "SHIPPER"
-}
-```
-
-> Sau bước này, user có role SHIPPER nhưng chưa được gán vào shop nào.
+- `POST /shipper-applications`, `GET /shipper-applications/me`, `DELETE /shipper-applications/{id}`:
+  bat ky user da dang nhap (khong bat buoc role SHIPPER), mien khong da co shipperInfo.shopId.
+- `/owner/shippers/**`: bat buoc role OWNER.
+- `/shippers/notifications/**`: bat buoc role SHIPPER.
 
 ---
 
-### 4.1.1 Backend Flow: Đăng ký & Apply
+## 4. Business Rules (Theo code)
 
-1. User đăng ký tài khoản với role SHIPPER
-2. User nộp đơn apply vào shop (POST /shipper-applications)
-3. Backend kiểm tra:
-  - User đã là shipper của shop khác chưa?
-  - Đã có đơn PENDING cho shop này chưa?
-  - Validate file ảnh, dung lượng, định dạng
-4. Upload ảnh lên Firebase Storage
-5. Tạo application (status = PENDING)
-6. Gửi notification cho chủ shop
+1) **User da co shipperInfo.shopId thi khong duoc apply lai**
+- Tra ve `SHIPPER_001` (409).
 
-### 4.2 Nộp đơn xin làm shipper
+2) **Khong apply trung shop khi da co PENDING**
+- Tra ve `SHIPPER_005` (409).
+
+3) **Tao application bat buoc 3 anh**
+- idCardFront, idCardBack, driverLicense la bat buoc.
+- Chi chap nhan JPG/JPEG/PNG, toi da 5MB/anh.
+
+4) **Approve chi duoc khi PENDING**
+- Neu status khac PENDING -> 409 "Da xu ly".
+
+5) **Owner khong duoc tu duyet minh**
+- Neu app.userId == ownerId -> BadRequest `SHIPPER_BUG`.
+
+6) **Sau khi approve**
+- Firestore update role = SHIPPER, shipperInfo, claimsSyncStatus = PENDING
+- Set custom claims role SHIPPER
+- Nếu sync claims fail: claimsSyncStatus = FAILED, user can re-login
+- Tao vi shipper (wallet) bat dong bo
+- Gui notification cho shipper
+
+7) **Remove shipper**
+- Clear shipperInfo, set role = CUSTOMER
+- Update Firebase custom claims to CUSTOMER
+
+---
+
+## 5. API Endpoints (Shipper Applications)
+
+### 5.1 Apply to be Shipper
 
 ```http
-POST /api/shipper-applications
+POST /shipper-applications
 Authorization: Bearer <ID_TOKEN>
 Content-Type: multipart/form-data
+
+Fields:
+- shopId (string, required)
+- vehicleType (enum: MOTORBIKE/CAR/BICYCLE, required)
+- vehicleNumber (string, required, max 20)
+- idCardNumber (string, required, 12 digits)
+- idCardFront (file, required)
+- idCardBack (file, required)
+- driverLicense (file, required)
+- message (string, required, max 500)
 ```
 
-| Field           | Type   | Required | Description                           |
-| --------------- | ------ | -------- | ------------------------------------- |
-| `shopId`        | string | ✅       | ID của shop muốn làm việc             |
-| `vehicleType`   | enum   | ✅       | `MOTORBIKE`, `BICYCLE`, `WALKING`     |
-| `vehicleNumber` | string | ✅       | Biển số xe (VD: 59A1-12345)           |
-| `idCardNumber`  | string | ✅       | Số CCCD (12 số)                       |
-| `idCardFront`   | file   | ✅       | Ảnh CCCD mặt trước (JPG/PNG, max 5MB) |
-| `idCardBack`    | file   | ✅       | Ảnh CCCD mặt sau (JPG/PNG, max 5MB)   |
-| `driverLicense` | file   | ✅       | Ảnh Bằng lái xe (JPG/PNG, max 5MB)    |
-| `message`       | string | ❌       | Lời nhắn cho chủ shop                 |
-
-**Response:**
+**Success (201)**
 ```json
 {
   "success": true,
   "data": {
-    "id": "...",
+    "id": "app_abc123",
     "status": "PENDING"
   }
 }
 ```
 
-### 4.3 Xem trạng thái đơn
+**Error cases**
+- 404: Shop not found
+- 409: `SHIPPER_001` (da co shop)
+- 409: `SHIPPER_005` (da co don PENDING cho shop nay)
+- 400: Sai dinh dang anh / qua dung luong / upload fail
+
+### 5.2 Get My Applications
 
 ```http
-GET /api/shipper-applications/me
+GET /shipper-applications/me
 Authorization: Bearer <ID_TOKEN>
 ```
 
-**Response:**
+**Success (200)**
 ```json
 {
   "success": true,
   "data": [
     {
-      "id": "...",
-      "shopName": "...",
-      "status": "PENDING"
+      "id": "app_abc123",
+      "shopName": "Quan A Map",
+      "status": "PENDING",
+      "createdAt": "2026-01-13T10:00:00Z"
     }
   ]
 }
 ```
 
-### 4.4 Hủy đơn
+### 5.3 Cancel Application
 
 ```http
-DELETE /api/shipper-applications/:id
+DELETE /shipper-applications/{id}
 Authorization: Bearer <ID_TOKEN>
 ```
+
+**Success (200)**
+```json
+{ "message": "Huy don thanh cong" }
+```
+
+**Rules**
+- Chi cancel khi status = PENDING
+- Chi user so huu don moi co quyen huy
 
 ---
 
-## 5. Owner Review Flow (OWNER)
+## 6. API Endpoints (Owner - Shippers)
 
-### 5.1 Xem danh sách đơn
+### 6.1 List Applications (Owner)
+
 ```http
-GET /api/shipper-applications?status=PENDING
+GET /owner/shippers/applications?status=PENDING
 Authorization: Bearer <ID_TOKEN>
 ```
 
-### 5.2 Duyệt đơn
+**Query**
+- `status` (optional): PENDING, APPROVED, REJECTED
+
+### 6.2 Approve Application
+
 ```http
-PATCH /api/shipper-applications/:id/approve
+POST /owner/shippers/applications/{id}/approve
 Authorization: Bearer <ID_TOKEN>
 ```
-- User được gán vào shop, role chuyển thành SHIPPER, shipperInfo cập nhật.
 
-#### Backend Flow: Approve Application
-1. Owner gọi approve API
-2. Backend kiểm tra quyền owner, trạng thái đơn
-3. Transaction:
-  - Update application status = APPROVED
-  - Update user: role = SHIPPER, shipperInfo.shopId = ...
-  - claimsSyncStatus = PENDING
-4. Gọi Firebase setCustomUserClaims (role: SHIPPER)
-5. Update claimsSyncStatus = OK (hoặc FAILED nếu lỗi)
-6. Gửi notification cho shipper
-7. Khởi tạo ví shipper (wallet)
+**Success (200)**
+```json
+{ "message": "Da duyet don xin lam shipper" }
+```
 
-### 5.3 Từ chối đơn
+**Error**
+- 404: Don khong ton tai
+- 403: Don khong thuoc shop cua owner
+- 409: Don da xu ly
+- 400: `SHIPPER_BUG` (owner tu duyet minh)
+
+### 6.3 Reject Application
+
 ```http
-PATCH /api/shipper-applications/:id/reject
+POST /owner/shippers/applications/{id}/reject
 Authorization: Bearer <ID_TOKEN>
 Content-Type: application/json
+
 {
-  "reason": "Thiếu bằng lái xe"
+  "reason": "Khong du dieu kien"
 }
 ```
 
----
+**Success (200)**
+```json
+{ "message": "Da tu choi don xin lam shipper" }
+```
 
-## 6. Response Format
+### 6.4 List Shop Shippers
 
-**Success:**
+```http
+GET /owner/shippers
+Authorization: Bearer <ID_TOKEN>
+```
+
+**Response Example**
 ```json
 {
   "success": true,
-  "data": { ... },
-  "message": "Thành công"
+  "data": [
+    {
+      "id": "uid_123",
+      "name": "Nguyen Van A",
+      "phone": "0901234567",
+      "avatar": "https://...",
+      "shipperInfo": {
+        "shopId": "shop_abc",
+        "shopName": "Quan A Map",
+        "vehicleType": "MOTORBIKE",
+        "vehicleNumber": "59X1-12345",
+        "status": "AVAILABLE",
+        "rating": 4.8,
+        "totalDeliveries": 150,
+        "currentOrders": ["order_1"],
+        "joinedAt": "2026-01-01T00:00:00Z"
+      }
+    }
+  ]
 }
 ```
 
-**Error:**
+### 6.5 Remove Shipper
+
+```http
+DELETE /owner/shippers/{id}
+Authorization: Bearer <ID_TOKEN>
+```
+
+**Success (200)**
+```json
+{ "message": "Da xoa shipper khoi shop" }
+```
+
+**Notes**
+- Co the that bai neu shipper khong thuoc shop owner.
+- Khi remove: role ve CUSTOMER, xoa shipperInfo, sync claims.
+
+---
+
+## 7. API Endpoints (Shipper Notifications)
+
+### 7.1 Go Online
+
+```http
+POST /shippers/notifications/online
+Authorization: Bearer <ID_TOKEN>
+```
+
+**Response**
 ```json
 {
-  "success": false,
-  "error": {
-    "code": "SHIPPER_001",
-    "message": "Bạn đã là shipper của một shop rồi"
-  }
+  "subscribedCount": 1,
+  "topic": "shop_abc123_shippers_active"
 }
 ```
 
+### 7.2 Go Offline
+
+```http
+DELETE /shippers/notifications/online
+Authorization: Bearer <ID_TOKEN>
+```
+
+**Response**
+```json
+{
+  "unsubscribedCount": 1,
+  "topic": "shop_abc123_shippers_active"
+}
+```
+
+**Error**
+- 400: Shipper profile not found or not assigned to a shop
+
 ---
 
-## 7. Error Codes
+## 8. Error Codes Summary
 
-| Code          | Status | Message                            | Giải thích                                          |
-| ------------- | ------ | ---------------------------------- | --------------------------------------------------- |
-| SHIPPER_001   | 409    | Bạn đã là shipper của một shop rồi | User đã được gán vào shop (có `shipperInfo.shopId`) |
-| SHIPPER_005   | 409    | Bạn đã nộp đơn cho shop này rồi    | Đã có đơn PENDING cho shop này                      |
+| Code | Status | Description |
+|---|---|---|
+| SHIPPER_001 | 409 | User da la shipper cua mot shop |
+| SHIPPER_005 | 409 | Da nop don PENDING cho shop nay |
+| SHIPPER_BUG | 400 | Owner tu duyet minh (sanity check) |
+
+Ngoai ra co cac loi chung:
+- 404: Application not found / Shop not found
+- 403: Khong co quyen tren don/shipper
+- 400: Validate input, upload anh fail
 
 ---
 
-## 8. Testing với cURL
+## 9. Validation & Constraints
 
-## 8.1. Testing Checklist
+### 9.1 ApplyShipperDto
+- shopId: required
+- vehicleType: MOTORBIKE/CAR/BICYCLE
+- vehicleNumber: max 20 chars
+- idCardNumber: 12 digits
+- message: required, max 500 chars
 
-- [ ] Đăng ký tài khoản SHIPPER (email, password, role)
-- [ ] Nộp đơn vào shop (đủ giấy tờ, đúng định dạng)
-- [ ] Xem trạng thái đơn (PENDING, APPROVED, REJECTED)
-- [ ] Hủy đơn PENDING
-- [ ] Chủ shop duyệt đơn (APPROVE)
-- [ ] Chủ shop từ chối đơn (REJECT, nhập lý do)
-- [ ] Shipper nhận được notification trạng thái đơn
-- [ ] Đăng nhập lại sau khi được duyệt (kiểm tra quyền truy cập)
-- [ ] Test upload ảnh sai định dạng/dung lượng (bắt lỗi)
-- [ ] Test apply trùng shop (bắt lỗi SHIPPER_005)
-- [ ] Test chủ shop tự duyệt mình (bắt lỗi)
+### 9.2 Image rules
+- JPG/JPEG/PNG
+- Max 5MB per file
 
-## 8.2. Testing với Swagger UI
+---
 
-1. Mở http://localhost:3000/api/docs
-2. Click Authorize, nhập Bearer <ID_TOKEN>
-3. Test lần lượt các endpoint:
-  - POST /auth/register
-  - POST /shipper-applications
-  - GET /shipper-applications/me
-  - DELETE /shipper-applications/{id}
-  - PATCH /shipper-applications/{id}/approve
-  - PATCH /shipper-applications/{id}/reject
-4. Xem response, kiểm tra trạng thái, message, error code
+## 10. Flows
 
-## 8.3. Test Accounts (mẫu)
+### 10.1 Shipper Apply Flow
+1. User dang nhap
+2. POST /shipper-applications (multipart)
+3. Backend:
+   - Check shipperInfo.shopId
+   - Check shop exists
+   - Check pending app
+   - Validate image types + size
+   - Upload 3 images
+   - Create application (PENDING)
+   - Send notification to shop owner
 
-| Email                  | Password   | Role     | Status  | Note                |
-|------------------------|------------|----------|---------|---------------------|
-| shipper1@test.com      | Test123!   | SHIPPER  | ACTIVE  | Shipper chưa apply  |
-| owner1@test.com        | Test123!   | OWNER    | ACTIVE  | Chủ shop            |
-| admin1@test.com        | Test123!   | ADMIN    | ACTIVE  | Quản trị viên       |
+### 10.2 Owner Approve Flow
+1. Owner GET /owner/shippers/applications
+2. Owner POST approve
+3. Backend:
+   - Validate ownership + PENDING
+   - Transaction: update application + update user role/shipperInfo
+   - Sync Firebase claims (role SHIPPER)
+   - Init shipper wallet (best effort)
+   - Send notification to shipper
 
-> Xem thêm: [TEST_ACCOUNTS.md](TEST_ACCOUNTS.md)
+### 10.3 Owner Reject Flow
+1. Owner POST reject + reason
+2. Backend update status REJECTED + save reason
+3. Notify shipper
 
-## 8.4. Negative Test Cases (Gợi ý test lỗi)
+### 10.4 Shipper Online Flow
+1. Shipper POST /shippers/notifications/online
+2. Backend subscribe topic `shop_{shopId}_shippers_active`
+3. When offline, call DELETE to unsubscribe
 
-- Nộp đơn thiếu giấy tờ hoặc sai định dạng ảnh → 400 Bad Request
-- Nộp đơn khi đã là shipper của shop khác → 409 SHIPPER_001
-- Nộp đơn trùng shop (đã có đơn PENDING) → 409 SHIPPER_005
-- Chủ shop tự duyệt mình làm shipper → 400 SHIPPER_BUG
-- Duyệt đơn đã bị từ chối hoặc đã duyệt → 409 Conflict
-- Hủy đơn không phải của mình → 403 Forbidden
+---
+
+## 11. Testing Checklist
+
+- [ ] Apply shipper with full docs (3 images)
+- [ ] Apply with wrong image type/size -> 400
+- [ ] Apply when already shipper -> SHIPPER_001
+- [ ] Apply duplicate PENDING -> SHIPPER_005
+- [ ] Get my applications
+- [ ] Cancel PENDING application
+- [ ] Cancel when status != PENDING -> 409
+- [ ] Owner list applications (filter status)
+- [ ] Owner approve application
+- [ ] Owner reject application (with reason)
+- [ ] Owner remove shipper
+- [ ] Shipper go online/offline
+- [ ] Claims sync fail -> verify claimsSyncStatus = FAILED
+
+---
+
+## 12. Testing with cURL
 
 ```bash
-# Đăng ký tài khoản SHIPPER
-curl -X POST http://localhost:3000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email":"shipper@example.com","password":"matkhau123","displayName":"Nguyễn Văn A","phone":"0901234567","role":"SHIPPER"}'
-
-# Nộp đơn
-curl -X POST http://localhost:3000/api/shipper-applications \
+# Apply shipper
+curl -X POST http://localhost:3000/shipper-applications \
   -H "Authorization: Bearer <token>" \
-  -F "shopId=abc123" -F "vehicleType=MOTORBIKE" -F "vehicleNumber=59A1-12345" \
-  -F "idCardNumber=012345678901" -F "idCardFront=@cccd_truoc.jpg" -F "idCardBack=@cccd_sau.jpg" -F "driverLicense=@banglai.jpg"
+  -F "shopId=shop_abc" \
+  -F "vehicleType=MOTORBIKE" \
+  -F "vehicleNumber=59X1-12345" \
+  -F "idCardNumber=079202012345" \
+  -F "message=Toi muon lam shipper" \
+  -F "idCardFront=@cccd_front.jpg" \
+  -F "idCardBack=@cccd_back.jpg" \
+  -F "driverLicense=@license.jpg"
 
-# Xem trạng thái đơn
-curl -X GET http://localhost:3000/api/shipper-applications/me \
+# My applications
+curl -X GET http://localhost:3000/shipper-applications/me \
   -H "Authorization: Bearer <token>"
 
-# Hủy đơn
-curl -X DELETE http://localhost:3000/api/shipper-applications/<id> \
+# Cancel application
+curl -X DELETE http://localhost:3000/shipper-applications/app_abc123 \
   -H "Authorization: Bearer <token>"
 
-# Chủ shop duyệt đơn
-curl -X PATCH http://localhost:3000/api/shipper-applications/<id>/approve \
-  -H "Authorization: Bearer <token>"
+# Owner list applications
+curl -X GET "http://localhost:3000/owner/shippers/applications?status=PENDING" \
+  -H "Authorization: Bearer <owner_token>"
 
-# Chủ shop từ chối đơn
-curl -X PATCH http://localhost:3000/api/shipper-applications/<id>/reject \
-  -H "Authorization: Bearer <token>" \
+# Owner approve
+curl -X POST http://localhost:3000/owner/shippers/applications/app_abc123/approve \
+  -H "Authorization: Bearer <owner_token>"
+
+# Owner reject
+curl -X POST http://localhost:3000/owner/shippers/applications/app_abc123/reject \
+  -H "Authorization: Bearer <owner_token>" \
   -H "Content-Type: application/json" \
-  -d '{"reason":"Thiếu bằng lái xe"}'
+  -d '{"reason":"Khong du dieu kien"}'
+
+# Owner list shippers
+curl -X GET http://localhost:3000/owner/shippers \
+  -H "Authorization: Bearer <owner_token>"
+
+# Owner remove shipper
+curl -X DELETE http://localhost:3000/owner/shippers/uid_123 \
+  -H "Authorization: Bearer <owner_token>"
+
+# Shipper go online
+curl -X POST http://localhost:3000/shippers/notifications/online \
+  -H "Authorization: Bearer <shipper_token>"
+
+# Shipper go offline
+curl -X DELETE http://localhost:3000/shippers/notifications/online \
+  -H "Authorization: Bearer <shipper_token>"
 ```
 
 ---
 
-## 9. UI/UX Mockup & Logic
+## 13. UI/UX Notes (Shipper App)
 
-```
-┌───────────────────────────────┐
-│  Đăng ký Shipper              │
-│  ↓                            │
-│  Chọn Shop để apply           │
-│  ↓                            │
-│  Điền thông tin: CCCD, xe...  │
-│  ↓                            │
-│  [Submit Application]         │
-│  ↓                            │
-│  [Màn hình "Chờ duyệt"]      │
-│  ↓                            │
-│  (Owner duyệt)                │
-│  ↓                            │
-│  [Shipper Home - Xem đơn hàng]│
-└───────────────────────────────┘
-```
+### 13.1 Status Mapping
 
-### 9.1 UI State Table
+| Condition | UI State |
+|---|---|
+| role != SHIPPER | Show registration / upgrade flow |
+| role == SHIPPER, shipperInfo.shopId == null | Prompt apply to shop |
+| application PENDING | Waiting approval screen |
+| application REJECTED | Show reason + re-apply CTA |
+| shipperInfo.shopId != null | Shipper home |
 
-| Trạng thái | UI/UX | Quyền truy cập |
-|------------|-------|----------------|
-| NOT_SHIPPER | Đăng ký tài khoản | Không truy cập API shipper |
-| NEED_TO_APPLY | Nộp đơn vào shop | Không nhận đơn hàng |
-| PENDING_APPLICATION | Màn hình chờ duyệt | Không nhận đơn hàng |
-| ACTIVE_SHIPPER | Home shipper, nhận đơn | Đầy đủ quyền shipper |
+### 13.2 Online/Offline
 
-### 9.2 UI Mockup: Trạng thái đơn
-
-```
-┌───────────────────────────────┐
-│  Đơn xin làm shipper          │
-│  ───────────────────────────  │
-│  Shop: Hiệp Thập Cẩm          │
-│  Trạng thái: PENDING          │
-│  [Huỷ đơn]                    │
-└───────────────────────────────┘
-```
-```
-┌───────────────────────────────┐
-│  Đơn đã được duyệt!           │
-│  Shop: Hiệp Thập Cẩm          │
-│  [Vào Home Shipper]           │
-└───────────────────────────────┘
-```
-```
-┌───────────────────────────────┐
-│  Đơn bị từ chối               │
-│  Lý do: Thiếu bằng lái xe     │
-│  [Nộp đơn lại]                │
-└───────────────────────────────┘
-```
-
-**Logic kiểm tra trạng thái shipper:**
-
-```javascript
-async function checkShipperStatus(user) {
-  if (user.role !== "SHIPPER") return "NOT_SHIPPER";
-  if (user.shipperInfo?.shopId) return "ACTIVE_SHIPPER";
-  const applications = await api.get("/shipper-applications/me");
-  const pending = applications.find((a) => a.status === "PENDING");
-  if (pending) return "PENDING_APPLICATION";
-  return "NEED_TO_APPLY";
-}
-```
+- Khi user bam "Online", call `POST /shippers/notifications/online`.
+- Khi user tat, call `DELETE /shippers/notifications/online`.
+- Hien thi thong bao ORDER_READY neu da subscribe.
 
 ---
 
-## 10. Security & Best Practices
+## 14. FAQ
 
-- Ảnh upload chỉ nhận JPG/PNG, tối đa 5MB/file
-- Một user chỉ có thể apply 1 shop tại 1 thời điểm
-- Chủ shop không thể tự duyệt mình làm shipper
-- Sau khi được duyệt, shipper phải re-login để cập nhật quyền
+**Q: Co the apply nhieu shop cung luc khong?**  
+A: Khong. Chi 1 don PENDING cho 1 shop, va neu da la shipper thi khong duoc apply.
 
-- Khi tích hợp frontend:
-  - Luôn kiểm tra trạng thái shipper, trạng thái đơn, trạng thái trip.
-  - Hiển thị rõ các trạng thái: PENDING, APPROVED, REJECTED, SHIPPING, DELIVERED.
-  - Khi shipper có nhiều đơn, ưu tiên hiển thị theo stopIndex (từ GPS module).
-  - Khi cập nhật phương tiện, validate đúng format biển số và loại xe (xem Vehicle API Guide).
-  - Khi hiển thị doanh thu, dùng API wallets/revenue để lấy số liệu tổng hợp.
+**Q: Sau khi duoc duyet can lam gi?**  
+A: Re-login de cap nhat Firebase custom claims (role SHIPPER) neu can.
 
-- Khi phát triển/tích hợp:
-  - Đảm bảo cấu hình đúng các biến môi trường (.env): FIREBASE_PROJECT_ID, GOOGLE_APPLICATION_CREDENTIALS, GEMINI_API_KEY, ...
-  - Đọc kỹ các docs liên quan để tránh lỗi tích hợp.
+**Q: Neu claims sync fail thi sao?**  
+A: Backend set claimsSyncStatus = FAILED, user can re-login hoac admin retry.
 
-- Không lưu ảnh giấy tờ trên client, chỉ upload khi cần
-- Kiểm tra claimsSyncStatus để debug lỗi phân quyền
-- Sử dụng notification để báo trạng thái đơn cho user
-- Tối ưu: cache trạng thái đơn, chỉ fetch lại khi có thay đổi
+**Q: Owner co the tu duyet minh lam shipper khong?**  
+A: Khong. Co check `SHIPPER_BUG`.
 
 ---
 
-## 11. FAQ
+## 15. Related Files
 
-**Q: Một user có thể apply nhiều shop cùng lúc không?**  
-A: Không. Chỉ được apply 1 shop tại 1 thời điểm.
-
-**Q: Chủ shop có thể tự duyệt mình làm shipper không?**  
-A: Không. Hệ thống sẽ chặn thao tác này.
-
-**Q: Sau khi được duyệt, shipper cần làm gì?**  
-A: Đăng nhập lại để cập nhật quyền truy cập mới.
-
-**Q: Ảnh upload bị lỗi?**  
-A: Kiểm tra định dạng (JPG/PNG) và dung lượng (≤5MB).
-
-**Q: Làm sao debug lỗi không nhận được quyền shipper?**
-A: Kiểm tra trường claimsSyncStatus trong user, nếu FAILED thì cần re-login hoặc liên hệ admin để sync lại claims.
-
-**Q: Shipper bị từ chối có thể nộp lại không?**
-A: Có, sau khi đơn bị từ chối có thể nộp lại đơn mới cho shop khác hoặc cùng shop.
-
-**Q: Có thể xem lịch sử đơn đã nộp không?**
-A: Có, dùng API GET /shipper-applications/me để xem toàn bộ đơn đã nộp và trạng thái.
+- `D:\MobileProject\Backend\functions\src\modules\shippers\shipper-applications.controller.ts`
+- `D:\MobileProject\Backend\functions\src\modules\shippers\owner-shippers.controller.ts`
+- `D:\MobileProject\Backend\functions\src\modules\shippers\shipper-notifications.controller.ts`
+- `D:\MobileProject\Backend\functions\src\modules\shippers\shippers.service.ts`
+- `D:\MobileProject\Backend\functions\src\modules\shippers\entities\shipper-application.entity.ts`
+- `D:\MobileProject\Backend\functions\src\modules\shippers\entities\shipper.entity.ts`
+- `D:\MobileProject\Backend\functions\src\modules\shippers\dto\apply-shipper.dto.ts`
+- `D:\MobileProject\Backend\functions\src\modules\shippers\dto\reject-application.dto.ts`
 
 ---
 
-## 12. Related Files
+## 16. Troubleshooting
 
-- [shipper-applications.controller.ts](../../Backend/functions/src/modules/shippers/shipper-applications.controller.ts)
-- [shippers.service.ts](../../Backend/functions/src/modules/shippers/shippers.service.ts)
-- [owner-shippers.controller.ts](../../Backend/functions/src/modules/shippers/owner-shippers.controller.ts)
-- [shipper-notifications.controller.ts](../../Backend/functions/src/modules/shippers/shipper-notifications.controller.ts)
-
-- [GPS_FRONTEND_INTEGRATION_GUIDE.md](GPS_FRONTEND_INTEGRATION_GUIDE.md) — Hướng dẫn tích hợp GPS/trip cho shipper
-- [REVENUE_API_QUICK_REFERENCE.md](REVENUE_API_QUICK_REFERENCE.md) — Tham khảo nhanh API doanh thu
-- [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) — Trạng thái các module backend
-
-- [SHIPPER_REVENUE_API_GUIDE.md](SHIPPER_REVENUE_API_GUIDE.md) — Hướng dẫn doanh thu shipper
-- [VEHICLE_API_GUIDE.md](VEHICLE_API_GUIDE.md) — Quản lý phương tiện shipper
-
----
-
-## 13. Support
-
-Gặp vấn đề? Check:
-1. Backend logs: Terminal đang chạy `npm start`
-2. Firebase Console: Authentication & Firestore tabs
+1. Backend logs: terminal dang chay `npm start`
+2. Firebase console: Firestore + Auth
 3. Swagger docs: http://localhost:3000/api/docs
-4. Issue tracker: GitHub repository
+4. Claims mismatch: user re-login hoac admin sync claims
+5. Upload errors: check image type/size
