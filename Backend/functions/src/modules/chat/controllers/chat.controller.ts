@@ -42,7 +42,7 @@ import { AuthGuard } from '../../../core/guards/auth.guard';
  * Base URL: /api/chat
  */
 @ApiTags('Chat')
-@ApiBearerAuth()
+@ApiBearerAuth('firebase-auth')
 @UseGuards(AuthGuard)
 @Controller('chat')
 export class ChatController {
