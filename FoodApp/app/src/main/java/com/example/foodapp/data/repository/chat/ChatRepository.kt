@@ -30,9 +30,10 @@ class ChatRepository(
             
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null) {
-                    Log.d(TAG, "✅ Created conversation: ${body.id}")
-                    Result.success(body)
+                val conversation = body?.data
+                if (conversation != null) {
+                    Log.d(TAG, "✅ Created conversation: ${conversation.id}")
+                    Result.success(conversation)
                 } else {
                     Result.failure(Exception("Empty response"))
                 }
@@ -61,9 +62,10 @@ class ChatRepository(
             
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null) {
-                    Log.d(TAG, "✅ Loaded ${body.items.size} conversations")
-                    Result.success(body)
+                val data = body?.data
+                if (data != null) {
+                    Log.d(TAG, "✅ Loaded ${data.items.size} conversations")
+                    Result.success(data)
                 } else {
                     Log.d(TAG, "⚠️ Response body is null, returning empty list")
                     Result.success(PaginatedConversationsResponse())
@@ -90,9 +92,10 @@ class ChatRepository(
             
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null) {
-                    Log.d(TAG, "✅ Loaded conversation: ${body.id}")
-                    Result.success(body)
+                val conversation = body?.data
+                if (conversation != null) {
+                    Log.d(TAG, "✅ Loaded conversation: ${conversation.id}")
+                    Result.success(conversation)
                 } else {
                     Result.failure(Exception("Conversation not found"))
                 }
@@ -120,9 +123,10 @@ class ChatRepository(
             
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null) {
-                    Log.d(TAG, "✅ Loaded ${body.items.size} messages")
-                    Result.success(body)
+                val data = body?.data
+                if (data != null) {
+                    Log.d(TAG, "✅ Loaded ${data.items.size} messages")
+                    Result.success(data)
                 } else {
                     Result.success(PaginatedMessagesResponse())
                 }
@@ -149,9 +153,10 @@ class ChatRepository(
             
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null) {
-                    Log.d(TAG, "✅ Sent message: ${body.id}")
-                    Result.success(body)
+                val message = body?.data
+                if (message != null) {
+                    Log.d(TAG, "✅ Sent message: ${message.id}")
+                    Result.success(message)
                 } else {
                     Result.failure(Exception("Empty response"))
                 }
@@ -178,9 +183,10 @@ class ChatRepository(
             
             if (response.isSuccessful) {
                 val body = response.body()
-                if (body != null) {
-                    Log.d(TAG, "✅ Marked as read: ${body.id}")
-                    Result.success(body)
+                val message = body?.data
+                if (message != null) {
+                    Log.d(TAG, "✅ Marked as read: ${message.id}")
+                    Result.success(message)
                 } else {
                     Result.failure(Exception("Empty response"))
                 }

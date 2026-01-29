@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -16,14 +17,26 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.data.remote.client.response.chat.MessageApiModel
 import java.text.SimpleDateFormat
 import java.util.*
+
+// Màu sắc theme
+private val PrimaryYellow = Color(0xFFFBBB00)
+private val BackgroundGray = Color(0xFFF8F9FA)
+private val MessageBubbleMe = Color(0xFFFBBB00)
+private val MessageBubbleOther = Color.White
+private val TextPrimary = Color(0xFF212121)
+private val TextSecondary = Color(0xFF757575)
+private val ErrorRed = Color(0xFFE53935)
+private val ErrorBackground = Color(0xFFFFEBEE)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,8 +65,6 @@ fun ChatScreen(
                 message = error,
                 duration = SnackbarDuration.Short
             )
-            // Xóa error message sau khi hiển thị
-            // viewModel.clearErrorMessage() // Bạn có thể thêm hàm này trong ViewModel
         }
     }
 
@@ -61,42 +72,72 @@ fun ChatScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        text = "Tin nhắn",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.Black
-                    )
+                    Column {
+                        Text(
+                            text = "Trò chuyện",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextPrimary
+                        )
+                        Text(
+                            text = "Hỗ trợ khách hàng",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = TextSecondary
+                        )
+                    }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBackClick) {
+                    IconButton(
+                        onClick = onBackClick,
+                        modifier = Modifier
+                            .padding(start = 4.dp)
+                            .size(40.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Quay lại",
-                            tint = Color.Black
+                            tint = TextPrimary
                         )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White
+                ),
+                modifier = Modifier.shadow(
+                    elevation = 2.dp,
+                    spotColor = Color.Black.copy(alpha = 0.1f)
                 )
             )
         },
         bottomBar = {
-            MessageInput(
-                onSendMessage = { message ->
-                    viewModel.sendMessage(message)
-                },
-                isSending = uiState.isSending
-            )
+            Surface(
+                shadowElevation = 8.dp,
+                color = Color.White
+            ) {
+                MessageInput(
+                    onSendMessage = { message ->
+                        viewModel.sendMessage(message)
+                    },
+                    isSending = uiState.isSending
+                )
+            }
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = {
+            SnackbarHost(snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = ErrorRed,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+        },
+        containerColor = BackgroundGray
     ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .background(Color(0xFFF5F5F5))
         ) {
             when (val state = messagesState) {
                 is ChatState.Loading -> {
@@ -114,27 +155,27 @@ fun ChatScreen(
                         currentUserId = viewModel.getCurrentUserId()
                     )
                 }
-                is ChatState.Idle -> {
-                    LoadingMessagesView()
-                }
-                null -> {
+                is ChatState.Idle, null -> {
                     LoadingMessagesView()
                 }
             }
 
             // Refresh indicator khi đang tải thêm
             if (uiState.isLoadingMore) {
-                Box(
+                Surface(
                     modifier = Modifier
-                        .fillMaxWidth()
                         .align(Alignment.TopCenter)
-                        .padding(top = 8.dp)
+                        .padding(top = 16.dp),
+                    shape = CircleShape,
+                    color = Color.White,
+                    shadowElevation = 4.dp
                 ) {
                     CircularProgressIndicator(
                         modifier = Modifier
-                            .size(24.dp)
-                            .align(Alignment.Center),
-                        strokeWidth = 2.dp
+                            .padding(8.dp)
+                            .size(24.dp),
+                        strokeWidth = 2.5.dp,
+                        color = PrimaryYellow
                     )
                 }
             }
@@ -149,22 +190,27 @@ fun MessagesList(
 ) {
     val lazyListState = rememberLazyListState()
 
+    // Sắp xếp messages theo thời gian tăng dần (cũ -> mới)
+    val sortedMessages = remember(messages) {
+        messages.sortedBy { it.createdAt }
+    }
+
     // Tự động scroll xuống cuối khi có tin nhắn mới
-    LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
-            lazyListState.animateScrollToItem(0) // Vì đang dùng reverseLayout = true
+    LaunchedEffect(sortedMessages.size) {
+        if (sortedMessages.isNotEmpty()) {
+            lazyListState.animateScrollToItem(sortedMessages.size - 1)
         }
     }
 
     LazyColumn(
         state = lazyListState,
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        reverseLayout = true, // Tin nhắn mới nhất ở dưới cùng
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+        reverseLayout = false, // ĐỔI THÀNH false
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         items(
-            items = messages, // Không cần reversed vì đã có reverseLayout = true
+            items = sortedMessages,
             key = { it.id }
         ) { message ->
             MessageBubble(
@@ -180,75 +226,104 @@ fun MessageBubble(
     message: MessageApiModel,
     isCurrentUser: Boolean
 ) {
-    // Xác định màu sắc và trạng thái dựa trên status
+    // Xác định màu sắc dựa trên status
     val bubbleColor = when {
-        !isCurrentUser -> Color(0xFFFFFFFF)
-        message.status == "FAILED" -> Color(0xFFFFCDD2) // Màu đỏ nhạt khi thất bại
-        else -> Color(0xFFFBBB00)
+        !isCurrentUser -> MessageBubbleOther
+        message.status == "FAILED" -> ErrorBackground
+        else -> MessageBubbleMe
     }
 
-    val textColor = if (isCurrentUser) Color.Black else Color.Black
+    val textColor = when {
+        !isCurrentUser -> TextPrimary
+        message.status == "FAILED" -> ErrorRed
+        else -> Color.Black
+    }
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
+    Column(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Card(
-            modifier = Modifier
-                .widthIn(max = 280.dp),
-            shape = when {
-                isCurrentUser -> RoundedCornerShape(16.dp, 4.dp, 16.dp, 16.dp)
-                else -> RoundedCornerShape(4.dp, 16.dp, 16.dp, 16.dp)
-            },
-            colors = CardDefaults.cardColors(
-                containerColor = bubbleColor
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = if (isCurrentUser) Arrangement.End else Arrangement.Start
         ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+            Surface(
+                modifier = Modifier.widthIn(max = 280.dp),
+                shape = when {
+                    isCurrentUser -> RoundedCornerShape(
+                        topStart = 20.dp,
+                        topEnd = 20.dp,
+                        bottomStart = 20.dp,
+                        bottomEnd = 4.dp
+                    )
+                    else -> RoundedCornerShape(
+                        topStart = 20.dp,
+                        topEnd = 20.dp,
+                        bottomStart = 4.dp,
+                        bottomEnd = 20.dp
+                    )
+                },
+                color = bubbleColor,
+                shadowElevation = if (isCurrentUser) 0.dp else 1.dp,
+                tonalElevation = if (isCurrentUser) 0.dp else 1.dp
             ) {
-                Text(
-                    text = message.text,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = textColor
-                )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                Column(
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
                 ) {
                     Text(
-                        text = formatMessageTime(message.createdAt),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (isCurrentUser) Color.Black.copy(alpha = 0.7f) else Color.Gray,
+                        text = message.text,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 15.sp,
+                            lineHeight = 20.sp
+                        ),
+                        color = textColor
                     )
 
-                    // Hiển thị icon trạng thái cho tin nhắn của người dùng hiện tại
-                    if (isCurrentUser) {
-                        when (message.status) {
-                            "SENDING" -> {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(12.dp),
-                                    strokeWidth = 1.5.dp,
-                                    color = Color.Black.copy(alpha = 0.5f)
-                                )
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.End,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = formatMessageTime(message.createdAt),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 11.sp
+                            ),
+                            color = if (isCurrentUser) {
+                                Color.Black.copy(alpha = 0.6f)
+                            } else {
+                                TextSecondary
                             }
-                            "SENT" -> {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = "Đã gửi",
-                                    modifier = Modifier.size(12.dp),
-                                    tint = Color.Black.copy(alpha = 0.5f)
-                                )
-                            }
-                            "FAILED" -> {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "Gửi thất bại",
-                                    modifier = Modifier.size(12.dp),
-                                    tint = Color.Red.copy(alpha = 0.7f)
-                                )
+                        )
+
+                        // Icon trạng thái cho tin nhắn của người dùng hiện tại
+                        if (isCurrentUser) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            when (message.status) {
+                                "SENDING" -> {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(12.dp),
+                                        strokeWidth = 1.5.dp,
+                                        color = Color.Black.copy(alpha = 0.5f)
+                                    )
+                                }
+                                "SENT" -> {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = "Đã gửi",
+                                        modifier = Modifier.size(14.dp),
+                                        tint = Color.Black.copy(alpha = 0.5f)
+                                    )
+                                }
+                                "FAILED" -> {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = "Gửi thất bại",
+                                        modifier = Modifier.size(14.dp),
+                                        tint = ErrorRed
+                                    )
+                                }
                             }
                         }
                     }
@@ -265,63 +340,85 @@ fun MessageInput(
 ) {
     var messageText by remember { mutableStateOf("") }
 
-    Card(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(8.dp),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.Bottom
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
+        // Input field với background đẹp hơn
+        Surface(
+            modifier = Modifier.weight(1f),
+            shape = RoundedCornerShape(24.dp),
+            color = BackgroundGray,
+            border = androidx.compose.foundation.BorderStroke(
+                width = 1.dp,
+                color = Color.Black.copy(alpha = 0.1f)
+            )
         ) {
-            // Text field
-            OutlinedTextField(
+            TextField(
                 value = messageText,
                 onValueChange = { messageText = it },
-                modifier = Modifier.weight(1f),
-                placeholder = { Text("Nhập tin nhắn...") },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color.Transparent,
-                    unfocusedBorderColor = Color.Transparent,
-                    cursorColor = Color(0xFFFBBB00),
-                    focusedTextColor = Color.Black,
-                    unfocusedTextColor = Color.Black
-                ),
-                singleLine = false,
-                maxLines = 3
-            )
-
-            // Send button với spacing tốt hơn
-            Spacer(modifier = Modifier.width(4.dp))
-
-            IconButton(
-                onClick = {
-                    if (messageText.isNotBlank() && !isSending) {
-                        onSendMessage(messageText)
-                        messageText = ""
-                    }
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = {
+                    Text(
+                        text = "Nhập tin nhắn...",
+                        color = TextSecondary
+                    )
                 },
-                enabled = messageText.isNotBlank() && !isSending,
-                modifier = Modifier.size(48.dp)
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    cursorColor = PrimaryYellow,
+                    focusedTextColor = TextPrimary,
+                    unfocusedTextColor = TextPrimary
+                ),
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 15.sp
+                ),
+                minLines = 1,
+                maxLines = 4
+            )
+        }
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        // Send button với thiết kế đẹp hơn
+        Surface(
+            modifier = Modifier.size(48.dp),
+            shape = CircleShape,
+            color = if (messageText.isNotBlank() && !isSending) {
+                PrimaryYellow
+            } else {
+                Color.LightGray.copy(alpha = 0.3f)
+            },
+            onClick = {
+                if (messageText.isNotBlank() && !isSending) {
+                    onSendMessage(messageText.trim())
+                    messageText = ""
+                }
+            }
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.fillMaxSize()
             ) {
                 if (isSending) {
                     CircularProgressIndicator(
                         modifier = Modifier.size(24.dp),
-                        strokeWidth = 2.dp,
-                        color = Color(0xFFFBBB00)
+                        strokeWidth = 2.5.dp,
+                        color = Color.White
                     )
                 } else {
                     Icon(
                         imageVector = Icons.Default.Send,
                         contentDescription = "Gửi",
-                        tint = if (messageText.isNotBlank()) Color(0xFFFBBB00) else Color.Gray
+                        tint = if (messageText.isNotBlank()) Color.White else TextSecondary,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
@@ -337,14 +434,17 @@ fun LoadingMessagesView() {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CircularProgressIndicator(
-                color = Color(0xFFFBBB00)
+                color = PrimaryYellow,
+                strokeWidth = 3.dp,
+                modifier = Modifier.size(48.dp)
             )
             Text(
                 text = "Đang tải tin nhắn...",
-                color = Color(0xFF666666)
+                style = MaterialTheme.typography.bodyMedium,
+                color = TextSecondary
             )
         }
     }
@@ -361,26 +461,61 @@ fun ErrorMessagesView(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(24.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            modifier = Modifier.padding(32.dp)
         ) {
+            // Icon lỗi
+            Surface(
+                modifier = Modifier.size(64.dp),
+                shape = CircleShape,
+                color = ErrorBackground
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = null,
+                        tint = ErrorRed,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+            }
+
             Text(
                 text = errorMessage,
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color(0xFF666666),
+                style = MaterialTheme.typography.bodyLarge,
+                color = TextPrimary,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
+
             Button(
                 onClick = onRetryClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFBBB00)
-                )
+                    containerColor = PrimaryYellow,
+                    contentColor = Color.Black
+                ),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .height(48.dp)
+                    .widthIn(min = 120.dp)
             ) {
-                Text("Thử lại")
+                Text(
+                    text = "Thử lại",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }
 }
+
+// Extension function để thêm shadow cho TopAppBar
+fun Modifier.shadow(
+    elevation: androidx.compose.ui.unit.Dp,
+    spotColor: Color = Color.Black
+): Modifier = this
 
 fun formatMessageTime(timestamp: String): String {
     return try {
@@ -389,8 +524,23 @@ fun formatMessageTime(timestamp: String): String {
         val date = sdf.parse(timestamp)
 
         if (date != null) {
-            val outputFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-            outputFormat.format(date)
+            val now = Calendar.getInstance()
+            val messageDate = Calendar.getInstance().apply {
+                time = date
+            }
+
+            // Kiểm tra nếu là hôm nay
+            val isToday = now.get(Calendar.YEAR) == messageDate.get(Calendar.YEAR) &&
+                    now.get(Calendar.DAY_OF_YEAR) == messageDate.get(Calendar.DAY_OF_YEAR)
+
+            if (isToday) {
+                val outputFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                outputFormat.format(date)
+            } else {
+                // Nếu không phải hôm nay, hiển thị ngày và giờ
+                val outputFormat = SimpleDateFormat("dd/MM HH:mm", Locale.getDefault())
+                outputFormat.format(date)
+            }
         } else {
             ""
         }

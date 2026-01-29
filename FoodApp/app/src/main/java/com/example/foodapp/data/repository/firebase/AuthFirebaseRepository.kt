@@ -44,9 +44,7 @@ class AuthManager(private val context: Context) {
             editor.putLong(KEY_LAST_REFRESH, System.currentTimeMillis())
             editor.apply()
 
-            Log.d("AuthManager", "✅ Đã lưu Firebase ID Token, hết hạn: ${Date(expiry)}")
         } catch (e: Exception) {
-            Log.e("AuthManager", "❌ Lỗi khi lưu token", e)
         }
     }
 
@@ -61,7 +59,6 @@ class AuthManager(private val context: Context) {
                 (expiryTime - TOKEN_EXPIRY_BUFFER) > System.currentTimeMillis()
 
         if (!isValid) {
-            Log.w("AuthManager", "⚠ Token không hợp lệ hoặc sắp hết hạn")
         }
 
         return isValid
@@ -83,11 +80,9 @@ class AuthManager(private val context: Context) {
      */
     suspend fun refreshFirebaseToken(): String? {
         return try {
-            Log.d("AuthManager", "🔄 Đang refresh Firebase token...")
 
             val currentUser = auth.currentUser
             if (currentUser == null) {
-                Log.w("AuthManager", "❌ Không có user để refresh token")
                 clearAuthData()
                 return null
             }
@@ -98,13 +93,11 @@ class AuthManager(private val context: Context) {
 
             if (newToken != null) {
                 saveFirebaseToken(newToken, tokenResult.expirationTimestamp)
-                Log.d("AuthManager", "✅ Đã refresh token mới")
             }
 
             newToken
 
         } catch (e: Exception) {
-            Log.e("AuthManager", "❌ Lỗi khi refresh token", e)
             null
         }
     }
@@ -113,16 +106,12 @@ class AuthManager(private val context: Context) {
      * Lấy token valid (tự động refresh nếu cần)
      */
     suspend fun getValidToken(): String? {
-        Log.d("AuthManager", "🔍 Kiểm tra và lấy valid token...")
 
         // 1. Kiểm tra token hiện tại còn valid không
         if (isTokenValid()) {
-            Log.d("AuthManager", "✅ Token còn valid, sử dụng token cache")
             return getCurrentToken()
         }
 
-        // 2. Token không valid, thử refresh
-        Log.d("AuthManager", "⚠ Token không valid, đang refresh...")
         return refreshFirebaseToken()
     }
 
@@ -174,12 +163,6 @@ class AuthManager(private val context: Context) {
 
         val isLoggedIn = userId != null && hasFirebaseUser && hasValidToken
 
-        Log.d("AuthManager", "🔍 Kiểm tra login state:")
-        Log.d("AuthManager", "   User ID: $userId")
-        Log.d("AuthManager", "   Firebase User: $hasFirebaseUser")
-        Log.d("AuthManager", "   Valid Token: $hasValidToken")
-        Log.d("AuthManager", "   => Logged in: $isLoggedIn")
-
         return isLoggedIn
     }
 
@@ -188,7 +171,6 @@ class AuthManager(private val context: Context) {
         userPrefs.edit().clear().apply()
         auth.signOut()
 
-        Log.d("AuthManager", "🧹 Đã xóa toàn bộ auth data và logout Firebase")
     }
 
     fun getCurrentUserId(): String? {

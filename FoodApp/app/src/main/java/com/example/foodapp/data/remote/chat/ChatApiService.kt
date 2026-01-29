@@ -18,7 +18,7 @@ interface ChatApiService {
     @POST("chat/conversations")
     suspend fun createConversation(
         @Body request: CreateConversationRequest
-    ): Response<Conversation>
+    ): Response<WrappedConversationResponse>
     
     /**
      * GET /chat/conversations
@@ -27,8 +27,8 @@ interface ChatApiService {
     @GET("chat/conversations")
     suspend fun listConversations(
         @Query("limit") limit: Int? = null,
-        @Query("startAfter") cursor: String? = null
-    ): Response<PaginatedConversationsResponse>
+        @Query("startAfter") startAfter: String? = null
+    ): Response<WrappedConversationsListResponse>
     
     /**
      * GET /chat/conversations/{id}
@@ -37,7 +37,7 @@ interface ChatApiService {
     @GET("chat/conversations/{id}")
     suspend fun getConversation(
         @Path("id") conversationId: String
-    ): Response<Conversation>
+    ): Response<WrappedConversationResponse>
     
     // ==================== MESSAGES ====================
     
@@ -49,8 +49,8 @@ interface ChatApiService {
     suspend fun listMessages(
         @Path("id") conversationId: String,
         @Query("limit") limit: Int? = null,
-        @Query("cursor") cursor: String? = null
-    ): Response<PaginatedMessagesResponse>
+        @Query("startAfter") startAfter: String? = null
+    ): Response<WrappedMessagesListResponse>
     
     /**
      * POST /chat/messages
@@ -59,7 +59,7 @@ interface ChatApiService {
     @POST("chat/messages")
     suspend fun sendMessage(
         @Body request: SendMessageRequest
-    ): Response<ChatMessage>
+    ): Response<WrappedMessageResponse>
     
     /**
      * PUT /chat/messages/{id}/read
@@ -69,5 +69,5 @@ interface ChatApiService {
     suspend fun markAsRead(
         @Path("id") messageId: String,
         @Body request: MarkAsReadRequest
-    ): Response<ChatMessage>
+    ): Response<WrappedMessageResponse>
 }

@@ -46,7 +46,6 @@ fun OrderDetailScreen(
     onBack: () -> Unit,
     orderId: String,
 ) {
-
     val context = LocalContext.current
     val viewModel: OrderDetailViewModel = viewModel(factory = OrderDetailViewModel.factory(context))
     val orderDetailState by viewModel.orderDetailState.observeAsState(OrderDetailState.Idle)
@@ -91,34 +90,9 @@ fun OrderDetailScreen(
     LaunchedEffect(cancelOrderState) {
         when (cancelOrderState) {
             is CancelOrderState.Success -> {
-                // Đóng dialog hủy nếu đang mở
                 showCancelDialog = false
-                // Refresh lại order detail
                 viewModel.fetchOrderDetail(orderId)
                 viewModel.resetCancelState()
-            }
-            else -> {}
-        }
-    }
-
-    // Handle review state
-    LaunchedEffect(reviewState) {
-        when (reviewState) {
-            is ReviewState.Success -> {
-                // Đóng dialog đánh giá
-                showReviewDialog = false
-                // Chờ một chút để đảm bảo dialog đã đóng
-                delay(100)
-                // Hiển thị dialog thành công
-                showReviewSuccessDialog = true
-                // Refresh lại order detail để cập nhật trạng thái đã đánh giá
-                viewModel.fetchOrderDetail(orderId)
-                // Reset review state
-                viewModel.resetReviewState()
-            }
-            is ReviewState.Error -> {
-                // Không cần đóng dialog review ở đây, để người dùng có thể thử lại
-                // Dialog lỗi sẽ được hiển thị trong ReviewDialog
             }
             else -> {}
         }
@@ -165,7 +139,6 @@ fun OrderDetailScreen(
                             hasReviewed = hasReviewed,
                             onCancelOrder = { showCancelDialog = true },
                             onReviewOrder = {
-                                // Reset all review states
                                 shopRating = 0
                                 shopComment = ""
                                 shipperRating = 0
@@ -198,18 +171,6 @@ fun OrderDetailScreen(
 
             // Cancel order loading overlay
             if (cancelOrderState is CancelOrderState.Loading) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.5f)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator(color = Color.White)
-                }
-            }
-
-            // Review loading overlay
-            if (reviewState is ReviewState.Loading) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -302,21 +263,28 @@ fun OrderDetailScreen(
                         ?: return@EnhancedReviewDialog
                 },
                 onSubmit = { shopRating, shopComment, shipperRating, shipperComment, productReviews ->
+                    // ĐÓNG DIALOG REVIEW TRƯỚC
+                    showReviewDialog = false
+
                     // Convert to request format
                     val productReviewRequests = productReviews.values.map { review ->
-                        com.example.foodapp.data.remote.client.response.review.ProductReviewRequest(
+                        ProductReviewRequest(
                             productId = review.productId,
                             rating = review.rating,
                             comment = if (review.comment.isNotBlank()) review.comment else ""
                         )
                     }
 
+                    // Gọi API (chạy ngầm)
                     viewModel.createOrderReview(
                         orderId = orderId,
                         shopRating = shopRating,
                         shopComment = if (shopComment.isNotBlank()) shopComment else null,
                         productReviews = productReviewRequests
                     )
+
+                    // HIỂN THỊ THÔNG BÁO THÀNH CÔNG NGAY
+                    showReviewSuccessDialog = true
                 },
                 onDismiss = {
                     showReviewDialog = false
@@ -356,6 +324,8 @@ fun OrderDetailScreen(
                     Button(
                         onClick = {
                             showReviewSuccessDialog = false
+                            // Refresh lại order detail sau khi đánh giá
+                            viewModel.fetchOrderDetail(orderId)
                         },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
@@ -368,11 +338,6 @@ fun OrderDetailScreen(
             )
         }
     }
-}
-
-@Composable
-fun ProductReviewRequest(productId: String, rating: Int, comment: String?) {
-    TODO("Not yet implemented")
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

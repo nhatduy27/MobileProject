@@ -335,7 +335,6 @@ class UserFirebaseRepository(private val context : Context) {
             }
     }
 
-    // Lấy User hiện tại đang đăng nhập
     fun getCurrentUser(onComplete: (Client?) -> Unit) {
         val userId = auth.currentUser?.uid
         if (userId == null) {
