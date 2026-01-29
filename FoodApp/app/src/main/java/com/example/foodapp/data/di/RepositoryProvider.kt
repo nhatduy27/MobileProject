@@ -335,5 +335,15 @@ object RepositoryProvider {
             )
         )
     }
+    
+    // ==================== CHAT REPOSITORY ====================
+    
+    fun getChatRepository(): com.example.foodapp.data.repository.chat.ChatRepository {
+        return com.example.foodapp.data.repository.chat.ChatRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.chat.ChatApiService::class.java
+            )
+        )
+    }
 }
 

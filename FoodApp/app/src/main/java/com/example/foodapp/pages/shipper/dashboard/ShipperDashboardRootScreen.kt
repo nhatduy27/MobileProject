@@ -39,6 +39,8 @@ import com.example.foodapp.pages.shipper.gps.TripHistoryScreen
 import com.example.foodapp.pages.shipper.gps.DeliveryMapScreen
 import com.example.foodapp.pages.shipper.removal.RemovalRequestScreen
 import com.example.foodapp.pages.shipper.chatbot.ShipperChatbotScreen
+import com.example.foodapp.pages.shipper.chat.ConversationsScreen
+import com.example.foodapp.pages.shipper.chat.ChatDetailScreen
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import androidx.navigation.compose.rememberNavController
@@ -87,6 +89,8 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
     var currentSettingsRoute by remember { mutableStateOf("settings_main") }
     var currentGpsRoute by remember { mutableStateOf("gps_main") }
     var currentTripId by remember { mutableStateOf<String?>(null) }
+    var currentChatRoute by remember { mutableStateOf("conversations_list") }
+    var currentConversationId by remember { mutableStateOf<String?>(null) }
     
     // User profile state
     var userProfile by remember { mutableStateOf<UserProfile?>(null) }
@@ -209,6 +213,16 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                     }
                 )
                 DrawerMenuItem(
+                    icon = Icons.Outlined.Chat,
+                    title = "Tin nhắn",
+                    isSelected = currentScreen == "chat",
+                    onClick = {
+                        currentScreen = "chat"
+                        currentChatRoute = "conversations_list"
+                        scope.launch { drawerState.close() }
+                    }
+                )
+                DrawerMenuItem(
                     icon = Icons.Outlined.Route,
                     title = "Lộ trình giao hàng",
                     isSelected = currentScreen == "gps",
@@ -297,6 +311,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 topBar = {
                     val isInSettingsChild = currentScreen == "settings" && currentSettingsRoute != "settings_main"
                     val isInGpsChild = currentScreen == "gps" && currentGpsRoute != "gps_main"
+                    val isInChatChild = currentScreen == "chat" && currentChatRoute == "chat_detail"
                     TopAppBar(
                         title = {
                             Text(
@@ -324,6 +339,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                                             else -> "Lộ trình giao hàng"
                                         }
                                     }
+                                    currentScreen == "chat" && currentChatRoute == "chat_detail" -> "Chi tiết tin nhắn"
                                     currentScreen == "home" -> "Trang chủ"
                                     currentScreen == "earnings" -> "Thu nhập của tôi"
                                     currentScreen == "history" -> "Lịch sử giao hàng"
@@ -332,6 +348,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                                     currentScreen == "gps" -> "Lộ trình giao hàng"
                                     currentScreen == "settings" -> "Cài đặt"
                                     currentScreen == "notifications" -> "Thông báo"
+                                    currentScreen == "chat" -> "Tin nhắn"
                                     currentScreen == "help" -> "Trợ giúp & Hỗ trợ"
                                     currentScreen == "chatbot" -> "Trợ lý AI"
                                     else -> "FoodApp Shipper"
@@ -366,6 +383,17 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                                         tint = ShipperColors.TextPrimary
                                     )
                                 }
+                            } else if (isInChatChild) {
+                                IconButton(onClick = { 
+                                    currentChatRoute = "conversations_list"
+                                    currentConversationId = null
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.ArrowBack,
+                                        contentDescription = "Quay lại",
+                                        tint = ShipperColors.TextPrimary
+                                    )
+                                }
                             } else {
                                 IconButton(onClick = { scope.launch { drawerState.open() } }) {
                                     Icon(
@@ -377,7 +405,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                             }
                         },
                         actions = {
-                            if (!isInSettingsChild && !isInGpsChild) {
+                            if (!isInSettingsChild && !isInGpsChild && !isInChatChild) {
                                 IconButton(onClick = {
                                     currentScreen = "notifications"
                                 }) {
@@ -434,6 +462,23 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                             showTopBar = false
                         )
                         "chatbot" -> ShipperChatbotScreen()
+                        "chat" -> {
+                            when (currentChatRoute) {
+                                "chat_detail" -> ChatDetailScreen(
+                                    conversationId = currentConversationId ?: "",
+                                    onBack = {
+                                        currentChatRoute = "conversations_list"
+                                        currentConversationId = null
+                                    }
+                                )
+                                else -> ConversationsScreen(
+                                    onConversationClick = { conversationId ->
+                                        currentConversationId = conversationId
+                                        currentChatRoute = "chat_detail"
+                                    }
+                                )
+                            }
+                        }
                         "gps" -> {
                             when (currentGpsRoute) {
                                 "trip_detail" -> TripDetailScreen(
