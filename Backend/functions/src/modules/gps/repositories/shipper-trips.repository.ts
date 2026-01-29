@@ -20,7 +20,9 @@ export class ShipperTripsRepository {
   /**
    * Create new trip
    */
-  async create(tripData: Omit<ShipperTrip, 'id' | 'createdAt' | 'updatedAt'>): Promise<ShipperTrip> {
+  async create(
+    tripData: Omit<ShipperTrip, 'id' | 'createdAt' | 'updatedAt'>,
+  ): Promise<ShipperTrip> {
     const docRef = this.firestore.collection(this.collectionName).doc();
     const timestamp = FieldValue.serverTimestamp();
 
@@ -82,9 +84,7 @@ export class ShipperTripsRepository {
     status?: TripStatus,
   ): Promise<{ trips: ShipperTrip[]; total: number }> {
     // Build base query
-    let query = this.firestore
-      .collection(this.collectionName)
-      .where('shipperId', '==', shipperId);
+    let query = this.firestore.collection(this.collectionName).where('shipperId', '==', shipperId);
 
     // Add status filter if provided
     if (status) {
@@ -97,10 +97,7 @@ export class ShipperTripsRepository {
 
     // Apply pagination and sorting
     const offset = (page - 1) * limit;
-    const paginatedQuery = query
-      .orderBy('createdAt', 'desc')
-      .offset(offset)
-      .limit(limit);
+    const paginatedQuery = query.orderBy('createdAt', 'desc').offset(offset).limit(limit);
 
     const snapshot = await paginatedQuery.get();
     const trips = snapshot.docs.map((doc) => doc.data() as ShipperTrip);

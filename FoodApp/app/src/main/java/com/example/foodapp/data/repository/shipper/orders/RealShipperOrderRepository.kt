@@ -3,6 +3,8 @@ package com.example.foodapp.data.repository.shipper.orders
 import android.util.Log
 import com.example.foodapp.data.model.shipper.order.PaginatedShipperOrdersDto
 import com.example.foodapp.data.model.shipper.order.ShipperOrder
+import com.example.foodapp.data.model.shipper.order.WrappedPaginatedOrdersResponse
+import com.example.foodapp.data.model.shipper.order.WrappedShipperOrderResponse
 import com.example.foodapp.data.remote.shipper.ShipperApiService
 import com.example.foodapp.data.repository.shipper.base.ShipperOrderRepository
 import org.json.JSONObject
@@ -17,12 +19,13 @@ class RealShipperOrderRepository(
             val response = apiService.getMyOrders(status, page, limit)
             Log.d("ShipperOrderRepo", "🔍 getMyOrders response: isSuccessful=${response.isSuccessful}, code=${response.code()}")
             if (response.isSuccessful) {
-                val body = response.body()
-                Log.d("ShipperOrderRepo", "📦 getMyOrders body: orders=${body?.orders?.size ?: 0}, total=${body?.total ?: 0}")
-                if (body != null) {
-                    Result.success(body)
+                val wrapper = response.body()
+                val data = wrapper?.data
+                Log.d("ShipperOrderRepo", "📦 getMyOrders body: success=${wrapper?.success}, orders=${data?.orders?.size ?: 0}, total=${data?.total ?: 0}")
+                if (data != null) {
+                    Result.success(data)
                 } else {
-                    Result.failure(Exception("Response body is null"))
+                    Result.failure(Exception("Response data is null"))
                 }
             } else {
                 val errorMessage = parseErrorBody(response)
@@ -40,12 +43,13 @@ class RealShipperOrderRepository(
             val response = apiService.getAvailableOrders(page, limit)
             Log.d("ShipperOrderRepo", "🔍 getAvailableOrders response: isSuccessful=${response.isSuccessful}, code=${response.code()}")
             if (response.isSuccessful) {
-                val body = response.body()
-                Log.d("ShipperOrderRepo", "📦 getAvailableOrders body: orders=${body?.orders?.size ?: 0}, total=${body?.total ?: 0}")
-                if (body != null) {
-                    Result.success(body)
+                val wrapper = response.body()
+                val data = wrapper?.data
+                Log.d("ShipperOrderRepo", "📦 getAvailableOrders body: success=${wrapper?.success}, orders=${data?.orders?.size ?: 0}, total=${data?.total ?: 0}")
+                if (data != null) {
+                    Result.success(data)
                 } else {
-                    Result.failure(Exception("Response body is null"))
+                    Result.failure(Exception("Response data is null"))
                 }
             } else {
                 val errorMessage = parseErrorBody(response)
@@ -59,19 +63,19 @@ class RealShipperOrderRepository(
     }
 
     override suspend fun getOrderDetail(id: String): Result<ShipperOrder> {
-        return safeApiCall { apiService.getOrderDetail(id) }
+        return safeApiCallWrapped { apiService.getOrderDetail(id) }
     }
 
     override suspend fun acceptOrder(id: String): Result<ShipperOrder> {
-        return safeApiCall { apiService.acceptOrder(id) }
+        return safeApiCallWrapped { apiService.acceptOrder(id) }
     }
 
     override suspend fun markShipping(id: String): Result<ShipperOrder> {
-        return safeApiCall { apiService.markShipping(id) }
+        return safeApiCallWrapped { apiService.markShipping(id) }
     }
 
     override suspend fun markDelivered(id: String): Result<ShipperOrder> {
-        return safeApiCall { apiService.markDelivered(id) }
+        return safeApiCallWrapped { apiService.markDelivered(id) }
     }
     
     override suspend fun goOnline(): Result<String> {
@@ -110,18 +114,19 @@ class RealShipperOrderRepository(
         }
     }
 
-    private suspend fun <T> safeApiCall(apiCall: suspend () -> Response<T>): Result<T> {
+    // Helper for wrapped ShipperOrder responses
+    private suspend fun safeApiCallWrapped(apiCall: suspend () -> Response<WrappedShipperOrderResponse>): Result<ShipperOrder> {
         return try {
             val response = apiCall()
             if (response.isSuccessful) {
-                val body = response.body()
-                if (body != null) {
-                    Result.success(body)
+                val wrapper = response.body()
+                val data = wrapper?.data
+                if (data != null) {
+                    Result.success(data)
                 } else {
-                    Result.failure(Exception("Response body is null"))
+                    Result.failure(Exception("Response data is null"))
                 }
             } else {
-                // Parse error body to get detailed message
                 val errorMessage = parseErrorBody(response)
                 Result.failure(Exception(errorMessage))
             }

@@ -1,8 +1,11 @@
 package com.example.foodapp.pages.owner.customer
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.foodapp.data.di.RepositoryProvider
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,65 +13,152 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * File này định nghĩa ViewModel cho màn hình CustomerScreen.
- *
- * ViewModel đóng vai trò là "bộ não" của màn hình, có các nhiệm vụ chính:
- * 1. Giao tiếp với lớp Repository (nguồn dữ liệu) để lấy và cập nhật dữ liệu.
- * 2. Giữ và quản lý trạng thái giao diện (CustomerUiState) trong vòng đời của màn hình,
- *    giúp trạng thái không bị mất khi xoay màn hình hay có thay đổi cấu hình.
- * 3. Cung cấp các hàm để xử lý sự kiện từ người dùng (ví dụ: thay đổi bộ lọc).
- * 4. Tách biệt logic nghiệp vụ khỏi tầng giao diện (Composable).
+ * ViewModel cho màn hình Buyer/Customer.
+ * Sử dụng Real Buyer Repository để kết nối API.
  */
 class CustomerViewModel : ViewModel() {
 
-    // ✅ SỬ DỤNG DI - Lấy repository từ RepositoryProvider
-    private val customerRepository = RepositoryProvider.getCustomerRepository()
+    private val buyerRepository = RepositoryProvider.getBuyerRepository()
 
-    // StateFlow nội bộ, chỉ ViewModel mới có quyền chỉnh sửa.
     private val _uiState = MutableStateFlow(CustomerUiState())
-
-    // StateFlow công khai, chỉ cho phép đọc từ bên ngoài (UI).
     val uiState: StateFlow<CustomerUiState> = _uiState.asStateFlow()
+    
+    private var searchJob: Job? = null
 
     init {
-        // Ngay khi ViewModel được tạo, bắt đầu lắng nghe sự thay đổi từ Repository.
-        loadCustomers()
+        loadBuyers()
     }
 
     /**
-     * Lắng nghe luồng dữ liệu khách hàng từ Repository và cập nhật UI State.
+     * Load danh sách buyers từ API
      */
-    private fun loadCustomers() {
-        // viewModelScope tự động hủy coroutine khi ViewModel bị hủy, tránh rò rỉ bộ nhớ.
+    fun loadBuyers(resetPage: Boolean = true) {
         viewModelScope.launch {
-            // Bắt đầu lắng nghe Flow từ repository
-            customerRepository.getCustomers().collect { customers ->
-                // Cập nhật StateFlow với danh sách khách hàng mới nhất.
+            if (resetPage) {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null, currentPage = 1) }
+            } else {
+                _uiState.update { it.copy(isLoadingMore = true, errorMessage = null) }
+            }
+            
+            val state = _uiState.value
+            val page = if (resetPage) 1 else state.currentPage
+            
+            buyerRepository.listBuyers(
+                page = page,
+                limit = 20,
+                tier = state.selectedFilter.apiValue,
+                search = state.searchQuery.takeIf { it.isNotBlank() },
+                sort = "createdAt"
+            ).onSuccess { result ->
                 _uiState.update { currentState ->
-                    currentState.copy(customers = customers)
+                    currentState.copy(
+                        buyers = if (resetPage) result.items else currentState.buyers + result.items,
+                        currentPage = result.pagination.page,
+                        totalPages = result.pagination.totalPages,
+                        totalBuyers = result.pagination.total,
+                        isLoading = false,
+                        isLoadingMore = false
+                    )
+                }
+            }.onFailure { error ->
+                Log.e("CustomerVM", "Error loading buyers", error)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isLoadingMore = false,
+                        errorMessage = error.message ?: "Không thể tải danh sách khách hàng"
+                    )
                 }
             }
         }
     }
 
     /**
-     * Xử lý sự kiện khi người dùng thay đổi bộ lọc.
-     * @param newFilter Bộ lọc mới được chọn ("Tất cả", "VIP", ...).
+     * Load thêm buyers (pagination)
      */
-    fun onFilterChanged(newFilter: String) {
-        _uiState.update { currentState ->
-            currentState.copy(selectedFilter = newFilter)
+    fun loadMoreBuyers() {
+        val state = _uiState.value
+        if (!state.isLoadingMore && state.currentPage < state.totalPages) {
+            _uiState.update { it.copy(currentPage = it.currentPage + 1) }
+            loadBuyers(resetPage = false)
         }
     }
 
-    // --- HÀM BỊ THIẾU ĐƯỢC THÊM VÀO ĐÂY ---
     /**
-     * Cập nhật trạng thái query tìm kiếm khi người dùng nhập liệu vào SearchBar.
-     * @param newQuery Nội dung mới từ thanh tìm kiếm.
+     * Xử lý khi filter thay đổi
+     */
+    fun onFilterChanged(filter: BuyerFilter) {
+        _uiState.update { it.copy(selectedFilter = filter) }
+        loadBuyers()
+    }
+    
+    // Overload để hỗ trợ display name (từ UI cũ)
+    fun onFilterChanged(displayName: String) {
+        val filter = BuyerFilter.fromDisplayName(displayName)
+        onFilterChanged(filter)
+    }
+
+    /**
+     * Xử lý search với debounce
      */
     fun onSearchQueryChanged(newQuery: String) {
-        _uiState.update { currentState ->
-            currentState.copy(searchQuery = newQuery)
+        _uiState.update { it.copy(searchQuery = newQuery) }
+        
+        // Cancel previous search job
+        searchJob?.cancel()
+        
+        // Debounce search
+        searchJob = viewModelScope.launch {
+            delay(500) // Wait 500ms before searching
+            loadBuyers()
         }
+    }
+
+    /**
+     * Load buyer detail
+     */
+    fun loadBuyerDetail(customerId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingDetail = true, errorMessage = null) }
+            
+            buyerRepository.getBuyerDetail(customerId)
+                .onSuccess { detail ->
+                    _uiState.update {
+                        it.copy(
+                            selectedBuyer = detail,
+                            isLoadingDetail = false
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isLoadingDetail = false,
+                            errorMessage = error.message ?: "Không thể tải thông tin khách hàng"
+                        )
+                    }
+                }
+        }
+    }
+
+    /**
+     * Clear selected buyer
+     */
+    fun clearSelectedBuyer() {
+        _uiState.update { it.copy(selectedBuyer = null) }
+    }
+
+    /**
+     * Refresh danh sách
+     */
+    fun refresh() {
+        loadBuyers()
+    }
+
+    /**
+     * Clear error message
+     */
+    fun clearError() {
+        _uiState.update { it.copy(errorMessage = null) }
     }
 }

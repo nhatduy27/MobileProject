@@ -80,3 +80,24 @@ export class FinishTripDto {
   @IsString()
   tripId: string;
 }
+
+/**
+ * Cancel Trip Request DTO
+ */
+export class CancelTripDto {
+  @ApiProperty({
+    description: 'Trip ID to cancel',
+    example: 'trip_abc123',
+  })
+  @IsString()
+  tripId: string;
+
+  @ApiProperty({
+    description: 'Optional reason for cancellation',
+    example: 'Customer requested cancellation',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  reason?: string;
+}

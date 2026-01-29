@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.foodapp.data.model.owner.product.Product
+import com.example.foodapp.pages.owner.theme.OwnerColors
 import java.text.NumberFormat
 import java.util.Locale
 
@@ -69,7 +70,7 @@ fun ProductItem(
             .alpha(cardAlpha)
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
-            containerColor = if (product.isAvailable) Color.White else Color(0xFFFAFAFA)
+            containerColor = if (product.isAvailable) OwnerColors.Surface else OwnerColors.SurfaceVariant
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = if (product.isAvailable) 2.dp else 1.dp
@@ -103,7 +104,7 @@ fun ProductItem(
                         modifier = Modifier
                             .size(40.dp)
                             .align(Alignment.Center),
-                        tint = Color(0xFFBDBDBD)
+                        tint = OwnerColors.BorderLight
                     )
                 }
 
@@ -130,7 +131,7 @@ fun ProductItem(
                             color = Color.White,
                             modifier = Modifier
                                 .background(
-                                    Color(0xFFE53935),
+                                    OwnerColors.Error,
                                     RoundedCornerShape(4.dp)
                                 )
                                 .padding(horizontal = 8.dp, vertical = 4.dp)
@@ -152,7 +153,7 @@ fun ProductItem(
                         text = product.name,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (product.isAvailable) Color(0xFF1A1A1A) else Color(0xFF757575),
+                        color = if (product.isAvailable) OwnerColors.TextPrimary else OwnerColors.TextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -165,13 +166,13 @@ fun ProductItem(
                             Icons.Default.Label,
                             contentDescription = null,
                             modifier = Modifier.size(12.dp),
-                            tint = Color(0xFFFF6B35)
+                            tint = OwnerColors.Primary
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = product.categoryName,
                             fontSize = 12.sp,
-                            color = Color(0xFF757575)
+                            color = OwnerColors.TextSecondary
                         )
                     }
 
@@ -181,7 +182,7 @@ fun ProductItem(
                     Text(
                         text = product.description,
                         fontSize = 12.sp,
-                        color = Color(0xFF9E9E9E),
+                        color = OwnerColors.TextTertiary,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -198,7 +199,7 @@ fun ProductItem(
                         text = "${priceFormatter.format(product.price.toLong())}đ",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (product.isAvailable) Color(0xFFFF6B35) else Color(0xFFBDBDBD),
+                        color = if (product.isAvailable) OwnerColors.Primary else OwnerColors.BorderLight,
                         textDecoration = if (product.isAvailable) TextDecoration.None else TextDecoration.LineThrough
                     )
 
@@ -220,7 +221,7 @@ fun ProductItem(
                                 Text(
                                     text = String.format("%.1f", product.rating),
                                     fontSize = 12.sp,
-                                    color = Color(0xFF757575)
+                                    color = OwnerColors.TextSecondary
                                 )
                             }
                         }
@@ -230,7 +231,7 @@ fun ProductItem(
                             Text(
                                 text = "Đã bán: ${product.soldCount}",
                                 fontSize = 12.sp,
-                                color = Color(0xFF757575)
+                                color = OwnerColors.TextSecondary
                             )
                         }
 
@@ -240,13 +241,13 @@ fun ProductItem(
                                 Icons.Default.Schedule,
                                 contentDescription = null,
                                 modifier = Modifier.size(14.dp),
-                                tint = Color(0xFF757575)
+                                tint = OwnerColors.TextSecondary
                             )
                             Spacer(modifier = Modifier.width(2.dp))
                             Text(
                                 text = "${product.preparationTime}p",
                                 fontSize = 12.sp,
-                                color = Color(0xFF757575)
+                                color = OwnerColors.TextSecondary
                             )
                         }
                     }
@@ -265,7 +266,7 @@ fun ProductItem(
                         .size(36.dp)
                         .background(
                             color = if (product.isAvailable)
-                                Color(0xFFE8F5E9) else Color(0xFFFFF3E0),
+                                OwnerColors.SuccessLight else OwnerColors.WarningLight,
                             shape = RoundedCornerShape(8.dp)
                         )
                 ) {
@@ -273,7 +274,7 @@ fun ProductItem(
                         imageVector = if (product.isAvailable)
                             Icons.Default.VisibilityOff else Icons.Default.Visibility,
                         contentDescription = if (product.isAvailable) "Ẩn sản phẩm" else "Hiện sản phẩm",
-                        tint = if (product.isAvailable) Color(0xFF4CAF50) else Color(0xFFFF9800),
+                        tint = if (product.isAvailable) OwnerColors.Success else OwnerColors.Warning,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -285,14 +286,14 @@ fun ProductItem(
                         modifier = Modifier
                             .size(36.dp)
                             .background(
-                                color = Color(0xFFFFEBEE),
+                                color = OwnerColors.ErrorLight,
                                 shape = RoundedCornerShape(8.dp)
                             )
                     ) {
                         Icon(
                             Icons.Default.DeleteForever,
                             contentDescription = "Xóa vĩnh viễn",
-                            tint = Color(0xFFF44336),
+                            tint = OwnerColors.Error,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -309,7 +310,7 @@ fun ProductItem(
                 Icon(
                     Icons.Default.Warning,
                     contentDescription = null,
-                    tint = Color(0xFFF44336),
+                    tint = OwnerColors.Error,
                     modifier = Modifier.size(48.dp)
                 )
             },
@@ -325,7 +326,7 @@ fun ProductItem(
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         "⚠️ Hành động này không thể hoàn tác!",
-                        color = Color(0xFFF44336),
+                        color = OwnerColors.Error,
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -338,7 +339,7 @@ fun ProductItem(
                         onDelete()
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFFF44336)
+                        containerColor = OwnerColors.Error
                     )
                 ) {
                     Icon(
@@ -374,11 +375,11 @@ fun StatusBadge(
             .background(
                 brush = if (isAvailable) {
                     Brush.horizontalGradient(
-                        colors = listOf(Color(0xFF4CAF50), Color(0xFF66BB6A))
+                        colors = listOf(OwnerColors.Success, Color(0xFF66BB6A))
                     )
                 } else {
                     Brush.horizontalGradient(
-                        colors = listOf(Color(0xFFE53935), Color(0xFFEF5350))
+                        colors = listOf(OwnerColors.Error, Color(0xFFEF5350))
                     )
                 },
                 shape = RoundedCornerShape(8.dp)

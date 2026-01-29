@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.data.model.owner.shipper.ApplicationStatus
+import com.example.foodapp.pages.owner.theme.OwnerColors
+import com.example.foodapp.pages.owner.theme.OwnerDimens
 
 /**
  * Màn hình quản lý Shipper
@@ -64,7 +66,7 @@ fun ShippersScreen(
                 onRefresh = { viewModel.refreshCurrentTab() }
             )
         },
-        containerColor = Color(0xFFF5F5F5)
+        containerColor = OwnerColors.Background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -74,8 +76,8 @@ fun ShippersScreen(
             // Tabs
             TabRow(
                 selectedTabIndex = uiState.selectedTab,
-                containerColor = Color.White,
-                contentColor = Color(0xFFFF6B35)
+                containerColor = OwnerColors.Surface,
+                contentColor = OwnerColors.Primary
             ) {
                 Tab(
                     selected = uiState.selectedTab == 0,
@@ -89,8 +91,8 @@ fun ShippersScreen(
                             if (stats.pendingApplications > 0) {
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Badge(
-                                    containerColor = Color(0xFFFF6B35),
-                                    contentColor = Color.White
+                                    containerColor = OwnerColors.Primary,
+                                    contentColor = OwnerColors.Surface
                                 ) {
                                     Text("${stats.pendingApplications}")
                                 }
@@ -118,9 +120,9 @@ fun ShippersScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator(color = Color(0xFFFF6B35))
+                            CircularProgressIndicator(color = OwnerColors.Primary)
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text("Đang tải...", color = Color.Gray)
+                            Text("Đang tải...", color = OwnerColors.TextSecondary)
                         }
                     }
                 } else {
@@ -172,13 +174,13 @@ private fun ApplicationsTab(
                     StatsCard(
                         title = "Tổng đơn",
                         value = stats.totalApplications.toString(),
-                        color = Color(0xFFFF6B35),
+                        color = OwnerColors.Primary,
                         modifier = Modifier.weight(1f)
                     )
                     StatsCard(
                         title = "Chờ duyệt",
                         value = stats.pendingApplications.toString(),
-                        color = Color(0xFFFF9800),
+                        color = OwnerColors.Warning,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -227,7 +229,7 @@ private fun ApplicationsTab(
                                 Icons.Default.Assignment,
                                 contentDescription = null,
                                 modifier = Modifier.size(64.dp),
-                                tint = Color(0xFFBDBDBD)
+                                tint = OwnerColors.BorderLight
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
@@ -236,7 +238,7 @@ private fun ApplicationsTab(
                                 else
                                     "Chưa có đơn xin làm shipper",
                                 fontSize = 16.sp,
-                                color = Color.Gray
+                                color = OwnerColors.TextSecondary
                             )
                         }
                     }
@@ -286,19 +288,19 @@ private fun ShippersTab(
                     StatsCard(
                         title = "Tổng shipper",
                         value = stats.totalShippers.toString(),
-                        color = Color(0xFF4CAF50),
+                        color = OwnerColors.Success,
                         modifier = Modifier.weight(1f)
                     )
                     StatsCard(
                         title = "Sẵn sàng",
                         value = stats.availableShippers.toString(),
-                        color = Color(0xFF2196F3),
+                        color = OwnerColors.Info,
                         modifier = Modifier.weight(1f)
                     )
                     StatsCard(
                         title = "Đang giao",
                         value = stats.busyShippers.toString(),
-                        color = Color(0xFFFF9800),
+                        color = OwnerColors.Warning,
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -318,7 +320,7 @@ private fun ShippersTab(
                                 Icons.Default.DeliveryDining,
                                 contentDescription = null,
                                 modifier = Modifier.size(64.dp),
-                                tint = Color(0xFFBDBDBD)
+                                tint = OwnerColors.BorderLight
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
@@ -327,7 +329,7 @@ private fun ShippersTab(
                                 else
                                     "Chưa có shipper nào",
                                 fontSize = 16.sp,
-                                color = Color.Gray
+                                color = OwnerColors.TextSecondary
                             )
                         }
                     }
@@ -374,7 +376,7 @@ private fun StatsCard(
             Text(
                 title,
                 fontSize = 12.sp,
-                color = Color(0xFF757575)
+                color = OwnerColors.TextSecondary
             )
         }
     }
@@ -391,16 +393,16 @@ private fun FilterChipStatus(
         onClick = onClick,
         label = { Text(label, fontSize = 13.sp) },
         colors = FilterChipDefaults.filterChipColors(
-            selectedContainerColor = Color(0xFFFF6B35),
-            selectedLabelColor = Color.White,
-            containerColor = Color.White,
-            labelColor = Color(0xFF757575)
+            selectedContainerColor = OwnerColors.Primary,
+            selectedLabelColor = OwnerColors.Surface,
+            containerColor = OwnerColors.Surface,
+            labelColor = OwnerColors.TextSecondary
         ),
         border = FilterChipDefaults.filterChipBorder(
             enabled = true,
             selected = isSelected,
-            borderColor = if (isSelected) Color(0xFFFF6B35) else Color(0xFFE0E0E0),
-            selectedBorderColor = Color(0xFFFF6B35)
+            borderColor = if (isSelected) OwnerColors.Primary else OwnerColors.Divider,
+            selectedBorderColor = OwnerColors.Primary
         )
     )
 }

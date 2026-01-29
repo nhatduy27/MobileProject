@@ -202,8 +202,8 @@ export class ConfigService {
     if (!key) {
       throw new Error(
         'Missing GOOGLE_ROUTES_API_KEY environment variable. ' +
-        'Please configure in Backend/.env for local development or ' +
-        'set as Cloud Functions secret for production deployment.'
+          'Please configure in Backend/.env for local development or ' +
+          'set as Cloud Functions secret for production deployment.',
       );
     }
     return key;

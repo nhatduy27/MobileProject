@@ -112,7 +112,8 @@ export class GoogleRoutesService {
         headers: {
           'Content-Type': 'application/json',
           'X-Goog-Api-Key': this.apiKey,
-          'X-Goog-FieldMask': 'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.optimizedIntermediateWaypointIndex',
+          'X-Goog-FieldMask':
+            'routes.duration,routes.distanceMeters,routes.polyline.encodedPolyline,routes.optimizedIntermediateWaypointIndex',
         },
         timeout: 10000, // 10 second timeout
       });
@@ -128,7 +129,8 @@ export class GoogleRoutesService {
       const durationSeconds = this.parseDuration(route.duration);
 
       // Get optimized waypoint order (indices)
-      const waypointOrder: number[] = route.optimizedIntermediateWaypointIndex || waypoints.map((_, i) => i);
+      const waypointOrder: number[] =
+        route.optimizedIntermediateWaypointIndex || waypoints.map((_, i) => i);
 
       // Optional: extract polyline
       const polyline = route.polyline?.encodedPolyline;
@@ -176,9 +178,13 @@ export class GoogleRoutesService {
       if (status === 400) {
         throw new InternalServerErrorException('Invalid route request. Please check locations.');
       } else if (status === 401 || status === 403) {
-        throw new InternalServerErrorException('Google Routes API authentication failed. Check API key.');
+        throw new InternalServerErrorException(
+          'Google Routes API authentication failed. Check API key.',
+        );
       } else if (status === 429) {
-        throw new InternalServerErrorException('Route optimization temporarily unavailable. Please try again.');
+        throw new InternalServerErrorException(
+          'Route optimization temporarily unavailable. Please try again.',
+        );
       } else {
         throw new InternalServerErrorException('Route optimization failed. Please try again.');
       }

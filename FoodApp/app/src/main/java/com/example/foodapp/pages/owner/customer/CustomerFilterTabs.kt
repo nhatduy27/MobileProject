@@ -20,57 +20,57 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.pages.owner.theme.OwnerColors
 
 @Composable
 fun CustomerFilterTabs(
-    selectedFilter: String,
-    onFilterSelected: (String) -> Unit
+    selectedFilter: BuyerFilter,
+    onFilterSelected: (BuyerFilter) -> Unit
 ) {
     val scrollState = rememberScrollState()
-    val tabs = listOf("Tất cả", "VIP", "Thường xuyên", "Mới")
+    val tabs = BuyerFilter.values().toList()
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White) // Nền tổng thể trắng sạch
+            .background(OwnerColors.Surface)
             .horizontalScroll(scrollState)
-            .padding(vertical = 12.dp, horizontal = 16.dp), // Padding thoáng hơn
-        horizontalArrangement = Arrangement.spacedBy(10.dp) // Khoảng cách giữa các nút
+            .padding(vertical = 12.dp, horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        tabs.forEach { title ->
-            val isSelected = selectedFilter == title
+        tabs.forEach { filter ->
+            val isSelected = selectedFilter == filter
 
-            // Màu sắc (Có animation nhẹ)
             val backgroundColor by animateColorAsState(
-                targetValue = if (isSelected) Color(0xFFFF6B35) else Color.White,
+                targetValue = if (isSelected) OwnerColors.Primary else OwnerColors.Surface,
                 animationSpec = tween(durationMillis = 300, easing = LinearEasing),
                 label = "bgColor"
             )
             val contentColor by animateColorAsState(
-                targetValue = if (isSelected) Color.White else Color(0xFF616161),
+                targetValue = if (isSelected) OwnerColors.Surface else OwnerColors.TextSecondary,
                 label = "textColor"
             )
             val borderColor by animateColorAsState(
-                targetValue = if (isSelected) Color(0xFFFF6B35) else Color(0xFFE0E0E0),
+                targetValue = if (isSelected) OwnerColors.Primary else OwnerColors.Divider,
                 label = "borderColor"
             )
 
             Box(
                 modifier = Modifier
-                    .clip(CircleShape) // Bo tròn hoàn toàn (hình viên thuốc)
+                    .clip(CircleShape)
                     .background(backgroundColor)
                     .border(
                         width = 1.dp,
-                        color = borderColor, // Border chuyển màu mượt mà
+                        color = borderColor,
                         shape = CircleShape
                     )
-                    .clickable { onFilterSelected(title) }
-                    .padding(horizontal = 24.dp, vertical = 10.dp) // Padding bên trong nút lớn hơn chút cho dễ bấm
+                    .clickable { onFilterSelected(filter) }
+                    .padding(horizontal = 24.dp, vertical = 10.dp)
             ) {
                 Text(
-                    text = title,
+                    text = filter.displayName,
                     fontSize = 14.sp,
-                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium, // Chữ đậm hơn
+                    fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
                     color = contentColor
                 )
             }
@@ -83,8 +83,8 @@ fun CustomerFilterTabs(
 @Composable
 fun PreviewFilterTabs() {
     Column {
-        CustomerFilterTabs(selectedFilter = "Tất cả", onFilterSelected = {})
+        CustomerFilterTabs(selectedFilter = BuyerFilter.ALL, onFilterSelected = {})
         Spacer(modifier = Modifier.height(10.dp))
-        CustomerFilterTabs(selectedFilter = "VIP", onFilterSelected = {})
+        CustomerFilterTabs(selectedFilter = BuyerFilter.VIP, onFilterSelected = {})
     }
 }

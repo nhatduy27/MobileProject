@@ -30,7 +30,7 @@ export interface TripLocation {
 export interface TripWaypoint {
   buildingCode: string;
   location: TripLocation;
-  order: number; // 1-based order in optimized route
+  order: number; // 1-based visiting order (1st stop, 2nd stop, 3rd stop...)
 }
 
 /** Order associated with trip */
@@ -38,6 +38,7 @@ export interface TripOrder {
   orderId: string;
   buildingCode: string;
   tripDeliveryStatus: TripDeliveryStatus;
+  stopIndex: number; // 1-based stop number matching waypoint.order (maps order to waypoint)
 }
 
 /** Route optimization result */
@@ -45,7 +46,7 @@ export interface TripRoute {
   distance: number; // meters
   duration: number; // seconds
   polyline?: string; // encoded polyline (optional)
-  waypointOrder: number[]; // Original index order after optimization
+  waypointOrder: number[]; // Sequential [0,1,2,...] - waypoints array is already in optimized visiting order
 }
 
 /** Shipper Trip Document */
@@ -65,7 +66,7 @@ export interface ShipperTrip {
   /** Return destination (hub/gate or same as origin) */
   returnTo: TripLocation;
 
-  /** Optimized waypoints in order */
+  /** Optimized waypoints in visiting order (waypoints[0] = 1st stop, waypoints[1] = 2nd stop, etc.) */
   waypoints: TripWaypoint[];
 
   /** Associated orders */
@@ -98,14 +99,20 @@ export interface ShipperTrip {
   /** Trip finish timestamp (when shipper completes) */
   finishedAt?: FirebaseFirestore.Timestamp;
 
+  /** Trip cancellation timestamp */
+  cancelledAt?: FirebaseFirestore.Timestamp;
+
+  /** Reason for cancellation */
+  cancelReason?: string;
+
   /**
    * TODO (GPS-011 - Phase 8): Realtime Location Tracking
-   * 
+   *
    * Add the following fields for live shipper tracking:
-   * 
+   *
    * currentLocation?: TripLocation;
    * lastLocationUpdate?: FirebaseFirestore.Timestamp;
-   * 
+   *
    * Implementation notes:
    * - Mobile app sends location every 30 seconds while trip STARTED
    * - Add POST /api/gps/update-location endpoint

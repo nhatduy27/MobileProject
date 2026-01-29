@@ -42,7 +42,7 @@ export function formatTrend(
   const trendPercent = ((currentValue - previousValue) / previousValue) * 100;
   const absPercent = Math.abs(trendPercent);
   const arrow = trendPercent >= 0 ? '↑' : '↓';
-  
+
   return `${arrow} ${Math.round(absPercent)}% so với ${periodLabel}`;
 }
 

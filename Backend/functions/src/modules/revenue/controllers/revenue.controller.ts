@@ -204,7 +204,7 @@ export class RevenueController {
       });
     } catch (error) {
       console.error('DEBUG_ERROR:', error); // Handle known errors
-      const err = error as any; 
+      const err = error as any;
 
       if (err.response) {
         throw error;

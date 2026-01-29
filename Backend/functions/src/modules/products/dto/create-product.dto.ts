@@ -1,5 +1,6 @@
 import { IsString, IsNotEmpty, IsNumber, Min, MaxLength, IsInt } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { Transform } from 'class-transformer';
 
 export class CreateProductDto {
   @ApiProperty({ example: 'Cơm sườn nướng', description: 'Product name' })
@@ -18,7 +19,11 @@ export class CreateProductDto {
   description: string;
 
   @ApiProperty({ example: 35000, description: 'Price in VND' })
-  @IsNumber()
+  @Transform(({ value }) => {
+    const parsed = parseFloat(value);
+    return isNaN(parsed) ? value : parsed;
+  })
+  @IsNumber({}, { message: 'Giá phải là số' })
   @Min(1000, { message: 'Giá tối thiểu 1,000đ' })
   price: number;
 
@@ -35,7 +40,12 @@ export class CreateProductDto {
   image: any;
 
   @ApiProperty({ example: 15, description: 'Preparation time in minutes' })
+  @Transform(({ value }) => {
+    const parsed = parseInt(value, 10);
+    return isNaN(parsed) ? value : parsed;
+  })
   @IsInt({ message: 'Thời gian chuẩn bị phải là số nguyên' })
   @Min(5, { message: 'Thời gian chuẩn bị tối thiểu 5 phút' })
   preparationTime: number;
 }
+

@@ -41,6 +41,8 @@ export class DeliveryPointsRepository {
       return result;
     }
 
+    this.logger.log(`Querying delivery points for building codes: ${buildingCodes.join(', ')}`);
+
     // Firestore 'in' query limit is 10, so batch if needed
     const batchSize = 10;
     const batches: string[][] = [];
@@ -50,17 +52,23 @@ export class DeliveryPointsRepository {
     }
 
     for (const batch of batches) {
+      this.logger.log(`Querying batch: ${batch.join(', ')}`);
       const snapshot = await this.firestore
         .collection(this.collectionName)
         .where('buildingCode', 'in', batch)
         .get();
 
+      this.logger.log(`Found ${snapshot.docs.length} documents in this batch`);
       snapshot.docs.forEach((doc) => {
         const data = doc.data() as DeliveryPoint;
+        this.logger.log(`Loaded delivery point: ${data.buildingCode} (doc ID: ${doc.id})`);
         result.set(data.buildingCode, data);
       });
     }
 
+    this.logger.log(
+      `Total delivery points loaded: ${result.size}, keys: ${Array.from(result.keys()).join(', ')}`,
+    );
     return result;
   }
 

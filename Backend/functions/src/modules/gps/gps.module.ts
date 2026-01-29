@@ -19,12 +19,7 @@ import { DeliveryPointsModule } from '../delivery-points/delivery-points.module'
 @Module({
   imports: [CoreModule, OrdersModule, ShippersModule, DeliveryPointsModule],
   controllers: [GpsController],
-  providers: [
-    GpsService,
-    GoogleRoutesService,
-    DeliveryPointsRepository,
-    ShipperTripsRepository,
-  ],
+  providers: [GpsService, GoogleRoutesService, DeliveryPointsRepository, ShipperTripsRepository],
   exports: [GpsService],
 })
 export class GpsModule {}

@@ -100,6 +100,15 @@ export class OwnerProductsController {
     @Body() dto: CreateProductDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
+    // Debug logging
+    console.log('=== CREATE PRODUCT REQUEST ===');
+    console.log('ownerId:', ownerId);
+    console.log('dto:', JSON.stringify(dto, null, 2));
+    console.log('dto.price:', dto.price, 'type:', typeof dto.price);
+    console.log('dto.preparationTime:', dto.preparationTime, 'type:', typeof dto.preparationTime);
+    console.log('file:', file ? { filename: file.originalname, size: file.size } : 'No file');
+    console.log('==============================');
+    
     if (!file) {
       throw new BadRequestException('Vui lòng upload ảnh sản phẩm');
     }

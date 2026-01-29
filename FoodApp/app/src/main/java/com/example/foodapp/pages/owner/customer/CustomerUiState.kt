@@ -1,27 +1,49 @@
 package com.example.foodapp.pages.owner.customer
 
-import com.example.foodapp.data.model.owner.Customer
+import com.example.foodapp.data.model.owner.buyer.BuyerDetail
+import com.example.foodapp.data.model.owner.buyer.BuyerListItem
+import com.example.foodapp.data.model.owner.buyer.BuyerTier
 
 /**
- * File này định nghĩa trạng thái giao diện (UI State) cho màn hình CustomerScreen.
- *
- * Nó sử dụng một 'data class' để đóng gói tất cả các thông tin cần thiết
- * để vẽ lên giao diện. Việc này giúp cho Composable (UI) trở nên "thụ động",
- * chỉ nhận dữ liệu và hiển thị, trong khi mọi logic xử lý được chuyển sang ViewModel.
+ * Filter options cho Buyer list
+ */
+enum class BuyerFilter(val apiValue: String, val displayName: String) {
+    ALL("ALL", "Tất cả"),
+    VIP("VIP", "VIP"),
+    NORMAL("NORMAL", "Thường xuyên"),
+    NEW("NEW", "Mới");
+    
+    companion object {
+        fun fromDisplayName(name: String): BuyerFilter {
+            return values().find { it.displayName == name } ?: ALL
+        }
+    }
+}
+
+/**
+ * UI state cho màn hình khách hàng (Buyer)
  */
 data class CustomerUiState(
-    // Danh sách khách hàng sẽ được hiển thị trên màn hình
-    val customers: List<Customer> = emptyList(),
-
-    // Bộ lọc đang được chọn ("Tất cả", "VIP", ...)
-    val selectedFilter: String = "Tất cả",
-
+    // Danh sách buyers từ API
+    val buyers: List<BuyerListItem> = emptyList(),
+    
+    // Buyer detail khi xem chi tiết
+    val selectedBuyer: BuyerDetail? = null,
+    
+    // Bộ lọc đang được chọn
+    val selectedFilter: BuyerFilter = BuyerFilter.ALL,
+    
+    // Search query
     val searchQuery: String = "",
-
-
-    // Cờ báo hiệu màn hình đang trong quá trình tải dữ liệu
+    
+    // Pagination
+    val currentPage: Int = 1,
+    val totalPages: Int = 0,
+    val totalBuyers: Int = 0,
+    
+    // Loading & Error states
     val isLoading: Boolean = false,
-
-    // Thông báo lỗi nếu có sự cố xảy ra
+    val isLoadingMore: Boolean = false,
+    val isLoadingDetail: Boolean = false,
     val errorMessage: String? = null
 )

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,66 +29,59 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.activity.compose.BackHandler
-import com.example.foodapp.data.model.owner.Customer
+import com.example.foodapp.data.model.owner.buyer.BuyerListItem
+import com.example.foodapp.data.model.owner.buyer.BuyerTier
 import com.example.foodapp.pages.owner.notifications.NotificationBell
+import com.example.foodapp.pages.owner.theme.OwnerColors
+import com.example.foodapp.pages.owner.theme.OwnerDimens
 
 // --- 1. COMPONENT ĐIỀU HƯỚNG CHÍNH ---
 @Composable
 fun CustomerScreenMain(onMenuClick: () -> Unit) {
-    // State để quản lý màn hình hiện tại: "LIST" (danh sách) hoặc "ADD" (thêm mới)
     var currentScreen by remember { mutableStateOf("LIST") }
-
-    // Lưu khách hàng đang được chọn (khi bấm vào từ danh sách)
-    var selectedCustomer by remember { mutableStateOf<Customer?>(null) }
-
-    // Cờ xác định đang ở chế độ chỉ xem (true) hay thêm/sửa (false)
+    var selectedBuyerId by remember { mutableStateOf<String?>(null) }
     var isReadOnly by remember { mutableStateOf(false) }
 
     BackHandler(enabled = currentScreen == "ADD") {
         currentScreen = "LIST"
-        selectedCustomer = null
+        selectedBuyerId = null
         isReadOnly = false
     }
 
-    // AnimatedContent tạo hiệu ứng chuyển đổi mượt mà giữa các màn hình
     AnimatedContent(
         targetState = currentScreen,
         label = "ScreenTransition",
         transitionSpec = {
-            // Định nghĩa hiệu ứng trượt ngang
             (fadeIn(tween(300)) + slideInHorizontally { fullWidth -> fullWidth })
                 .togetherWith(fadeOut(tween(300)) + slideOutHorizontally { fullWidth -> -fullWidth })
         }
     ) { screen ->
-        // Dựa vào state để quyết định hiển thị màn hình nào
         when (screen) {
             "LIST" -> CustomerScreen(
-                // Truyền một hàm để khi bấm nút, state sẽ đổi thành "ADD" (thêm mới)
                 onNavigateToAdd = {
-                    selectedCustomer = null
+                    selectedBuyerId = null
                     isReadOnly = false
                     currentScreen = "ADD"
                 },
-                // Khi bấm vào một khách hàng cụ thể -> mở màn hình xem chi tiết (readonly)
-                onCustomerClick = { customer ->
-                    selectedCustomer = customer
+                onBuyerClick = { buyer ->
+                    selectedBuyerId = buyer.customerId
                     isReadOnly = true
                     currentScreen = "ADD"
                 },
                 onMenuClick = onMenuClick
             )
             "ADD" -> AddCustomerScreen(
-                // Truyền một hàm để khi bấm nút Back, state sẽ đổi lại thành "LIST"
                 onBack = {
                     currentScreen = "LIST"
-                    selectedCustomer = null
+                    selectedBuyerId = null
                     isReadOnly = false
                 },
-                customer = selectedCustomer,
+                customerId = selectedBuyerId,
                 isReadOnly = isReadOnly
             )
         }
@@ -99,18 +93,25 @@ fun CustomerScreenMain(onMenuClick: () -> Unit) {
 @Composable
 fun CustomerScreen(
     customerViewModel: CustomerViewModel = viewModel(),
-    onNavigateToAdd: () -> Unit, // Nhận hàm điều hướng từ CustomerScreenMain
-    onCustomerClick: (Customer) -> Unit, // Khi bấm vào 1 khách hàng trong danh sách
+    onNavigateToAdd: () -> Unit,
+    onBuyerClick: (BuyerListItem) -> Unit,
     onMenuClick: () -> Unit
 ) {
     val uiState by customerViewModel.uiState.collectAsState()
-
-    // Logic lọc danh sách
-    val filteredCustomers = uiState.customers.filter { customer ->
-        val typeMatches = uiState.selectedFilter == "Tất cả" || customer.type == uiState.selectedFilter
-        val queryMatches = customer.name.contains(uiState.searchQuery, ignoreCase = true) ||
-                customer.contact.contains(uiState.searchQuery, ignoreCase = true)
-        typeMatches && queryMatches
+    val listState = rememberLazyListState()
+    
+    // Detect when reaching end of list for pagination
+    val shouldLoadMore = remember {
+        derivedStateOf {
+            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            lastVisibleItem >= uiState.buyers.size - 5
+        }
+    }
+    
+    LaunchedEffect(shouldLoadMore.value) {
+        if (shouldLoadMore.value && !uiState.isLoadingMore && uiState.currentPage < uiState.totalPages) {
+            customerViewModel.loadMoreBuyers()
+        }
     }
 
     Scaffold(
@@ -122,18 +123,17 @@ fun CustomerScreen(
             )
         },
         floatingActionButton = {
-            // Nút FAB gọi hàm onNavigateToAdd khi được bấm
             FloatingActionButton(
                 onClick = onNavigateToAdd,
-                containerColor = Color(0xFFFF6B35),
-                contentColor = Color.White,
+                containerColor = OwnerColors.Primary,
+                contentColor = OwnerColors.Surface,
                 shape = CircleShape,
                 elevation = FloatingActionButtonDefaults.elevation(4.dp)
             ) {
                 Icon(Icons.Filled.Add, contentDescription = "Thêm mới")
             }
         },
-        containerColor = Color(0xFFF9F9F9)
+        containerColor = OwnerColors.Background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -144,28 +144,108 @@ fun CustomerScreen(
                 selectedFilter = uiState.selectedFilter,
                 onFilterSelected = customerViewModel::onFilterChanged
             )
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(bottom = 80.dp) // Chừa chỗ cho FAB
-            ) {
-                // Stats ở đầu list để cuộn cùng danh sách
-                item {
-                    CustomerStats(
-                        uiState.customers.size,
-                        uiState.customers.count { it.type == "VIP" },
-                        uiState.customers.count { it.type == "Thường xuyên" },
-                        uiState.customers.count { it.type == "Mới" }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+            
+            // Loading state
+            if (uiState.isLoading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = OwnerColors.Primary)
                 }
-                items(items = filteredCustomers, key = { it.id }) { customer ->
-                    CustomerCard(
-                        customer = customer,
-                        onClick = { onCustomerClick(customer) }
+            }
+            // Error state
+            else if (uiState.errorMessage != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = uiState.errorMessage ?: "Đã xảy ra lỗi",
+                            color = OwnerColors.Error,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { customerViewModel.refresh() },
+                            colors = ButtonDefaults.buttonColors(containerColor = OwnerColors.Primary)
+                        ) {
+                            Text("Thử lại")
+                        }
+                    }
+                }
+            }
+            // Empty state
+            else if (uiState.buyers.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Chưa có khách hàng nào",
+                        color = OwnerColors.TextSecondary,
+                        textAlign = TextAlign.Center
                     )
+                }
+            }
+            // Content
+            else {
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(bottom = 80.dp)
+                ) {
+                    // Stats
+                    item {
+                        val vipCount = uiState.buyers.count { it.tier == BuyerTier.VIP }
+                        val normalCount = uiState.buyers.count { it.tier == BuyerTier.NORMAL }
+                        val newCount = uiState.buyers.count { it.tier == BuyerTier.NEW }
+                        
+                        CustomerStats(
+                            totalCustomers = uiState.totalBuyers,
+                            vipCustomers = vipCount,
+                            regularCustomers = normalCount,
+                            newCustomers = newCount
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    
+                    items(items = uiState.buyers, key = { it.customerId }) { buyer ->
+                        CustomerCard(
+                            buyer = buyer,
+                            onClick = { onBuyerClick(buyer) }
+                        )
+                    }
+                    
+                    // Loading more indicator
+                    if (uiState.isLoadingMore) {
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    color = OwnerColors.Primary,
+                                    modifier = Modifier.size(24.dp),
+                                    strokeWidth = 2.dp
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -193,7 +273,7 @@ fun ExpandableSearchHeader(
         modifier = Modifier
             .fillMaxWidth()
             .height(64.dp)
-            .background(Color.White)
+            .background(OwnerColors.Surface)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -210,14 +290,14 @@ fun ExpandableSearchHeader(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color(0xFF1A1A1A))
+                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = OwnerColors.TextPrimary)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Khách hàng",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1A1A)
+                        color = OwnerColors.TextPrimary
                     )
                 }
                 
@@ -227,10 +307,10 @@ fun ExpandableSearchHeader(
                 IconButton(
                     onClick = { isSearchActive = true },
                     modifier = Modifier
-                        .background(Color(0xFFF5F5F5), CircleShape)
+                        .background(OwnerColors.SurfaceVariant, CircleShape)
                         .size(40.dp)
                 ) {
-                    Icon(Icons.Default.Search, contentDescription = "Search", tint = Color(0xFF1A1A1A))
+                    Icon(Icons.Default.Search, contentDescription = "Search", tint = OwnerColors.TextPrimary)
                 }
             }
         }
@@ -244,7 +324,7 @@ fun ExpandableSearchHeader(
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { isSearchActive = false }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF1A1A1A))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = OwnerColors.TextPrimary)
                     }
                     TextField(
                         value = query,
@@ -260,7 +340,7 @@ fun ExpandableSearchHeader(
                             unfocusedContainerColor = Color(0xFFF5F5F5),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
-                            cursorColor = Color(0xFFFF6B35)
+                            cursorColor = OwnerColors.Primary
                         ),
                         shape = CircleShape,
                         keyboardOptions = KeyboardOptions(autoCorrect = false, imeAction = ImeAction.Search),

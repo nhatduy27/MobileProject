@@ -1,4 +1,13 @@
-import { Injectable, Logger, BadRequestException, NotFoundException, ForbiddenException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+  ConflictException,
+  Inject,
+} from '@nestjs/common';
+import { Firestore, Timestamp } from 'firebase-admin/firestore';
 import { GoogleRoutesService } from './google-routes.service';
 import { DeliveryPointsRepository } from '../repositories/delivery-points.repository';
 import { ShipperTripsRepository } from '../repositories/shipper-trips.repository';
@@ -13,6 +22,7 @@ import {
 } from '../entities/shipper-trip.entity';
 import { CreateOptimizedTripDto } from '../dto/create-optimized-trip.dto';
 import { PaginatedTripsDto } from '../dto/paginated-trips.dto';
+import { OrderStatus } from '../../orders/entities/order.entity';
 
 /**
  * GPS Service
@@ -29,7 +39,37 @@ export class GpsService {
     private readonly shipperTripsRepository: ShipperTripsRepository,
     private readonly ordersService: OrdersService,
     private readonly deliveryPointsService: DeliveryPointsService,
+    @Inject('FIRESTORE') private readonly firestore: Firestore,
   ) {}
+
+  /**
+   * Serialize Firestore Timestamp to ISO string
+   * Handles both Firestore Timestamp objects and Date objects
+   */
+  private serializeTimestamp(
+    timestamp: FirebaseFirestore.Timestamp | Date | undefined,
+  ): string | undefined {
+    if (!timestamp) return undefined;
+    if (timestamp instanceof Date) return timestamp.toISOString();
+    if (typeof (timestamp as any).toDate === 'function') {
+      return (timestamp as FirebaseFirestore.Timestamp).toDate().toISOString();
+    }
+    return undefined;
+  }
+
+  /**
+   * Serialize trip timestamps to ISO strings for API response consistency
+   */
+  private serializeTripTimestamps(trip: ShipperTrip): ShipperTrip {
+    return {
+      ...trip,
+      createdAt: this.serializeTimestamp(trip.createdAt) as any,
+      updatedAt: this.serializeTimestamp(trip.updatedAt) as any,
+      startedAt: this.serializeTimestamp(trip.startedAt) as any,
+      finishedAt: this.serializeTimestamp(trip.finishedAt) as any,
+      cancelledAt: this.serializeTimestamp(trip.cancelledAt) as any,
+    };
+  }
 
   /**
    * Create optimized trip for shipper
@@ -39,22 +79,30 @@ export class GpsService {
    * @returns Created trip with optimized route
    */
   async createOptimizedTrip(shipperId: string, dto: CreateOptimizedTripDto): Promise<ShipperTrip> {
-    this.logger.log(`Creating optimized trip for shipper ${shipperId} with ${dto.orderIds.length} orders`);
+    this.logger.log(
+      `Creating optimized trip for shipper ${shipperId} with ${dto.orderIds.length} orders`,
+    );
 
     // 1. Validate and fetch orders
     const orders = await this.validateOrders(dto.orderIds, shipperId);
+    this.logger.log(`Validated ${orders.length} orders`);
 
     // 2. Extract building codes from orders
     const buildingCodes = this.extractBuildingCodes(orders);
 
     if (buildingCodes.length === 0) {
-      throw new BadRequestException('No valid buildings found in orders. Ensure orders have building field.');
+      throw new BadRequestException(
+        'No valid buildings found in orders. Ensure orders have building field.',
+      );
     }
 
-    this.logger.log(`Extracted ${buildingCodes.length} unique buildings: ${buildingCodes.join(', ')}`);
+    this.logger.log(
+      `Extracted ${buildingCodes.length} unique buildings: ${buildingCodes.join(', ')}`,
+    );
 
     // 3. Fetch delivery points for buildings
     const deliveryPointsMap = await this.deliveryPointsRepository.getByBuildingCodes(buildingCodes);
+    this.logger.log(`Fetched ${deliveryPointsMap.size} delivery points from repository`);
 
     // Validate all buildings have delivery points
     const missingBuildings = buildingCodes.filter((code) => !deliveryPointsMap.has(code));
@@ -67,7 +115,17 @@ export class GpsService {
 
     // 4. Prepare waypoints for route optimization
     const waypoints = buildingCodes.map((code) => {
-      const point = deliveryPointsMap.get(code)!;
+      const point = deliveryPointsMap.get(code);
+      if (!point) {
+        this.logger.error(`Delivery point not found for building code: ${code}`);
+        throw new BadRequestException(`Delivery point not found for building: ${code}`);
+      }
+      if (!point.location) {
+        this.logger.error(
+          `Delivery point ${code} missing location field: ${JSON.stringify(point)}`,
+        );
+        throw new BadRequestException(`Delivery point ${code} missing location coordinates`);
+      }
       return {
         lat: point.location.lat,
         lng: point.location.lng,
@@ -79,44 +137,111 @@ export class GpsService {
 
     // 6. Call Google Routes API for route optimization
     this.logger.log('Calling Google Routes API for optimization...');
-    const routeResult = await this.googleRoutesService.computeOptimizedRoute(dto.origin, waypoints, returnTo);
+    const routeResult = await this.googleRoutesService.computeOptimizedRoute(
+      dto.origin,
+      waypoints,
+      returnTo,
+    );
 
     // 7. Build optimized waypoints with correct order
-    const optimizedWaypoints: TripWaypoint[] = routeResult.waypointOrder.map((originalIndex, newOrder) => {
-      const buildingCode = buildingCodes[originalIndex];
-      const point = deliveryPointsMap.get(buildingCode)!;
+    // Note: Google Routes API may return [-1] for single waypoint (no optimization needed)
+    // Filter out invalid indices and handle edge cases
+    let validWaypointOrder = routeResult.waypointOrder.filter(
+      (idx) => idx >= 0 && idx < buildingCodes.length,
+    );
+
+    // If no valid indices (e.g., all -1), use original order
+    // Note: Google Routes API returns [-1] for single waypoint (no optimization needed) - this is expected behavior
+    if (validWaypointOrder.length === 0) {
+      this.logger.log(
+        `Waypoint order from Google Routes API: [${routeResult.waypointOrder.join(', ')}]. Using original order (normal for single waypoint).`,
+      );
+      validWaypointOrder = buildingCodes.map((_, idx) => idx);
+    }
+
+    // IMPORTANT: Reorder waypoints array to match optimized visiting order
+    // This ensures waypoints[i].order matches the actual visiting sequence
+    // After this transformation:
+    // - waypoints[0] = first stop (order: 1)
+    // - waypoints[1] = second stop (order: 2)
+    // - etc.
+    const optimizedWaypoints: TripWaypoint[] = validWaypointOrder.map(
+      (originalIndex, visitingIndex) => {
+        const buildingCode = buildingCodes[originalIndex];
+        const point = deliveryPointsMap.get(buildingCode);
+
+        if (!point) {
+          this.logger.error(
+            `Delivery point not found for building code: ${buildingCode} at index ${originalIndex}`,
+          );
+          throw new BadRequestException(`Delivery point not found for building: ${buildingCode}`);
+        }
+
+        return {
+          buildingCode,
+          location: {
+            lat: point.location.lat,
+            lng: point.location.lng,
+            name: point.name,
+          },
+          order: visitingIndex + 1, // 1-based visiting order (1st, 2nd, 3rd...)
+        };
+      },
+    );
+
+    // 8. Map orders to trip orders with delivery status and stop index
+    // stopIndex maps each order to its corresponding waypoint (1-based)
+    // Multiple orders can share the same stopIndex if they go to the same building
+    const buildingToStopIndex = new Map<string, number>();
+    optimizedWaypoints.forEach((waypoint) => {
+      buildingToStopIndex.set(waypoint.buildingCode, waypoint.order);
+    });
+
+    const tripOrders: TripOrder[] = orders.map((order) => {
+      const buildingCode = order.deliveryAddress?.building || '';
+      const stopIndex = buildingToStopIndex.get(buildingCode) || 0;
 
       return {
+        orderId: order.id,
         buildingCode,
-        location: {
-          lat: point.location.lat,
-          lng: point.location.lng,
-          name: point.name,
-        },
-        order: newOrder + 1, // 1-based order
+        tripDeliveryStatus: TripDeliveryStatus.NOT_VISITED,
+        stopIndex, // Maps order to waypoint (1st stop, 2nd stop, etc.)
       };
     });
 
-    // 8. Map orders to trip orders with delivery status
-    const tripOrders: TripOrder[] = orders.map((order) => ({
-      orderId: order.id,
-      buildingCode: order.deliveryAddress?.building || '',
-      tripDeliveryStatus: TripDeliveryStatus.NOT_VISITED,
-    }));
+    // Sort orders by stopIndex (ascending), then by orderId for stability
+    tripOrders.sort((a, b) => {
+      if (a.stopIndex !== b.stopIndex) {
+        return a.stopIndex - b.stopIndex;
+      }
+      return a.orderId.localeCompare(b.orderId);
+    });
 
     // 9. Create trip document
+    // Convert DTO objects to plain objects for Firestore compatibility
+    // CRITICAL: Must spread all properties explicitly to avoid custom prototypes
     const tripData: Omit<ShipperTrip, 'id' | 'createdAt' | 'updatedAt'> = {
       shipperId,
       status: TripStatus.PENDING,
-      origin: dto.origin,
-      returnTo,
+      origin: {
+        lat: Number(dto.origin.lat),
+        lng: Number(dto.origin.lng),
+        ...(dto.origin.name && { name: String(dto.origin.name) }),
+      },
+      returnTo: {
+        lat: Number(returnTo.lat),
+        lng: Number(returnTo.lng),
+        ...(returnTo.name && { name: String(returnTo.name) }),
+      },
       waypoints: optimizedWaypoints,
       orders: tripOrders,
       route: {
         distance: routeResult.distance,
         duration: routeResult.duration,
         polyline: routeResult.polyline,
-        waypointOrder: routeResult.waypointOrder,
+        // waypointOrder is now sequential [0,1,2,...] since waypoints array is already in optimized order
+        // This eliminates confusion: waypoints[i] corresponds to visiting order i+1
+        waypointOrder: optimizedWaypoints.map((_, idx) => idx),
       },
       totalDistance: routeResult.distance,
       totalDuration: routeResult.duration,
@@ -155,7 +280,9 @@ export class GpsService {
 
         // Validate order status
         if (order.status === 'CANCELLED') {
-          throw new BadRequestException(`Order ${orderId} is cancelled and cannot be included in trip`);
+          throw new BadRequestException(
+            `Order ${orderId} is cancelled and cannot be included in trip`,
+          );
         }
 
         if (order.status === 'DELIVERED') {
@@ -204,7 +331,7 @@ export class GpsService {
    *
    * @param shipperId Shipper user ID
    * @param tripId Trip ID
-   * @returns Trip details
+   * @returns Trip details with serialized timestamps
    */
   async getMyTrip(shipperId: string, tripId: string): Promise<ShipperTrip> {
     const trip = await this.shipperTripsRepository.getById(tripId);
@@ -218,7 +345,8 @@ export class GpsService {
       throw new ForbiddenException('You do not have permission to view this trip');
     }
 
-    return trip;
+    // Serialize timestamps for consistent API response
+    return this.serializeTripTimestamps(trip);
   }
 
   /**
@@ -240,7 +368,9 @@ export class GpsService {
     const validPage = Math.max(1, page);
     const validLimit = Math.min(50, Math.max(1, limit));
 
-    this.logger.log(`Listing trips for shipper ${shipperId}: page=${validPage}, limit=${validLimit}, status=${status || 'all'}`);
+    this.logger.log(
+      `Listing trips for shipper ${shipperId}: page=${validPage}, limit=${validLimit}, status=${status || 'all'}`,
+    );
 
     // Get paginated results and total count
     const { trips, total } = await this.shipperTripsRepository.getByShipperIdPaginated(
@@ -250,18 +380,146 @@ export class GpsService {
       status,
     );
 
+    // Serialize timestamps for all trips
+    const serializedTrips = trips.map((trip) => this.serializeTripTimestamps(trip));
+
     // Calculate pagination metadata
     const totalPages = Math.ceil(total / validLimit);
     const hasNext = validPage < totalPages;
 
     return {
-      items: trips,
+      items: serializedTrips,
       page: validPage,
       limit: validLimit,
       total,
       totalPages,
       hasNext,
     };
+  }
+
+  /**
+   * Batch update orders to SHIPPING status
+   *
+   * Uses Firestore batch write for atomic updates.
+   * Validates shipper ownership and order status before updating.
+   *
+   * @param shipperId Shipper user ID
+   * @param tripOrders Array of trip orders
+   * @throws ConflictException if any order is not in READY status
+   * @throws ForbiddenException if shipper doesn't own any order
+   */
+  private async batchUpdateOrdersToShipping(
+    shipperId: string,
+    tripOrders: TripOrder[],
+  ): Promise<void> {
+    const batch = this.firestore.batch();
+    const now = Timestamp.now();
+    const orderIds = tripOrders.map((order) => order.orderId);
+
+    this.logger.log(
+      `Batch updating ${orderIds.length} orders to SHIPPING for shipper ${shipperId}`,
+    );
+
+    // Fetch all orders and validate
+    for (const orderId of orderIds) {
+      const orderRef = this.firestore.collection('orders').doc(orderId);
+      const orderDoc = await orderRef.get();
+
+      if (!orderDoc.exists) {
+        throw new NotFoundException(`Order ${orderId} not found`);
+      }
+
+      const orderData = orderDoc.data();
+
+      // Validate shipper ownership
+      if (orderData?.shipperId !== shipperId) {
+        throw new ForbiddenException(
+          `Order ${orderId} is not assigned to shipper ${shipperId}. ` +
+            `Current shipper: ${orderData?.shipperId || 'none'}`,
+        );
+      }
+
+      // Validate order status
+      if (orderData?.status !== OrderStatus.READY) {
+        throw new ConflictException(
+          `Order ${orderId} must be in READY status to start shipping. ` +
+            `Current status: ${orderData?.status}`,
+        );
+      }
+
+      // Add update to batch
+      batch.update(orderRef, {
+        status: OrderStatus.SHIPPING,
+        updatedAt: now,
+      });
+    }
+
+    // Commit all updates atomically
+    await batch.commit();
+    this.logger.log(`Successfully updated ${orderIds.length} orders to SHIPPING`);
+  }
+
+  /**
+   * Batch update orders to DELIVERED status
+   *
+   * Uses Firestore batch write for atomic updates.
+   * Validates shipper ownership and order status before updating.
+   *
+   * @param shipperId Shipper user ID
+   * @param tripOrders Array of trip orders
+   * @throws ConflictException if any order is not in SHIPPING status
+   * @throws ForbiddenException if shipper doesn't own any order
+   */
+  private async batchUpdateOrdersToDelivered(
+    shipperId: string,
+    tripOrders: TripOrder[],
+  ): Promise<void> {
+    const batch = this.firestore.batch();
+    const now = Timestamp.now();
+    const orderIds = tripOrders.map((order) => order.orderId);
+
+    this.logger.log(
+      `Batch updating ${orderIds.length} orders to DELIVERED for shipper ${shipperId}`,
+    );
+
+    // Fetch all orders and validate
+    for (const orderId of orderIds) {
+      const orderRef = this.firestore.collection('orders').doc(orderId);
+      const orderDoc = await orderRef.get();
+
+      if (!orderDoc.exists) {
+        throw new NotFoundException(`Order ${orderId} not found`);
+      }
+
+      const orderData = orderDoc.data();
+
+      // Validate shipper ownership
+      if (orderData?.shipperId !== shipperId) {
+        throw new ForbiddenException(
+          `Order ${orderId} is not assigned to shipper ${shipperId}. ` +
+            `Current shipper: ${orderData?.shipperId || 'none'}`,
+        );
+      }
+
+      // Validate order status
+      if (orderData?.status !== OrderStatus.SHIPPING) {
+        throw new ConflictException(
+          `Order ${orderId} must be in SHIPPING status to mark as delivered. ` +
+            `Current status: ${orderData?.status}`,
+        );
+      }
+
+      // Add update to batch
+      batch.update(orderRef, {
+        status: OrderStatus.DELIVERED,
+        deliveredAt: now,
+        updatedAt: now,
+      });
+    }
+
+    // Commit all updates atomically
+    await batch.commit();
+    this.logger.log(`Successfully updated ${orderIds.length} orders to DELIVERED`);
   }
 
   /**
@@ -281,13 +539,25 @@ export class GpsService {
       );
     }
 
-    // Update trip status
+    // Batch update all orders to SHIPPING status (atomic operation)
+    await this.batchUpdateOrdersToShipping(shipperId, trip.orders);
+
+    // Update trip status and set all tripDeliveryStatus to NOT_VISITED (reset for trip start)
+    const updatedOrders = trip.orders.map((order) => ({
+      ...order,
+      tripDeliveryStatus: TripDeliveryStatus.NOT_VISITED,
+    }));
+
     await this.shipperTripsRepository.update(tripId, {
       status: TripStatus.STARTED,
       startedAt: new Date() as any, // Will be replaced by serverTimestamp in repo
+      orders: updatedOrders,
     });
 
-    this.logger.log(`Trip ${tripId} started by shipper ${shipperId}`);
+    this.logger.log(
+      `Trip ${tripId} started by shipper ${shipperId}. ` +
+        `${trip.orders.length} orders updated to SHIPPING status.`,
+    );
 
     // Return updated trip
     return this.getMyTrip(shipperId, tripId);
@@ -300,7 +570,10 @@ export class GpsService {
    * @param tripId Trip ID
    * @returns Updated trip with delivery stats
    */
-  async finishTrip(shipperId: string, tripId: string): Promise<{ trip: ShipperTrip; ordersDelivered: number }> {
+  async finishTrip(
+    shipperId: string,
+    tripId: string,
+  ): Promise<{ trip: ShipperTrip; ordersDelivered: number }> {
     const trip = await this.getMyTrip(shipperId, tripId);
 
     // Validate state transition
@@ -310,27 +583,69 @@ export class GpsService {
       );
     }
 
-    // Count delivered orders (for stats)
-    const ordersDelivered = trip.orders.filter(
-      (order) => order.tripDeliveryStatus === TripDeliveryStatus.VISITED,
-    ).length;
+    // Batch update all orders to DELIVERED status (atomic operation)
+    await this.batchUpdateOrdersToDelivered(shipperId, trip.orders);
+
+    // Update all tripDeliveryStatus to VISITED on finish
+    const updatedOrders = trip.orders.map((order) => ({
+      ...order,
+      tripDeliveryStatus: TripDeliveryStatus.VISITED,
+    }));
 
     // Update trip status
     await this.shipperTripsRepository.update(tripId, {
       status: TripStatus.FINISHED,
       finishedAt: new Date() as any, // Will be replaced by serverTimestamp in repo
+      orders: updatedOrders,
     });
 
     this.logger.log(
-      `Trip ${tripId} finished by shipper ${shipperId}. Orders delivered: ${ordersDelivered}/${trip.totalOrders}`,
+      `Trip ${tripId} finished by shipper ${shipperId}. ` +
+        `${trip.orders.length} orders updated to DELIVERED status.`,
     );
 
     // Return updated trip
     const updatedTrip = await this.getMyTrip(shipperId, tripId);
     return {
       trip: updatedTrip,
-      ordersDelivered,
+      ordersDelivered: updatedTrip.orders.length,
     };
+  }
+
+  /**
+   * Cancel a trip (PENDING -> CANCELLED)
+   *
+   * Only PENDING trips can be cancelled.
+   * Does NOT update Orders collection status.
+   *
+   * @param shipperId Shipper user ID
+   * @param tripId Trip ID
+   * @param reason Optional cancellation reason
+   * @returns Updated trip
+   */
+  async cancelTrip(shipperId: string, tripId: string, reason?: string): Promise<ShipperTrip> {
+    const trip = await this.getMyTrip(shipperId, tripId);
+
+    // Only allow cancellation of PENDING trips
+    if (trip.status !== TripStatus.PENDING) {
+      throw new ConflictException(
+        `Cannot cancel trip. Trip is ${trip.status}. Only PENDING trips can be cancelled.`,
+      );
+    }
+
+    // Update trip status to CANCELLED
+    await this.shipperTripsRepository.update(tripId, {
+      status: TripStatus.CANCELLED,
+      cancelledAt: new Date() as any, // Will be replaced by serverTimestamp in repo
+      ...(reason && { cancelReason: reason }),
+    });
+
+    this.logger.log(
+      `Trip ${tripId} cancelled by shipper ${shipperId}.${reason ? ` Reason: ${reason}` : ''}`,
+    );
+
+    // Return updated trip
+    return this.getMyTrip(shipperId, tripId);
   }
 
   /**

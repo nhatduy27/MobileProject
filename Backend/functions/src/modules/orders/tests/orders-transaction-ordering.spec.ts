@@ -98,14 +98,16 @@ describe('Orders - Firestore Transaction Ordering', () => {
           provide: OrderStateMachineService,
           useValue: { validateTransition: jest.fn() },
         },
-        { provide: FirebaseService, useValue: mockFirebaseService },        {
+        { provide: FirebaseService, useValue: mockFirebaseService },
+        {
           provide: BuyersStatsService,
           useValue: {
             incrementOrderCount: jest.fn().mockResolvedValue(undefined),
             updateTotalSpent: jest.fn().mockResolvedValue(undefined),
             updateBuyerStatsOnDelivery: jest.fn().mockResolvedValue(undefined),
           },
-        },      ],
+        },
+      ],
     }).compile();
 
     service = module.get<OrdersService>(OrdersService);

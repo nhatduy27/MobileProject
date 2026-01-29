@@ -40,6 +40,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.font.FontWeight
 import com.example.foodapp.data.model.owner.product.Product
 import com.example.foodapp.pages.owner.notifications.NotificationBell
+import com.example.foodapp.pages.owner.theme.OwnerColors
+import com.example.foodapp.pages.owner.theme.OwnerDimens
 
 /**
  * Màn hình quản lý sản phẩm - FoodsScreen
@@ -108,15 +110,15 @@ fun FoodsScreen(
                         editingProduct = null
                         isEditing = true
                     },
-                    containerColor = Color(0xFFFF6B35),
-                    contentColor = Color.White,
+                    containerColor = OwnerColors.Primary,
+                    contentColor = OwnerColors.Surface,
                     shape = CircleShape,
                     elevation = FloatingActionButtonDefaults.elevation(4.dp)
                 ) {
                     Icon(Icons.Filled.Add, contentDescription = "Thêm sản phẩm")
                 }
             },
-            containerColor = Color(0xFFF5F5F5)
+            containerColor = OwnerColors.Background
         ) { paddingValues ->
 
             Box(
@@ -131,9 +133,9 @@ fun FoodsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            CircularProgressIndicator(color = Color(0xFFFF6B35))
+                            CircularProgressIndicator(color = OwnerColors.Primary)
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text("Đang tải sản phẩm...", color = Color.Gray)
+                            Text("Đang tải sản phẩm...", color = OwnerColors.TextSecondary)
                         }
                     }
                 } else {
@@ -142,7 +144,7 @@ fun FoodsScreen(
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(Color.White)
+                                .background(OwnerColors.Surface)
                                 .horizontalScroll(rememberScrollState())
                                 .padding(12.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -181,17 +183,17 @@ fun FoodsScreen(
                                         StatCard(
                                             title = "Tổng sản phẩm",
                                             value = stats.total.toString(),
-                                            color = Color(0xFFFF6B35)
+                                            color = OwnerColors.Primary
                                         )
                                         StatCard(
                                             title = "Còn hàng",
                                             value = stats.available.toString(),
-                                            color = Color(0xFF4CAF50)
+                                            color = OwnerColors.Success
                                         )
                                         StatCard(
                                             title = "Hết hàng",
                                             value = stats.outOfStock.toString(),
-                                            color = Color(0xFFF44336)
+                                            color = OwnerColors.Error
                                         )
                                     }
                                 }
@@ -212,14 +214,14 @@ fun FoodsScreen(
                                                     else
                                                         "Chưa có sản phẩm nào",
                                                     fontSize = 16.sp,
-                                                    color = Color.Gray
+                                                    color = OwnerColors.TextSecondary
                                                 )
                                                 if (uiState.searchQuery.isEmpty()) {
                                                     Spacer(modifier = Modifier.height(8.dp))
                                                     Text(
                                                         text = "Nhấn + để thêm sản phẩm mới",
                                                         fontSize = 14.sp,
-                                                        color = Color.Gray
+                                                        color = OwnerColors.TextSecondary
                                                     )
                                                 }
                                             }
@@ -321,7 +323,7 @@ fun FoodsSearchHeader(
         modifier = Modifier
             .fillMaxWidth()
             .height(64.dp)
-            .background(Color.White)
+            .background(OwnerColors.Surface)
             .padding(horizontal = 16.dp),
         contentAlignment = Alignment.CenterStart
     ) {
@@ -338,14 +340,14 @@ fun FoodsSearchHeader(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = Color(0xFF1A1A1A))
+                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = OwnerColors.TextPrimary)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Sản phẩm",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF1A1A1A)
+                        color = OwnerColors.TextPrimary
                     )
                 }
                 
@@ -354,15 +356,15 @@ fun FoodsSearchHeader(
 
                 Row {
                     IconButton(onClick = onRefresh) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = Color(0xFF1A1A1A))
+                        Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = OwnerColors.TextPrimary)
                     }
                     IconButton(
                         onClick = { isSearchActive = true },
                         modifier = Modifier
-                            .background(Color(0xFFF5F5F5), CircleShape)
+                            .background(OwnerColors.SurfaceVariant, CircleShape)
                             .size(40.dp)
                     ) {
-                        Icon(Icons.Default.Search, contentDescription = "Search", tint = Color(0xFF1A1A1A))
+                        Icon(Icons.Default.Search, contentDescription = "Search", tint = OwnerColors.TextPrimary)
                     }
                 }
             }
@@ -380,7 +382,7 @@ fun FoodsSearchHeader(
                         isSearchActive = false
                         onQueryChange("")
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color(0xFF1A1A1A))
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = OwnerColors.TextPrimary)
                     }
                     TextField(
                         value = query,
@@ -389,14 +391,14 @@ fun FoodsSearchHeader(
                             .weight(1f)
                             .height(50.dp)
                             .focusRequester(focusRequester),
-                        placeholder = { Text("Tìm sản phẩm...", color = Color.Gray, fontSize = 14.sp) },
+                        placeholder = { Text("Tìm sản phẩm...", color = OwnerColors.TextTertiary, fontSize = 14.sp) },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFFF5F5F5),
                             unfocusedContainerColor = Color(0xFFF5F5F5),
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
-                            cursorColor = Color(0xFFFF6B35)
+                            cursorColor = OwnerColors.Primary
                         ),
                         shape = CircleShape,
                         keyboardOptions = KeyboardOptions(autoCorrect = false, imeAction = ImeAction.Search),
@@ -404,7 +406,7 @@ fun FoodsSearchHeader(
                         trailingIcon = {
                             if (query.isNotEmpty()) {
                                 IconButton(onClick = { onQueryChange("") }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Clear", tint = Color.Gray)
+                                    Icon(Icons.Default.Close, contentDescription = "Clear", tint = OwnerColors.TextTertiary)
                                 }
                             }
                         }

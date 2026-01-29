@@ -22,14 +22,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.example.foodapp.pages.owner.theme.OwnerColors
+import com.example.foodapp.pages.owner.theme.OwnerDimens
 
-// Define standard status colors
-val ColorPending = Color(0xFFFF9800)   // Orange
-val ColorPreparing = Color(0xFF2196F3) // Blue
-val ColorDelivering = Color(0xFF9C27B0) // Purple
-val ColorCompleted = Color(0xFF4CAF50) // Green
-val ColorCancelled = Color(0xFFF44336) // Red
-val ColorReady = Color(0xFF009688)     // Teal
+// Define standard status colors (synchronized with Shipper)
+val ColorPending = OwnerColors.StatusPending      // Amber
+val ColorPreparing = OwnerColors.StatusPreparing  // Purple
+val ColorDelivering = OwnerColors.StatusShipping  // Amber
+val ColorCompleted = OwnerColors.StatusDelivered  // Dark green
+val ColorCancelled = OwnerColors.StatusCancelled  // Red
+val ColorReady = OwnerColors.StatusReady          // Green
 
 @Composable
 fun DonutChart(
@@ -60,7 +62,7 @@ fun DonutChart(
 
         if (total == 0) {
             drawCircle(
-                color = Color.LightGray.copy(alpha=0.2f),
+                color = OwnerColors.BorderLight,
                 style = Stroke(width = strokeWidth)
             )
         } else {
@@ -69,7 +71,7 @@ fun DonutChart(
                 if (value > 0) {
                     val sweepAngle = value * 360f
                     drawArc(
-                        color = colors[key] ?: Color.Gray,
+                        color = colors[key] ?: OwnerColors.TextTertiary,
                         startAngle = startAngle,
                         sweepAngle = sweepAngle,
                         useCenter = false,
@@ -94,13 +96,13 @@ fun ModernStatCard(
 ) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        shape = RoundedCornerShape(16.dp)
+        colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = OwnerDimens.CardElevation.dp),
+        shape = RoundedCornerShape(OwnerDimens.CardRadiusLarge.dp)
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(OwnerDimens.CardPadding.dp)
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -119,8 +121,8 @@ fun ModernStatCard(
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(text = title, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                Text(text = value, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = Color.Black)
+                Text(text = title, style = MaterialTheme.typography.bodySmall, color = OwnerColors.TextSecondary)
+                Text(text = value, style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold), color = OwnerColors.TextPrimary)
             }
         }
     }
@@ -136,7 +138,7 @@ fun HorizontalBar(
         modifier = Modifier
             .fillMaxWidth()
             .height(height)
-            .background(Color.LightGray.copy(alpha = 0.2f), CircleShape)
+            .background(OwnerColors.BorderLight, CircleShape)
     ) {
         Box(
             modifier = Modifier

@@ -6,8 +6,8 @@
 
 /** Location with GPS coordinates */
 export interface TripLocation {
-  lat: number;   // Latitude
-  lng: number;   // Longitude
+  lat: number; // Latitude
+  lng: number; // Longitude
 }
 
 export interface DeliveryPoint {

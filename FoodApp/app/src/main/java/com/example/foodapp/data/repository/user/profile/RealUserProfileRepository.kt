@@ -79,9 +79,14 @@ class RealUserProfileRepository(
             val response = apiService.uploadAvatar(part)
 
             if (response.isSuccessful && response.body() != null) {
-                val avatarUrl = response.body()!!.avatarUrl
-                Log.d(TAG, "✅ Avatar uploaded: $avatarUrl")
-                Result.success(avatarUrl)
+                val avatarUrl = response.body()!!.data?.avatarUrl
+                if (avatarUrl != null) {
+                    Log.d(TAG, "✅ Avatar uploaded: $avatarUrl")
+                    Result.success(avatarUrl)
+                } else {
+                    Log.e(TAG, "❌ Avatar URL is null in response")
+                    Result.failure(Exception("Server không trả về đường dẫn ảnh"))
+                }
             } else {
                 val errorBody = response.errorBody()?.string()
                 val errorMessage = ErrorParser.parseError(errorBody)
