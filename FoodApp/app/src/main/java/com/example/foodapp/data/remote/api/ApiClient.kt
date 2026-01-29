@@ -14,6 +14,10 @@ import com.example.foodapp.data.remote.client.VoucherApiService
 import com.example.foodapp.data.remote.client.NotificationApiService
 import com.example.foodapp.data.remote.client.PaymentApiService
 import com.example.foodapp.data.remote.client.ShopApiService
+import com.example.foodapp.data.remote.client.ReviewApiService
+import com.example.foodapp.data.remote.client.ChatBoxApiService
+import com.example.foodapp.data.remote.client.ChatApiService
+
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -117,4 +121,7 @@ object ApiClient {
     val paymentApiService: PaymentApiService by lazy { retrofit.create(PaymentApiService::class.java) }
 
     val shopApiService: ShopApiService by lazy { retrofit.create(ShopApiService::class.java) }
+    val reviewApiService: ReviewApiService by lazy { retrofit.create(ReviewApiService::class.java) }
+    val chatBoxApiService: ChatBoxApiService by lazy { retrofit.create(ChatBoxApiService::class.java) }
+    val chatApiService : ChatApiService by lazy { retrofit.create(ChatApiService::class.java) }
 }

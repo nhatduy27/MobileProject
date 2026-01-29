@@ -1,11 +1,13 @@
 package com.example.foodapp.pages.client.shopdetail
 
+import android.content.Context
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -16,7 +18,6 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -24,31 +25,49 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.example.foodapp.data.repository.client.chat.ChatRepository
+import com.example.foodapp.data.remote.client.response.review.*
 import com.example.foodapp.data.remote.client.response.shop.ShopDetailApiModel
+import com.example.foodapp.data.repository.client.review.ReviewRepository
+import com.example.foodapp.data.repository.client.shop.ShopRepository
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShopDetailScreen(
     shopId: String,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onChatCreated: (ShopID: String, conversationId: String, shopName: String) -> Unit
 ) {
     val context = LocalContext.current
 
     // Khởi tạo ViewModel với factory
     val viewModel: ShopDetailViewModel = viewModel(
         factory = ShopDetailViewModel.factory(
-            shopRepository = com.example.foodapp.data.repository.client.shop.ShopRepository()
+            shopRepository = ShopRepository(),
+            reviewRepository = ReviewRepository(),
+            chatRepository = ChatRepository(),
+            context = context
         )
     )
 
     // Observe LiveData
     val shopDetailState by viewModel.shopDetailState.observeAsState(ShopDetailState.Idle)
+    val reviewsState by viewModel.reviewsState.observeAsState(ReviewsState.Idle)
     val shop by viewModel.shop.observeAsState(null)
+    val reviews by viewModel.reviews.observeAsState(null)
+    val reviewsMetadata by viewModel.reviewsMetadata.observeAsState(null)
+
+    // State cho chat
+    val chatLoading by viewModel.chatLoading.observeAsState(false)
+    val chatError by viewModel.chatError.observeAsState()
+
+    var showReviewsDialog by remember { mutableStateOf(false) }
 
     // Gọi API khi screen được khởi tạo hoặc shopId thay đổi
     LaunchedEffect(shopId) {
@@ -60,6 +79,51 @@ fun ShopDetailScreen(
         onDispose {
             viewModel.clear()
         }
+    }
+
+    // Reviews Dialog
+    if (showReviewsDialog && shop != null) {
+        ReviewsDialog(
+            shopName = shop!!.name,
+            reviews = reviews,
+            reviewsMetadata = reviewsMetadata,
+            reviewsState = reviewsState,
+            onClose = { showReviewsDialog = false },
+            onRetry = { viewModel.refreshReviews(shopId) }
+        )
+    }
+
+    // Chat Loading Dialog
+    if (chatLoading) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("Đang tạo cuộc trò chuyện...") },
+            text = {
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            },
+            confirmButton = {}
+        )
+    }
+
+    // Chat Error Dialog
+    chatError?.let { error ->
+        AlertDialog(
+            onDismissRequest = { viewModel.clearChatError() },
+            title = { Text("Lỗi") },
+            text = { Text(error) },
+            confirmButton = {
+                Button(
+                    onClick = { viewModel.clearChatError() }
+                ) {
+                    Text("OK")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -101,11 +165,148 @@ fun ShopDetailScreen(
                         )
                     }
                 },
+                actions = {
+                    // Nút xem đánh giá
+                    if (shop != null) {
+                        IconButton(
+                            onClick = { showReviewsDialog = true }
+                        ) {
+                            BadgedBox(
+                                badge = {
+                                    if (reviewsMetadata?.totalReviews ?: 0 > 0) {
+                                        Badge {
+                                            Text(
+                                                text = "${reviewsMetadata?.totalReviews ?: 0}",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                fontSize = 10.sp
+                                            )
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Default.Star,
+                                    contentDescription = "Xem đánh giá",
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.onSurface
                 )
             )
+        },
+        bottomBar = {
+            // Floating Action Button cho nhắn tin
+            if (shop != null && shopDetailState is ShopDetailState.Success) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    shadowElevation = 8.dp,
+                    tonalElevation = 4.dp,
+                    color = MaterialTheme.colorScheme.primary
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(60.dp)
+                            .padding(horizontal = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Thông tin shop nhỏ
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Logo nhỏ
+                            Image(
+                                painter = rememberAsyncImagePainter(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(shop?.logoUrl)
+                                        .crossfade(true)
+                                        .build()
+                                ),
+                                contentDescription = "Logo cửa hàng",
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+
+                            Column {
+                                Text(
+                                    text = "Chat với",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    fontSize = 10.sp
+                                )
+                                Text(
+                                    text = shop?.name ?: "Cửa hàng",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                        // Nút nhắn tin
+                        Button(
+                            onClick = {
+                                viewModel.startChatWithShop(
+                                    shopId = shopId,
+                                    shopName = shop?.name ?: "Cửa hàng",
+                                    onChatCreated = onChatCreated
+                                )
+                            },
+                            modifier = Modifier.height(44.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color.White,
+                                contentColor = MaterialTheme.colorScheme.primary
+                            ),
+                            enabled = !chatLoading
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                if (chatLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(16.dp),
+                                        strokeWidth = 2.dp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        "Đang tạo...",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Default.Chat,
+                                        contentDescription = "Nhắn tin",
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        "Nhắn tin",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     ) { padding ->
         AnimatedContent(
@@ -129,7 +330,18 @@ fun ShopDetailScreen(
                     if (shop != null) {
                         ShopDetailContent(
                             shop = shop!!,
-                            modifier = Modifier.padding(padding)
+                            reviews = reviews,
+                            reviewsMetadata = reviewsMetadata,
+                            onViewReviewsClick = { showReviewsDialog = true },
+                            onMessageClick = {
+                                viewModel.startChatWithShop(
+                                    shopId = shopId,
+                                    shopName = shop!!.name,
+                                    onChatCreated = onChatCreated
+                                )
+                            },
+                            modifier = Modifier.padding(padding),
+                            chatLoading = chatLoading
                         )
                     } else {
                         EmptyState()
@@ -147,55 +359,299 @@ fun ShopDetailScreen(
     }
 }
 
+// ========== Reviews Dialog ==========
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LoadingState() {
-    val infiniteTransition = rememberInfiniteTransition(label = "loading")
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 0.9f,
-        targetValue = 1.1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "scale"
-    )
-
-    Box(
+fun ReviewsDialog(
+    shopName: String,
+    reviews: List<ShopOrderReviewApiModel>?,
+    reviewsMetadata: ReviewsMetadata?,
+    reviewsState: ReviewsState,
+    onClose: () -> Unit,
+    onRetry: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onClose,
         modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface),
-        contentAlignment = Alignment.Center
+            .fillMaxWidth()
+            .heightIn(max = 600.dp)
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(0.dp)
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "Đánh giá ($shopName)",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        fontSize = 20.sp
+                    )
+
+                    IconButton(
+                        onClick = onClose,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(Icons.Default.Close, contentDescription = "Đóng")
+                    }
+                }
+
+                // Rating Summary
+                if (reviewsMetadata != null && reviewsState is ReviewsState.Success) {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text(
+                                    text = String.format("%.1f", reviewsMetadata.averageRating),
+                                    style = MaterialTheme.typography.displaySmall.copy(fontWeight = FontWeight.Bold),
+                                    fontSize = 48.sp,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = "⭐".repeat(5),
+                                    fontSize = 14.sp,
+                                    color = Color(0xFFFFA726)
+                                )
+                                Text(
+                                    text = "${reviewsMetadata.totalReviews} đánh giá",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Reviews List
+                when (reviewsState) {
+                    is ReviewsState.Loading -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+
+                    is ReviewsState.Success -> {
+                        if (reviews.isNullOrEmpty()) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Icon(
+                                        Icons.Default.StarOutline,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(60.dp),
+                                        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                    )
+                                    Text(
+                                        text = "Chưa có đánh giá nào",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                    )
+                                }
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(reviews ?: emptyList()) { review ->
+                                    ReviewItem(review = review)
+                                }
+                            }
+                        }
+                    }
+
+                    is ReviewsState.Error -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                Text(
+                                    text = "Không thể tải đánh giá",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                Button(onClick = onRetry) {
+                                    Text("Thử lại")
+                                }
+                            }
+                        }
+                    }
+
+                    ReviewsState.Empty -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Icon(
+                                    Icons.Default.StarOutline,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(60.dp),
+                                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+                                )
+                                Text(
+                                    text = "Chưa có đánh giá nào",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                                )
+                            }
+                        }
+                    }
+
+                    ReviewsState.Idle -> {
+                        // Do nothing
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReviewItem(review: ShopOrderReviewApiModel) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .size(80.dp)
-                    .background(
-                        brush = Brush.linearGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.tertiary
-                            )
-                        ),
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
+            // Header
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(60.dp),
-                    color = Color.White,
-                    strokeWidth = 4.dp
-                )
+                // Avatar
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = review.customerName.firstOrNull()?.uppercaseChar()?.toString() ?: "U",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = review.customerName,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Medium)
+                    )
+                    Text(
+                        text = review.createdAt.substring(0, 10),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    )
+                }
+
+                // Shop Rating
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "${review.rating}",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color(0xFFFFA726)
+                    )
+                    Text("⭐", fontSize = 20.sp)
+                }
             }
 
-            Text(
-                "Đang tải thông tin cửa hàng...",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-            )
+            // Ratings section
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Shop comment
+                if (review.comment.isNotEmpty()) {
+                    Text(
+                        text = "Shop: ${review.comment}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        lineHeight = 20.sp
+                    )
+                }
+
+                // Owner Reply
+                if (!review.ownerReply.isNullOrBlank()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "💬 Phản hồi từ cửa hàng",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = review.ownerReply,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -203,15 +659,20 @@ private fun LoadingState() {
 @Composable
 private fun ShopDetailContent(
     shop: ShopDetailApiModel,
-    modifier: Modifier = Modifier
+    reviews: List<ShopOrderReviewApiModel>?,
+    reviewsMetadata: ReviewsMetadata?,
+    onViewReviewsClick: () -> Unit,
+    onMessageClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    chatLoading: Boolean = false
 ) {
     LazyColumn(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(bottom = 24.dp)
+        contentPadding = PaddingValues(bottom = 80.dp)
     ) {
-        // Cover Image with Gradient Overlay
+        // Cover Image
         item {
             Box(
                 modifier = Modifier
@@ -230,7 +691,6 @@ private fun ShopDetailContent(
                     contentScale = ContentScale.Crop
                 )
 
-                // Gradient overlay
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -248,7 +708,7 @@ private fun ShopDetailContent(
             }
         }
 
-        // Logo và Basic Info - Overlapping design
+        // Main Info Card
         item {
             Column(
                 modifier = Modifier
@@ -272,7 +732,6 @@ private fun ShopDetailContent(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            // Logo with shadow
                             Card(
                                 shape = CircleShape,
                                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
@@ -292,7 +751,6 @@ private fun ShopDetailContent(
                                 )
                             }
 
-                            // Shop Info
                             Column(
                                 verticalArrangement = Arrangement.spacedBy(6.dp),
                                 modifier = Modifier.weight(1f)
@@ -357,7 +815,6 @@ private fun ShopDetailContent(
                             }
                         }
 
-                        // Description
                         if (shop.description.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(16.dp))
                             Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
@@ -369,6 +826,37 @@ private fun ShopDetailContent(
                                 lineHeight = 22.sp,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                             )
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = onMessageClick,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            ),
+                            border = ButtonDefaults.outlinedButtonBorder,
+                            enabled = !chatLoading
+                        ) {
+                            if (chatLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Đang tạo...")
+                            } else {
+                                Icon(
+                                    Icons.Default.Chat,
+                                    contentDescription = "Nhắn tin",
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Nhắn tin với cửa hàng")
+                            }
                         }
                     }
                 }
@@ -494,6 +982,200 @@ private fun ShopDetailContent(
                     )
                 }
             }
+        }
+
+        // Reviews Preview Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .padding(top = 16.dp),
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                ),
+                onClick = onViewReviewsClick
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Đánh giá",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            fontSize = 18.sp
+                        )
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = "⭐",
+                                fontSize = 16.sp
+                            )
+                            Text(
+                                text = String.format("%.1f", reviewsMetadata?.averageRating ?: 0f),
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                            Text(
+                                text = "(${reviewsMetadata?.totalReviews ?: 0})",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+
+                    // Hiển thị 2 review mẫu
+                    if (!reviews.isNullOrEmpty()) {
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            reviews.take(2).forEach { review ->
+                                ReviewPreviewItem(review = review)
+                            }
+                        }
+
+                        if (reviewsMetadata?.totalReviews ?: 0 > 2) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "Xem thêm ${(reviewsMetadata?.totalReviews ?: 0) - 2} đánh giá khác",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
+                        }
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(100.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Chưa có đánh giá nào",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
+
+                    Button(
+                        onClick = onViewReviewsClick,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(Icons.Default.Star, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Xem tất cả đánh giá")
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReviewPreviewItem(review: ShopOrderReviewApiModel) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "⭐".repeat(review.rating),
+                    fontSize = 14.sp,
+                    color = Color(0xFFFFA726)
+                )
+                Text(
+                    text = review.customerName,
+                    style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Medium)
+                )
+            }
+
+            if (review.comment.isNotEmpty()) {
+                Text(
+                    text = review.comment,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LoadingState() {
+    val infiniteTransition = rememberInfiniteTransition(label = "loading")
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.9f,
+        targetValue = 1.1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "scale"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary,
+                                MaterialTheme.colorScheme.tertiary
+                            )
+                        ),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(60.dp),
+                    color = Color.White,
+                    strokeWidth = 4.dp
+                )
+            }
+
+            Text(
+                "Đang tải thông tin cửa hàng...",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
         }
     }
 }
@@ -668,38 +1350,6 @@ private fun StatisticItem(
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             textAlign = TextAlign.Center
         )
-    }
-}
-
-@Composable
-private fun InfoRow(
-    icon: ImageVector,
-    title: String,
-    value: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = title,
-            modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.primary
-        )
-
-        Column {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall,
-                color = Color.Gray
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
     }
 }
 

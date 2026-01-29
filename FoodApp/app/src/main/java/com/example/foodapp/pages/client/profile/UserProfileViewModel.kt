@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.foodapp.data.model.Client
 import com.example.foodapp.data.remote.client.response.profile.*
 import com.example.foodapp.data.repository.client.profile.ProfileRepository
+import com.example.foodapp.data.repository.firebase.AuthManager
 import kotlinx.coroutines.launch
 
 // Sealed class cho các trạng thái
@@ -59,9 +60,21 @@ sealed class SetDefaultAddressState {
     data class Error(val message: String) : SetDefaultAddressState()
 }
 
+// Thêm state cho pickup points
+sealed class PickupPointsState {
+    object Idle : PickupPointsState()
+    object Loading : PickupPointsState()
+    data class Success(val points: List<PickupPointDTO>) : PickupPointsState()
+    data class Error(val message: String) : PickupPointsState()
+}
+
 class ProfileViewModel(
-    private val profileRepository: ProfileRepository
+    private val profileRepository: ProfileRepository,
+    private val context: Context
 ) : ViewModel() {
+
+    private val authManager = AuthManager(context)
+
 
     // State cho việc lấy thông tin người dùng
     private val _userState = MutableLiveData<ProfileState>(ProfileState.Idle)
@@ -87,6 +100,10 @@ class ProfileViewModel(
     private val _setDefaultAddressState = MutableLiveData<SetDefaultAddressState>(SetDefaultAddressState.Idle)
     val setDefaultAddressState: LiveData<SetDefaultAddressState> = _setDefaultAddressState
 
+    // State cho pickup points
+    private val _pickupPointsState = MutableLiveData<PickupPointsState>(PickupPointsState.Idle)
+    val pickupPointsState: LiveData<PickupPointsState> = _pickupPointsState
+
     // State cho logout
     private val _logoutState = MutableLiveData<Boolean>(false)
     val logoutState: LiveData<Boolean> = _logoutState
@@ -99,9 +116,14 @@ class ProfileViewModel(
     private val _addresses = MutableLiveData<List<AddressResponse>>(emptyList())
     val addresses: LiveData<List<AddressResponse>> = _addresses
 
+    // Pickup points data
+    private val _pickupPoints = MutableLiveData<List<PickupPointDTO>>(emptyList())
+    val pickupPoints: LiveData<List<PickupPointDTO>> = _pickupPoints
+
     // Load thông tin của người dùng ngay khi vừa vào app
     init {
         fetchUserData()
+        fetchPickupPoints()
     }
 
     // user refresh thủ công
@@ -154,6 +176,46 @@ class ProfileViewModel(
         }
     }
 
+    // Lấy danh sách pickup points
+    fun fetchPickupPoints() {
+        viewModelScope.launch {
+            _pickupPointsState.value = PickupPointsState.Loading
+
+            try {
+
+                val token = authManager.getCurrentToken()
+
+                val result = if (token!!.isNotEmpty()) {
+                    profileRepository.getPickupPoints(token)
+                } else {
+                    // Fallback nếu không có token
+                    ApiResult.Failure(Exception("Không tìm thấy token đăng nhập"))
+                }
+
+                when (result) {
+                    is ApiResult.Success -> {
+                        _pickupPoints.value = result.data
+                        _pickupPointsState.value = PickupPointsState.Success(result.data)
+                    }
+                    is ApiResult.Failure -> {
+                        _pickupPointsState.value = PickupPointsState.Error(
+                            result.exception.message ?: "Không thể lấy danh sách tòa nhà"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                _pickupPointsState.value = PickupPointsState.Error(
+                    e.message ?: "Lỗi không xác định khi lấy danh sách tòa nhà"
+                )
+            }
+        }
+    }
+
+    // Refresh pickup points
+    fun refreshPickupPoints() {
+        fetchPickupPoints()
+    }
+
     fun refreshAddresses() {
         viewModelScope.launch {
             try {
@@ -179,11 +241,9 @@ class ProfileViewModel(
         }
     }
 
-    // Hàm thêm địa chỉ mới
     fun createAddress(
         label: String,
-        fullAddress: String,
-        building: String? = null,
+        buildingCode: String,
         room: String? = null,
         note: String? = null,
         isDefault: Boolean = false
@@ -192,11 +252,16 @@ class ProfileViewModel(
             _createAddressState.value = CreateAddressState.Loading
 
             try {
+                // Tìm building name từ buildingCode
+                val selectedBuilding = _pickupPoints.value?.find { it.buildingCode == buildingCode }
+                val buildingName = selectedBuilding?.name ?: buildingCode
+                val fullAddress = "$buildingName, Phòng $room"
+
                 // Tạo request
                 val request = CreateAddressRequest(
                     label = label,
                     fullAddress = fullAddress,
-                    building = building,
+                    building = buildingCode,  // Gửi buildingCode thay vì building name
                     room = room,
                     note = note,
                     isDefault = isDefault
@@ -256,12 +321,11 @@ class ProfileViewModel(
         }
     }
 
-    // Hàm cập nhật địa chỉ
+    // Hàm cập nhật địa chỉ với building là dropdown
     fun updateAddress(
         addressId: String,
         label: String,
-        fullAddress: String,
-        building: String? = null,
+        buildingCode: String,  // Thay building String? bằng buildingCode
         room: String? = null,
         note: String? = null,
         isDefault: Boolean = false
@@ -270,11 +334,16 @@ class ProfileViewModel(
             _updateAddressState.value = UpdateAddressState.Loading
 
             try {
+                // Tìm building name từ buildingCode
+                val selectedBuilding = _pickupPoints.value?.find { it.buildingCode == buildingCode }
+                val buildingName = selectedBuilding?.name ?: buildingCode
+                val fullAddress = "$buildingName, Phòng $room"
+
                 // Tạo request
                 val request = UpdateAddressRequest(
                     label = label,
                     fullAddress = fullAddress,
-                    building = building,
+                    building = buildingCode,  // Gửi buildingCode thay vì building name
                     room = room,
                     note = note,
                     isDefault = isDefault
@@ -334,6 +403,14 @@ class ProfileViewModel(
         }
     }
 
+    // Hàm helper để lấy auth token
+    private suspend fun getAuthToken(): String {
+        // TODO: Implement logic lấy token từ AuthManager hoặc SharedPreferences
+        // Ví dụ:
+        // return AuthManager.getToken() ?: ""
+        return "Bearer YOUR_TOKEN_HERE" // Thay bằng token thực tế
+    }
+
     // Reset các state
     fun resetCreateAddressState() {
         _createAddressState.value = CreateAddressState.Idle
@@ -351,11 +428,15 @@ class ProfileViewModel(
         _setDefaultAddressState.value = SetDefaultAddressState.Idle
     }
 
+    fun resetPickupPointsState() {
+        _pickupPointsState.value = PickupPointsState.Idle
+    }
+
     companion object {
         fun factory(context: Context) = viewModelFactory {
             initializer {
                 val profileRepository = ProfileRepository()
-                ProfileViewModel(profileRepository)
+                ProfileViewModel(profileRepository, context)
             }
         }
     }

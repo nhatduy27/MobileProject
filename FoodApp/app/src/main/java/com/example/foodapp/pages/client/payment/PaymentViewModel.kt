@@ -42,7 +42,7 @@ class PaymentViewModel(
     private val _cartItems = MutableLiveData<List<CartItem>>(emptyList())
     val cartItems: LiveData<List<CartItem>> = _cartItems
 
-    private val _selectedPaymentMethod = MutableLiveData(0) // 0: COD, 1: SEPAY
+    private val _selectedPaymentMethod = MutableLiveData(0)
     val selectedPaymentMethod: LiveData<Int> = _selectedPaymentMethod
 
     private val _isLoading = MutableLiveData(false)
@@ -171,7 +171,6 @@ class PaymentViewModel(
 
         viewModelScope.launch {
             try {
-                // BƯỚC 1: Tạo order
                 println("DEBUG: Bắt đầu tạo order...")
 
                 val orderRequest = CreateOrderRequest(
@@ -194,9 +193,7 @@ class PaymentViewModel(
                     is OrderApiResult.Success<OrderApiModel> -> {
                         val order = orderResult.data
                         _createdOrder.value = order
-                        println("DEBUG: Tạo order thành công, orderId: ${order.id}" )
 
-                        // BƯỚC 2: Tạo payment với orderId vừa tạo
                         val paymentMethod = if (_selectedPaymentMethod.value == 0) "COD" else "SEPAY"
                         println("DEBUG: Bắt đầu tạo payment cho orderId: ${order.id}, method: $paymentMethod")
 
@@ -277,14 +274,14 @@ class PaymentViewModel(
      * Bắt đầu polling NGẦM - không hiển thị trạng thái trong UI
      */
     private fun startBackgroundPolling(orderId: String) {
-        stopPaymentVerification() // Dừng polling cũ nếu có
+        stopPaymentVerification()
 
         currentOrderIdForVerification = orderId
-        _isVerifyingPayment.value = true // Chỉ dùng để kiểm soát internal state
+        _isVerifyingPayment.value = true
 
         verificationJob = viewModelScope.launch {
             var attempts = 0
-            val maxAttempts = 60 // 60 lần * 5 giây = 5 phút timeout
+            val maxAttempts = 60
             var isPaymentVerified = false
 
             while (attempts < maxAttempts && _isVerifyingPayment.value == true && !isPaymentVerified) {
@@ -373,7 +370,6 @@ class PaymentViewModel(
         stopPaymentVerification()
     }
 
-    // Hàm để reset navigation flag sau khi đã chuyển trang
     fun resetNavigation() {
         _shouldNavigateWithOrder.value = null
         _pollingResult.value = null
