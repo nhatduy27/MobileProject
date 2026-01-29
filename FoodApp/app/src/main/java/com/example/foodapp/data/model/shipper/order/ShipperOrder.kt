@@ -148,7 +148,6 @@ data class ShipperOrderItem(
     val subtotal: Double = 0.0
 )
 
-// Pagination response wrapper - matches backend PaginatedOrdersDto
 data class PaginatedShipperOrdersDto(
     val orders: List<ShipperOrder> = emptyList(),
     val page: Int = 1,
@@ -161,3 +160,15 @@ data class PaginatedShipperOrdersDto(
         get() = orders
 }
 
+// Wrapper for API responses that come wrapped in { success, data, timestamp }
+data class WrappedPaginatedOrdersResponse(
+    val success: Boolean = false,
+    val data: PaginatedShipperOrdersDto? = null,
+    val timestamp: String? = null
+)
+
+data class WrappedShipperOrderResponse(
+    val success: Boolean = false,
+    val data: ShipperOrder? = null,
+    val timestamp: String? = null
+)

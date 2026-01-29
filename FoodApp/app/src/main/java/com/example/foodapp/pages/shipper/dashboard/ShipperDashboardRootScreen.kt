@@ -17,11 +17,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import coil.compose.AsyncImage
+import com.example.foodapp.data.di.RepositoryProvider
+import com.example.foodapp.data.model.user.UserProfile
 import com.example.foodapp.pages.shipper.earnings.EarningsScreen
 import com.example.foodapp.pages.shipper.help.HelpScreen
 import com.example.foodapp.pages.shipper.history.HistoryScreen
@@ -76,6 +80,18 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
     var currentScreen by remember { mutableStateOf("home") }
     var currentSettingsRoute by remember { mutableStateOf("settings_main") }
     
+    // User profile state
+    var userProfile by remember { mutableStateOf<UserProfile?>(null) }
+    val repository = remember { RepositoryProvider.getUserProfileRepository() }
+    
+    // Fetch user profile on launch
+    LaunchedEffect(Unit) {
+        val result = repository.getProfile()
+        result.onSuccess { profile ->
+            userProfile = profile
+        }
+    }
+    
     val settingsNavController = rememberNavController()
     
     // Listen to settings navigation changes
@@ -101,14 +117,24 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 ) {
                     Column {
                         // Avatar
-                        Surface(
-                            modifier = Modifier.size(56.dp),
-                            shape = CircleShape,
-                            color = ShipperColors.PrimaryLight
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(CircleShape)
+                                .background(ShipperColors.PrimaryLight),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
+                            val avatarUrl = userProfile?.avatarUrl
+                            if (!avatarUrl.isNullOrEmpty()) {
+                                AsyncImage(
+                                    model = avatarUrl,
+                                    contentDescription = "Avatar",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
                                 Text(
-                                    text = "N",
+                                    text = userProfile?.displayName?.firstOrNull()?.uppercase() ?: "S",
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.SemiBold,
                                     color = ShipperColors.Primary
@@ -119,7 +145,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                         Spacer(modifier = Modifier.height(14.dp))
                         
                         Text(
-                            text = "Nguyễn Văn A",
+                            text = userProfile?.displayName ?: "Shipper",
                             fontSize = 17.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = ShipperColors.TextPrimary

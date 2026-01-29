@@ -1,5 +1,7 @@
 package com.example.foodapp.pages.shipper.profile
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.google.firebase.auth.FirebaseAuth
+import java.io.File
 
 /**
  * ViewModel cho EditProfileScreen
@@ -64,14 +67,6 @@ class EditProfileViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(phone = value)
     }
 
-    fun updateAddress(value: String) {
-        _uiState.value = _uiState.value.copy(address = value)
-    }
-
-    fun updateVehicleType(value: String) {
-        _uiState.value = _uiState.value.copy(vehicleType = value)
-    }
-
     fun setEditing(editing: Boolean) {
         _uiState.value = _uiState.value.copy(isEditing = editing)
     }
@@ -104,6 +99,52 @@ class EditProfileViewModel : ViewModel() {
         }
     }
 
+    /**
+     * Upload avatar from Uri
+     */
+    fun uploadAvatar(context: Context, imageUri: Uri) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isSaving = true, error = null, successMessage = null)
+
+            try {
+                // Convert Uri to File
+                val inputStream = context.contentResolver.openInputStream(imageUri)
+                val tempFile = File.createTempFile("avatar", ".jpg", context.cacheDir)
+                inputStream?.use { input ->
+                    tempFile.outputStream().use { output ->
+                        input.copyTo(output)
+                    }
+                }
+
+                val result = repository.uploadAvatar(tempFile)
+
+                result.onSuccess { avatarUrl ->
+                    Log.d("EditProfileVM", "✅ Avatar uploaded: $avatarUrl")
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = false,
+                        avatarUrl = avatarUrl,
+                        successMessage = "Đã cập nhật ảnh đại diện!"
+                    )
+                }.onFailure { error ->
+                    Log.e("EditProfileVM", "❌ Failed to upload avatar: ${error.message}")
+                    _uiState.value = _uiState.value.copy(
+                        isSaving = false,
+                        error = "Không thể tải ảnh: ${error.message}"
+                    )
+                }
+
+                // Cleanup temp file
+                tempFile.delete()
+            } catch (e: Exception) {
+                Log.e("EditProfileVM", "❌ Exception uploading avatar: ${e.message}")
+                _uiState.value = _uiState.value.copy(
+                    isSaving = false,
+                    error = "Lỗi: ${e.message}"
+                )
+            }
+        }
+    }
+
     fun clearError() {
         _uiState.value = _uiState.value.copy(error = null)
     }
@@ -121,8 +162,6 @@ data class EditProfileUiState(
     val displayName: String = "",
     val email: String = "",
     val phone: String = "",
-    val address: String = "",
-    val vehicleType: String = "",
     val avatarUrl: String = "",
     val error: String? = null,
     val successMessage: String? = null
