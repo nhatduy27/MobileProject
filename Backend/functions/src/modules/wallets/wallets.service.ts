@@ -409,7 +409,12 @@ export class WalletsService {
     type: WalletType,
     period: RevenuePeriod = RevenuePeriod.MONTH,
   ): Promise<RevenueStatsDto> {
-    const wallet = await this.getWalletByUserIdAndType(userId, type);
+    // Auto-create wallet if doesn't exist (returns 0 revenue instead of 404)
+    let wallet = await this.walletsRepo.findByUserIdAndType(userId, type);
+    if (!wallet) {
+      this.logger.log(`Wallet not found for user ${userId} (${type}), auto-creating...`);
+      wallet = await this.initializeWallet(userId, type);
+    }
 
     // Fetch ALL ledger entries (for accurate calculation)
     // Note: In production, consider caching or pagination for large datasets
