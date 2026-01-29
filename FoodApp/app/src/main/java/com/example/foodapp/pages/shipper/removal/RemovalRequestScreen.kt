@@ -36,13 +36,20 @@ import java.util.*
 
 // ==================== UI STATE ====================
 
+data class ApprovedShop(
+    val shopId: String,
+    val shopName: String
+)
+
 data class RemovalRequestUiState(
     val requests: List<RemovalRequest> = emptyList(),
+    val approvedShops: List<ApprovedShop> = emptyList(), // Shops shipper is working for
+    val selectedShop: ApprovedShop? = null,
     val isLoading: Boolean = false,
+    val isLoadingShops: Boolean = false,
     val isCreating: Boolean = false,
     val statusFilter: RemovalRequestStatus? = null,
     val showCreateDialog: Boolean = false,
-    val selectedShopId: String = "",
     val selectedType: RemovalRequestType = RemovalRequestType.TRANSFER,
     val reason: String = "",
     val errorMessage: String? = null,
@@ -54,12 +61,42 @@ data class RemovalRequestUiState(
 class RemovalRequestViewModel : ViewModel() {
     
     private val repository: RemovalRequestRepository = RepositoryProvider.getRemovalRequestRepository()
+    private val applicationRepository = RepositoryProvider.getShipperApplicationRepository()
     
     private val _uiState = MutableStateFlow(RemovalRequestUiState())
     val uiState: StateFlow<RemovalRequestUiState> = _uiState.asStateFlow()
     
     init {
+        loadApprovedShops()
         loadRequests()
+    }
+    
+    /**
+     * Load shops shipper is currently working for (from approved applications)
+     */
+    private fun loadApprovedShops() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoadingShops = true) }
+            
+            applicationRepository.getMyApplications()
+                .onSuccess { applications ->
+                    val approvedShops = applications
+                        .filter { it.status == "APPROVED" }
+                        .map { ApprovedShop(it.shopId, it.shopName ?: "Shop #${it.shopId.take(8)}") }
+                    
+                    _uiState.update { 
+                        it.copy(
+                            approvedShops = approvedShops,
+                            isLoadingShops = false
+                        )
+                    }
+                }
+                .onFailure { e ->
+                    _uiState.update { 
+                        it.copy(isLoadingShops = false)
+                    }
+                }
+        }
     }
     
     fun loadRequests() {
@@ -91,11 +128,12 @@ class RemovalRequestViewModel : ViewModel() {
         loadRequests()
     }
     
-    fun showCreateDialog(shopId: String) {
+    fun showCreateDialog() {
+        val shops = _uiState.value.approvedShops
         _uiState.update { 
             it.copy(
                 showCreateDialog = true,
-                selectedShopId = shopId,
+                selectedShop = shops.firstOrNull(),
                 selectedType = RemovalRequestType.TRANSFER,
                 reason = ""
             )
@@ -104,6 +142,10 @@ class RemovalRequestViewModel : ViewModel() {
     
     fun dismissCreateDialog() {
         _uiState.update { it.copy(showCreateDialog = false) }
+    }
+    
+    fun selectShop(shop: ApprovedShop) {
+        _uiState.update { it.copy(selectedShop = shop) }
     }
     
     fun setType(type: RemovalRequestType) {
@@ -116,7 +158,9 @@ class RemovalRequestViewModel : ViewModel() {
     
     fun createRequest() {
         val state = _uiState.value
-        if (state.selectedShopId.isBlank()) {
+        val selectedShop = state.selectedShop
+        
+        if (selectedShop == null) {
             _uiState.update { it.copy(errorMessage = "Vui lòng chọn shop") }
             return
         }
@@ -125,7 +169,7 @@ class RemovalRequestViewModel : ViewModel() {
             _uiState.update { it.copy(isCreating = true) }
             
             val dto = CreateRemovalRequestDto(
-                shopId = state.selectedShopId,
+                shopId = selectedShop.shopId,
                 type = state.selectedType.name,
                 reason = state.reason.takeIf { it.isNotBlank() }
             )
@@ -166,7 +210,6 @@ class RemovalRequestViewModel : ViewModel() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RemovalRequestScreen(
-    currentShopId: String? = null,
     onBack: () -> Unit = {},
     showTopBar: Boolean = true,
     viewModel: RemovalRequestViewModel = viewModel()
@@ -192,9 +235,12 @@ fun RemovalRequestScreen(
     // Create Dialog
     if (uiState.showCreateDialog) {
         CreateRemovalRequestDialog(
+            approvedShops = uiState.approvedShops,
+            selectedShop = uiState.selectedShop,
             selectedType = uiState.selectedType,
             reason = uiState.reason,
             isCreating = uiState.isCreating,
+            onShopSelect = { viewModel.selectShop(it) },
             onTypeChange = { viewModel.setType(it) },
             onReasonChange = { viewModel.setReason(it) },
             onDismiss = { viewModel.dismissCreateDialog() },
@@ -249,9 +295,10 @@ fun RemovalRequestScreen(
                 )
             }
             
-            if (!currentShopId.isNullOrBlank()) {
+            // Show create button if shipper is working at any shop
+            if (uiState.approvedShops.isNotEmpty()) {
                 Button(
-                    onClick = { viewModel.showCreateDialog(currentShopId) },
+                    onClick = { viewModel.showCreateDialog() },
                     colors = ButtonDefaults.buttonColors(containerColor = ShipperColors.Primary),
                     shape = RoundedCornerShape(8.dp)
                 ) {
@@ -260,6 +307,36 @@ fun RemovalRequestScreen(
                     Text("Tạo yêu cầu")
                 }
             }
+        }
+        
+        // Info card if no shops
+        if (uiState.approvedShops.isEmpty() && !uiState.isLoadingShops) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = CardDefaults.cardColors(containerColor = ShipperColors.InfoLight),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        Icons.Outlined.Info,
+                        contentDescription = null,
+                        tint = ShipperColors.Info,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        "Bạn chưa được duyệt làm việc tại shop nào. Không thể tạo yêu cầu rời shop.",
+                        fontSize = 13.sp,
+                        color = ShipperColors.Info
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
         }
         
         // Filter Tabs
@@ -332,14 +409,19 @@ private fun FilterTabs(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun CreateRemovalRequestDialog(
+    approvedShops: List<ApprovedShop>,
+    selectedShop: ApprovedShop?,
     selectedType: RemovalRequestType,
     reason: String,
     isCreating: Boolean,
+    onShopSelect: (ApprovedShop) -> Unit,
     onTypeChange: (RemovalRequestType) -> Unit,
     onReasonChange: (String) -> Unit,
     onDismiss: () -> Unit,
     onCreate: () -> Unit
 ) {
+    var showShopDropdown by remember { mutableStateOf(false) }
+    
     AlertDialog(
         onDismissRequest = { if (!isCreating) onDismiss() },
         title = { 
@@ -352,6 +434,70 @@ private fun CreateRemovalRequestDialog(
             Column(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Shop selection (if multiple shops)
+                if (approvedShops.size > 1) {
+                    Text(
+                        "Chọn shop",
+                        fontWeight = FontWeight.Medium,
+                        color = ShipperColors.TextPrimary
+                    )
+                    
+                    ExposedDropdownMenuBox(
+                        expanded = showShopDropdown,
+                        onExpandedChange = { showShopDropdown = it }
+                    ) {
+                        OutlinedTextField(
+                            value = selectedShop?.shopName ?: "Chọn shop",
+                            onValueChange = {},
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showShopDropdown) },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
+                            enabled = !isCreating
+                        )
+                        
+                        ExposedDropdownMenu(
+                            expanded = showShopDropdown,
+                            onDismissRequest = { showShopDropdown = false }
+                        ) {
+                            approvedShops.forEach { shop ->
+                                DropdownMenuItem(
+                                    text = { Text(shop.shopName) },
+                                    onClick = {
+                                        onShopSelect(shop)
+                                        showShopDropdown = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                } else if (selectedShop != null) {
+                    // Single shop - just display it
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = ShipperColors.SurfaceVariant),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Outlined.Store,
+                                contentDescription = null,
+                                tint = ShipperColors.Primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                selectedShop.shopName,
+                                fontWeight = FontWeight.Medium,
+                                color = ShipperColors.TextPrimary
+                            )
+                        }
+                    }
+                }
+                
                 // Type selection
                 Text(
                     "Loại yêu cầu",
@@ -418,7 +564,7 @@ private fun CreateRemovalRequestDialog(
         confirmButton = {
             Button(
                 onClick = onCreate,
-                enabled = !isCreating,
+                enabled = !isCreating && selectedShop != null,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (selectedType == RemovalRequestType.QUIT) 
                         ShipperColors.Error else ShipperColors.Primary

@@ -419,7 +419,6 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                         "notifications" -> NotificationsScreen()
                         "help" -> HelpScreen()
                         "removal_requests" -> RemovalRequestScreen(
-                            currentShopId = userProfile?.shopId,
                             onBack = { currentScreen = "home" },
                             showTopBar = false
                         )
