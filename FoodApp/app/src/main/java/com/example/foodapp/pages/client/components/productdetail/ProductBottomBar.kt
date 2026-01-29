@@ -1,7 +1,5 @@
 package com.example.foodapp.pages.client.components.productdetail
 
-
-
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,7 +22,7 @@ fun ProductBottomBar(
     onQuantityIncrease: () -> Unit,
     onQuantityDecrease: () -> Unit,
     onAddToCart: () -> Unit,
-    onBuyNow: () -> Unit,
+    onBuyNow: () -> Unit, // Có thể giữ hoặc xóa tham số này
     isAddingToCart: Boolean = false
 ) {
     Surface(
@@ -95,60 +93,29 @@ fun ProductBottomBar(
                 }
             }
 
-            // Action buttons
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                // Add to cart button
-                if (isAddingToCart) {
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        color = Color(0xFFF5F5F5)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.dp,
-                                color = Color(0xFFFF9800)
-                            )
-                        }
-                    }
-                } else {
-                    Surface(
-                        onClick = onAddToCart,
-                        enabled = product.isAvailable,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
-                        shape = RoundedCornerShape(16.dp),
-                        color = if (product.isAvailable) Color.White else Color(0xFFF5F5F5),
-                        border = BorderStroke(
-                            2.dp,
-                            if (product.isAvailable) Color(0xFFFF9800) else Color(0xFFE0E0E0)
-                        ),
-                        shadowElevation = if (product.isAvailable) 4.dp else 0.dp
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Filled.ShoppingCart,
-                                contentDescription = "Giỏ hàng",
-                                tint = if (product.isAvailable) Color(0xFFFF9800) else Color(0xFFBDBDBD),
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
+            // CHỈ CÒN NÚT THÊM VÀO GIỎ HÀNG
+            if (isAddingToCart) {
+                Surface(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(56.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color(0xFFF5F5F5)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp,
+                            color = Color(0xFFFF9800)
+                        )
                     }
                 }
-
-                // Buy now button
+            } else {
                 Button(
-                    onClick = onBuyNow,
-                    enabled = product.isAvailable && !isAddingToCart,
+                    onClick = onAddToCart,
+                    enabled = product.isAvailable,
                     modifier = Modifier
-                        .weight(1.5f)
+                        .weight(1f)
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -167,13 +134,13 @@ fun ProductBottomBar(
                         horizontalArrangement = Arrangement.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.ShoppingBag,
+                            imageVector = Icons.Filled.ShoppingCart,
                             contentDescription = null,
                             modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Mua ngay",
+                            text = "Thêm vào giỏ",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
