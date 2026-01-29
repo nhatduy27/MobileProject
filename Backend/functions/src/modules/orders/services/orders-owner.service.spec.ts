@@ -3,6 +3,7 @@ import { NotFoundException, ForbiddenException, ConflictException } from '@nestj
 import { Timestamp } from 'firebase-admin/firestore';
 import { OrdersService } from './orders.service';
 import { OrderStateMachineService } from './order-state-machine.service';
+import { ProductsService } from '../../products/services';
 import { CartService } from '../../cart/services';
 import { VouchersService } from '../../vouchers/vouchers.service';
 import { WalletsService } from '../../wallets/wallets.service';
@@ -112,6 +113,13 @@ describe('OrdersService - Owner Flow', () => {
         {
           provide: 'PRODUCTS_REPOSITORY',
           useValue: productsRepo,
+        },
+        {
+          provide: ProductsService,
+          useValue: {
+            incrementSoldCount: jest.fn().mockResolvedValue(undefined),
+            decrementSoldCount: jest.fn().mockResolvedValue(undefined),
+          },
         },
         {
           provide: 'IShippersRepository',

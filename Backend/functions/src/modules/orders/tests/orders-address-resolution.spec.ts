@@ -72,6 +72,13 @@ describe('OrdersService - Address Resolution', () => {
         { provide: ORDERS_REPOSITORY, useValue: mockOrdersRepo },
         { provide: CartService, useValue: mockCartService },
         { provide: 'PRODUCTS_REPOSITORY', useValue: mockProductsRepo },
+        {
+          provide: ProductsService,
+          useValue: {
+            incrementSoldCount: jest.fn().mockResolvedValue(undefined),
+            decrementSoldCount: jest.fn().mockResolvedValue(undefined),
+          },
+        },
         { provide: 'SHOPS_REPOSITORY', useValue: mockShopsRepo },
         { provide: 'IShippersRepository', useValue: mockShippersRepo },
         { provide: ADDRESSES_REPOSITORY, useValue: mockAddressesRepo },

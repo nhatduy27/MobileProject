@@ -11,6 +11,7 @@ import { Timestamp } from 'firebase-admin/firestore';
 import { IOrdersRepository, ORDERS_REPOSITORY } from '../interfaces';
 import { CartService } from '../../cart/services';
 import { IProductsRepository } from '../../products/interfaces';
+import { ProductsService } from '../../products/services';
 import { IShopsRepository } from '../../shops/interfaces';
 import { ShopsService } from '../../shops/services/shops.service';
 import { IShippersRepository } from '../../shippers/repositories/shippers-repository.interface';
@@ -48,6 +49,7 @@ export class OrdersService {
     private readonly cartService: CartService,
     @Inject('PRODUCTS_REPOSITORY')
     private readonly productsRepo: IProductsRepository,
+    private readonly productsService: ProductsService,
     @Inject('SHOPS_REPOSITORY')
     private readonly shopsRepo: IShopsRepository,
     private readonly shopsService: ShopsService,
@@ -1395,7 +1397,37 @@ export class OrdersService {
 
     await this.ordersRepo.update(orderId, updateData);
 
-    // 5.5. Update shop stats (totalOrders, totalRevenue) - MVP: synchronous aggregation
+    // 5.5. Update product soldCount (atomic, idempotent with marker)
+    // Only increment if not already applied (prevents double-counting on retries)
+    if (!order.soldCountApplied) {
+      try {
+        const items = order.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+        }));
+        await this.productsService.incrementSoldCount(items);
+        
+        // Mark as applied to prevent future re-application
+        await this.ordersRepo.update(orderId, { soldCountApplied: true });
+        
+        this.logger.log(
+          `Updated soldCount for ${items.length} products from order ${order.orderNumber}`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Failed to update soldCount for order ${orderId}:`,
+          error,
+        );
+        // Non-blocking: soldCount failure should not fail delivery confirmation
+        // Admin can run backfill script to fix inconsistencies
+      }
+    } else {
+      this.logger.log(
+        `soldCount already applied for order ${order.orderNumber} (idempotent skip)`,
+      );
+    }
+
+    // 5.6. Update shop stats (totalOrders, totalRevenue) - MVP: synchronous aggregation
     // Recomputes from all DELIVERED orders for this shop (idempotent, safe on retries)
     try {
       const stats = await this.aggregateShopOrderStats(order.shopId);

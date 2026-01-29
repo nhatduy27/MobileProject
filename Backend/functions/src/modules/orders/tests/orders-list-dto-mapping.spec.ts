@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { OrdersService } from '../services/orders.service';
+import { ProductsService } from '../../products/services';
 import { ORDERS_REPOSITORY } from '../interfaces';
 import { CartService } from '../../cart/services';
 import { VouchersService } from '../../vouchers/vouchers.service';
@@ -66,6 +67,13 @@ describe('OrdersService - Owner List DTO Mapping', () => {
         { provide: ORDERS_REPOSITORY, useValue: mockOrdersRepo },
         { provide: CartService, useValue: mockCartService },
         { provide: 'PRODUCTS_REPOSITORY', useValue: mockProductsRepo },
+        {
+          provide: ProductsService,
+          useValue: {
+            incrementSoldCount: jest.fn().mockResolvedValue(undefined),
+            decrementSoldCount: jest.fn().mockResolvedValue(undefined),
+          },
+        },
         { provide: 'SHOPS_REPOSITORY', useValue: mockShopsRepo },
         { provide: 'IShippersRepository', useValue: mockShippersRepo },
         { provide: ADDRESSES_REPOSITORY, useValue: mockAddressesRepo },

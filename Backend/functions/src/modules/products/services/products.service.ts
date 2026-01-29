@@ -342,6 +342,20 @@ export class ProductsService {
   }
 
   /**
+   * Increment soldCount for order items (called when order is delivered)
+   */
+  async incrementSoldCount(items: Array<{ productId: string; quantity: number }>): Promise<void> {
+    await this.productsRepository.incrementSoldCount(items);
+  }
+
+  /**
+   * Decrement soldCount for order items (called when delivered order is cancelled)
+   */
+  async decrementSoldCount(items: Array<{ productId: string; quantity: number }>): Promise<void> {
+    await this.productsRepository.decrementSoldCount(items);
+  }
+
+  /**
    * Upload product image
    * PROD-005
    */

@@ -87,4 +87,7 @@ export class OrderEntity {
   // Payout
   paidOut?: boolean;
   paidOutAt?: Timestamp;
+
+  // Product soldCount tracking
+  soldCountApplied?: boolean; // Tracks if soldCount increments have been applied (idempotent marker)
 }

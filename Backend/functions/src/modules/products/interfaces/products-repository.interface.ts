@@ -66,4 +66,16 @@ export interface IProductsRepository {
       soldCount?: number;
     },
   ): Promise<void>;
+
+  /**
+   * Increment soldCount for multiple products atomically
+   * Used when order is delivered
+   */
+  incrementSoldCount(items: Array<{ productId: string; quantity: number }>): Promise<void>;
+
+  /**
+   * Decrement soldCount for multiple products atomically
+   * Used when delivered order is cancelled (edge case)
+   */
+  decrementSoldCount(items: Array<{ productId: string; quantity: number }>): Promise<void>;
 }

@@ -281,6 +281,54 @@ export class FirestoreProductsRepository implements IProductsRepository {
   }
 
   /**
+   * Increment soldCount atomically for multiple products
+   * Uses FieldValue.increment for atomic operation
+   */
+  async incrementSoldCount(items: Array<{ productId: string; quantity: number }>): Promise<void> {
+    const batch = this.firestore.batch();
+
+    for (const item of items) {
+      const productRef = this.firestore.collection(this.collection).doc(item.productId);
+      batch.update(productRef, {
+        soldCount: FieldValue.increment(item.quantity),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    }
+
+    await batch.commit();
+
+    // Invalidate cache for affected shops
+    const productIds = items.map((i) => i.productId);
+    const products = await Promise.all(productIds.map((id) => this.findById(id)));
+    const shopIds = new Set(products.filter((p) => p).map((p) => p!.shopId));
+    shopIds.forEach((shopId) => this.invalidateShopCache(shopId));
+  }
+
+  /**
+   * Decrement soldCount atomically for multiple products
+   * Uses FieldValue.increment with negative values for atomic operation
+   */
+  async decrementSoldCount(items: Array<{ productId: string; quantity: number }>): Promise<void> {
+    const batch = this.firestore.batch();
+
+    for (const item of items) {
+      const productRef = this.firestore.collection(this.collection).doc(item.productId);
+      batch.update(productRef, {
+        soldCount: FieldValue.increment(-item.quantity),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    }
+
+    await batch.commit();
+
+    // Invalidate cache for affected shops
+    const productIds = items.map((i) => i.productId);
+    const products = await Promise.all(productIds.map((id) => this.findById(id)));
+    const shopIds = new Set(products.filter((p) => p).map((p) => p!.shopId));
+    shopIds.forEach((shopId) => this.invalidateShopCache(shopId));
+  }
+
+  /**
    * Map Firestore document to ProductEntity
    */
   private mapToEntity(data: FirebaseFirestore.DocumentData): ProductEntity {
