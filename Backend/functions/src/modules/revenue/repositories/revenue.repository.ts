@@ -27,7 +27,8 @@ export class RevenueRepository {
   constructor(@Inject('FIRESTORE') private readonly firestore: Firestore) {}
 
   /**
-   * Get COMPLETED orders for a shop within date range
+   * Get DELIVERED orders for a shop within date range
+   * (Final state: order has been successfully delivered to customer)
    */
   async getCompletedOrdersByPeriod(
     shopId: string,

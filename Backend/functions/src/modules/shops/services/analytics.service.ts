@@ -53,8 +53,8 @@ export class AnalyticsService {
       if (orderDate >= weekStart) weekOrders.push(order);
       if (orderDate >= monthStart) monthOrders.push(order);
 
-      // Track product sales (only completed orders)
-      if (order.status === 'COMPLETED' && order.items) {
+      // Track product sales (only delivered orders)
+      if (order.status === 'DELIVERED' && order.items) {
         order.items.forEach((item: any) => {
           const existing = productSales.get(item.productId) || {
             name: item.productName,
@@ -70,24 +70,24 @@ export class AnalyticsService {
 
     // Aggregate today stats
     const todayRevenue = todayOrders
-      .filter((o) => o.status === 'COMPLETED')
+      .filter((o) => o.status === 'DELIVERED')
       .reduce((sum, o) => sum + (o.total || 0), 0);
-    const todayOrderCount = todayOrders.filter((o) => o.status === 'COMPLETED').length;
+    const todayOrderCount = todayOrders.filter((o) => o.status === 'DELIVERED').length;
     const todayPendingOrders = todayOrders.filter(
       (o) => o.status === 'PENDING' || o.status === 'PREPARING',
     ).length;
 
     // Aggregate week stats
     const weekRevenue = weekOrders
-      .filter((o) => o.status === 'COMPLETED')
+      .filter((o) => o.status === 'DELIVERED')
       .reduce((sum, o) => sum + (o.total || 0), 0);
-    const weekOrderCount = weekOrders.filter((o) => o.status === 'COMPLETED').length;
+    const weekOrderCount = weekOrders.filter((o) => o.status === 'DELIVERED').length;
 
     // Aggregate month stats
     const monthRevenue = monthOrders
-      .filter((o) => o.status === 'COMPLETED')
+      .filter((o) => o.status === 'DELIVERED')
       .reduce((sum, o) => sum + (o.total || 0), 0);
-    const monthOrderCount = monthOrders.filter((o) => o.status === 'COMPLETED').length;
+    const monthOrderCount = monthOrders.filter((o) => o.status === 'DELIVERED').length;
 
     // Get top 5 products
     const topProducts = Array.from(productSales.entries())

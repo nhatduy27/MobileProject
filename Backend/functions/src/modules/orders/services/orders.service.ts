@@ -1305,6 +1305,45 @@ export class OrdersService {
   }
 
   /**
+   * Aggregate shop order stats from delivered orders (idempotent)
+   * Queries all DELIVERED orders for the shop and recomputes totals.
+   * Safe to call multiple times - no double counting.
+   * 
+   * @param shopId Shop ID
+   * @returns totalOrders and totalRevenue counts
+   * @private
+   */
+  private async aggregateShopOrderStats(shopId: string): Promise<{
+    totalOrders: number;
+    totalRevenue: number;
+  }> {
+    try {
+      // Query all DELIVERED orders for this shop
+      const deliveredOrdersSnapshot = await this.ordersRepo
+        .query()
+        .where('shopId', '==', shopId)
+        .where('status', '==', OrderStatus.DELIVERED)
+        .get();
+
+      // Calculate totals
+      const totalOrders = deliveredOrdersSnapshot.size;
+      const totalRevenue = deliveredOrdersSnapshot.docs.reduce(
+        (sum: number, doc: any) => sum + (doc.data().total || 0),
+        0,
+      );
+
+      return { totalOrders, totalRevenue };
+    } catch (error) {
+      this.logger.error(
+        `Failed to aggregate shop stats for shop ${shopId}:`,
+        error,
+      );
+      // Return current zeros if aggregation fails (non-blocking)
+      return { totalOrders: 0, totalRevenue: 0 };
+    }
+  }
+
+  /**
    * ORDER-015: Mark order as delivered
    * PHASE 2
    */
@@ -1353,6 +1392,25 @@ export class OrdersService {
     }
 
     await this.ordersRepo.update(orderId, updateData);
+
+    // 5.5. Update shop stats (totalOrders, totalRevenue) - MVP: synchronous aggregation
+    // Recomputes from all DELIVERED orders for this shop (idempotent, safe on retries)
+    try {
+      const stats = await this.aggregateShopOrderStats(order.shopId);
+      await this.shopsService.updateShopStats(order.shopId, {
+        totalOrders: stats.totalOrders,
+        totalRevenue: stats.totalRevenue,
+      });
+      this.logger.log(
+        `Updated shop stats for ${order.shopId}: totalOrders=${stats.totalOrders}, totalRevenue=${stats.totalRevenue}`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `Failed to update shop stats for order ${orderId}:`,
+        error,
+      );
+      // Non-blocking: shop stats failure should not fail delivery confirmation
+    }
 
     // 6. Update shipper status back to AVAILABLE
     const shipper = await this.shippersRepo.findById(shipperId);
