@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import {
   Table,
   Button,
@@ -21,6 +21,8 @@ import {
   ShopOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
+import { collection, query, onSnapshot, orderBy, limit } from 'firebase/firestore';
+import { db } from '../config/firebase';
 import api from '../api/client';
 import type { Shop, PaginatedResponse, ListShopsQuery } from '../types';
 import dayjs from 'dayjs';
@@ -38,11 +40,8 @@ export default function Shops() {
   });
   const [filters, setFilters] = useState<ListShopsQuery>({});
 
-  useEffect(() => {
-    loadShops();
-  }, [pagination.current, pagination.pageSize, filters.status, filters.search]);
-
-  const loadShops = async () => {
+  // Memoize loadShops for realtime listener
+  const loadShops = useCallback(async () => {
     try {
       setLoading(true);
       const params: ListShopsQuery = {
@@ -88,7 +87,41 @@ export default function Shops() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.current, pagination.pageSize, filters]);
+
+  // Load shops when dependencies change
+  useEffect(() => {
+    loadShops();
+  }, [loadShops]);
+
+  // ========================================
+  // REALTIME: Listen to Firestore for auto-refresh
+  // ========================================
+  useEffect(() => {
+    // Listen to all shops (we filter via API)
+    const shopsQuery = query(
+      collection(db, 'shops'),
+      orderBy('createdAt', 'desc'),
+      limit(100)
+    );
+
+    // Listen for changes
+    const unsubscribe = onSnapshot(
+      shopsQuery,
+      () => {
+        // When data changes, reload from API
+        const timeoutId = setTimeout(() => {
+          loadShops();
+        }, 500);
+        return () => clearTimeout(timeoutId);
+      },
+      (error) => {
+        console.error('Firestore listener error:', error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [loadShops]);
 
   const handleStatusChange = async (
     shopId: string,

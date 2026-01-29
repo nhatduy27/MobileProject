@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import {
   Table,
   Button,
@@ -28,6 +28,8 @@ import {
   SyncOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType, TablePaginationConfig } from 'antd/es/table';
+import { collection, query, where, onSnapshot, orderBy, limit } from 'firebase/firestore';
+import { db } from '../config/firebase';
 import api from '../api/client';
 import type { Payout, ListPayoutsQuery } from '../types';
 import dayjs from 'dayjs';
@@ -72,41 +74,8 @@ export default function Payouts() {
   const pollingAttemptRef = useRef(0);
   const maxPollingAttempts = 20;
 
-  useEffect(() => {
-    loadPayouts();
-  }, [pagination.current, pagination.pageSize, filters.status]);
-
-  // Cleanup polling on unmount
-  useEffect(() => {
-    return () => {
-      if (pollingRef.current) {
-        clearTimeout(pollingRef.current);
-      }
-    };
-  }, []);
-
-  // Auto-start polling when QR modal opens (after 3 seconds delay)
-  useEffect(() => {
-    if (qrModalVisible && qrPayout && !isPolling) {
-      const timeout = setTimeout(() => {
-        startPolling();
-      }, 3000);
-      return () => clearTimeout(timeout);
-    }
-  }, [qrModalVisible, qrPayout]);
-
-  // Generate QR URL for payout (SePay format) - defined early for use in handleProcess
-  const generateQrUrl = (payout: Payout) => {
-    const content = `PAYOUT${payout.id?.substring(0, 8).toUpperCase() || ''}`;
-    // Use backend field names first, fallback to legacy names
-    const bank = payout.bankCode || payout.bankName || '';
-    const acc = payout.accountNumber || payout.bankAccountNumber || '';
-    const amount = payout.amount || 0;
-    // Use correct SePay QR template URL format
-    return `https://qr.sepay.vn/img?acc=${acc}&bank=${bank}&amount=${amount}&des=${encodeURIComponent(content)}&template=compact`;
-  };
-
-  const loadPayouts = async () => {
+  // Memoize loadPayouts to use in realtime listener
+  const loadPayouts = useCallback(async () => {
     try {
       setLoading(true);
       const params: ListPayoutsQuery = {
@@ -154,6 +123,73 @@ export default function Payouts() {
     } finally {
       setLoading(false);
     }
+  }, [pagination.current, pagination.pageSize, filters]);
+
+  // Load payouts when dependencies change
+  useEffect(() => {
+    loadPayouts();
+  }, [loadPayouts]);
+
+  // ========================================
+  // REALTIME: Listen to Firestore for auto-refresh
+  // ========================================
+  useEffect(() => {
+    // Build query based on current filter
+    const statusFilter = filters.status || 'PENDING';
+    const payoutsQuery = query(
+      collection(db, 'payoutRequests'),
+      where('status', '==', statusFilter),
+      orderBy('requestedAt', 'desc'),
+      limit(100)
+    );
+
+    // Listen for changes
+    const unsubscribe = onSnapshot(
+      payoutsQuery,
+      (snapshot) => {
+        // When data changes, reload from API (to get full data with joins)
+        // Use a small delay to batch rapid changes
+        const timeoutId = setTimeout(() => {
+          loadPayouts();
+        }, 500);
+        return () => clearTimeout(timeoutId);
+      },
+      (error) => {
+        console.error('Firestore listener error:', error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [filters.status, loadPayouts]);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) {
+        clearTimeout(pollingRef.current);
+      }
+    };
+  }, []);
+
+  // Auto-start polling when QR modal opens (after 3 seconds delay)
+  useEffect(() => {
+    if (qrModalVisible && qrPayout && !isPolling) {
+      const timeout = setTimeout(() => {
+        startPolling();
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, [qrModalVisible, qrPayout]);
+
+  // Generate QR URL for payout (SePay format) - defined early for use in handleProcess
+  const generateQrUrl = (payout: Payout) => {
+    const content = `PAYOUT${payout.id?.substring(0, 8).toUpperCase() || ''}`;
+    // Use backend field names first, fallback to legacy names
+    const bank = payout.bankCode || payout.bankName || '';
+    const acc = payout.accountNumber || payout.bankAccountNumber || '';
+    const amount = payout.amount || 0;
+    // Use correct SePay QR template URL format
+    return `https://qr.sepay.vn/img?acc=${acc}&bank=${bank}&amount=${amount}&des=${encodeURIComponent(content)}&template=compact`;
   };
 
   // Process payout - shows QR modal WITHOUT calling approve API yet

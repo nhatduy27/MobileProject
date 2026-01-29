@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Layout as AntLayout, Menu, Avatar, Dropdown, Typography, Space, theme } from 'antd';
+import { Layout as AntLayout, Menu, Avatar, Dropdown, Typography, Space, theme, Badge } from 'antd';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   DashboardOutlined,
@@ -14,6 +14,7 @@ import {
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { useAuth } from '../contexts/AuthContext';
+import { useRealtime } from '../contexts/RealtimeContext';
 
 const { Header, Sider, Content } = AntLayout;
 const { Text } = Typography;
@@ -23,6 +24,7 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { pendingPayoutsCount, pendingShopsCount } = useRealtime();
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
@@ -41,7 +43,18 @@ export default function Layout() {
     {
       key: '/shops',
       icon: <ShopOutlined />,
-      label: 'Shops',
+      label: (
+        <span>
+          Shops
+          {pendingShopsCount > 0 && (
+            <Badge
+              count={pendingShopsCount}
+              size="small"
+              style={{ marginLeft: 8, backgroundColor: '#F59E0B' }}
+            />
+          )}
+        </span>
+      ),
     },
     {
       key: '/categories',
@@ -56,7 +69,18 @@ export default function Layout() {
     {
       key: '/payouts',
       icon: <WalletOutlined />,
-      label: 'Payouts',
+      label: (
+        <span>
+          Payouts
+          {pendingPayoutsCount > 0 && (
+            <Badge
+              count={pendingPayoutsCount}
+              size="small"
+              style={{ marginLeft: 8, backgroundColor: '#EF4444' }}
+            />
+          )}
+        </span>
+      ),
     },
   ];
 

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider, theme } from 'antd';
 import { AuthProvider } from './contexts/AuthContext';
+import { RealtimeProvider } from './contexts/RealtimeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout';
 import Login from './pages/Login';
@@ -93,8 +94,9 @@ function App() {
       }}
     >
       <AuthProvider>
-        <BrowserRouter>
-          <Routes>
+        <RealtimeProvider>
+          <BrowserRouter>
+            <Routes>
             <Route path="/login" element={<Login />} />
 
             <Route
@@ -114,9 +116,10 @@ function App() {
               <Route path="payouts" element={<Payouts />} />
             </Route>
 
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </BrowserRouter>
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            </Routes>
+          </BrowserRouter>
+        </RealtimeProvider>
       </AuthProvider>
     </ConfigProvider>
   );
