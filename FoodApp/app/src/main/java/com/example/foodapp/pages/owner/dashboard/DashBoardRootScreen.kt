@@ -52,6 +52,8 @@ import com.example.foodapp.pages.owner.shopmanagement.ShopManagementViewModel
 import androidx.compose.ui.platform.LocalContext
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
+import com.example.foodapp.pages.owner.chat.OwnerConversationsScreen
+import com.example.foodapp.pages.owner.chat.OwnerChatDetailScreen
 
 @Preview(showBackground = true, backgroundColor = 0xFF00FF00)
 
@@ -66,6 +68,10 @@ fun DashBoardRootScreen(navController: NavHostController) {
     
     // NavController riêng cho settings navigation
     val settingsNavController = rememberNavController()
+    
+    // Chat navigation state
+    var currentChatRoute by remember { mutableStateOf("conversations_list") }
+    var currentConversationId by remember { mutableStateOf<String?>(null) }
 
     // ViewModel for Shop Info
     val context = LocalContext.current
@@ -244,6 +250,16 @@ fun DashBoardRootScreen(navController: NavHostController) {
                         scope.launch { drawerState.close() }
                     }
 
+                    DrawerItem(
+                        text = "Tin nhắn", 
+                        iconRes = R.drawable.ic_chat,
+                        isSelected = currentScreen == "chat"
+                    ) {
+                        currentScreen = "chat"
+                        currentChatRoute = "conversations_list"
+                        scope.launch { drawerState.close() }
+                    }
+
                     Divider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha=0.3f))
 
                     DrawerItem(
@@ -274,7 +290,8 @@ fun DashBoardRootScreen(navController: NavHostController) {
         Scaffold(
             topBar = {
                 // Show TopBar for screens that don't have their own TopBar
-                if (currentScreen != "dashboard" && currentScreen != "orders" && currentScreen != "foods" && currentScreen != "shippers" && currentScreen != "vouchers" && currentScreen != "customers" && currentScreen != "reviews" && currentScreen != "chatbot") {
+                val isInChatDetail = currentScreen == "chat" && currentChatRoute == "chat_detail"
+                if (currentScreen != "dashboard" && currentScreen != "orders" && currentScreen != "foods" && currentScreen != "shippers" && currentScreen != "vouchers" && currentScreen != "customers" && currentScreen != "reviews" && currentScreen != "chatbot" && !isInChatDetail) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -283,8 +300,14 @@ fun DashBoardRootScreen(navController: NavHostController) {
                             .padding(horizontal = 16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "Open Menu", tint = MaterialTheme.colorScheme.onSurface)
+                        if (currentScreen == "chat" && currentChatRoute == "conversations_list") {
+                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                Icon(Icons.Default.Menu, contentDescription = "Open Menu", tint = MaterialTheme.colorScheme.onSurface)
+                            }
+                        } else {
+                            IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                                Icon(Icons.Default.Menu, contentDescription = "Open Menu", tint = MaterialTheme.colorScheme.onSurface)
+                            }
                         }
 
                         Spacer(modifier = Modifier.width(8.dp))
@@ -294,6 +317,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                                 "revenue" -> "Báo cáo doanh thu"
                                 "reviews" -> "Đánh giá"
                                 "settings" -> "Cài đặt"
+                                "chat" -> "Tin nhắn"
                                 else -> shopState.shopName.ifEmpty { "KTX Food" }
                             },
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
@@ -331,6 +355,23 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     "chatbot" -> ChatbotScreen(
                         onMenuClick = { scope.launch { drawerState.open() } }
                     )
+                    "chat" -> {
+                        when (currentChatRoute) {
+                            "chat_detail" -> OwnerChatDetailScreen(
+                                conversationId = currentConversationId ?: "",
+                                onBack = {
+                                    currentChatRoute = "conversations_list"
+                                    currentConversationId = null
+                                }
+                            )
+                            else -> OwnerConversationsScreen(
+                                onConversationClick = { conversationId ->
+                                    currentConversationId = conversationId
+                                    currentChatRoute = "chat_detail"
+                                }
+                            )
+                        }
+                    }
                     "settings" -> SettingsNavHost(
                         navController = settingsNavController,
                         onLogout = {

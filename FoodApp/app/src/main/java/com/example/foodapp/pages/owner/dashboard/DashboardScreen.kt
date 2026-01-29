@@ -269,14 +269,12 @@ fun DashboardHeaderNew(onMenuClick: () -> Unit) {
 
 @Composable
 fun LegendItem(label: String, color: Color, count: Int) {
-    if (count > 0) {
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
-            Box(Modifier.size(10.dp).background(color, CircleShape))
-            Spacer(Modifier.width(8.dp))
-            Text(text = label, style = MaterialTheme.typography.bodyMedium, color = OwnerColors.TextSecondary)
-            Spacer(Modifier.width(4.dp))
-            Text(text = "($count)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-        }
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 4.dp)) {
+        Box(Modifier.size(10.dp).background(color, CircleShape))
+        Spacer(Modifier.width(8.dp))
+        Text(text = label, style = MaterialTheme.typography.bodyMedium, color = OwnerColors.TextSecondary)
+        Spacer(Modifier.width(4.dp))
+        Text(text = "($count)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
     }
 }
 

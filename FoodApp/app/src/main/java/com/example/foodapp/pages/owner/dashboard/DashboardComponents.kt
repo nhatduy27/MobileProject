@@ -40,7 +40,6 @@ fun DonutChart(
     thickness: Dp = 20.dp
 ) {
     val total = data.values.sum()
-    val proportions = data.mapValues { if (total > 0) it.value.toFloat() / total else 0f }
     
     // Fixed order for consistency
     val orderedKeys = listOf("PENDING", "PREPARING", "READY", "DELIVERING", "COMPLETED", "CANCELLED")
@@ -55,21 +54,26 @@ fun DonutChart(
     )
 
     Canvas(modifier = modifier) {
-        var startAngle = -90f
         val strokeWidth = thickness.toPx()
         val radius = size.minDimension / 2 - strokeWidth / 2
         val center = Offset(size.width / 2, size.height / 2)
 
-        if (total == 0) {
-            drawCircle(
-                color = OwnerColors.BorderLight,
-                style = Stroke(width = strokeWidth)
-            )
-        } else {
+        // Luôn vẽ vòng tròn nền màu xám nhạt trước
+        drawCircle(
+            color = OwnerColors.BorderLight,
+            radius = radius,
+            center = center,
+            style = Stroke(width = strokeWidth)
+        )
+
+        // Sau đó vẽ các phần có dữ liệu lên trên
+        if (total > 0) {
+            var startAngle = -90f
             orderedKeys.forEach { key ->
-                val value = proportions[key] ?: 0f
-                if (value > 0) {
-                    val sweepAngle = value * 360f
+                val value = data[key] ?: 0
+                val proportion = value.toFloat() / total
+                if (proportion > 0) {
+                    val sweepAngle = proportion * 360f
                     drawArc(
                         color = colors[key] ?: OwnerColors.TextTertiary,
                         startAngle = startAngle,
@@ -77,7 +81,7 @@ fun DonutChart(
                         useCenter = false,
                         topLeft = Offset(center.x - radius, center.y - radius),
                         size = Size(radius * 2, radius * 2),
-                        style = Stroke(width = strokeWidth, cap = StrokeCap.Butt) // Butt cap for cleaner segments
+                        style = Stroke(width = strokeWidth, cap = StrokeCap.Butt)
                     )
                     startAngle += sweepAngle
                 }
