@@ -139,14 +139,31 @@ export class AuthService {
    * Register new user with email/password
    *
    * AUTH-003
+   *
+   * Handles re-registration after soft-delete:
+   * - If user was soft-deleted (status=DELETED in Firestore), they can re-register
+   * - If Firebase Auth has orphaned user (from incomplete deletion), we clean it up
    */
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterDto): Promise<{
+    user: {
+      id: string;
+      email: string;
+      displayName: string;
+      role: UserRole;
+      status: UserStatus;
+    };
+    customToken: string;
+  }> {
     // Check if email already exists (excludes only DELETED users; BANNED/ACTIVE still block)
     // Soft-deleted users (status=DELETED) are excluded, allowing re-registration
     const existingUser = await this.usersRepository.findActiveByEmail(dto.email);
     if (existingUser) {
       throw new ConflictException('Email đã được sử dụng');
     }
+
+    // Check for soft-deleted user (for potential orphan cleanup later)
+    const softDeletedUser = await this.usersRepository.findByEmail(dto.email);
+    const hasSoftDeletedRecord = softDeletedUser && softDeletedUser.status === UserStatus.DELETED;
 
     // Check if phone already exists (if provided; excludes only DELETED users; BANNED/ACTIVE still block)
     if (dto.phone) {
@@ -191,6 +208,7 @@ export class AuthService {
         role: userRole, // FIX: Use dto.role (not hardcoded CUSTOMER) to sync with claims
         status: UserStatus.ACTIVE,
         emailVerified: false,
+        provider: 'password', // Track authentication provider
         fcmTokens: [],
         loginCount: 0,
         createdAt: FieldValue.serverTimestamp() as any,
@@ -227,6 +245,29 @@ export class AuthService {
     } catch (error: any) {
       // Handle Firebase Auth errors
       if (error.code === 'auth/email-already-exists') {
+        // Check if this is an orphaned Auth user from incomplete soft-delete
+        if (hasSoftDeletedRecord) {
+          // Orphaned Auth user detected - clean up and retry
+          try {
+            // Get the existing Auth user by email to delete it
+            const orphanedAuthUser = await this.firebaseService.auth.getUserByEmail(dto.email);
+            await this.firebaseService.auth.deleteUser(orphanedAuthUser.uid);
+
+            console.log(
+              `Cleaned up orphaned Auth user for email ${dto.email} (uid: ${orphanedAuthUser.uid})`,
+            );
+
+            // Retry registration after cleanup
+            return this.register(dto);
+          } catch (cleanupError: any) {
+            console.error('Failed to clean up orphaned Auth user:', cleanupError);
+            throw new ConflictException(
+              'Tài khoản cũ chưa được xóa hoàn toàn. Vui lòng liên hệ hỗ trợ.',
+            );
+          }
+        }
+
+        // Normal case: email genuinely in use
         throw new ConflictException('Email đã được sử dụng');
       }
       if (error.code === 'auth/phone-number-already-exists') {
@@ -245,7 +286,12 @@ export class AuthService {
    * 1. Mobile app gets Google ID token from Firebase SDK
    * 2. Send token to backend
    * 3. Backend verifies token
-   * 4. Create/update user in Firestore
+   * 4. Check for existing email/password account collision
+   * 5. Create/update user in Firestore
+   *
+   * IMPORTANT: Handles email collision with existing password accounts.
+   * Policy: If email already registered with password, block Google sign-in
+   * and prompt user to link accounts via client SDK instead.
    */
   async googleSignIn(dto: GoogleAuthDto) {
     try {
@@ -257,12 +303,29 @@ export class AuthService {
         throw new BadRequestException('Email không tồn tại trong Google account');
       }
 
-      // Check if user exists
+      // Check if user exists by Google UID
       let user = await this.usersRepository.findById(uid);
       let isNewUser = false;
 
       if (!user) {
-        // New user - create in Firestore
+        // User doesn't exist by UID - check if email already registered (collision check)
+        // This prevents creating duplicate Firestore docs when a password user signs in with Google
+        const existingUserByEmail = await this.usersRepository.findActiveByEmail(email);
+
+        if (existingUserByEmail) {
+          // Email collision detected: existing password account with same email
+          // Policy: Block and advise linking accounts on client side
+          // This prevents:
+          // 1. Duplicate Firestore documents with same email
+          // 2. Overwriting/breaking existing password login
+          // 3. Accidental account takeover
+          throw new ConflictException(
+            'Email này đã được đăng ký bằng email/mật khẩu. ' +
+              'Vui lòng đăng nhập bằng email/mật khẩu trước, sau đó liên kết tài khoản Google trong phần Cài đặt.',
+          );
+        }
+
+        // No collision - create new user in Firestore
         const role = dto.role || UserRole.CUSTOMER;
 
         // Set custom claims
@@ -275,6 +338,7 @@ export class AuthService {
           role,
           status: UserStatus.ACTIVE,
           emailVerified: email_verified || false,
+          provider: 'google', // Track authentication provider
           fcmTokens: [],
           loginCount: 1,
           lastLoginAt: FieldValue.serverTimestamp() as any,
@@ -286,7 +350,14 @@ export class AuthService {
         user = await this.usersRepository.findById(uid);
         isNewUser = true;
       } else {
-        // Existing user - update last login
+        // Existing user by UID - check if account is active
+        if (user.status === UserStatus.BANNED) {
+          throw new UnauthorizedException(
+            `Tài khoản đã bị khóa${user.bannedReason ? `: ${user.bannedReason}` : ''}`,
+          );
+        }
+
+        // Update last login
         await this.usersRepository.updateLastLogin(uid);
         user = await this.usersRepository.findById(uid);
       }
@@ -304,6 +375,9 @@ export class AuthService {
         isNewUser,
       };
     } catch (error: any) {
+      if (error instanceof ConflictException || error instanceof UnauthorizedException) {
+        throw error;
+      }
       if (error.code === 'auth/id-token-expired') {
         throw new UnauthorizedException('Google token đã hết hạn');
       }

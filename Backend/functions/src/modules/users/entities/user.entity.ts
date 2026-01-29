@@ -56,6 +56,9 @@ export class UserEntity {
   status: UserStatus;
   emailVerified: boolean;
 
+  // Authentication provider (password, google, etc.)
+  provider?: 'password' | 'google';
+
   // Role-specific fields
   shopId?: string; // For OWNER
   shipperInfo?: ShipperInfo; // For SHIPPER

@@ -19,6 +19,9 @@ export interface UserEntity extends IBaseEntity {
   status: UserStatus;
   emailVerified: boolean;
 
+  // Authentication provider (password, google, etc.)
+  provider?: 'password' | 'google';
+
   // Ban information (if status === BANNED)
   bannedAt?: Date;
   bannedBy?: string; // Admin UID
@@ -52,4 +55,5 @@ export enum UserRole {
 export enum UserStatus {
   ACTIVE = 'ACTIVE',
   BANNED = 'BANNED',
+  DELETED = 'DELETED',
 }
