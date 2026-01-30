@@ -285,10 +285,14 @@ fun CartScreen(
                                 handleCheckoutAll(filteredShopGroups, onCheckoutShop, context)
                             }
                         )
-                        UserBottomNav(navController = navController, onProfileClick = { })
+                        UserBottomNav(navController = navController, onProfileClick = { 
+                            navController.navigate(com.example.foodapp.navigation.Screen.UserProfile.route)
+                        })
                     }
                 } else {
-                    UserBottomNav(navController = navController, onProfileClick = { })
+                    UserBottomNav(navController = navController, onProfileClick = { 
+                        navController.navigate(com.example.foodapp.navigation.Screen.UserProfile.route)
+                    })
                 }
             },
             containerColor = Color(0xFFF5F5F5)

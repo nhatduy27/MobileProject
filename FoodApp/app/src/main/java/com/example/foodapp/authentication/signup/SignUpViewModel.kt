@@ -60,19 +60,13 @@ class SignUpViewModel(
 
                             if (customToken.isNotBlank()) {
                                 authManager.signInWithCustomToken(customToken) { isSuccessful, idToken, error ->
-                                    if (isSuccessful) {
-                                        if (!idToken.isNullOrEmpty()) {
-                                            authManager.saveFirebaseToken(idToken)
-                                            authManager.debugTokenInfo()
-                                            registerDeviceTokenForUser()
-
-                                            _signUpState.postValue(SignUpState.Success)
-                                        } else {
-                                            _signUpState.postValue(SignUpState.Success)
-                                        }
-                                    } else {
-                                        _signUpState.postValue(SignUpState.Success)
+                                    if (isSuccessful && !idToken.isNullOrEmpty()) {
+                                        authManager.saveFirebaseToken(idToken)
+                                        authManager.debugTokenInfo()
+                                        registerDeviceTokenForUser()
                                     }
+                                    // Chỉ set Success 1 lần duy nhất
+                                    _signUpState.postValue(SignUpState.Success)
                                 }
                             } else {
                                 _signUpState.value = SignUpState.Success

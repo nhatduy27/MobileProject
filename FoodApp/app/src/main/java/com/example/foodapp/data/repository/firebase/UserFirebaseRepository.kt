@@ -45,6 +45,13 @@ class UserFirebaseRepository(private val context : Context) {
             return
         }
 
+        // Check emailVerified từ Firebase Auth trước (cho Google Sign-In)
+        if (currentUser.isEmailVerified) {
+            onComplete(true)
+            return
+        }
+
+        // Nếu chưa verified từ Auth, check isVerify từ Firestore
         db.collection("users").document(userId).get()
             .addOnSuccessListener { document ->
                 if (document != null && document.exists()) {

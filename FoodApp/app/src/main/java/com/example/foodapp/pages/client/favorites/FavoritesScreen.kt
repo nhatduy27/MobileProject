@@ -163,7 +163,9 @@ fun FavoritesScreen(
             }
         },
         bottomBar = {
-            UserBottomNav(navController = navController, onProfileClick = {})
+            UserBottomNav(navController = navController, onProfileClick = { 
+                navController.navigate(com.example.foodapp.navigation.Screen.UserProfile.route)
+            })
         },
         containerColor = Color(0xFFF8F9FA)
     ) { padding ->
