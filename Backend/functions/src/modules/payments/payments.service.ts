@@ -203,10 +203,47 @@ export class PaymentsService {
   }
 
   /**
-   * Get payment by order ID
+   * Get payment by order ID (internal use, no ownership check)
    */
   async getPaymentByOrderId(orderId: string): Promise<PaymentEntity | null> {
     return this.paymentsRepo.findByOrderId(orderId);
+  }
+
+  /**
+   * Get payment for customer with ownership validation
+   * GET /api/orders/:orderId/payment
+   */
+  async getPaymentForCustomer(customerId: string, orderId: string): Promise<PaymentEntity> {
+    // 1. Get order and validate
+    const order = await this.ordersRepo.findById(orderId);
+    if (!order) {
+      throw new NotFoundException({
+        code: 'PAYMENT_012',
+        message: 'Order not found',
+        statusCode: 404,
+      });
+    }
+
+    // 2. Verify ownership
+    if (order.customerId !== customerId) {
+      throw new BadRequestException({
+        code: 'PAYMENT_013',
+        message: 'Order does not belong to you',
+        statusCode: 400,
+      });
+    }
+
+    // 3. Get payment
+    const payment = await this.paymentsRepo.findByOrderId(orderId);
+    if (!payment) {
+      throw new NotFoundException({
+        code: 'PAYMENT_014',
+        message: 'Payment not found for this order',
+        statusCode: 404,
+      });
+    }
+
+    return payment;
   }
 
   /**

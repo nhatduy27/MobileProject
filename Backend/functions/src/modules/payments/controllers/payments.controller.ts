@@ -1,4 +1,4 @@
-import { Controller, Post, Param, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthGuard } from '../../../core/guards/auth.guard';
 import { RolesGuard } from '../../../core/guards/roles.guard';
 import { Roles } from '../../../core/decorators/roles.decorator';
@@ -35,6 +35,34 @@ export class PaymentsController {
         method: payment.method,
         status: payment.status,
         ...(payment.providerData && { providerData: payment.providerData }),
+        createdAt: payment.createdAt,
+      },
+    };
+  }
+
+  /**
+   * Get payment info for order (includes QR code if SEPAY)
+   * GET /api/orders/:orderId/payment
+   */
+  @Get(':orderId/payment')
+  @Roles(UserRole.CUSTOMER)
+  @HttpCode(HttpStatus.OK)
+  async getPayment(
+    @CurrentUser('uid') customerId: string,
+    @Param('orderId') orderId: string,
+  ) {
+    const payment = await this.paymentsService.getPaymentForCustomer(customerId, orderId);
+
+    return {
+      message: 'Payment retrieved successfully',
+      payment: {
+        id: payment.id,
+        orderId: payment.orderId,
+        amount: payment.amount,
+        method: payment.method,
+        status: payment.status,
+        ...(payment.providerData && { providerData: payment.providerData }),
+        ...(payment.paidAt && { paidAt: payment.paidAt }),
         createdAt: payment.createdAt,
       },
     };
