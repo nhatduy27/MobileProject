@@ -20,12 +20,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.data.remote.client.response.review.MyOrderReviewApiModel
 import kotlinx.coroutines.launch
 
@@ -114,7 +116,7 @@ fun MyReviewsScreen(
             },
             title = {
                 Text(
-                    "Xác nhận xóa",
+                    stringResource(R.string.delete_review_title),
                     style = MaterialTheme.typography.titleLarge.copy(
                         fontWeight = FontWeight.Bold
                     )
@@ -122,7 +124,7 @@ fun MyReviewsScreen(
             },
             text = {
                 Text(
-                    "Bạn có chắc chắn muốn xóa đánh giá này? Hành động này không thể hoàn tác.",
+                    stringResource(R.string.delete_review_confirmation),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
                 )
@@ -145,7 +147,10 @@ fun MyReviewsScreen(
                             color = Color.White
                         )
                     } else {
-                        Text("Xóa", fontWeight = FontWeight.SemiBold)
+                        Text(
+                            stringResource(R.string.delete),
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             },
@@ -158,7 +163,10 @@ fun MyReviewsScreen(
                     enabled = deleteReviewState !is DeleteReviewState.Loading,
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Text("Hủy", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        stringResource(R.string.cancel),
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             },
             shape = RoundedCornerShape(16.dp)
@@ -171,7 +179,7 @@ fun MyReviewsScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Đánh giá của tôi",
+                        text = stringResource(R.string.my_reviews_title),
                         style = MaterialTheme.typography.titleLarge.copy(
                             fontWeight = FontWeight.Bold
                         )
@@ -181,7 +189,7 @@ fun MyReviewsScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.Outlined.ArrowBack,
-                            contentDescription = "Quay lại"
+                            contentDescription = stringResource(R.string.go_back)
                         )
                     }
                 },
@@ -189,7 +197,7 @@ fun MyReviewsScreen(
                     IconButton(onClick = { viewModel.refreshReviews() }) {
                         Icon(
                             imageVector = Icons.Outlined.Refresh,
-                            contentDescription = "Làm mới",
+                            contentDescription = stringResource(R.string.refresh),
                             tint = Color(0xFFFBBB00)
                         )
                     }
@@ -351,7 +359,7 @@ fun ReviewCard(
                     Spacer(modifier = Modifier.height(2.dp))
 
                     Text(
-                        text = "Mã đơn: ${review.orderId}",
+                        text = stringResource(R.string.order_code, review.orderId),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color(0xFF757575),
                         fontSize = 12.sp
@@ -368,7 +376,7 @@ fun ReviewCard(
                 // Shop rating
                 if (review.shopRating > 0) {
                     RatingSection(
-                        title = "Shop",
+                        title = stringResource(R.string.shop),
                         rating = review.shopRating,
                         comment = review.shopComment
                     )
@@ -378,7 +386,7 @@ fun ReviewCard(
                 review.shipperRating?.let { shipperRating ->
                     if (shipperRating > 0) {
                         RatingSection(
-                            title = "Shipper",
+                            title = stringResource(R.string.shipper),
                             rating = shipperRating,
                             comment = review.shipperComment ?: ""
                         )
@@ -391,7 +399,7 @@ fun ReviewCard(
             // Product reviews
             if (review.productReviews.isNotEmpty()) {
                 Text(
-                    text = "Đánh giá sản phẩm:",
+                    text = stringResource(R.string.product_reviews_title),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF424242)
@@ -402,7 +410,7 @@ fun ReviewCard(
 
                 review.productReviews.forEach { productReview ->
                     ProductReviewItem(
-                        productName = productReview.productName ?: "Sản phẩm",
+                        productName = productReview.productName ?: stringResource(R.string.product),
                         rating = productReview.rating,
                         comment = productReview.comment
                     )
@@ -437,7 +445,7 @@ fun ReviewCard(
                             Spacer(modifier = Modifier.width(8.dp))
 
                             Text(
-                                text = "Phản hồi từ quán",
+                                text = stringResource(R.string.shop_response_title),
                                 style = MaterialTheme.typography.bodySmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF424242)
@@ -505,7 +513,7 @@ fun ReviewCard(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
-                            contentDescription = "Sửa",
+                            contentDescription = stringResource(R.string.edit),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -521,7 +529,7 @@ fun ReviewCard(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Delete,
-                            contentDescription = "Xóa",
+                            contentDescription = stringResource(R.string.delete),
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -550,7 +558,7 @@ fun RatingSection(
             )
             StarRating(rating = rating)
             Text(
-                text = "$rating.0",
+                text = stringResource(R.string.rating_value, rating),
                 style = MaterialTheme.typography.bodyMedium.copy(
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFFFBBB00)
@@ -590,7 +598,7 @@ fun ProductReviewItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = productName ?: "Sản phẩm",
+                    text = productName ?: stringResource(R.string.product),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.SemiBold,
                         color = Color(0xFF424242)
@@ -647,7 +655,7 @@ fun EmptyReviewsScreen(modifier: Modifier = Modifier) {
         ) {
             Icon(
                 imageVector = Icons.Outlined.RateReview,
-                contentDescription = "Chưa có đánh giá",
+                contentDescription = stringResource(R.string.no_reviews_icon_desc),
                 tint = Color(0xFFFBBB00),
                 modifier = Modifier.size(60.dp)
             )
@@ -656,7 +664,7 @@ fun EmptyReviewsScreen(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Chưa có đánh giá nào",
+            text = stringResource(R.string.no_reviews_title),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold
             ),
@@ -666,7 +674,7 @@ fun EmptyReviewsScreen(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Hãy đánh giá các đơn hàng đã mua để chia sẻ trải nghiệm của bạn với mọi người",
+            text = stringResource(R.string.no_reviews_message),
             style = MaterialTheme.typography.bodyMedium,
             color = Color(0xFF757575),
             textAlign = TextAlign.Center,
@@ -695,7 +703,7 @@ fun LoadingScreen(modifier: Modifier = Modifier) {
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "Đang tải...",
+                text = stringResource(R.string.loading),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF757575)
             )
@@ -726,7 +734,7 @@ fun ErrorScreen(
         ) {
             Icon(
                 imageVector = Icons.Outlined.Refresh,
-                contentDescription = "Lỗi",
+                contentDescription = stringResource(R.string.error_icon_desc),
                 tint = Color(0xFFD32F2F),
                 modifier = Modifier.size(60.dp)
             )
@@ -735,7 +743,7 @@ fun ErrorScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Đã có lỗi xảy ra",
+            text = stringResource(R.string.error_title),
             style = MaterialTheme.typography.titleLarge.copy(
                 fontWeight = FontWeight.Bold
             ),
@@ -769,7 +777,7 @@ fun ErrorScreen(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                "Thử lại",
+                stringResource(R.string.retry),
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontWeight = FontWeight.SemiBold
                 )

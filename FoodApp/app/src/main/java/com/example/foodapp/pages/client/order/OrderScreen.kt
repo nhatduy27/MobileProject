@@ -16,15 +16,17 @@ import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.launch
+import com.example.foodapp.R
 import com.example.foodapp.pages.client.components.order.OrderCard
-import com.example.foodapp.ui.theme.*
+import kotlinx.coroutines.launch
 
 // Màu chủ đạo cam
 private val PrimaryOrange = Color(0xFFFF6B35)
@@ -39,6 +41,8 @@ fun OrderScreen(
     onBack: () -> Unit,
     onOrderClick: (String) -> Unit = {}
 ) {
+
+    val context = LocalContext.current
     val viewModel: OrderViewModel = viewModel(factory = OrderViewModel.factory())
     val coroutineScope = rememberCoroutineScope()
 
@@ -72,11 +76,11 @@ fun OrderScreen(
 
     // Danh sách lý do xóa
     val deleteReasons = listOf(
-        "Đặt nhầm đơn hàng",
-        "Thay đổi ý định mua hàng",
-        "Thông tin đơn hàng không chính xác",
-        "Tìm thấy sản phẩm tốt hơn",
-        "Lý do khác"
+        stringResource(R.string.delete_reason_wrong_order),
+        stringResource(R.string.delete_reason_change_mind),
+        stringResource(R.string.delete_reason_incorrect_info),
+        stringResource(R.string.delete_reason_better_product),
+        stringResource(R.string.delete_reason_other)
     )
 
     // Hiển thị snackbar thông báo
@@ -87,8 +91,8 @@ fun OrderScreen(
         when (val state = deleteState) {
             is DeleteOrderState.Success -> {
                 snackbarHostState.showSnackbar(
-                    message = "Đã xóa đơn hàng thành công",
-                    actionLabel = "OK"
+                    message = R.string.delete_order_success.toString(),
+                    actionLabel = R.string.ok.toString()
                 )
                 showDeleteReasonDialog = false
                 showConfirmDeleteDialog = false
@@ -99,7 +103,7 @@ fun OrderScreen(
             is DeleteOrderState.Error -> {
                 snackbarHostState.showSnackbar(
                     message = state.message,
-                    actionLabel = "Thử lại"
+                    actionLabel = R.string.retry.toString()
                 )
                 showConfirmDeleteDialog = false
                 viewModel.resetDeleteState()
@@ -186,7 +190,7 @@ fun OrderScreen(
                     },
                     title = {
                         Text(
-                            "Lý do xóa đơn hàng",
+                            stringResource(R.string.delete_order_reason_title),
                             fontWeight = FontWeight.Bold,
                             color = PrimaryOrange
                         )
@@ -204,16 +208,16 @@ fun OrderScreen(
                                             .fillMaxWidth()
                                     ) {
                                         Text(
-                                            "Mã đơn: #${it.orderNumber}",
+                                            stringResource(R.string.order_code_label, it.orderNumber),
                                             fontWeight = FontWeight.SemiBold,
                                             color = DarkOrange
                                         )
                                         Text(
-                                            "Cửa hàng: ${it.shopName}",
+                                            stringResource(R.string.shop_name_label, it.shopName),
                                             fontSize = 14.sp
                                         )
                                         Text(
-                                            "Tổng tiền: ${formatPrice(it.total)}",
+                                            stringResource(R.string.total_price_label, formatPrice(it.total)),
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Medium
                                         )
@@ -223,7 +227,7 @@ fun OrderScreen(
                             }
 
                             Text(
-                                "Vui lòng chọn lý do bạn muốn xóa đơn hàng này:",
+                                stringResource(R.string.choose_delete_reason_hint),
                                 fontSize = 14.sp,
                                 color = Color.Gray
                             )
@@ -238,7 +242,7 @@ fun OrderScreen(
                                     Card(
                                         onClick = {
                                             deleteReason = reason
-                                            if (reason == "Lý do khác") {
+                                            if (reason == R.string.delete_reason_other.toString()) {
                                                 deleteReason = ""
                                             }
                                         },
@@ -264,7 +268,7 @@ fun OrderScreen(
                                                 selected = isSelected,
                                                 onClick = {
                                                     deleteReason = reason
-                                                    if (reason == "Lý do khác") {
+                                                    if (reason == R.string.delete_reason_other.toString()) {
                                                         deleteReason = ""
                                                     }
                                                 },
@@ -291,8 +295,8 @@ fun OrderScreen(
                                     value = deleteReason,
                                     onValueChange = { deleteReason = it },
                                     modifier = Modifier.fillMaxWidth(),
-                                    label = { Text("Nhập lý do khác") },
-                                    placeholder = { Text("Vui lòng nhập lý do cụ thể...") },
+                                    label = { Text(stringResource(R.string.enter_other_reason_label)) },
+                                    placeholder = { Text(stringResource(R.string.enter_other_reason_placeholder)) },
                                     maxLines = 3,
                                     shape = RoundedCornerShape(12.dp),
                                     colors = OutlinedTextFieldDefaults.colors(
@@ -313,8 +317,8 @@ fun OrderScreen(
                                 } else {
                                     coroutineScope.launch {
                                         snackbarHostState.showSnackbar(
-                                            message = "Vui lòng chọn hoặc nhập lý do xóa",
-                                            actionLabel = "OK"
+                                            message = R.string.please_choose_delete_reason.toString(),
+                                            actionLabel = R.string.ok.toString()
                                         )
                                     }
                                 }
@@ -326,7 +330,7 @@ fun OrderScreen(
                             ),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("Tiếp tục", fontWeight = FontWeight.SemiBold)
+                            Text(stringResource(R.string.continue_button), fontWeight = FontWeight.SemiBold)
                         }
                     },
                     dismissButton = {
@@ -337,7 +341,7 @@ fun OrderScreen(
                                 deleteReason = ""
                             }
                         ) {
-                            Text("Hủy", color = Color.Gray)
+                            Text(stringResource(R.string.cancel), color = Color.Gray)
                         }
                     },
                     shape = RoundedCornerShape(16.dp)
@@ -357,12 +361,12 @@ fun OrderScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Warning,
-                                contentDescription = "Cảnh báo",
+                                contentDescription = stringResource(R.string.warning_content_description),
                                 tint = PrimaryOrange,
                                 modifier = Modifier.size(28.dp)
                             )
                             Text(
-                                "Xác nhận xóa đơn hàng",
+                                stringResource(R.string.confirm_delete_order_title),
                                 fontWeight = FontWeight.Bold,
                                 color = PrimaryOrange
                             )
@@ -380,15 +384,15 @@ fun OrderScreen(
                                         .fillMaxWidth()
                                 ) {
                                     Text(
-                                        "Bạn sắp xóa đơn hàng sau:",
+                                        stringResource(R.string.about_to_delete_order),
                                         fontWeight = FontWeight.SemiBold,
                                         color = DarkOrange
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
-                                    Text("📦 Mã đơn: #${it.orderNumber}", fontSize = 14.sp)
-                                    Text("🏪 Cửa hàng: ${it.shopName}", fontSize = 14.sp)
-                                    Text("💰 Tổng tiền: ${formatPrice(it.total)}", fontSize = 14.sp)
-                                    Text("📅 Ngày đặt: ${formatDate(it.createdAt)}", fontSize = 14.sp)
+                                    Text(stringResource(R.string.order_code_display, it.orderNumber), fontSize = 14.sp)
+                                    Text(stringResource(R.string.shop_name_display, it.shopName), fontSize = 14.sp)
+                                    Text(stringResource(R.string.total_price_display, formatPrice(it.total)), fontSize = 14.sp)
+                                    Text(stringResource(R.string.order_date_display, formatDate(it.createdAt)), fontSize = 14.sp)
                                 }
                             }
 
@@ -402,7 +406,7 @@ fun OrderScreen(
                                     .fillMaxWidth()
                             ) {
                                 Text(
-                                    "Lý do xóa:",
+                                    stringResource(R.string.delete_reason_display),
                                     fontWeight = FontWeight.SemiBold,
                                     color = DarkOrange
                                 )
@@ -427,12 +431,12 @@ fun OrderScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Warning,
-                                    contentDescription = "Cảnh báo",
+                                    contentDescription = stringResource(R.string.warning_content_description),
                                     tint = Color(0xFFD32F2F),
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Text(
-                                    "Hành động này KHÔNG THỂ hoàn tác!",
+                                    stringResource(R.string.irreversible_warning),
                                     color = Color(0xFFD32F2F),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp
@@ -454,7 +458,7 @@ fun OrderScreen(
                             ),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("XÓA ĐƠN HÀNG", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.delete_order_button), fontWeight = FontWeight.Bold)
                         }
                     },
                     dismissButton = {
@@ -468,7 +472,7 @@ fun OrderScreen(
                             ),
                             shape = RoundedCornerShape(8.dp)
                         ) {
-                            Text("Hủy bỏ", fontWeight = FontWeight.Medium)
+                            Text(stringResource(R.string.cancel), fontWeight = FontWeight.Medium)
                         }
                     },
                     shape = RoundedCornerShape(16.dp)
@@ -553,7 +557,7 @@ fun OrderTopBar(
     CenterAlignedTopAppBar(
         title = {
             Text(
-                text = "Đơn hàng của tôi",
+                text = stringResource(R.string.my_orders_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
             )
@@ -568,7 +572,7 @@ fun OrderTopBar(
             IconButton(onClick = onBack) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Quay lại"
+                    contentDescription = stringResource(R.string.back_button)
                 )
             }
         },
@@ -580,7 +584,7 @@ fun OrderTopBar(
                 IconButton(onClick = { expanded = true }) {
                     Icon(
                         imageVector = Icons.Default.FilterList,
-                        contentDescription = "Lọc đơn hàng"
+                        contentDescription = stringResource(R.string.filter_orders_button)
                     )
                 }
 
@@ -589,7 +593,7 @@ fun OrderTopBar(
                     onDismissRequest = { expanded = false }
                 ) {
                     DropdownMenuItem(
-                        text = { Text("Tất cả") },
+                        text = { Text(stringResource(R.string.filter_all)) },
                         onClick = {
                             onFilterClick(null)
                             expanded = false
@@ -605,7 +609,7 @@ fun OrderTopBar(
                     DropdownMenuItem(
                         text = {
                             Text(
-                                "Đang giao",
+                                stringResource(R.string.filter_shipping),
                                 fontWeight = FontWeight.SemiBold,
                                 color = PrimaryOrange
                             )
@@ -623,7 +627,7 @@ fun OrderTopBar(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Đang chờ") },
+                        text = { Text(stringResource(R.string.filter_pending)) },
                         onClick = {
                             onFilterClick("PENDING")
                             expanded = false
@@ -636,7 +640,7 @@ fun OrderTopBar(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Đã giao") },
+                        text = { Text(stringResource(R.string.filter_delivered)) },
                         onClick = {
                             onFilterClick("DELIVERED")
                             expanded = false
@@ -649,7 +653,7 @@ fun OrderTopBar(
                         }
                     )
                     DropdownMenuItem(
-                        text = { Text("Đã hủy") },
+                        text = { Text(stringResource(R.string.filter_cancelled)) },
                         onClick = {
                             onFilterClick("CANCELLED")
                             expanded = false
@@ -668,7 +672,7 @@ fun OrderTopBar(
             IconButton(onClick = onRefresh) {
                 Icon(
                     imageVector = Icons.Default.Refresh,
-                    contentDescription = "Làm mới"
+                    contentDescription = stringResource(R.string.refresh_button)
                 )
             }
         }
@@ -687,7 +691,7 @@ fun LoadingState() {
         ) {
             CircularProgressIndicator(color = PrimaryOrange)
             Text(
-                "Đang tải đơn hàng...",
+                stringResource(R.string.loading_orders),
                 color = PrimaryOrange,
                 fontWeight = FontWeight.Medium
             )
@@ -708,18 +712,18 @@ fun EmptyState() {
         ) {
             Icon(
                 imageVector = Icons.Default.ShoppingBag,
-                contentDescription = "Không có đơn hàng",
+                contentDescription = stringResource(R.string.no_orders_content_description),
                 modifier = Modifier.size(80.dp),
                 tint = PrimaryOrange.copy(alpha = 0.5f)
             )
             Text(
-                text = "Chưa có đơn hàng nào",
+                text = stringResource(R.string.no_orders_title),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryOrange
             )
             Text(
-                text = "Hãy đặt món ngay để trải nghiệm\ndịch vụ giao hàng nhanh chóng!",
+                text = stringResource(R.string.no_orders_subtitle),
                 fontSize = 14.sp,
                 color = Color.Gray,
                 textAlign = TextAlign.Center
@@ -744,12 +748,12 @@ fun ErrorState(
         ) {
             Icon(
                 imageVector = Icons.Default.Error,
-                contentDescription = "Lỗi",
+                contentDescription = stringResource(R.string.error_content_description),
                 modifier = Modifier.size(80.dp),
                 tint = PrimaryOrange
             )
             Text(
-                text = "Đã xảy ra lỗi",
+                text = stringResource(R.string.error_loading_orders_title),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = PrimaryOrange
@@ -774,7 +778,7 @@ fun ErrorState(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Thử lại", fontWeight = FontWeight.SemiBold)
+                Text(stringResource(R.string.retry), fontWeight = FontWeight.SemiBold)
             }
         }
     }

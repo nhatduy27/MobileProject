@@ -1,6 +1,5 @@
 package com.example.foodapp.pages.client.components.payment
 
-
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -15,11 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.foodapp.pages.client.payment.*
+import com.example.foodapp.R
 import com.example.foodapp.ui.theme.*
 
 @Composable
@@ -44,7 +44,7 @@ fun QuantitySelector(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Remove,
-                    contentDescription = "Giảm",
+                    contentDescription = stringResource(id = R.string.decrease_quantity),
                     tint = if (quantity > 1) PrimaryOrange else TextSecondary.copy(alpha = 0.5f),
                     modifier = Modifier.size(18.dp)
                 )
@@ -68,7 +68,7 @@ fun QuantitySelector(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Add,
-                    contentDescription = "Tăng",
+                    contentDescription = stringResource(id = R.string.increase_quantity),
                     tint = PrimaryOrange,
                     modifier = Modifier.size(18.dp)
                 )

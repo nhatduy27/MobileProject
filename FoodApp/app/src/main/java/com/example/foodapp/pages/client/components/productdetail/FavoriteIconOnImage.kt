@@ -16,7 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.example.foodapp.R
 
 @Composable
 fun FavoriteIconOnImage(
@@ -50,7 +52,10 @@ fun FavoriteIconOnImage(
             } else {
                 Icon(
                     imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Outlined.Favorite,
-                    contentDescription = if (isFavorite) "Bỏ yêu thích" else "Thêm vào yêu thích",
+                    contentDescription = if (isFavorite)
+                        stringResource(id = R.string.remove_from_favorites)
+                    else
+                        stringResource(id = R.string.add_to_favorites),
                     tint = if (isFavorite) Color(0xFFFF6B6B) else Color(0xFF9E9E9E),
                     modifier = Modifier
                         .size(32.dp)

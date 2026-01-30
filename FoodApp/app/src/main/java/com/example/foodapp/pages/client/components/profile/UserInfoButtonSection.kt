@@ -1,12 +1,9 @@
 package com.example.foodapp.pages.client.components.profile
 
-
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -14,9 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.foodapp.R
 
 @Composable
 fun UserInfoButtonSection(
@@ -45,7 +43,7 @@ fun UserInfoButtonSection(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.Person,
-                        contentDescription = "Thông tin người dùng",
+                        contentDescription = stringResource(id = R.string.user_info_icon),
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(24.dp)
                     )
@@ -54,13 +52,13 @@ fun UserInfoButtonSection(
 
                     Column {
                         Text(
-                            text = "Thông tin người dùng",
+                            text = stringResource(id = R.string.user_info_button_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            text = "Xem và quản lý thông tin cá nhân",
+                            text = stringResource(id = R.string.user_info_button_description),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -69,7 +67,7 @@ fun UserInfoButtonSection(
 
                 Icon(
                     imageVector = Icons.Default.ArrowForwardIos,
-                    contentDescription = "Đi đến",
+                    contentDescription = stringResource(id = R.string.go_to_icon),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(20.dp)
                 )

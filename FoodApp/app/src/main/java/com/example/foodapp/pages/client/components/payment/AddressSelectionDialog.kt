@@ -1,6 +1,5 @@
 package com.example.foodapp.pages.client.components.payment
 
-
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -13,10 +12,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.data.model.client.DeliveryAddress
 import com.example.foodapp.ui.theme.*
 
@@ -31,7 +32,7 @@ fun AddressSelectionDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Chọn địa chỉ giao hàng",
+                text = stringResource(R.string.select_delivery_address),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary
@@ -52,13 +53,13 @@ fun AddressSelectionDialog(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.LocationOff,
-                                contentDescription = null,
+                                contentDescription = stringResource(R.string.no_addresses),
                                 tint = TextSecondary.copy(alpha = 0.5f),
                                 modifier = Modifier.size(48.dp)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "Chưa có địa chỉ nào",
+                                text = stringResource(R.string.no_addresses_message),
                                 fontSize = 16.sp,
                                 color = TextSecondary,
                                 textAlign = TextAlign.Center
@@ -84,7 +85,7 @@ fun AddressSelectionDialog(
         confirmButton = {
             TextButton(onClick = onDismiss) {
                 Text(
-                    text = "Đóng",
+                    text = stringResource(R.string.close),
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -133,7 +134,10 @@ fun AddressItem(
                             containerColor = AccentGreen.copy(alpha = 0.1f),
                             contentColor = AccentGreen,
                         ) {
-                            Text("Mặc định", fontSize = 10.sp)
+                            Text(
+                                text = stringResource(R.string.default_address_badge),
+                                fontSize = 10.sp
+                            )
                         }
                     }
                 }
@@ -141,7 +145,7 @@ fun AddressItem(
                 if (isSelected) {
                     Icon(
                         imageVector = Icons.Filled.CheckCircle,
-                        contentDescription = "Đã chọn",
+                        contentDescription = stringResource(R.string.selected),
                         tint = AccentGreen,
                         modifier = Modifier.size(20.dp)
                     )
@@ -180,7 +184,7 @@ fun AddressItem(
                 }
                 if (!address.room.isNullOrBlank()) {
                     if (!address.building.isNullOrBlank()) append(" - ")
-                    append("Phòng ${address.room}")
+                    append(stringResource(R.string.room_prefix, address.room))
                 }
             }
 

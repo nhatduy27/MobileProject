@@ -18,8 +18,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.data.model.client.Client
 import com.example.foodapp.data.remote.client.response.profile.AddressResponse
 import com.example.foodapp.pages.client.components.profile.*
@@ -193,8 +195,8 @@ fun UserProfileScreen(
                 showDeleteConfirmDialog = false
                 addressToDelete = null
             },
-            title = { Text("Xác nhận xóa") },
-            text = { Text("Bạn có chắc chắn muốn xóa địa chỉ này?") },
+            title = { Text(stringResource(R.string.delete_confirmation_title)) },
+            text = { Text(stringResource(R.string.delete_address_confirmation)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -208,7 +210,7 @@ fun UserProfileScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text("Xóa")
+                        Text(stringResource(R.string.delete))
                     }
                 }
             },
@@ -220,7 +222,7 @@ fun UserProfileScreen(
                     },
                     enabled = deleteAddressState !is DeleteAddressState.Loading
                 ) {
-                    Text("Hủy")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -233,8 +235,8 @@ fun UserProfileScreen(
                 showSetDefaultConfirmDialog = false
                 addressToSetDefault = null
             },
-            title = { Text("Đặt địa chỉ mặc định") },
-            text = { Text("Bạn có muốn đặt địa chỉ này làm mặc định?") },
+            title = { Text(stringResource(R.string.set_default_address_title)) },
+            text = { Text(stringResource(R.string.set_default_address_confirmation)) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -248,7 +250,7 @@ fun UserProfileScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Text("Đồng ý")
+                        Text(stringResource(R.string.agree))
                     }
                 }
             },
@@ -260,7 +262,7 @@ fun UserProfileScreen(
                     },
                     enabled = setDefaultAddressState !is SetDefaultAddressState.Loading
                 ) {
-                    Text("Hủy")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -316,7 +318,7 @@ fun UserProfileScreen(
                         },
                         onOrderButtonClick = onOrderButtonClick,
                         onReviewsButtonClick = onReviewsButtonClick,
-                        onChatsButtonClick = onChatsButtonClick // Thêm callback
+                        onChatsButtonClick = onChatsButtonClick
                     )
                 }
                 is ProfileState.Idle -> {
@@ -342,7 +344,7 @@ fun ProfileContent(
     onSetDefaultAddressClick: (String) -> Unit,
     onOrderButtonClick: () -> Unit,
     onReviewsButtonClick: () -> Unit,
-    onChatsButtonClick: () -> Unit // Thêm tham số
+    onChatsButtonClick: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -354,7 +356,7 @@ fun ProfileContent(
         ActionButtonsSection(
             onOrderButtonClick = onOrderButtonClick,
             onReviewsButtonClick = onReviewsButtonClick,
-            onChatsButtonClick = onChatsButtonClick // Truyền callback
+            onChatsButtonClick = onChatsButtonClick
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -392,7 +394,7 @@ fun ProfileContent(
 fun ActionButtonsSection(
     onOrderButtonClick: () -> Unit,
     onReviewsButtonClick: () -> Unit,
-    onChatsButtonClick: () -> Unit // Thêm tham số
+    onChatsButtonClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -410,9 +412,9 @@ fun ActionButtonsSection(
             // Button Đơn mua
             ProfileActionItem(
                 onClick = onOrderButtonClick,
-                icon = Icons.Outlined.ShoppingBag, // Icon cho đơn hàng
+                icon = Icons.Outlined.ShoppingBag,
                 iconTint = Color(0xFFFBBB00),
-                title = "Đơn mua",
+                title = stringResource(R.string.profile_orders),
                 showDivider = true
             )
 
@@ -421,7 +423,7 @@ fun ActionButtonsSection(
                 onClick = onChatsButtonClick,
                 icon = Icons.Outlined.ChatBubbleOutline,
                 iconTint = Color(0xFFFBBB00),
-                title = "Đoạn chat",
+                title = stringResource(R.string.profile_chats),
                 showDivider = true
             )
 
@@ -430,7 +432,7 @@ fun ActionButtonsSection(
                 onClick = onReviewsButtonClick,
                 icon = Icons.Outlined.RateReview,
                 iconTint = Color(0xFFFBBB00),
-                title = "Đánh giá của tôi",
+                title = stringResource(R.string.profile_reviews),
                 showDivider = false
             )
         }
@@ -475,7 +477,7 @@ fun ProfileActionItem(
             }
             Icon(
                 imageVector = Icons.Outlined.ChevronRight,
-                contentDescription = "Xem chi tiết",
+                contentDescription = stringResource(R.string.view_details),
                 tint = Color.Gray,
                 modifier = Modifier.size(20.dp)
             )
@@ -528,7 +530,7 @@ fun ErrorScreen(
                 containerColor = Color(0xFFFBBB00)
             )
         ) {
-            Text("Thử lại")
+            Text(stringResource(R.string.retry))
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.example.foodapp.pages.client.listchat
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,11 +22,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.data.repository.client.chat.ChatRepository
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -73,7 +76,7 @@ fun ConversationsScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Đoạn chat",
+                        text = stringResource(R.string.conversations_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
@@ -83,7 +86,7 @@ fun ConversationsScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Quay lại",
+                            contentDescription = stringResource(R.string.back_button),
                             tint = Color.Black
                         )
                     }
@@ -102,7 +105,7 @@ fun ConversationsScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
-                                contentDescription = "Làm mới",
+                                contentDescription = stringResource(R.string.refresh_button),
                                 tint = Color.Black
                             )
                         }
@@ -146,7 +149,8 @@ fun ConversationsScreen(
                             ) { conversation ->
                                 ConversationItem(
                                     conversation = conversation,
-                                    onClick = { onConversationClick(conversation.id) }
+                                    onClick = { onConversationClick(conversation.id) },
+                                    context
                                 )
                             }
 
@@ -202,7 +206,8 @@ fun ConversationsScreen(
 @Composable
 fun ConversationItem(
     conversation: com.example.foodapp.data.remote.client.response.chat.ConversationApiModel,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    context: Context
 ) {
     Card(
         modifier = Modifier
@@ -232,7 +237,7 @@ fun ConversationItem(
             ) {
                 Icon(
                     imageVector = Icons.Default.Person,
-                    contentDescription = "Avatar",
+                    contentDescription = stringResource(R.string.avatar_content_description),
                     tint = Color(0xFF888888),
                     modifier = Modifier.size(24.dp)
                 )
@@ -274,10 +279,9 @@ fun ConversationItem(
                     )
                 } else {
                     Text(
-                        text = "Chưa có tin nhắn",
+                        text = stringResource(R.string.no_messages),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF999999),
-                        // Sửa dòng này: bỏ fontStyle hoặc import đúng package
                         maxLines = 1
                     )
                 }
@@ -289,7 +293,7 @@ fun ConversationItem(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = formatTime(conversation.lastMessageAt),
+                            text = formatTime(conversation.lastMessageAt, context),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF888888)
                         )
@@ -298,7 +302,7 @@ fun ConversationItem(
                         conversation.otherParticipant?.role?.let { role ->
                             if (role.isNotBlank()) {
                                 Text(
-                                    text = "• $role",
+                                    text = stringResource(R.string.role_display, role),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = Color(0xFFFBBB00),
                                     fontWeight = FontWeight.Medium
@@ -338,7 +342,7 @@ fun LoadingView() {
                 color = Color(0xFFFBBB00)
             )
             Text(
-                text = "Đang tải đoạn chat...",
+                text = stringResource(R.string.loading_conversations),
                 color = Color(0xFF666666)
             )
         }
@@ -361,7 +365,7 @@ fun ErrorView(
         ) {
             Icon(
                 imageVector = Icons.Default.Chat,
-                contentDescription = "Lỗi",
+                contentDescription = stringResource(R.string.error_content_description),
                 tint = Color(0xFF888888),
                 modifier = Modifier.size(64.dp)
             )
@@ -379,7 +383,7 @@ fun ErrorView(
                     containerColor = Color(0xFFFBBB00)
                 )
             ) {
-                Text("Thử lại")
+                Text(stringResource(R.string.retry))
             }
         }
     }
@@ -398,20 +402,20 @@ fun EmptyConversationsView() {
         ) {
             Icon(
                 imageVector = Icons.Default.Chat,
-                contentDescription = "Không có chat",
+                contentDescription = stringResource(R.string.empty_conversations_content_description),
                 tint = Color(0xFFCCCCCC),
                 modifier = Modifier.size(96.dp)
             )
 
             Text(
-                text = "Chưa có đoạn chat nào",
+                text = stringResource(R.string.empty_conversations_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF666666)
             )
 
             Text(
-                text = "Bắt đầu trò chuyện với người bán hoặc hỗ trợ viên",
+                text = stringResource(R.string.empty_conversations_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF888888),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -421,16 +425,13 @@ fun EmptyConversationsView() {
 }
 
 // Helper function để format thời gian - Compatible với API < 26
-fun formatTime(timestamp: String): String {
+fun formatTime(timestamp: String, context: Context): String { // 1. Thêm context vào tham số
     return try {
-        // Parse ISO 8601 timestamp
         val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
         sdf.timeZone = TimeZone.getTimeZone("UTC")
         val date = sdf.parse(timestamp)
 
-        if (date == null) {
-            return timestamp
-        }
+        if (date == null) return timestamp
 
         val now = Date()
         val diffInMillis = now.time - date.time
@@ -439,11 +440,12 @@ fun formatTime(timestamp: String): String {
         val hours = TimeUnit.MILLISECONDS.toHours(diffInMillis)
         val days = TimeUnit.MILLISECONDS.toDays(diffInMillis)
 
+        // 2. Thay stringResource bằng context.getString
         when {
-            minutes < 1 -> "Vừa xong"
-            minutes < 60 -> "$minutes phút trước"
-            hours < 24 -> "$hours giờ trước"
-            days < 7 -> "$days ngày trước"
+            minutes < 1 -> context.getString(R.string.just_now)
+            minutes < 60 -> context.getString(R.string.minutes_ago, minutes.toInt())
+            hours < 24 -> context.getString(R.string.hours_ago, hours.toInt())
+            days < 7 -> context.getString(R.string.days_ago, days.toInt())
             else -> {
                 val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 outputFormat.format(date)

@@ -24,6 +24,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.text.style.TextAlign
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.ui.theme.PrimaryOrange
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -48,14 +50,12 @@ fun LoginScreen(
     )
 
     LaunchedEffect(Unit) {
-        // Sử dụng đúng Web Client ID từ google-services.json
         val WEB_CLIENT_ID = "884959847866-5qiurc00ii1pnrs1dtou2kvau5oa9s96.apps.googleusercontent.com"
 
-
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(WEB_CLIENT_ID)  // ← ĐÚNG RỒI!
+            .requestIdToken(WEB_CLIENT_ID)
             .requestEmail()
-            .requestProfile()  // Thêm dòng này để lấy profile info
+            .requestProfile()
             .build()
 
         val googleSignInClient = GoogleSignIn.getClient(context, gso)
@@ -107,7 +107,7 @@ fun LoginScreen(
                     googleSignInLauncher.launch(signInIntent)
                 }
             } catch (e: Exception) {
-                // Error handled by ViewModel
+                // Error handled
             }
         },
         onBackClicked = {
@@ -146,7 +146,7 @@ fun LoginContent(
     val serverError = loginError ?: googleError
     val displayError = localValidationError ?: serverError
 
-    // Gradient background
+    // background
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -169,7 +169,7 @@ fun LoginContent(
         ) {
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Back Button with modern design
+            // Button quay về
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
@@ -188,7 +188,7 @@ fun LoginContent(
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back_button),
                             tint = PrimaryOrange
                         )
                     }
@@ -197,7 +197,6 @@ fun LoginContent(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Welcome Section with Animation
             AnimatedVisibility(
                 visible = true,
                 enter = fadeIn() + slideInVertically()
@@ -222,7 +221,7 @@ fun LoginContent(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "Chào mừng trở lại!",
+                        text = stringResource(R.string.login_welcome_back),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF2D2D2D)
@@ -231,7 +230,7 @@ fun LoginContent(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Đăng nhập để tiếp tục",
+                        text = stringResource(R.string.login_subtitle),
                         fontSize = 16.sp,
                         color = Color(0xFF666666),
                         textAlign = TextAlign.Center
@@ -294,8 +293,8 @@ fun LoginContent(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            text = if (isEmailLoginSuccess) "Đăng nhập thành công!"
-                            else "Đăng nhập Google thành công!",
+                            text = if (isEmailLoginSuccess) stringResource(R.string.login_success_email)
+                            else stringResource(R.string.login_success_google),
                             color = Color(0xFF2E7D32),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium
@@ -313,7 +312,7 @@ fun LoginContent(
                     email = it
                     localValidationError = null
                 },
-                label = "Email",
+                label = stringResource(R.string.email_hint),
                 leadingIcon = Icons.Default.Email,
                 enabled = !isLoading && !isSuccess,
                 keyboardOptions = KeyboardOptions.Default.copy(
@@ -330,7 +329,7 @@ fun LoginContent(
                     password = it
                     localValidationError = null
                 },
-                label = "Mật khẩu",
+                label = stringResource(R.string.password_hint),
                 leadingIcon = Icons.Default.Lock,
                 enabled = !isLoading && !isSuccess,
                 isPassword = true,
@@ -354,7 +353,7 @@ fun LoginContent(
                     enabled = !isLoading && !isSuccess
                 ) {
                     Text(
-                        "Quên mật khẩu?",
+                        stringResource(R.string.forgot_password),
                         color = PrimaryOrange,
                         fontWeight = FontWeight.Medium
                     )
@@ -363,14 +362,20 @@ fun LoginContent(
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            val context = LocalContext.current
+            val errEmailReq = stringResource(R.string.error_email_required)
+            val errInvalidEmail = stringResource(R.string.error_invalid_email)
+            val errPassReq = stringResource(R.string.error_password_required)
+            val errPassLen = stringResource(R.string.error_password_length)
+
             // Modern Login Button
             Button(
                 onClick = {
                     localValidationError = when {
-                        email.isBlank() -> "Vui lòng nhập email"
-                        !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> "Email không hợp lệ"
-                        password.isBlank() -> "Vui lòng nhập mật khẩu"
-                        password.length < 6 -> "Mật khẩu phải có ít nhất 6 ký tự"
+                        email.isBlank() -> errEmailReq
+                        !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> errInvalidEmail
+                        password.isBlank() -> errPassReq
+                        password.length < 6 -> errPassLen
                         else -> null
                     }
 
@@ -400,7 +405,8 @@ fun LoginContent(
                             color = Color.White
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text("Đang đăng nhập...", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        // stringResource ở đây vẫn OK vì trong composable scope
+                        Text(stringResource(R.string.logging_in), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
                     isEmailLoginSuccess -> {
                         Icon(
@@ -409,9 +415,9 @@ fun LoginContent(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Thành công!", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.success), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
-                    else -> Text("Đăng nhập", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    else -> Text(stringResource(R.string.login_button), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -441,7 +447,7 @@ fun LoginContent(
                             color = PrimaryOrange
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text("Đang kết nối...", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.connecting), fontWeight = FontWeight.Bold)
                     }
                     isGoogleLoginSuccess -> {
                         Icon(
@@ -451,7 +457,7 @@ fun LoginContent(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Đã kết nối!", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.connected), fontWeight = FontWeight.Bold)
                     }
                     else -> {
                         // Google Logo SVG as Text
@@ -466,7 +472,7 @@ fun LoginContent(
                                 .wrapContentSize(Alignment.Center)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text("Tiếp tục với Google", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.continue_with_google), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -479,12 +485,12 @@ fun LoginContent(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Chưa có tài khoản? ",
+                    text = stringResource(R.string.no_account),
                     color = Color(0xFF666666),
                     fontSize = 15.sp
                 )
                 Text(
-                    text = "Đăng ký ngay",
+                    text = stringResource(R.string.sign_up_now),
                     color = PrimaryOrange,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
@@ -545,7 +551,8 @@ fun ModernTextField(
                         Icon(
                             imageVector = if (isVisible) Icons.Default.VisibilityOff
                             else Icons.Default.Visibility,
-                            contentDescription = if (isVisible) "Ẩn" else "Hiện",
+                            contentDescription = if (isVisible) stringResource(R.string.hide_password)
+                            else stringResource(R.string.show_password),
                             tint = if (enabled) Color(0xFF999999) else Color(0xFFCCCCCC)
                         )
                     }
@@ -567,43 +574,5 @@ fun ModernTextField(
             singleLine = true,
             keyboardOptions = keyboardOptions
         )
-    }
-}
-
-@Composable
-fun DemoChip(
-    text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        onClick = onClick,
-        modifier = modifier.height(44.dp),
-        shape = RoundedCornerShape(22.dp),
-        color = PrimaryOrange.copy(alpha = 0.1f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryOrange.copy(alpha = 0.3f))
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = PrimaryOrange,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = text,
-                color = PrimaryOrange,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Bold
-            )
-        }
     }
 }

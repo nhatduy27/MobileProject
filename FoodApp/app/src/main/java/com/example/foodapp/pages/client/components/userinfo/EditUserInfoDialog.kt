@@ -11,12 +11,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.data.model.client.Client
 import com.example.foodapp.pages.client.userInfo.UpdateUserInfoState
 import com.example.foodapp.pages.client.userInfo.UserInfoViewModel
@@ -81,7 +83,7 @@ fun EditUserInfoDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Chỉnh sửa thông tin",
+                        text = stringResource(R.string.edit_user_info_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -97,7 +99,7 @@ fun EditUserInfoDialog(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
-                            contentDescription = "Đóng"
+                            contentDescription = stringResource(R.string.close_icon)
                         )
                     }
                 }
@@ -113,8 +115,8 @@ fun EditUserInfoDialog(
                     OutlinedTextField(
                         value = fullName,
                         onValueChange = { fullName = it },
-                        label = { Text("Họ và tên") },
-                        placeholder = { Text("Nhập họ và tên") },
+                        label = { Text(stringResource(R.string.full_name_label)) },
+                        placeholder = { Text(stringResource(R.string.full_name_placeholder)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
                             imeAction = ImeAction.Next
@@ -127,8 +129,8 @@ fun EditUserInfoDialog(
                     OutlinedTextField(
                         value = phone,
                         onValueChange = { phone = it },
-                        label = { Text("Số điện thoại") },
-                        placeholder = { Text("Nhập số điện thoại") },
+                        label = { Text(stringResource(R.string.phone_label)) },
+                        placeholder = { Text(stringResource(R.string.phone_placeholder)) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Phone,
@@ -142,7 +144,7 @@ fun EditUserInfoDialog(
                     OutlinedTextField(
                         value = currentUser?.email ?: "",
                         onValueChange = {},
-                        label = { Text("Email") },
+                        label = { Text(stringResource(R.string.email_label)) },
                         singleLine = true,
                         readOnly = true,
                         modifier = Modifier.fillMaxWidth(),
@@ -167,7 +169,7 @@ fun EditUserInfoDialog(
                             color = Color.White
                         )
                     } else {
-                        Text("Lưu thay đổi")
+                        Text(stringResource(R.string.save_changes_button))
                     }
                 }
             }

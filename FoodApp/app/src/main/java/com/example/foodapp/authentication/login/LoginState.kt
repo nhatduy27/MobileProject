@@ -1,5 +1,8 @@
 package com.example.foodapp.authentication.login
 
+
+// TRẠNG THÁI CỦA ĐĂNG NHẬP
+
 sealed class LogInState {
     object Idle : LogInState()
     object Loading : LogInState()

@@ -9,9 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -21,7 +23,7 @@ fun ProductDetailTopBar(
     TopAppBar(
         title = {
             Text(
-                text = "Chi tiết sản phẩm",
+                text = stringResource(id = R.string.product_detail_title),
                 color = Color.White,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
@@ -39,7 +41,7 @@ fun ProductDetailTopBar(
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Filled.ArrowBack,
-                        contentDescription = "Quay lại",
+                        contentDescription = stringResource(id = R.string.back_button),
                         tint = Color.White,
                         modifier = Modifier.size(24.dp)
                     )

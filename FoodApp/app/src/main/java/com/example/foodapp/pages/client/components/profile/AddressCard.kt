@@ -1,6 +1,5 @@
 package com.example.foodapp.pages.client.components.profile
 
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -11,9 +10,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.data.remote.client.response.profile.AddressResponse
 
 @Composable
@@ -55,7 +56,7 @@ fun AddressCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.LocationOn,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.location_icon),
                         tint = Color(0xFFFF9800),
                         modifier = Modifier.size(24.dp)
                     )
@@ -64,7 +65,7 @@ fun AddressCard(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Text(
-                    text = "Địa chỉ giao hàng",
+                    text = stringResource(R.string.shipping_address_title),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF212121)
@@ -102,13 +103,13 @@ fun AddressCard(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.LocationOn,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.location_icon),
                         tint = Color(0xFFBDBDBD),
                         modifier = Modifier.size(48.dp)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Chưa có địa chỉ giao hàng",
+                        text = stringResource(R.string.no_shipping_address),
                         fontSize = 14.sp,
                         color = Color(0xFF9E9E9E)
                     )
@@ -135,12 +136,12 @@ fun AddressCard(
             ) {
                 Icon(
                     imageVector = Icons.Filled.Add,
-                    contentDescription = "Thêm địa chỉ",
+                    contentDescription = stringResource(R.string.add_address_icon),
                     modifier = Modifier.size(22.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Thêm địa chỉ mới",
+                    text = stringResource(R.string.add_new_address_button),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -186,7 +187,10 @@ fun AddressItem(
                                 containerColor = Color.Green.copy(alpha = 0.1f),
                                 contentColor = Color.Green,
                             ) {
-                                Text("Mặc định", fontSize = 10.sp)
+                                Text(
+                                    stringResource(R.string.address_default_badge),
+                                    fontSize = 10.sp
+                                )
                             }
                         }
                     }
@@ -201,7 +205,7 @@ fun AddressItem(
                     // Hiển thị thông tin tòa nhà và phòng nếu có
                     if (!address.building.isNullOrBlank() || !address.room.isNullOrBlank()) {
                         Text(
-                            text = "${address.building ?: ""} ${if (!address.room.isNullOrBlank()) "Phòng ${address.room}" else ""}".trim(),
+                            text = "${address.building ?: ""} ${if (!address.room.isNullOrBlank()) stringResource(R.string.room_label, address.room) else ""}".trim(),
                             fontSize = 13.sp,
                             color = Color(0xFF666666),
                             modifier = Modifier.padding(top = 2.dp)
@@ -211,7 +215,7 @@ fun AddressItem(
                     // Hiển thị ghi chú nếu có
                     if (!address.note.isNullOrBlank()) {
                         Text(
-                            text = "📝 ${address.note}",
+                            text = stringResource(R.string.address_note_label, address.note),
                             fontSize = 12.sp,
                             color = Color(0xFF888888),
                             modifier = Modifier.padding(top = 4.dp)
@@ -231,7 +235,7 @@ fun AddressItem(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.MoreVert,
-                            contentDescription = "Tùy chọn",
+                            contentDescription = stringResource(R.string.address_options_icon),
                             tint = Color.Gray,
                             modifier = Modifier.size(20.dp)
                         )
@@ -250,12 +254,12 @@ fun AddressItem(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Filled.Star,
-                                            contentDescription = null,
+                                            contentDescription = stringResource(R.string.set_as_default_option),
                                             tint = Color(0xFFFF9800),
                                             modifier = Modifier.size(16.dp)
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Đặt làm mặc định")
+                                        Text(stringResource(R.string.set_as_default_option))
                                     }
                                 },
                                 onClick = {
@@ -273,12 +277,12 @@ fun AddressItem(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Filled.Edit,
-                                        contentDescription = null,
+                                        contentDescription = stringResource(R.string.edit_option),
                                         tint = Color.Blue,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Chỉnh sửa")
+                                    Text(stringResource(R.string.edit_option))
                                 }
                             },
                             onClick = {
@@ -295,12 +299,12 @@ fun AddressItem(
                                 ) {
                                     Icon(
                                         imageVector = Icons.Filled.Delete,
-                                        contentDescription = null,
+                                        contentDescription = stringResource(R.string.delete_option),
                                         tint = Color.Red,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Xóa")
+                                    Text(stringResource(R.string.delete_option))
                                 }
                             },
                             onClick = {

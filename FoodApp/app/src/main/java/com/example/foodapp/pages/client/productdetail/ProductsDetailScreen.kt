@@ -14,10 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.data.model.shared.product.Product
 import com.example.foodapp.pages.client.components.productdetail.*
 import kotlinx.coroutines.launch
@@ -191,7 +193,7 @@ private fun LoadingState() {
                 strokeWidth = 4.dp
             )
             Text(
-                text = "Đang tải thông tin sản phẩm...",
+                text = stringResource(R.string.loading_product_info),
                 color = Color(0xFF666666),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium
@@ -223,14 +225,14 @@ private fun ErrorState(
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.Filled.ErrorOutline,
-                        contentDescription = "Lỗi",
+                        contentDescription = stringResource(R.string.error_content_description),
                         tint = Color(0xFFD32F2F),
                         modifier = Modifier.size(56.dp)
                     )
                 }
             }
             Text(
-                text = "Đã xảy ra lỗi",
+                text = stringResource(R.string.error_occurred_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
                 color = Color(0xFF212121)
@@ -262,7 +264,7 @@ private fun ErrorState(
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Thử lại", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.retry), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
 
                 OutlinedButton(
@@ -278,7 +280,7 @@ private fun ErrorState(
                         tint = Color(0xFF424242)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Quay lại", fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF424242))
+                    Text(stringResource(R.string.back_button), fontSize = 16.sp, fontWeight = FontWeight.SemiBold, color = Color(0xFF424242))
                 }
             }
         }

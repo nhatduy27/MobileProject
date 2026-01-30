@@ -20,12 +20,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.foodapp.R
 import com.example.foodapp.data.model.shared.category.Category
 import com.example.foodapp.data.model.shared.product.Product
 import com.example.foodapp.pages.client.home.*
@@ -61,9 +62,13 @@ fun UserHomeContent(
     var selectedCategory by remember { mutableStateOf<String?>(null) }
 
     val categoryMap = remember(categories) {
-        buildMap<String?, String> {
-            put(null, "Tất cả")
-            categories.forEach { if (it.isActive) put(it.id, it.name) }
+        mutableMapOf<String?, String>().apply {
+            this[null] = "Tất cả"
+            categories.forEach { category ->
+                if (category.isActive) {
+                    this[category.id] = category.name
+                }
+            }
         }
     }
 
@@ -79,7 +84,7 @@ fun UserHomeContent(
             ) {
                 Icon(
                     imageVector = Icons.Outlined.Chat,
-                    contentDescription = "Chat với bot hỗ trợ"
+                    contentDescription = stringResource(R.string.chat_with_bot)
                 )
             }
         }
@@ -191,12 +196,12 @@ private fun ShopViewButton(onClick: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Default.Storefront,
-                contentDescription = "Cửa hàng",
+                contentDescription = stringResource(R.string.shop),
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Xem tất cả cửa hàng",
+                text = stringResource(R.string.view_all_shops),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 14.sp
             )
@@ -249,7 +254,7 @@ fun SearchStatusSection(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Text(
-                            text = "Đang tìm kiếm \"$searchQuery\"...",
+                            text = stringResource(R.string.searching_for, searchQuery),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSecondaryContainer,
                             fontWeight = FontWeight.Medium
@@ -265,7 +270,7 @@ fun SearchStatusSection(
                             }
                         }
                         Text(
-                            text = "Tìm thấy $resultCount kết quả",
+                            text = stringResource(R.string.found_results_count, resultCount),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onTertiaryContainer,
                             fontWeight = FontWeight.SemiBold
@@ -288,7 +293,7 @@ fun SearchStatusSection(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            "Xóa",
+                            stringResource(R.string.clear),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -338,7 +343,7 @@ fun ResultsHeader(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    val categoryName = categoryMap[selectedCategory] ?: "Tất cả"
+                    val categoryName = categoryMap[selectedCategory] ?: stringResource(R.string.all_categories)
 
                     Icon(
                         imageVector = Icons.Default.ViewModule,
@@ -349,9 +354,9 @@ fun ResultsHeader(
 
                     Text(
                         text = if (searchQuery.isNotEmpty()) {
-                            "$resultCount sản phẩm tìm thấy"
+                            stringResource(R.string.products_found_count, resultCount)
                         } else {
-                            "$categoryName • $resultCount sản phẩm"
+                            stringResource(R.string.category_and_products_count, categoryName, resultCount)
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
@@ -371,7 +376,7 @@ fun ResultsHeader(
                         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
                     ) {
                         Text(
-                            text = "Xóa",
+                            text = stringResource(R.string.clear),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Medium
                         )
@@ -410,7 +415,7 @@ fun PaginationSection(
                 shape = RoundedCornerShape(10.dp)
             ) {
                 Text(
-                    text = "$totalItems sản phẩm • Trang $currentPage/$totalPages",
+                    text = stringResource(R.string.pagination_summary, totalItems, currentPage, totalPages),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -439,7 +444,7 @@ fun PaginationSection(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 Icons.Default.ArrowBack,
-                                contentDescription = "Trang trước",
+                                contentDescription = stringResource(R.string.previous_page),
                                 tint = if (currentPage > 1)
                                     MaterialTheme.colorScheme.primary
                                 else
@@ -525,7 +530,7 @@ fun PaginationSection(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 Icons.Default.ArrowForward,
-                                contentDescription = "Trang sau",
+                                contentDescription = stringResource(R.string.next_page),
                                 tint = if (currentPage < totalPages)
                                     MaterialTheme.colorScheme.primary
                                 else

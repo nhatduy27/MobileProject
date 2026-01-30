@@ -29,4 +29,12 @@ interface PaymentApiService {
         @Header("Authorization") authHeader: String,
         @Path("orderId") orderId: String
     ): Response<VerifyPaymentResponse>
+
+
+
+    @GET("orders/{orderId}/payment")
+    suspend fun getPaymentByOrder(
+        @Header("Authorization") authHeader: String,
+        @Path("orderId") orderId: String
+    ): Response<GetPaymentResponse>
 }

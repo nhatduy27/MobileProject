@@ -16,10 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.data.model.client.DeliveryAddress
 import com.example.foodapp.pages.client.payment.*
 import com.example.foodapp.ui.theme.*
@@ -71,7 +73,7 @@ fun DeliveryInfoSectionUpdated(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = "Địa chỉ giao hàng",
+                            text = stringResource(R.string.delivery_address_title),
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
@@ -79,7 +81,7 @@ fun DeliveryInfoSectionUpdated(
                         if (!hasAddresses) {
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "Chưa có địa chỉ nào",
+                                text = stringResource(R.string.no_addresses_message),
                                 fontSize = 13.sp,
                                 color = TextSecondary,
                                 fontWeight = FontWeight.Medium
@@ -96,14 +98,14 @@ fun DeliveryInfoSectionUpdated(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Refresh,
-                            contentDescription = "Làm mới",
+                            contentDescription = stringResource(R.string.refresh),
                             tint = TextSecondary
                         )
                     }
 
                     TextButton(onClick = onChangeAddress) {
                         Text(
-                            text = if (hasAddresses) "Thay đổi" else "Thêm địa chỉ",
+                            text = if (hasAddresses) stringResource(R.string.change_address) else stringResource(R.string.add_address),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -145,7 +147,7 @@ fun DeliveryInfoSectionUpdated(
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                             ) {
                                 Text(
-                                    text = "Mặc định",
+                                    text = stringResource(R.string.default_address),
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = AccentGreen
@@ -209,7 +211,7 @@ fun DeliveryInfoSectionUpdated(
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = "Vui lòng chọn địa chỉ giao hàng",
+                        text = stringResource(R.string.please_select_address),
                         fontSize = 16.sp,
                         color = TextSecondary,
                         textAlign = TextAlign.Center

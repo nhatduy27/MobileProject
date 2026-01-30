@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -30,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.foodapp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +39,6 @@ fun ShopListScreen(
     onBackClick: () -> Unit,
     onShopClick: (String) -> Unit
 ) {
-    val context = LocalContext.current
 
     val viewModel: ShopListViewModel = viewModel(
         factory = ShopListViewModel.factory(
@@ -81,7 +82,7 @@ fun ShopListScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 placeholder = {
                                     Text(
-                                        "Tìm kiếm cửa hàng...",
+                                        stringResource(R.string.search_shop_placeholder),
                                         style = MaterialTheme.typography.bodyMedium
                                     )
                                 },
@@ -101,7 +102,7 @@ fun ShopListScreen(
                                         ) {
                                             Icon(
                                                 Icons.Default.Close,
-                                                contentDescription = "Xóa",
+                                                contentDescription = stringResource(R.string.clear),
                                                 tint = MaterialTheme.colorScheme.onSurfaceVariant
                                             )
                                         }
@@ -110,7 +111,7 @@ fun ShopListScreen(
                             )
                         } else {
                             Text(
-                                "Danh sách cửa hàng",
+                                stringResource(R.string.shop_list_title),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
@@ -124,7 +125,7 @@ fun ShopListScreen(
                     ) {
                         Icon(
                             Icons.Default.ArrowBack,
-                            contentDescription = "Quay lại",
+                            contentDescription = stringResource(R.string.go_back),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -148,7 +149,7 @@ fun ShopListScreen(
                                 )
                             ) {
                                 Text(
-                                    "Tìm",
+                                    stringResource(R.string.search),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 16.sp
                                 )
@@ -160,7 +161,7 @@ fun ShopListScreen(
                             ) {
                                 Icon(
                                     Icons.Default.Search,
-                                    contentDescription = "Tìm kiếm",
+                                    contentDescription = stringResource(R.string.search),
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -284,7 +285,7 @@ private fun LoadingState() {
                 color = MaterialTheme.colorScheme.primary
             )
             Text(
-                "Đang tải danh sách...",
+                stringResource(R.string.loading_shops),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
@@ -316,19 +317,19 @@ private fun FilterSection(
             ModernFilterChip(
                 selected = statusFilter == null,
                 onClick = { onStatusFilterChange(null) },
-                label = "Tất cả",
+                label = stringResource(R.string.all_shops),
                 icon = "🏪"
             )
             ModernFilterChip(
                 selected = statusFilter == "OPEN",
                 onClick = { onStatusFilterChange("OPEN") },
-                label = "Đang mở",
+                label = stringResource(R.string.open_shops),
                 icon = "✅"
             )
             ModernFilterChip(
                 selected = statusFilter == "CLOSED",
                 onClick = { onStatusFilterChange("CLOSED") },
-                label = "Đã đóng",
+                label = stringResource(R.string.closed_shops),
                 icon = "🔒"
             )
         }
@@ -412,16 +413,16 @@ private fun ShopResultsHeader(
                 )
 
                 val statusText = when (statusFilter) {
-                    "OPEN" -> "Đang mở"
-                    "CLOSED" -> "Đã đóng"
-                    else -> "Tất cả"
+                    "OPEN" -> stringResource(R.string.open_shops)
+                    "CLOSED" -> stringResource(R.string.closed_shops)
+                    else -> stringResource(R.string.all_shops)
                 }
 
                 Text(
                     text = if (searchQuery.isNotEmpty()) {
-                        "$resultCount kết quả tìm kiếm"
+                        stringResource(R.string.search_results_count, resultCount)
                     } else {
-                        "$statusText • $resultCount cửa hàng"
+                        stringResource(R.string.shops_count, statusText, resultCount)
                     },
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
@@ -444,7 +445,7 @@ private fun ShopResultsHeader(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        "Xóa",
+                        stringResource(R.string.clear_filters),
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -524,7 +525,7 @@ private fun ShopItem(
                     color = Color(0xFFFFA726)
                 )
                 Text(
-                    text = "(${shop.totalRatings})",
+                    text = stringResource(R.string.rating_count, shop.totalRatings),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                     fontSize = 10.sp
@@ -543,7 +544,7 @@ private fun ShopItem(
                     tint = Color(0xFF42A5F5)
                 )
                 Text(
-                    text = "${shop.openTime} - ${shop.closeTime}",
+                    text = stringResource(R.string.shop_hours, shop.openTime, shop.closeTime),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     fontSize = 11.sp
@@ -562,7 +563,7 @@ private fun ShopItem(
                 ) {
                     Text("🚚", fontSize = 12.sp)
                     Text(
-                        text = "${shop.shipFeePerOrder}đ",
+                        text = stringResource(R.string.delivery_fee, shop.shipFeePerOrder),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Medium,
                         color = Color(0xFF66BB6A),
@@ -570,7 +571,7 @@ private fun ShopItem(
                     )
                 }
                 Text(
-                    text = "Min ${shop.minOrderAmount}đ",
+                    text = stringResource(R.string.min_order, shop.minOrderAmount),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                     fontSize = 10.sp
@@ -598,7 +599,7 @@ private fun CompactStatusBadge(isOpen: Boolean) {
                     .background(Color.White, CircleShape)
             )
             Text(
-                text = if (isOpen) "Mở" else "Đóng",
+                text = if (isOpen) stringResource(R.string.open_status) else stringResource(R.string.closed_status),
                 fontSize = 10.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -639,13 +640,13 @@ private fun EmptyState() {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "Không tìm thấy cửa hàng",
+                    text = stringResource(R.string.no_shops_found),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Thử điều chỉnh bộ lọc hoặc tìm kiếm khác",
+                    text = stringResource(R.string.no_shops_message),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     textAlign = TextAlign.Center
@@ -694,7 +695,7 @@ private fun ErrorState(
                 }
 
                 Text(
-                    text = "Đã xảy ra lỗi",
+                    text = stringResource(R.string.error_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.error
@@ -719,7 +720,7 @@ private fun ErrorState(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        "Thử lại",
+                        stringResource(R.string.retry),
                         style = MaterialTheme.typography.labelLarge
                     )
                 }
@@ -749,7 +750,7 @@ private fun LoadMoreSection(
                     strokeWidth = 3.dp
                 )
                 Text(
-                    "Đang tải thêm...",
+                    stringResource(R.string.loading_more),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
@@ -770,7 +771,7 @@ private fun LoadMoreSection(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Tải thêm",
+                    stringResource(R.string.load_more),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.Medium
                 )
@@ -793,7 +794,7 @@ private fun PaginationInfo(
         shape = RoundedCornerShape(12.dp)
     ) {
         Text(
-            text = "Trang $currentPage/$totalPages • Tổng $totalItems cửa hàng",
+            text = stringResource(R.string.pagination_info, currentPage, totalPages, totalItems),
             modifier = Modifier.padding(vertical = 12.dp),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.labelMedium,
