@@ -345,5 +345,15 @@ object RepositoryProvider {
             )
         )
     }
+    
+    // ==================== OWNER WALLET REPOSITORY ====================
+    
+    fun getOwnerWalletRepository(): com.example.foodapp.data.repository.owner.base.OwnerWalletRepository {
+        return com.example.foodapp.data.repository.owner.wallet.RealWalletRepository(
+            com.example.foodapp.data.remote.api.ApiClient.createService(
+                com.example.foodapp.data.remote.owner.WalletApiService::class.java
+            )
+        )
+    }
 }
 

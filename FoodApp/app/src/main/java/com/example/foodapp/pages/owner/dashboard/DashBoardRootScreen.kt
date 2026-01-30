@@ -54,6 +54,8 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import com.example.foodapp.pages.owner.chat.OwnerConversationsScreen
 import com.example.foodapp.pages.owner.chat.OwnerChatDetailScreen
+// Import WalletScreen
+import com.example.foodapp.pages.owner.wallet.WalletScreen
 
 @Preview(showBackground = true, backgroundColor = 0xFF00FF00)
 
@@ -224,6 +226,15 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     }
 
                     DrawerItem(
+                        text = "Ví tiền", 
+                        iconRes = R.drawable.ic_wallet,
+                        isSelected = currentScreen == "wallet"
+                    ) {
+                        currentScreen = "wallet"
+                        scope.launch { drawerState.close() }
+                    }
+
+                    DrawerItem(
                         text = "Báo cáo doanh thu", 
                         iconRes = R.drawable.ic_bar_chart,
                         isSelected = currentScreen == "revenue"
@@ -291,7 +302,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
             topBar = {
                 // Show TopBar for screens that don't have their own TopBar
                 val isInChatDetail = currentScreen == "chat" && currentChatRoute == "chat_detail"
-                if (currentScreen != "dashboard" && currentScreen != "orders" && currentScreen != "foods" && currentScreen != "shippers" && currentScreen != "vouchers" && currentScreen != "customers" && currentScreen != "reviews" && currentScreen != "chatbot" && !isInChatDetail) {
+                if (currentScreen != "dashboard" && currentScreen != "orders" && currentScreen != "foods" && currentScreen != "shippers" && currentScreen != "vouchers" && currentScreen != "customers" && currentScreen != "reviews" && currentScreen != "chatbot" && currentScreen != "wallet" && !isInChatDetail) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -347,6 +358,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     )
                     "vouchers" -> VouchersScreen(onMenuClick = { scope.launch { drawerState.open() } })
                     "customers" -> CustomerScreenMain(onMenuClick = { scope.launch { drawerState.open() } }) 
+                    "wallet" -> WalletScreen(onMenuClick = { scope.launch { drawerState.open() } })
                     "revenue" -> RevenueScreen()
                     "reviews" -> ReviewsScreen(
                         shopId = shopState.shopId,
