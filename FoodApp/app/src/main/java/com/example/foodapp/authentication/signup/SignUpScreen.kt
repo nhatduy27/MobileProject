@@ -45,16 +45,13 @@ fun SignUpScreen(
     )
 
     val signUpState by viewModel.signUpState.observeAsState(SignUpState.Idle)
-    val saveUserState by viewModel.saveUserState.observeAsState(null)
+    var hasNavigated by remember { mutableStateOf(false) }
 
-    LaunchedEffect(signUpState) {
+    LaunchedEffect(signUpState, hasNavigated) {
+        if (hasNavigated) return@LaunchedEffect
+        
         if (signUpState is SignUpState.Success) {
-            onSignUpSuccess()
-        }
-    }
-
-    LaunchedEffect(saveUserState) {
-        if (saveUserState == true) {
+            hasNavigated = true
             onSignUpSuccess()
         }
     }

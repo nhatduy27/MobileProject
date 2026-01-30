@@ -72,26 +72,34 @@ fun LoginScreen(
         viewModel.handleGoogleSignInResult(task)
     }
 
-    LaunchedEffect(logInState, googleLogInState) {
+    var hasNavigated by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.resetStates()
+    }
+
+    LaunchedEffect(logInState, googleLogInState, hasNavigated) {
+        if (hasNavigated) return@LaunchedEffect
+        
         when (logInState) {
             is LogInState.Success -> {
+                hasNavigated = true
                 val successState = logInState as LogInState.Success
                 onLoginSuccess(successState.role)
+                return@LaunchedEffect
             }
             else -> {}
         }
 
         when (googleLogInState) {
             is GoogleLogInState.Success -> {
+                hasNavigated = true
                 val successState = googleLogInState as GoogleLogInState.Success
                 onLoginSuccess(successState.role)
+                return@LaunchedEffect
             }
             else -> {}
         }
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.resetStates()
     }
 
     LoginContent(
