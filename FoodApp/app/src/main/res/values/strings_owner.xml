@@ -283,6 +283,43 @@
     <string name="revenue_no_data">Chưa có dữ liệu doanh thu</string>
     <string name="revenue_time_slots_detail">Chi tiết doanh thu theo khung giờ</string>
     <string name="revenue_top_products_period">Sản phẩm bán chạy %1$s</string>
+    <string name="revenue_subtitle">Thống kê và phân tích tài chính</string>
+    <string name="revenue_chart_7_days">Biểu đồ doanh thu 7 ngày</string>
+    <string name="revenue_time_slot_info">%1$d đơn hàng • %2$d%% tổng doanh thu</string>
+    <string name="revenue_product_info">%1$d phần • %2$sđ/phần</string>
+    <string name="revenue_day_mon">T2</string>
+    <string name="revenue_day_tue">T3</string>
+    <string name="revenue_day_wed">T4</string>
+    <string name="revenue_day_thu">T5</string>
+    <string name="revenue_day_fri">T6</string>
+    <string name="revenue_day_sat">T7</string>
+    <string name="revenue_day_sun">CN</string>
+    <!-- Revenue Stat Titles (for mapping API responses) -->
+    <string name="revenue_stat_total_revenue">Tổng doanh thu</string>
+    <string name="revenue_stat_order_count">Số đơn hàng</string>
+    <string name="revenue_stat_avg_order">Trung bình/đơn</string>
+    <string name="revenue_stat_pending">Đang xử lý</string>
+    <string name="revenue_stat_completed">Hoàn thành</string>
+    <string name="revenue_stat_cancelled">Đã hủy</string>
+    <string name="revenue_stat_growth">Tăng trưởng</string>
+    <!-- Revenue Stat Subtitles -->
+    <string name="revenue_stat_vs_yesterday">so với hôm qua</string>
+    <string name="revenue_stat_vs_last_week">so với tuần trước</string>
+    <string name="revenue_stat_vs_last_month">so với tháng trước</string>
+    <string name="revenue_stat_vs_last_year">so với năm trước</string>
+    <string name="revenue_stat_up">↑ %1$s%% %2$s</string>
+    <string name="revenue_stat_down">↓ %1$s%% %2$s</string>
+    <string name="revenue_stat_no_revenue">Không có doanh thu</string>
+    <string name="revenue_stat_no_orders">Không có đơn hàng</string>
+    <string name="revenue_stat_no_data">Chưa có dữ liệu</string>
+    <string name="revenue_stat_first_days">%1$d ngày đầu tháng</string>
+    <string name="revenue_stat_first_weeks">%1$d tuần đầu năm</string>
+    <string name="revenue_stat_first_month">Tháng đầu tiên</string>
+    <string name="revenue_stat_first_time">Lần đầu tiên</string>
+    <string name="revenue_stat_today_only">Chỉ tính hôm nay</string>
+    <string name="revenue_stat_this_week">Tuần này</string>
+    <string name="revenue_stat_this_month">Tháng này</string>
+    <string name="revenue_stat_this_year">Năm nay</string>
     
     <!-- ==================== REVIEWS ==================== -->
     <string name="reviews_no_reviews">Chưa có đánh giá nào</string>

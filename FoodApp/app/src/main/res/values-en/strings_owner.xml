@@ -283,6 +283,43 @@
     <string name="revenue_no_data">No revenue data yet</string>
     <string name="revenue_time_slots_detail">Revenue details by time slot</string>
     <string name="revenue_top_products_period">Best sellers %1$s</string>
+    <string name="revenue_subtitle">Financial statistics and analysis</string>
+    <string name="revenue_chart_7_days">7-day revenue chart</string>
+    <string name="revenue_time_slot_info">%1$d orders • %2$d%% of total revenue</string>
+    <string name="revenue_product_info">%1$d servings • %2$s₫/serving</string>
+    <string name="revenue_day_mon">Mon</string>
+    <string name="revenue_day_tue">Tue</string>
+    <string name="revenue_day_wed">Wed</string>
+    <string name="revenue_day_thu">Thu</string>
+    <string name="revenue_day_fri">Fri</string>
+    <string name="revenue_day_sat">Sat</string>
+    <string name="revenue_day_sun">Sun</string>
+    <!-- Revenue Stat Titles (for mapping API responses) -->
+    <string name="revenue_stat_total_revenue">Total Revenue</string>
+    <string name="revenue_stat_order_count">Number of Orders</string>
+    <string name="revenue_stat_avg_order">Average/Order</string>
+    <string name="revenue_stat_pending">Pending</string>
+    <string name="revenue_stat_completed">Completed</string>
+    <string name="revenue_stat_cancelled">Cancelled</string>
+    <string name="revenue_stat_growth">Growth</string>
+    <!-- Revenue Stat Subtitles -->
+    <string name="revenue_stat_vs_yesterday">vs yesterday</string>
+    <string name="revenue_stat_vs_last_week">vs last week</string>
+    <string name="revenue_stat_vs_last_month">vs last month</string>
+    <string name="revenue_stat_vs_last_year">vs last year</string>
+    <string name="revenue_stat_up">↑ %1$s%% %2$s</string>
+    <string name="revenue_stat_down">↓ %1$s%% %2$s</string>
+    <string name="revenue_stat_no_revenue">No revenue</string>
+    <string name="revenue_stat_no_orders">No orders</string>
+    <string name="revenue_stat_no_data">No data yet</string>
+    <string name="revenue_stat_first_days">First %1$d days of month</string>
+    <string name="revenue_stat_first_weeks">First %1$d weeks of year</string>
+    <string name="revenue_stat_first_month">First month</string>
+    <string name="revenue_stat_first_time">First time</string>
+    <string name="revenue_stat_today_only">Today only</string>
+    <string name="revenue_stat_this_week">This week</string>
+    <string name="revenue_stat_this_month">This month</string>
+    <string name="revenue_stat_this_year">This year</string>
     
     <!-- ==================== REVIEWS ==================== -->
     <string name="reviews_no_reviews">No reviews yet</string>
