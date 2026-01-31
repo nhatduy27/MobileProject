@@ -121,7 +121,7 @@ export class AuthService {
           role: user.role,
           status: user.status,
           emailVerified: user.emailVerified,
-          createdAt: user.createdAt,
+          createdAt: user.createdAt?.toDate?.()?.toISOString?.() ?? user.createdAt,
         },
         customToken,
         message: 'Đăng nhập thành công',

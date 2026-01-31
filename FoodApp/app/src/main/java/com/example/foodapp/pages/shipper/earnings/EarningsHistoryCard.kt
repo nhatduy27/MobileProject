@@ -59,6 +59,7 @@ fun LedgerEntryCard(entry: LedgerEntry) {
                         imageVector = when (entry.type) {
                             LedgerType.ORDER_PAYOUT -> Icons.Outlined.ShoppingBag
                             LedgerType.WITHDRAWAL -> Icons.Outlined.AccountBalanceWallet
+                            LedgerType.PAYOUT -> Icons.Outlined.AccountBalanceWallet
                             LedgerType.ADJUSTMENT -> Icons.Outlined.Tune
                         },
                         contentDescription = null,
@@ -120,13 +121,16 @@ fun LedgerEntryCard(entry: LedgerEntry) {
 }
 
 /**
- * Format datetime from FirebaseTimestamp millis
+ * Format datetime from ISO string
  */
-private fun formatDateTime(timestamp: com.example.foodapp.data.model.shipper.wallet.FirebaseTimestamp?): String {
-    if (timestamp == null) return ""
+private fun formatDateTime(isoString: String?): String {
+    if (isoString.isNullOrBlank()) return ""
     
     return try {
-        val date = java.util.Date(timestamp.toMillis())
+        val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault())
+        inputFormat.timeZone = java.util.TimeZone.getTimeZone("UTC")
+        val date = inputFormat.parse(isoString) ?: return ""
+        
         val outputFormat = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
         outputFormat.timeZone = java.util.TimeZone.getDefault()
         outputFormat.format(date)

@@ -228,7 +228,7 @@ export class WalletsService {
         });
 
         // Create ledger entries
-        const ownerLedgerRef = this.firestore.collection('walletLedger').doc();
+        const ownerLedgerRef = this.firestore.collection('wallet_ledger').doc();
         transaction.set(ownerLedgerRef, {
           walletId: ownerWalletId,
           userId: ownerId,
@@ -242,7 +242,7 @@ export class WalletsService {
           createdAt: Timestamp.now(),
         });
 
-        const shipperLedgerRef = this.firestore.collection('walletLedger').doc();
+        const shipperLedgerRef = this.firestore.collection('wallet_ledger').doc();
         transaction.set(shipperLedgerRef, {
           walletId: shipperWalletId,
           userId: shipperId,
@@ -323,7 +323,7 @@ export class WalletsService {
       bankCode: payoutRequest.bankCode,
       accountNumber: payoutRequest.accountNumber,
       accountName: payoutRequest.accountName,
-      createdAt: payoutRequest.createdAt,
+      createdAt: payoutRequest.createdAt?.toDate?.()?.toISOString?.() ?? payoutRequest.createdAt,
     };
   }
 
@@ -384,7 +384,7 @@ export class WalletsService {
     });
 
     // Create ledger entry
-    const ledgerRef = this.firestore.collection('walletLedger').doc();
+    const ledgerRef = this.firestore.collection('wallet_ledger').doc();
     await ledgerRef.set({
       id: ledgerRef.id,
       walletId,
