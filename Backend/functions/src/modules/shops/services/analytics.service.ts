@@ -57,7 +57,9 @@ export class AnalyticsService {
 
       anchorDate = toDate;
     } else if (from || to) {
-      throw new BadRequestException('Both from and to parameters are required when filtering by date');
+      throw new BadRequestException(
+        'Both from and to parameters are required when filtering by date',
+      );
     } else {
       // No date params: use server's current time
       anchorDate = new Date();

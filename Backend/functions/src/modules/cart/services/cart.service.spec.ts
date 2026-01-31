@@ -19,7 +19,7 @@ describe('CartService - Add to Cart Increment Logic', () => {
     id: 'prod_123',
     shopId: 'shop_456',
     name: 'Test Product',
-    imageUrl: 'https://example.com/image.jpg',
+    imageUrls: ['https://example.com/image.jpg'],
     price: 50000,
     isAvailable: true,
     isDeleted: false,

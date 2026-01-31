@@ -17,7 +17,7 @@ export interface IProductsRepository {
       description: string;
       price: number;
       categoryId: string;
-      imageUrl: string;
+      imageUrls?: string[];
       preparationTime: number;
     },
   ): Promise<ProductEntity>;

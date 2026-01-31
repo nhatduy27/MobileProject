@@ -15,6 +15,8 @@ import java.io.File
 /**
  * ViewModel cho màn hình quản lý sản phẩm.
  * Sử dụng Real Repository để gọi API backend.
+ * 
+ * Hỗ trợ nhiều ảnh thay vì chỉ 1 ảnh.
  */
 class FoodsViewModel : ViewModel() {
 
@@ -186,7 +188,8 @@ class FoodsViewModel : ViewModel() {
     // ==================== CREATE/UPDATE/DELETE ====================
 
     /**
-     * Tạo sản phẩm mới
+     * Tạo sản phẩm mới với nhiều ảnh
+     * @param imageFiles List các file ảnh (ít nhất 1 ảnh)
      */
     fun createProduct(
         name: String,
@@ -194,7 +197,7 @@ class FoodsViewModel : ViewModel() {
         price: Double,
         categoryId: String,
         preparationTime: Int,
-        imageFile: File,
+        imageFiles: List<File>,
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
@@ -209,7 +212,7 @@ class FoodsViewModel : ViewModel() {
                 preparationTime = preparationTime
             )
 
-            val result = productRepository.createProduct(request, imageFile)
+            val result = productRepository.createProduct(request, imageFiles)
 
             result.onSuccess { product ->
                 Log.d(TAG, "✅ Created product: ${product.name}")
@@ -235,7 +238,8 @@ class FoodsViewModel : ViewModel() {
     }
 
     /**
-     * Cập nhật sản phẩm
+     * Cập nhật sản phẩm với nhiều ảnh
+     * @param imageFiles List các file ảnh mới (null = giữ ảnh cũ)
      */
     fun updateProduct(
         productId: String,
@@ -244,7 +248,7 @@ class FoodsViewModel : ViewModel() {
         price: Double? = null,
         categoryId: String? = null,
         preparationTime: Int? = null,
-        imageFile: File? = null,
+        imageFiles: List<File>? = null,
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
@@ -259,7 +263,7 @@ class FoodsViewModel : ViewModel() {
                 preparationTime = preparationTime
             )
 
-            val result = productRepository.updateProduct(productId, request, imageFile)
+            val result = productRepository.updateProduct(productId, request, imageFiles)
 
             result.onSuccess { message ->
                 Log.d(TAG, "✅ Updated product: $message")

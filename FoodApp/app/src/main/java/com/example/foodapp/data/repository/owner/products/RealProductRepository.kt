@@ -13,6 +13,8 @@ import java.io.File
 /**
  * Real implementation của OwnerProductRepository
  * Gọi API thực sự từ backend
+ * 
+ * Hỗ trợ nhiều ảnh thay vì chỉ 1 ảnh.
  */
 class RealProductRepository(
     private val apiService: ProductApiService
@@ -76,10 +78,10 @@ class RealProductRepository(
 
     override suspend fun createProduct(
         request: CreateProductRequest,
-        imageFile: File
+        imageFiles: List<File>
     ): Result<Product> {
         return try {
-            Log.d(TAG, "🔄 Creating product: ${request.name}")
+            Log.d(TAG, "🔄 Creating product: ${request.name} with ${imageFiles.size} images")
 
             val nameBody = request.name.toRequestBody("text/plain".toMediaType())
             val descBody = request.description.toRequestBody("text/plain".toMediaType())
@@ -87,7 +89,9 @@ class RealProductRepository(
             val categoryBody = request.categoryId.toRequestBody("text/plain".toMediaType())
             val prepTimeBody = request.preparationTime.toString().toRequestBody("text/plain".toMediaType())
 
-            val imagePart = createImagePart(imageFile)
+            val imageParts = imageFiles.mapIndexed { index, file -> 
+                createImagePart(file, "images")
+            }
 
             val response = apiService.createProduct(
                 name = nameBody,
@@ -95,7 +99,7 @@ class RealProductRepository(
                 price = priceBody,
                 categoryId = categoryBody,
                 preparationTime = prepTimeBody,
-                image = imagePart
+                images = imageParts
             )
 
             if (response.isSuccessful && response.body() != null) {
@@ -116,10 +120,10 @@ class RealProductRepository(
     override suspend fun updateProduct(
         productId: String,
         request: UpdateProductRequest,
-        imageFile: File?
+        imageFiles: List<File>?
     ): Result<String> {
         return try {
-            Log.d(TAG, "🔄 Updating product: $productId")
+            Log.d(TAG, "🔄 Updating product: $productId with ${imageFiles?.size ?: 0} images")
 
             val nameBody = request.name?.toRequestBody("text/plain".toMediaType())
             val descBody = request.description?.toRequestBody("text/plain".toMediaType())
@@ -127,17 +131,30 @@ class RealProductRepository(
             val categoryBody = request.categoryId?.toRequestBody("text/plain".toMediaType())
             val prepTimeBody = request.preparationTime?.toString()?.toRequestBody("text/plain".toMediaType())
 
-            val imagePart = imageFile?.let { createImagePart(it) }
-
-            val response = apiService.updateProduct(
-                productId = productId,
-                name = nameBody,
-                description = descBody,
-                price = priceBody,
-                categoryId = categoryBody,
-                preparationTime = prepTimeBody,
-                image = imagePart
-            )
+            // Use different API calls based on whether images are provided
+            val response = if (imageFiles != null && imageFiles.isNotEmpty()) {
+                val imageParts = imageFiles.map { file -> 
+                    createImagePart(file, "images")
+                }
+                apiService.updateProductWithImages(
+                    productId = productId,
+                    name = nameBody,
+                    description = descBody,
+                    price = priceBody,
+                    categoryId = categoryBody,
+                    preparationTime = prepTimeBody,
+                    images = imageParts
+                )
+            } else {
+                apiService.updateProductWithoutImages(
+                    productId = productId,
+                    name = nameBody,
+                    description = descBody,
+                    price = priceBody,
+                    categoryId = categoryBody,
+                    preparationTime = prepTimeBody
+                )
+            }
 
             if (response.isSuccessful && response.body() != null) {
                 val message = response.body()!!.message
@@ -202,36 +219,40 @@ class RealProductRepository(
         }
     }
 
-    override suspend fun uploadProductImage(
+    override suspend fun uploadProductImages(
         productId: String,
-        imageFile: File
-    ): Result<String> {
+        imageFiles: List<File>
+    ): Result<List<String>> {
         return try {
-            Log.d(TAG, "🔄 Uploading image for product: $productId")
+            Log.d(TAG, "🔄 Uploading ${imageFiles.size} images for product: $productId")
 
-            val imagePart = createImagePart(imageFile)
-            val response = apiService.uploadProductImage(productId, imagePart)
+            val imageParts = imageFiles.map { file -> 
+                createImagePart(file, "images")
+            }
+            val response = apiService.uploadProductImages(productId, imageParts)
 
             if (response.isSuccessful && response.body() != null) {
                 val body = response.body()!!
-                val imageUrl = body.data?.imageUrl ?: body.imageUrl ?: ""
-                Log.d(TAG, "✅ Uploaded image: $imageUrl")
-                Result.success(imageUrl)
+                val imageUrls = body.data?.imageUrls ?: emptyList()
+                Log.d(TAG, "✅ Uploaded ${imageUrls.size} images")
+                Result.success(imageUrls)
             } else {
                 val error = response.errorBody()?.string() ?: "Unknown error"
-                Log.e(TAG, "❌ Error uploading image: $error")
+                Log.e(TAG, "❌ Error uploading images: $error")
                 Result.failure(Exception(error))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Exception uploading image", e)
+            Log.e(TAG, "❌ Exception uploading images", e)
             Result.failure(e)
         }
     }
 
     /**
      * Helper function to create MultipartBody.Part from File
+     * @param file File ảnh
+     * @param fieldName Tên field trong multipart (images cho nhiều ảnh)
      */
-    private fun createImagePart(file: File): MultipartBody.Part {
+    private fun createImagePart(file: File, fieldName: String = "images"): MultipartBody.Part {
         val mediaType = when {
             file.name.endsWith(".png", ignoreCase = true) -> "image/png"
             file.name.endsWith(".jpg", ignoreCase = true) -> "image/jpeg"
@@ -240,6 +261,6 @@ class RealProductRepository(
         }.toMediaType()
 
         val requestBody = file.asRequestBody(mediaType)
-        return MultipartBody.Part.createFormData("image", file.name, requestBody)
+        return MultipartBody.Part.createFormData(fieldName, file.name, requestBody)
     }
 }

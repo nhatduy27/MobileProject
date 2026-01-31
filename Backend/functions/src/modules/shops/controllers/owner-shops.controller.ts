@@ -271,7 +271,7 @@ export class OwnerShopsController {
     
     TIMESTAMP RULES:
     - Revenue/orderCount use deliveredAt (when order was delivered)
-    - Only DELIVERED orders count toward revenue/orderCount/topProducts
+    - Only DELIVERED orders count toward reavenue/orderCount/topProducts
     - ordersByStatus counts all orders (by createdAt)
     - recentOrders sorted by createdAt desc (shows order activity)
     - pendingOrders counts orders with status in [PENDING, CONFIRMED, PREPARING, READY, SHIPPING] created within "today" bucket
@@ -279,19 +279,20 @@ export class OwnerShopsController {
     DATE FORMAT: YYYY-MM-DD (e.g., 2026-01-01)
     `,
   })
-  @ApiQuery({ 
-    name: 'from', 
-    required: false, 
-    type: String, 
+  @ApiQuery({
+    name: 'from',
+    required: false,
+    type: String,
     example: '2026-01-01',
-    description: 'Start date (YYYY-MM-DD). Must be provided with "to" parameter.'
+    description: 'Start date (YYYY-MM-DD). Must be provided with "to" parameter.',
   })
-  @ApiQuery({ 
-    name: 'to', 
-    required: false, 
-    type: String, 
+  @ApiQuery({
+    name: 'to',
+    required: false,
+    type: String,
     example: '2026-01-31',
-    description: 'End date (YYYY-MM-DD). Must be provided with "from" parameter. Time buckets anchor to this date.'
+    description:
+      'End date (YYYY-MM-DD). Must be provided with "from" parameter. Time buckets anchor to this date.',
   })
   @ApiResponse({
     status: 200,

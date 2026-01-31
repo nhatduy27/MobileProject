@@ -98,6 +98,93 @@ export class StorageService {
   }
 
   /**
+   * Upload product gallery image to Firebase Storage
+   *
+   * @param shopId - Shop ID
+   * @param productId - Product ID
+   * @param buffer - Image buffer
+   * @param mimetype - Image mime type (image/jpeg, image/png)
+   * @returns Public URL of uploaded image
+   */
+  async uploadProductGalleryImage(
+    shopId: string,
+    productId: string,
+    buffer: Buffer,
+    mimetype: string,
+  ): Promise<string> {
+    const bucketName = 'foodappproject-7c136.firebasestorage.app';
+    const bucket = this.firebase.storage.bucket(bucketName);
+
+    // Generate filename: products/{shopId}/{productId}/{hash}.{ext}
+    const ext = mimetype === 'image/png' ? 'png' : 'jpg';
+    const hash = crypto.randomBytes(8).toString('hex');
+    const filename = `products/${shopId}/${productId}/${hash}.${ext}`;
+
+    // Generate download token
+    const downloadToken = crypto.randomBytes(16).toString('hex');
+
+    // Upload file
+    const file = bucket.file(filename);
+    await file.save(buffer, {
+      metadata: {
+        contentType: mimetype,
+        metadata: {
+          firebaseStorageDownloadTokens: downloadToken,
+        },
+      },
+    });
+
+    // Make file publicly accessible
+    await file.makePublic();
+
+    // Return public URL
+    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodeURIComponent(filename)}?alt=media&token=${downloadToken}`;
+
+    return publicUrl;
+  }
+
+  /**
+   * Delete product image from Firebase Storage
+   *
+   * @param imageUrl - Full URL of product image to delete
+   */
+  async deleteProductImage(imageUrl: string): Promise<void> {
+    try {
+      if (!imageUrl) return;
+
+      const bucketName = 'foodappproject-7c136.firebasestorage.app';
+      const bucket = this.firebase.storage.bucket(bucketName);
+
+      // Extract filename from URL
+      let filename = '';
+
+      if (imageUrl.includes('firebasestorage.googleapis.com')) {
+        const match = imageUrl.match(/\/o\/([^?]+)/);
+        if (match) {
+          filename = decodeURIComponent(match[1]);
+        }
+      } else {
+        const urlParts = imageUrl.split('/');
+        const bucketIndex = urlParts.findIndex((part) => part.includes('.appspot.com'));
+        if (bucketIndex !== -1) {
+          filename = urlParts.slice(bucketIndex + 1).join('/');
+        }
+      }
+
+      if (!filename) return;
+
+      const file = bucket.file(filename);
+      const [exists] = await file.exists();
+
+      if (exists) {
+        await file.delete();
+      }
+    } catch (error) {
+      console.warn('Failed to delete product image:', error);
+    }
+  }
+
+  /**
    * Upload shop image to Firebase Storage
    *
    * @param shopId - Shop ID

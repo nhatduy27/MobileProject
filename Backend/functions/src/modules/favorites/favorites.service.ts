@@ -11,7 +11,7 @@ interface ProductData {
   id: string;
   name: string;
   price: number;
-  imageUrl?: string;
+  imageUrls?: string[];
   shopId: string;
   shopName: string;
 }
@@ -44,7 +44,7 @@ export class FavoritesService {
       productId,
       productName: productData.name,
       productPrice: productData.price,
-      productImage: productData.imageUrl,
+      productImage: productData.imageUrls?.[0],
       shopId: productData.shopId,
       shopName: productData.shopName,
     });
@@ -103,8 +103,7 @@ export class FavoritesService {
         id: product.id,
         name: product.name || 'Product Name',
         price: product.price || 0,
-        // Sửa: product.imageUrl là string, không phải array
-        imageUrl: product.imageUrl || undefined,
+        imageUrls: product.imageUrls,
         shopId: product.shopId || 'shop_placeholder',
         // Sửa: product.shopName là trường trực tiếp
         shopName: product.shopName || 'Shop Name',
@@ -118,7 +117,7 @@ export class FavoritesService {
         id: productId,
         name: 'Product Name',
         price: 0,
-        imageUrl: undefined,
+        imageUrls: undefined,
         shopId: 'shop_placeholder',
         shopName: 'Shop Name',
       };

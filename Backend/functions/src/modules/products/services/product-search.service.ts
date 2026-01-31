@@ -16,7 +16,7 @@ export interface ProductSearchItem {
   categoryId: string;
   categoryName: string;
   price: number;
-  imageUrl: string | null;
+  imageUrls: string[];
   isAvailable: boolean;
   rating: number;
   soldCount: number;
@@ -160,7 +160,7 @@ export class ProductSearchService {
         categoryId: data.categoryId || '',
         categoryName: data.categoryName || '',
         price: data.price || 0,
-        imageUrl: data.imageUrl || null,
+        imageUrls: data.imageUrls ?? [],
         isAvailable: data.isAvailable ?? true,
         rating: data.rating || 0,
         soldCount: data.soldCount || 0,

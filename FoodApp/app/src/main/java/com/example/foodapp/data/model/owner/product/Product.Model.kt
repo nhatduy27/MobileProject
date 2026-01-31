@@ -2,11 +2,14 @@ package com.example.foodapp.data.model.owner.product
 
 import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 
 /**
  * Product Entity - Matches backend ProductEntity
  * Collection: products
+ * 
+ * Backend now returns imageUrls as a list instead of a single imageUrl
  */
 @Parcelize
 data class Product(
@@ -34,8 +37,8 @@ data class Product(
     @SerializedName("categoryName")
     val categoryName: String,
 
-    @SerializedName("imageUrl")
-    val imageUrl: String? = null,
+    @SerializedName("imageUrls")
+    val imageUrls: List<String>? = null,
 
     @SerializedName("isAvailable")
     val isAvailable: Boolean = true,
@@ -63,7 +66,15 @@ data class Product(
 
     @SerializedName("updatedAt")
     val updatedAt: String = ""
-) : Parcelable
+) : Parcelable {
+    /**
+     * Computed property for backward compatibility
+     * Returns the first image URL from the list (main image)
+     */
+    @IgnoredOnParcel
+    val imageUrl: String?
+        get() = imageUrls?.firstOrNull()
+}
 
 /**
  * Request DTO for creating a product
@@ -138,15 +149,12 @@ data class ImageUploadResponse(
     val success: Boolean,
 
     @SerializedName("data")
-    val data: ImageData? = null,
-
-    @SerializedName("imageUrl")
-    val imageUrl: String? = null
+    val data: ImageUploadData? = null
 )
 
-data class ImageData(
-    @SerializedName("imageUrl")
-    val imageUrl: String
+data class ImageUploadData(
+    @SerializedName("imageUrls")
+    val imageUrls: List<String>
 )
 
 /**

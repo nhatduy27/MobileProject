@@ -35,9 +35,10 @@ export class CreateProductDto {
   @ApiProperty({
     type: 'string',
     format: 'binary',
-    description: 'Product image',
+    isArray: true,
+    description: 'Product images',
   })
-  image: any;
+  images: any;
 
   @ApiProperty({ example: 15, description: 'Preparation time in minutes' })
   @Transform(({ value }) => {

@@ -256,17 +256,17 @@ fun FoodsScreen(
                 isEditing = false
                 editingProduct = null
             },
-            onSave = { name, description, price, categoryId, prepTime, imageFile ->
+            onSave = { name, description, price, categoryId, prepTime, imageFiles ->
                 if (editingProduct == null) {
-                    // Create new
-                    if (imageFile != null) {
+                    // Create new - must have at least 1 image
+                    if (imageFiles.isNotEmpty()) {
                         viewModel.createProduct(
                             name = name,
                             description = description,
                             price = price,
                             categoryId = categoryId,
                             preparationTime = prepTime,
-                            imageFile = imageFile,
+                            imageFiles = imageFiles,
                             onSuccess = {
                                 isEditing = false
                                 editingProduct = null
@@ -274,7 +274,7 @@ fun FoodsScreen(
                         )
                     }
                 } else {
-                    // Update existing
+                    // Update existing - imageFiles can be empty (keep existing images)
                     viewModel.updateProduct(
                         productId = editingProduct!!.id,
                         name = name,
@@ -282,7 +282,7 @@ fun FoodsScreen(
                         price = price,
                         categoryId = categoryId,
                         preparationTime = prepTime,
-                        imageFile = imageFile,
+                        imageFiles = imageFiles.ifEmpty { null },
                         onSuccess = {
                             isEditing = false
                             editingProduct = null

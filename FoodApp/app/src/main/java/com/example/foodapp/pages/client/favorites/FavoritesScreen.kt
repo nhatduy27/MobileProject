@@ -343,10 +343,10 @@ private fun FavoriteProductCard(
                     .size(100.dp)
                     .clip(RoundedCornerShape(12.dp))
             ) {
-                if (!product.imageUrl.isNullOrEmpty()) {
+                if (product.imageUrls.isNotEmpty()) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(product.imageUrl)
+                            .data(product.imageUrls[0])
                             .crossfade(true)
                             .build(),
                         contentDescription = product.name,

@@ -59,10 +59,10 @@ fun ProductImage(product: Product) {
         contentAlignment = Alignment.Center
     ) {
         // Ưu tiên hiển thị ảnh từ URL (API)
-        if (!product.imageUrl.isNullOrBlank()) {
+        if (!product.imageUrls.isEmpty()) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(product.imageUrl)
+                    .data(product.imageUrls[0])
                     .crossfade(true)
                     .build(),
                 contentDescription = product.name,

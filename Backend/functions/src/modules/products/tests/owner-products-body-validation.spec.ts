@@ -228,7 +228,7 @@ describe('Integration test documentation', () => {
         Authorization: 'Bearer <token>',
         // DO NOT set Content-Type manually - let FormData set it with boundary
       },
-      body: 'FormData with fields: name, description, price, categoryId, preparationTime, image',
+      body: 'FormData with fields: name, description, price, categoryId, preparationTime, images[]',
     };
 
     expect(correctExample.headers).not.toHaveProperty('Content-Type');

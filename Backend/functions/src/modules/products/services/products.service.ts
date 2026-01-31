@@ -43,7 +43,7 @@ export class ProductsService {
   async createProduct(
     ownerId: string,
     dto: CreateProductDto,
-    imageFile: Express.Multer.File,
+    imageFiles: Express.Multer.File[],
   ): Promise<ProductEntity> {
     // Get owner's shop
     const shop = await this.shopsService.getMyShop(ownerId);
@@ -52,30 +52,46 @@ export class ProductsService {
     const category = await this.categoriesService.findById(dto.categoryId);
     const categoryName = category.name;
 
+    if (!imageFiles || imageFiles.length === 0) {
+      throw new BadRequestException('Vui lòng upload ảnh sản phẩm');
+    }
+
+    const maxFiles = 10;
+    if (imageFiles.length > maxFiles) {
+      throw new BadRequestException(`Maximum ${maxFiles} images are allowed`);
+    }
+
     // Validate image type
     const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    if (!validMimeTypes.includes(imageFile.mimetype)) {
-      throw new BadRequestException('Chỉ chấp nhận file ảnh định dạng JPG, JPEG, PNG');
+    for (const imageFile of imageFiles) {
+      if (!validMimeTypes.includes(imageFile.mimetype)) {
+        throw new BadRequestException('Chỉ chấp nhận file ảnh định dạng JPG, JPEG, PNG');
+      }
     }
 
     // Validate image size (max 5MB)
     const maxSize = 5 * 1024 * 1024; // 5MB
-    if (imageFile.size > maxSize) {
-      throw new BadRequestException('Kích thước ảnh không được vượt quá 5MB');
+    for (const imageFile of imageFiles) {
+      if (imageFile.size > maxSize) {
+        throw new BadRequestException('Kích thước ảnh không được vượt quá 5MB');
+      }
     }
 
     // Generate temporary productId for upload path
     const tempProductId = `prod_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // Upload image to Firebase Storage
-    let imageUrl: string;
+    // Upload images to Firebase Storage
+    const imageUrls: string[] = [];
     try {
-      imageUrl = await this.storageService.uploadProductImage(
-        shop.id,
-        tempProductId,
-        imageFile.buffer,
-        imageFile.mimetype,
-      );
+      for (const imageFile of imageFiles) {
+        const url = await this.storageService.uploadProductGalleryImage(
+          shop.id,
+          tempProductId,
+          imageFile.buffer,
+          imageFile.mimetype,
+        );
+        imageUrls.push(url);
+      }
     } catch (error) {
       throw new BadRequestException('Upload ảnh thất bại. Vui lòng thử lại');
     }
@@ -83,12 +99,11 @@ export class ProductsService {
     // Create product with uploaded URL
     const createData = {
       ...dto,
-      imageUrl,
+      imageUrls,
     };
 
     return await this.productsRepository.create(shop.id, shop.name, categoryName, createData);
   }
-
   /**
    * Get all products of owner's shop
    * PROD-002
@@ -135,7 +150,7 @@ export class ProductsService {
     ownerId: string,
     productId: string,
     dto: UpdateProductDto,
-    imageFile?: Express.Multer.File,
+    imageFiles?: Express.Multer.File[],
   ): Promise<void> {
     const product = await this.getMyProduct(ownerId, productId);
 
@@ -163,27 +178,48 @@ export class ProductsService {
     };
 
     // Handle file upload if provided
-    if (imageFile) {
+    if (imageFiles && imageFiles.length > 0) {
+      const maxFiles = 10;
+      if (imageFiles.length > maxFiles) {
+        throw new BadRequestException(`Maximum ${maxFiles} images are allowed`);
+      }
+
       // Validate image type
       const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-      if (!validMimeTypes.includes(imageFile.mimetype)) {
-        throw new BadRequestException('Chỉ chấp nhận file ảnh định dạng JPG, JPEG, PNG');
+      for (const imageFile of imageFiles) {
+        if (!validMimeTypes.includes(imageFile.mimetype)) {
+          throw new BadRequestException('Chỉ chấp nhận file ảnh định dạng JPG, JPEG, PNG');
+        }
       }
 
       // Validate image size (max 5MB)
       const maxSize = 5 * 1024 * 1024; // 5MB
-      if (imageFile.size > maxSize) {
-        throw new BadRequestException('Kích thước ảnh không được vượt quá 5MB');
+      for (const imageFile of imageFiles) {
+        if (imageFile.size > maxSize) {
+          throw new BadRequestException('Kích thước ảnh không được vượt quá 5MB');
+        }
       }
 
-      // Upload new image
+      // Upload new images (replace album)
+      const uploadedUrls: string[] = [];
       try {
-        updateData.imageUrl = await this.storageService.uploadProductImage(
-          product.shopId,
-          productId,
-          imageFile.buffer,
-          imageFile.mimetype,
-        );
+        for (const imageFile of imageFiles) {
+          const url = await this.storageService.uploadProductGalleryImage(
+            product.shopId,
+            productId,
+            imageFile.buffer,
+            imageFile.mimetype,
+          );
+          uploadedUrls.push(url);
+        }
+
+        // Delete old images after new uploads succeed
+        const oldImageUrls = product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls : [];
+        for (const oldUrl of oldImageUrls) {
+          await this.storageService.deleteProductImage(oldUrl);
+        }
+
+        updateData.imageUrls = uploadedUrls;
       } catch (error) {
         throw new BadRequestException('Upload ảnh thất bại. Vui lòng thử lại');
       }
@@ -192,7 +228,8 @@ export class ProductsService {
     await this.productsRepository.update(productId, updateData);
   }
 
-  /**   * Toggle product availability
+  /**
+   * Toggle product availability
    * PROD-007
    */
   async toggleAvailability(
@@ -356,28 +393,60 @@ export class ProductsService {
   }
 
   /**
-   * Upload product image
-   * PROD-005
+   * Upload multiple product images
+   * PROD-005 (multi)
    */
-  async uploadProductImage(
+  async uploadProductImages(
     ownerId: string,
     productId: string,
-    buffer: Buffer,
-    mimetype: string,
-  ): Promise<string> {
+    files: Express.Multer.File[],
+  ): Promise<string[]> {
     const product = await this.getMyProduct(ownerId, productId);
 
-    // Upload to Storage
-    const imageUrl = await this.storageService.uploadProductImage(
-      product.shopId,
-      productId,
-      buffer,
-      mimetype,
-    );
+    if (!files || files.length === 0) {
+      throw new BadRequestException('No files uploaded');
+    }
 
-    // Update product imageUrl
-    await this.productsRepository.update(productId, { imageUrl });
+    const maxFiles = 10;
+    if (files.length > maxFiles) {
+      throw new BadRequestException(`Maximum ${maxFiles} images are allowed`);
+    }
 
-    return imageUrl;
+    const validMimeTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    const maxSize = 5 * 1024 * 1024;
+
+    for (const file of files) {
+      if (!validMimeTypes.includes(file.mimetype)) {
+        throw new BadRequestException('Chỉ chấp nhận file ảnh định dạng JPG, JPEG, PNG');
+      }
+      if (file.size > maxSize) {
+        throw new BadRequestException('Kích thước ảnh không được vượt quá 5MB');
+      }
+    }
+
+    const uploadedUrls: string[] = [];
+    for (const file of files) {
+      const url = await this.storageService.uploadProductGalleryImage(
+        product.shopId,
+        productId,
+        file.buffer,
+        file.mimetype,
+      );
+      uploadedUrls.push(url);
+    }
+
+    const existingImageUrls =
+      product.imageUrls && product.imageUrls.length > 0 ? [...product.imageUrls] : [];
+    const merged = [...existingImageUrls, ...uploadedUrls];
+
+    await this.productsRepository.update(productId, {
+      imageUrls: merged,
+    });
+
+    return merged;
   }
 }
+
+
+
+

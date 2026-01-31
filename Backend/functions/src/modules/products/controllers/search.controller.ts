@@ -49,7 +49,7 @@ export class SearchController {
               categoryId: 'cat_1',
               categoryName: 'Món nước',
               price: 45000,
-              imageUrl: 'https://...',
+              imageUrls: ['https://...'],
               isAvailable: true,
               rating: 4.5,
               soldCount: 200,
