@@ -9,9 +9,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.data.model.shipper.wallet.RevenuePeriod
 import com.example.foodapp.pages.shipper.theme.ShipperColors
 
@@ -34,8 +36,15 @@ fun PeriodFilterChips(
             RevenuePeriod.MONTH,
             RevenuePeriod.ALL
         ).forEach { period ->
+            val displayText = when (period) {
+                RevenuePeriod.TODAY -> stringResource(R.string.shipper_wallet_today)
+                RevenuePeriod.WEEK -> stringResource(R.string.shipper_wallet_this_week)
+                RevenuePeriod.MONTH -> stringResource(R.string.shipper_wallet_this_month)
+                RevenuePeriod.YEAR -> stringResource(R.string.shipper_wallet_this_month) // Not used
+                RevenuePeriod.ALL -> stringResource(R.string.shipper_wallet_all_time)
+            }
             PeriodChip(
-                text = period.displayName,
+                text = displayText,
                 isSelected = period == selectedPeriod,
                 onClick = { if (!isLoading) onPeriodSelected(period) },
                 modifier = Modifier.weight(1f)

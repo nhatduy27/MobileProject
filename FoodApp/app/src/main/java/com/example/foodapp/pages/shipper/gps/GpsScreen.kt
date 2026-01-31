@@ -23,7 +23,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.data.model.shipper.order.ShipperOrder
 import com.example.foodapp.pages.shipper.theme.ShipperColors
 
@@ -55,9 +57,10 @@ fun GpsScreen(
     }
     
     // Handle error messages
+    val errorPrefix = stringResource(R.string.shipper_gps_error_prefix, uiState.errorMessage ?: "")
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { message ->
-            Toast.makeText(context, "Lỗi: $message", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, errorPrefix, Toast.LENGTH_SHORT).show()
             viewModel.clearErrorMessage()
         }
     }
@@ -93,13 +96,13 @@ fun GpsScreen(
         ) {
             Column {
                 Text(
-                    "Lộ trình giao hàng",
+                    stringResource(R.string.shipper_gps_title_manage),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = ShipperColors.TextPrimary
                 )
                 Text(
-                    "Quản lý đơn hàng và lộ trình",
+                    stringResource(R.string.shipper_gps_subtitle),
                     fontSize = 13.sp,
                     color = ShipperColors.TextSecondary
                 )
@@ -109,7 +112,7 @@ fun GpsScreen(
             IconButton(onClick = onNavigateToTripHistory) {
                 Icon(
                     Icons.Outlined.History,
-                    contentDescription = "Lịch sử chuyến",
+                    contentDescription = stringResource(R.string.shipper_gps_trip_history),
                     tint = ShipperColors.Primary
                 )
             }
@@ -127,7 +130,7 @@ fun GpsScreen(
                 onClick = { selectedTab = 0 },
                 text = { 
                     Text(
-                        "Chờ giao (${uiState.availableOrders.size})",
+                        stringResource(R.string.shipper_gps_ready_tab, uiState.availableOrders.size),
                         fontWeight = if (selectedTab == 0) FontWeight.SemiBold else FontWeight.Normal
                     )
                 }
@@ -137,7 +140,7 @@ fun GpsScreen(
                 onClick = { selectedTab = 1 },
                 text = { 
                     Text(
-                        "Đang giao (${uiState.shippingOrders.size})",
+                        stringResource(R.string.shipper_gps_shipping_tab, uiState.shippingOrders.size),
                         fontWeight = if (selectedTab == 1) FontWeight.SemiBold else FontWeight.Normal
                     )
                 }
@@ -169,7 +172,7 @@ fun GpsScreen(
                     // Ready orders - for creating trips
                     if (uiState.availableOrders.isEmpty()) {
                         EmptyOrdersContent(
-                            message = "Chưa có đơn hàng sẵn sàng để giao",
+                            message = stringResource(R.string.shipper_gps_no_orders_ready),
                             onRefresh = { viewModel.loadAvailableOrders() }
                         )
                     } else {
@@ -203,7 +206,7 @@ fun GpsScreen(
                     // Shipping orders - already accepted and being delivered
                     if (uiState.shippingOrders.isEmpty()) {
                         EmptyOrdersContent(
-                            message = "Chưa có đơn hàng đang giao",
+                            message = stringResource(R.string.shipper_gps_no_orders_shipping),
                             onRefresh = { viewModel.loadShippingOrders() }
                         )
                     } else {
@@ -214,7 +217,7 @@ fun GpsScreen(
                         ) {
                             item {
                                 Text(
-                                    "${uiState.shippingOrders.size} đơn đang giao",
+                                    stringResource(R.string.shipper_gps_orders_shipping_count, uiState.shippingOrders.size),
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = ShipperColors.TextSecondary,
@@ -283,7 +286,7 @@ private fun ShippingOrderCard(order: ShipperOrder) {
                         color = ShipperColors.SuccessLight
                     ) {
                         Text(
-                            "Đang giao",
+                            stringResource(R.string.shipper_gps_status_shipping),
                             fontSize = 11.sp,
                             color = ShipperColors.Success,
                             fontWeight = FontWeight.Medium,
@@ -295,7 +298,7 @@ private fun ShippingOrderCard(order: ShipperOrder) {
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 Text(
-                    order.customer?.displayName ?: order.customerSnapshot?.displayName ?: "Khách hàng",
+                    order.customer?.displayName ?: order.customerSnapshot?.displayName ?: stringResource(R.string.shipper_gps_customer_default),
                     fontSize = 13.sp,
                     color = ShipperColors.TextSecondary,
                     maxLines = 1,
@@ -379,9 +382,9 @@ private fun ActiveTripBanner(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     when (trip.status) {
-                        com.example.foodapp.data.model.shipper.gps.TripStatus.STARTED -> "Đang giao hàng"
-                        com.example.foodapp.data.model.shipper.gps.TripStatus.PENDING -> "Chuyến đang chờ"
-                        else -> "Chuyến đi"
+                        com.example.foodapp.data.model.shipper.gps.TripStatus.STARTED -> stringResource(R.string.shipper_gps_trip_delivering)
+                        com.example.foodapp.data.model.shipper.gps.TripStatus.PENDING -> stringResource(R.string.shipper_gps_trip_pending)
+                        else -> stringResource(R.string.shipper_gps_trip_default)
                     },
                     fontWeight = FontWeight.SemiBold,
                     color = ShipperColors.TextPrimary
@@ -441,7 +444,7 @@ private fun SelectionSummaryCard(
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Đã chọn ($selectedCount/$maxCount)",
+                    stringResource(R.string.shipper_gps_selected, selectedCount, maxCount),
                     fontWeight = FontWeight.Medium,
                     color = ShipperColors.Primary
                 )
@@ -449,7 +452,7 @@ private fun SelectionSummaryCard(
             
             Row {
                 TextButton(onClick = onClear) {
-                    Text("Xóa", color = ShipperColors.TextSecondary)
+                    Text(stringResource(R.string.shipper_gps_clear), color = ShipperColors.TextSecondary)
                 }
                 
                 Button(
@@ -467,7 +470,7 @@ private fun SelectionSummaryCard(
                     } else {
                         Icon(Icons.Outlined.Route, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Tạo lộ trình")
+                        Text(stringResource(R.string.shipper_gps_create_route))
                     }
                 }
             }
@@ -488,7 +491,7 @@ private fun SelectAllRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            "$totalOrders đơn hàng sẵn sàng",
+            stringResource(R.string.shipper_gps_orders_ready_count, totalOrders),
             fontSize = 14.sp,
             fontWeight = FontWeight.Medium,
             color = ShipperColors.TextSecondary
@@ -498,7 +501,7 @@ private fun SelectAllRow(
             onClick = if (selectedCount == 0) onSelectAll else onClearAll
         ) {
             Text(
-                if (selectedCount == 0) "Chọn tất cả" else "Bỏ chọn",
+                if (selectedCount == 0) stringResource(R.string.shipper_gps_select_all) else stringResource(R.string.shipper_gps_deselect),
                 color = ShipperColors.Primary
             )
         }
@@ -585,7 +588,7 @@ private fun SelectableOrderCard(
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 Text(
-                    order.customer?.displayName ?: order.customerSnapshot?.displayName ?: "Khách hàng",
+                    order.customer?.displayName ?: order.customerSnapshot?.displayName ?: stringResource(R.string.shipper_gps_customer_default),
                     fontSize = 13.sp,
                     color = ShipperColors.TextSecondary,
                     maxLines = 1,
@@ -606,7 +609,7 @@ private fun SelectableOrderCard(
 
 @Composable
 private fun EmptyOrdersContent(
-    message: String = "Chưa có đơn hàng sẵn sàng để giao",
+    message: String,
     onRefresh: () -> Unit
 ) {
     Column(
@@ -626,7 +629,7 @@ private fun EmptyOrdersContent(
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            "Không có đơn hàng",
+            stringResource(R.string.shipper_gps_empty_title),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
             color = ShipperColors.TextSecondary
@@ -646,7 +649,7 @@ private fun EmptyOrdersContent(
         ) {
             Icon(Icons.Outlined.Refresh, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Làm mới")
+            Text(stringResource(R.string.shipper_gps_refresh))
         }
     }
 }

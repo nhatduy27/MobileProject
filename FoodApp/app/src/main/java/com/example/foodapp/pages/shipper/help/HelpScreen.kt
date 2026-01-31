@@ -9,9 +9,11 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.pages.shipper.theme.ShipperColors
 
 @Composable
@@ -20,56 +22,56 @@ fun HelpScreen() {
         HelpCategory(
             "1",
             "rocket",
-            "Bắt đầu với FoodApp",
-            "Hướng dẫn cho người mới",
+            stringResource(R.string.shipper_help_cat_getting_started),
+            stringResource(R.string.shipper_help_cat_getting_started_desc),
             emptyList()
         ),
         HelpCategory(
             "2",
             "package",
-            "Quản lý đơn hàng",
-            "Nhận, giao và hoàn thành đơn",
+            stringResource(R.string.shipper_help_cat_orders),
+            stringResource(R.string.shipper_help_cat_orders_desc),
             emptyList()
         ),
         HelpCategory(
             "3",
             "wallet",
-            "Thu nhập & Thanh toán",
-            "Cách tính phí và nhận tiền",
+            stringResource(R.string.shipper_help_cat_earnings),
+            stringResource(R.string.shipper_help_cat_earnings_desc),
             emptyList()
         ),
         HelpCategory(
             "4",
             "settings",
-            "Cài đặt tài khoản",
-            "Quản lý thông tin cá nhân",
+            stringResource(R.string.shipper_help_cat_account),
+            stringResource(R.string.shipper_help_cat_account_desc),
             emptyList()
         ),
         HelpCategory(
             "5",
             "help",
-            "Khác",
-            "Các câu hỏi khác",
+            stringResource(R.string.shipper_help_cat_other),
+            stringResource(R.string.shipper_help_cat_other_desc),
             emptyList()
         )
     )
 
     val faqs = listOf(
         FAQ(
-            "Làm thế nào để nhận đơn hàng?",
-            "Khi có đơn hàng mới phù hợp với khu vực của bạn, hệ thống sẽ gửi thông báo. Bạn nhấn 'Nhận đơn' để xác nhận nhận đơn hàng đó."
+            stringResource(R.string.shipper_help_faq1_q),
+            stringResource(R.string.shipper_help_faq1_a)
         ),
         FAQ(
-            "Tôi có thể hủy đơn hàng không?",
-            "Bạn có thể hủy đơn hàng trước khi lấy hàng. Sau khi đã lấy hàng, vui lòng liên hệ hotline để được hỗ trợ."
+            stringResource(R.string.shipper_help_faq2_q),
+            stringResource(R.string.shipper_help_faq2_a)
         ),
         FAQ(
-            "Khi nào tôi nhận được tiền?",
-            "Tiền sẽ được chuyển vào tài khoản ngân hàng của bạn vào mỗi thứ 2 hàng tuần cho tất cả đơn hàng hoàn thành tuần trước."
+            stringResource(R.string.shipper_help_faq3_q),
+            stringResource(R.string.shipper_help_faq3_a)
         ),
         FAQ(
-            "Làm sao để tăng thu nhập?",
-            "Bạn có thể tăng thu nhập bằng cách: (1) Hoạt động trong khung giờ cao điểm, (2) Duy trì tỷ lệ hoàn thành đơn cao, (3) Nhận đánh giá tốt từ khách hàng."
+            stringResource(R.string.shipper_help_faq4_q),
+            stringResource(R.string.shipper_help_faq4_a)
         )
     )
 
@@ -89,7 +91,7 @@ fun HelpScreen() {
             ContactSupportCard()
 
             Text(
-                text = "Danh mục trợ giúp",
+                text = stringResource(R.string.shipper_help_categories),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = ShipperColors.TextPrimary,
@@ -101,7 +103,7 @@ fun HelpScreen() {
             }
 
             Text(
-                text = "Câu hỏi thường gặp",
+                text = stringResource(R.string.shipper_help_faq),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = ShipperColors.TextPrimary,

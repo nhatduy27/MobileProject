@@ -58,6 +58,37 @@
     <string name="shipper_orders_distance">Distance</string>
     <string name="shipper_orders_earning">Earning</string>
     
+    <!-- Order Detail Screen -->
+    <string name="shipper_order_detail_title">Order Details</string>
+    <string name="shipper_order_timeline_created">Created</string>
+    <string name="shipper_order_timeline_ready">Ready</string>
+    <string name="shipper_order_timeline_shipping">Shipping</string>
+    <string name="shipper_order_timeline_delivered">Delivered</string>
+    <string name="shipper_order_delivery_info">Delivery Information</string>
+    <string name="shipper_order_customer_default">Customer</string>
+    <string name="shipper_order_call_customer">Call customer</string>
+    <string name="shipper_order_no_address">No address</string>
+    <string name="shipper_order_building">Building %1$s</string>
+    <string name="shipper_order_room">Room %1$s</string>
+    <string name="shipper_order_delivery_note">Delivery Note</string>
+    <string name="shipper_order_shop">Shop</string>
+    <string name="shipper_order_shop_default">Shop</string>
+    <string name="shipper_order_items">Order (%1$d items)</string>
+    <string name="shipper_order_payment">Payment</string>
+    <string name="shipper_order_payment_method">Method</string>
+    <string name="shipper_order_subtotal">Subtotal</string>
+    <string name="shipper_order_shipping_fee">Shipping Fee</string>
+    <string name="shipper_order_discount">Discount</string>
+    <string name="shipper_order_total">TOTAL</string>
+    <string name="shipper_order_cod_note">Collect cash on delivery</string>
+    <string name="shipper_order_accept_btn">ACCEPT ORDER</string>
+    <string name="shipper_order_start_delivery_btn">START DELIVERY</string>
+    <string name="shipper_order_confirm_delivered_btn">CONFIRM DELIVERED</string>
+    <string name="shipper_order_completed">Order completed</string>
+    <string name="shipper_order_cancelled_title">Order cancelled</string>
+    <string name="shipper_order_cancel_reason">Reason: %1$s</string>
+    <string name="shipper_order_processing">Order is being processed</string>
+    
     <!-- ==================== HISTORY ==================== -->
     <string name="shipper_history_title">Delivery History</string>
     <string name="shipper_history_no_orders">No delivery history yet</string>
@@ -65,6 +96,9 @@
     <string name="shipper_history_filter_today">Today</string>
     <string name="shipper_history_filter_week">This Week</string>
     <string name="shipper_history_filter_month">This Month</string>
+    <string name="shipper_history_filter_delivered">Delivered</string>
+    <string name="shipper_history_filter_cancelled">Cancelled</string>
+    <string name="shipper_history_empty">No order history</string>
     
     <!-- ==================== EARNINGS ==================== -->
     <string name="shipper_earnings_title">Earnings</string>
@@ -78,6 +112,10 @@
     <string name="shipper_earnings_today">Today</string>
     <string name="shipper_earnings_this_week">This Week</string>
     <string name="shipper_earnings_this_month">This Month</string>
+    <string name="shipper_earnings_transaction_history">Transaction History</string>
+    <string name="shipper_earnings_refresh">Refresh</string>
+    <string name="shipper_earnings_no_transactions">No transactions yet</string>
+    <string name="shipper_earnings_reload">Reload</string>
     
     <!-- ==================== PROFILE ==================== -->
     <string name="shipper_profile_title">Profile</string>
@@ -163,8 +201,247 @@
     <string name="shipper_error_unknown">An error occurred</string>
     <string name="shipper_error_load_data">Unable to load data</string>
     
-    <!-- ==================== SUCCESS MESSAGES ==================== -->
     <string name="shipper_success_saved">Saved successfully</string>
     <string name="shipper_success_deleted">Deleted successfully</string>
     <string name="shipper_success_updated">Updated successfully</string>
+    
+    <!-- ==================== NOTIFICATIONS EXTENDED ==================== -->
+    <string name="shipper_notif_unread_count">%1$d unread notifications</string>
+    <string name="shipper_notif_load_error">Unable to load notifications</string>
+    <string name="shipper_notif_time_just_now">Just now</string>
+    <string name="shipper_notif_time_minutes_ago">%1$d minutes ago</string>
+    <string name="shipper_notif_time_hours_ago">%1$d hours ago</string>
+    <string name="shipper_notif_time_days_ago">%1$d days ago</string>
+    <string name="shipper_notif_time_unknown">Unknown</string>
+    <!-- Notification titles -->
+    <string name="shipper_notif_new_order">New Order</string>
+    <string name="shipper_notif_order_confirmed">Order Confirmed</string>
+    <string name="shipper_notif_order_preparing">Order Preparing</string>
+    <string name="shipper_notif_order_ready">Order Ready</string>
+    <string name="shipper_notif_order_shipping">Order Shipping</string>
+    <string name="shipper_notif_order_delivered">Order Delivered</string>
+    <string name="shipper_notif_order_cancelled">Order Cancelled</string>
+    <string name="shipper_notif_payment_success">Payment Successful</string>
+    <string name="shipper_notif_payment_failed">Payment Failed</string>
+    <string name="shipper_notif_payment_refunded">Payment Refunded</string>
+    <string name="shipper_notif_shipper_assigned">Order Assigned</string>
+    <string name="shipper_notif_shipper_applied">Shipper Applied</string>
+    <string name="shipper_notif_app_approved">Application Approved</string>
+    <string name="shipper_notif_app_rejected">Application Rejected</string>
+    <string name="shipper_notif_daily_summary">Daily Summary</string>
+    <string name="shipper_notif_subscription_expiring">Subscription Expiring</string>
+    <string name="shipper_notif_promotion">Promotion</string>
+    <string name="shipper_notif_voucher_available">New Voucher</string>
+    <!-- Notification body messages -->
+    <string name="shipper_notif_new_order_id">New order #%1$s received</string>
+    <string name="shipper_notif_new_order_generic">New order received</string>
+    <string name="shipper_notif_order_confirmed_id">Order #%1$s has been confirmed</string>
+    <string name="shipper_notif_order_confirmed_generic">Order has been confirmed</string>
+    <string name="shipper_notif_order_preparing_id">Order #%1$s is being prepared</string>
+    <string name="shipper_notif_order_preparing_generic">Order is being prepared</string>
+    <string name="shipper_notif_order_ready_id">Order #%1$s is ready for pickup</string>
+    <string name="shipper_notif_order_ready_generic">Order is ready for pickup</string>
+    <string name="shipper_notif_order_shipping_id">Order #%1$s is being delivered</string>
+    <string name="shipper_notif_order_shipping_generic">Order is being delivered</string>
+    <string name="shipper_notif_order_delivered_id">Order #%1$s delivered successfully</string>
+    <string name="shipper_notif_order_delivered_generic">Order delivered successfully</string>
+    <string name="shipper_notif_order_cancelled_id">Order #%1$s has been cancelled</string>
+    <string name="shipper_notif_order_cancelled_generic">Order has been cancelled</string>
+    <string name="shipper_notif_payment_success_body">Payment processed successfully</string>
+    <string name="shipper_notif_payment_failed_body">Payment was unsuccessful</string>
+    <string name="shipper_notif_payment_refunded_body">Refund processed to payment method</string>
+    <string name="shipper_notif_shipper_assigned_body">You have been assigned a new order</string>
+    <string name="shipper_notif_shipper_applied_body">A new shipper has applied</string>
+    <string name="shipper_notif_app_approved_body">Your application has been approved</string>
+    <string name="shipper_notif_app_rejected_body">Your application was rejected</string>
+    <string name="shipper_notif_daily_summary_body">Summary of today\'s activities</string>
+    <string name="shipper_notif_subscription_expiring_body">Your subscription is expiring soon</string>
+    <string name="shipper_notif_promotion_body">New promotion available</string>
+    <string name="shipper_notif_voucher_available_body">New voucher available for you</string>
+    
+    <!-- ==================== TRIP DETAIL EXTENDED ==================== -->
+    <string name="shipper_trip_info">Trip Information</string>
+    <string name="shipper_trip_route">Route (%1$d stops)</string>
+    <string name="shipper_trip_stops">Stops</string>
+    <string name="shipper_trip_orders">Orders</string>
+    <string name="shipper_trip_estimated">Estimated</string>
+    <string name="shipper_trip_status_pending">Pending</string>
+    <string name="shipper_trip_status_started">In Progress</string>
+    <string name="shipper_trip_status_finished">Completed</string>
+    <string name="shipper_trip_status_cancelled">Cancelled</string>
+    <string name="shipper_trip_building">Building %1$s</string>
+    <string name="shipper_trip_point">Point %1$d</string>
+    <string name="shipper_trip_orders_count">%1$d orders</string>
+    <string name="shipper_trip_start_delivery">Start Delivery</string>
+    <string name="shipper_trip_cancel">Cancel Trip</string>
+    <string name="shipper_trip_finish">Complete Delivery</string>
+    <string name="shipper_trip_completed">Trip Completed!</string>
+    <string name="shipper_trip_delivered_count">Delivered %1$d orders</string>
+    <string name="shipper_trip_cancelled_title">Trip Cancelled</string>
+    <string name="shipper_trip_cancel_reason">Reason: %1$s</string>
+    <string name="shipper_trip_cancel_dialog_title">Cancel Trip?</string>
+    <string name="shipper_trip_cancel_dialog_message">Are you sure you want to cancel this trip? Orders will return to ready status.</string>
+    <string name="shipper_trip_cancel_reason_hint">Cancel reason (optional)</string>
+    <string name="shipper_trip_error_prefix">Error: %1$s</string>
+    
+    <!-- ==================== HOME EXTENDED ==================== -->
+    <string name="shipper_home_new_orders">New Orders (%1$d)</string>
+    <string name="shipper_home_my_orders">My Orders (%1$d)</string>
+    <string name="shipper_home_no_new_orders">No new orders</string>
+    <string name="shipper_home_no_accepted_orders">You haven\'t accepted any orders</string>
+    <string name="shipper_home_not_assigned_title">Not registered to a shop</string>
+    <string name="shipper_home_not_assigned_message">You need to register as a shipper for a shop to receive and deliver orders.</string>
+    <string name="shipper_home_register_shop">Register for Shop</string>
+    <string name="shipper_home_check_again">Check Again</string>
+    <string name="shipper_home_pending_approval">If you\'ve submitted an application, please wait for shop owner approval.</string>
+    
+    <!-- ==================== WALLET/EARNINGS COMPONENTS ==================== -->
+    <string name="shipper_wallet_balance">Wallet Balance</string>
+    <string name="shipper_wallet_withdraw">Withdraw</string>
+    <string name="shipper_wallet_total_earned">Total Earned</string>
+    <string name="shipper_wallet_total_withdrawn">Withdrawn</string>
+    <string name="shipper_wallet_today">Today</string>
+    <string name="shipper_wallet_this_week">This Week</string>
+    <string name="shipper_wallet_this_month">This Month</string>
+    <string name="shipper_wallet_all_time">All Time</string>
+    <string name="shipper_wallet_revenue_chart">Revenue Chart</string>
+    <string name="shipper_wallet_no_data">No data yet</string>
+    <string name="shipper_wallet_revenue_vnd">Revenue (VND)</string>
+    
+    <!-- Payout Dialog -->
+    <string name="shipper_payout_title">Withdrawal Request</string>
+    <string name="shipper_payout_close">Close</string>
+    <string name="shipper_payout_current_balance">Current balance: %1$s</string>
+    <string name="shipper_payout_amount">Amount (VND)</string>
+    <string name="shipper_payout_min_amount">Minimum 50,000 VND</string>
+    <string name="shipper_payout_bank">Bank</string>
+    <string name="shipper_payout_account_number">Account Number</string>
+    <string name="shipper_payout_account_name">Account Holder Name</string>
+    <string name="shipper_payout_account_name_hint">E.g.: NGUYEN VAN A</string>
+    <string name="shipper_payout_note">Note (optional)</string>
+    <string name="shipper_payout_submit">Submit Withdrawal Request</string>
+    <string name="shipper_payout_processing_note">* Request will be processed within 1-3 business days</string>
+    
+    <!-- ==================== CHAT/CONVERSATIONS ==================== -->
+    <string name="shipper_conv_no_conversations">No conversations yet</string>
+    <string name="shipper_conv_empty_desc">Conversations with customers and shop owners will appear here</string>
+    <string name="shipper_conv_shop_owner">Shop Owner</string>
+    <string name="shipper_conv_customer">Customer</string>
+    <string name="shipper_conv_shipper">Shipper</string>
+    <string name="shipper_conv_start_chat">Start a conversation</string>
+    <string name="shipper_conv_just_now">Just now</string>
+    
+    <!-- ==================== DELIVERY MAP ==================== -->
+    <string name="shipper_map_delivery_route">Delivery Route</string>
+    <string name="shipper_map_finish_title">Complete Delivery?</string>
+    <string name="shipper_map_finish_message">Have you delivered all %1$d orders? Order statuses will be updated to \'Delivered\'.</string>
+    <string name="shipper_map_confirm">Confirm</string>
+    <string name="shipper_map_back">Back</string>
+    <string name="shipper_map_delivering">Delivering</string>
+    <string name="shipper_map_points">stops</string>
+    <string name="shipper_map_orders">orders</string>
+    <string name="shipper_map_complete_delivery">Complete Delivery</string>
+    <string name="shipper_map_origin">Starting Point</string>
+    <string name="shipper_map_building">Building %1$s</string>
+    <string name="shipper_map_stop">Stop %1$d</string>
+    <string name="shipper_map_your_location">Your Location</string>
+    <string name="shipper_map_next_stop">Next Stop</string>
+    <string name="shipper_map_orders_count">%1$d orders</string>
+    <string name="shipper_map_directions">Directions</string>
+    
+    <!-- ==================== GPS SCREEN ==================== -->
+    <string name="shipper_gps_title_manage">Delivery Routes</string>
+    <string name="shipper_gps_subtitle">Manage orders and routes</string>
+    <string name="shipper_gps_trip_history">Trip History</string>
+    <string name="shipper_gps_ready_tab">Ready (%1$d)</string>
+    <string name="shipper_gps_shipping_tab">Shipping (%1$d)</string>
+    <string name="shipper_gps_no_orders_ready">No orders ready for delivery</string>
+    <string name="shipper_gps_no_orders_shipping">No orders being delivered</string>
+    <string name="shipper_gps_orders_shipping_count">%1$d orders being delivered</string>
+    <string name="shipper_gps_status_shipping">Shipping</string>
+    <string name="shipper_gps_customer_default">Customer</string>
+    <string name="shipper_gps_trip_delivering">Delivering</string>
+    <string name="shipper_gps_trip_pending">Trip Pending</string>
+    <string name="shipper_gps_trip_default">Trip</string>
+    <string name="shipper_gps_trip_stats">%1$d stops • %2$d orders • %3$s</string>
+    <string name="shipper_gps_selected">Selected (%1$d/%2$d)</string>
+    <string name="shipper_gps_clear">Clear</string>
+    <string name="shipper_gps_create_route">Create Route</string>
+    <string name="shipper_gps_orders_ready_count">%1$d orders ready</string>
+    <string name="shipper_gps_select_all">Select All</string>
+    <string name="shipper_gps_deselect">Deselect</string>
+    <string name="shipper_gps_empty_title">No Orders</string>
+    <string name="shipper_gps_refresh">Refresh</string>
+    <string name="shipper_gps_error_prefix">Error: %1$s</string>
+    
+    <!-- ==================== REMOVAL REQUEST ==================== -->
+    <string name="shipper_removal_title">Leave Shop Requests</string>
+    <string name="shipper_removal_back">Back</string>
+    <string name="shipper_removal_list">Request List</string>
+    <string name="shipper_removal_count">%1$d requests</string>
+    <string name="shipper_removal_create">Create Request</string>
+    <string name="shipper_removal_no_shop">You are not approved to work at any shop yet. Cannot create leave request.</string>
+    <string name="shipper_removal_filter_all">All</string>
+    <string name="shipper_removal_filter_pending">Pending</string>
+    <string name="shipper_removal_filter_approved">Approved</string>
+    <string name="shipper_removal_filter_rejected">Rejected</string>
+    <string name="shipper_removal_empty">No requests yet</string>
+    <string name="shipper_removal_empty_desc">You haven\'t created any leave requests</string>
+    <string name="shipper_removal_refresh">Refresh</string>
+    <string name="shipper_removal_error">Error: %1$s</string>
+    <string name="shipper_removal_select_shop">Select shop</string>
+    <string name="shipper_removal_please_select_shop">Please select a shop</string>
+    
+    <!-- Create Dialog -->
+    <string name="shipper_removal_dialog_title">Create Leave Request</string>
+    <string name="shipper_removal_select_shop_label">Select Shop</string>
+    <string name="shipper_removal_type_label">Request Type</string>
+    <string name="shipper_removal_type_quit">Quit</string>
+    <string name="shipper_removal_type_transfer">Transfer</string>
+    <string name="shipper_removal_quit_desc">You will stop being a shipper and become a regular customer</string>
+    <string name="shipper_removal_transfer_desc">You will leave this shop but remain a shipper to apply to another shop</string>
+    <string name="shipper_removal_reason_label">Reason (optional)</string>
+    <string name="shipper_removal_reason_hint">Enter your reason for leaving...</string>
+    <string name="shipper_removal_submit">Submit Request</string>
+    <string name="shipper_removal_sent_success">Request sent successfully</string>
+    
+    <!-- Request Card -->
+    <string name="shipper_removal_reason">Reason: %1$s</string>
+    <string name="shipper_removal_rejection_reason">Rejection reason: %1$s</string>
+    <string name="shipper_removal_created">Created: %1$s</string>
+    <string name="shipper_removal_processed">Processed: %1$s</string>
+    <string name="shipper_removal_status_pending">Pending</string>
+    <string name="shipper_removal_status_approved">Approved</string>
+    <string name="shipper_removal_status_rejected">Rejected</string>
+    
+    <!-- ==================== HELP SCREEN ==================== -->
+    <string name="shipper_help_categories">Help Categories</string>
+    
+    <!-- Help Categories -->
+    <string name="shipper_help_cat_getting_started">Getting Started</string>
+    <string name="shipper_help_cat_getting_started_desc">Guide for new shippers</string>
+    <string name="shipper_help_cat_orders">Order Management</string>
+    <string name="shipper_help_cat_orders_desc">Accept, deliver and complete orders</string>
+    <string name="shipper_help_cat_earnings">Earnings &amp; Payments</string>
+    <string name="shipper_help_cat_earnings_desc">How fees are calculated and payments work</string>
+    <string name="shipper_help_cat_account">Account Settings</string>
+    <string name="shipper_help_cat_account_desc">Manage personal information</string>
+    <string name="shipper_help_cat_other">Other</string>
+    <string name="shipper_help_cat_other_desc">Other questions</string>
+    
+    <!-- FAQ -->
+    <string name="shipper_help_faq1_q">How do I accept an order?</string>
+    <string name="shipper_help_faq1_a">When a new order matching your area is available, the system will send a notification. Tap \'Accept Order\' to confirm.</string>
+    <string name="shipper_help_faq2_q">Can I cancel an order?</string>
+    <string name="shipper_help_faq2_a">You can cancel an order before picking it up. After pickup, please contact the hotline for assistance.</string>
+    <string name="shipper_help_faq3_q">When will I receive payment?</string>
+    <string name="shipper_help_faq3_a">Payments are transferred to your bank account every Monday for all orders completed the previous week.</string>
+    <string name="shipper_help_faq4_q">How can I increase my earnings?</string>
+    <string name="shipper_help_faq4_a">You can increase earnings by: (1) Working during peak hours, (2) Maintaining a high completion rate, (3) Getting good customer reviews.</string>
+    
+    <!-- Contact Support -->
+    <string name="shipper_help_need_support">Need help now?</string>
+    <string name="shipper_help_contact_channels">Contact us through these channels</string>
+    <string name="shipper_help_call_now">Call Now</string>
+    <string name="shipper_help_email_btn">Email</string>
 </resources>
