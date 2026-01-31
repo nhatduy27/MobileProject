@@ -78,6 +78,24 @@ class RealShipperOrderRepository(
         return safeApiCallWrapped { apiService.markDelivered(id) }
     }
     
+    override suspend fun getOnlineStatus(): Result<Boolean> {
+        return try {
+            val response = apiService.getOnlineStatus()
+            if (response.isSuccessful) {
+                val isOnline = response.body()?.data?.isOnline ?: false
+                Log.d("ShipperOrderRepo", "Get online status success: $isOnline")
+                Result.success(isOnline)
+            } else {
+                val errorMessage = parseErrorBody(response)
+                Log.e("ShipperOrderRepo", "Get online status failed: $errorMessage")
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            Log.e("ShipperOrderRepo", "Get online status exception", e)
+            Result.failure(e)
+        }
+    }
+    
     override suspend fun goOnline(): Result<String> {
         return try {
             val response = apiService.goOnline()

@@ -477,4 +477,18 @@ export class ShippersService {
       shipperInfo: shipper.shipperInfo,
     });
   }
+
+  /**
+   * Update shipper online status
+   * Called when shipper goes online/offline via topic subscription
+   */
+  async updateOnlineStatus(shipperId: string, isOnline: boolean): Promise<void> {
+    const userRef = this.firestore.collection('users').doc(shipperId);
+    await userRef.update({
+      'shipperInfo.isOnline': isOnline,
+      'shipperInfo.lastOnlineAt': isOnline ? FieldValue.serverTimestamp() : null,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    this.logger.log(`Shipper ${shipperId} isOnline updated to: ${isOnline}`);
+  }
 }

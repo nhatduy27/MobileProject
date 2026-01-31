@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Delete,
+  Get,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -39,6 +40,50 @@ export class ShipperNotificationsController {
   ) {}
 
   /**
+   * Get shipper's current online status
+   */
+  @Get('online')
+  @ApiOperation({
+    summary: 'Get shipper online status',
+    description: 'Get current online/offline status of the shipper',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns current online status',
+    schema: {
+      type: 'object',
+      properties: {
+        isOnline: {
+          type: 'boolean',
+          example: true,
+        },
+        topic: {
+          type: 'string',
+          example: 'shop_abc123_shippers_active',
+        },
+      },
+    },
+  })
+  @ApiUnauthorizedResponse({ description: 'Not authenticated' })
+  @ApiForbiddenResponse({ description: 'User is not a SHIPPER (403 - required role missing)' })
+  async getOnlineStatus(
+    @CurrentUser('uid') shipperId: string,
+  ): Promise<{ isOnline: boolean; topic: string | null }> {
+    const shipper = await this.shippersService.findById(shipperId);
+    if (!shipper || !shipper.shipperInfo?.shopId) {
+      throw new BadRequestException('Shipper profile not found or not assigned to a shop');
+    }
+
+    const topic = `shop_${shipper.shipperInfo.shopId}_shippers_active`;
+    const isOnline = shipper.shipperInfo.isOnline ?? false;
+
+    return {
+      isOnline,
+      topic,
+    };
+  }
+
+  /**
    * Shipper goes online - subscribe to per-shop topic
    * When online, shipper will receive ORDER_READY broadcasts from their shop
    */
@@ -62,6 +107,10 @@ export class ShipperNotificationsController {
           type: 'string',
           example: 'shop_abc123_shippers_active',
         },
+        isOnline: {
+          type: 'boolean',
+          example: true,
+        },
       },
     },
   })
@@ -69,7 +118,7 @@ export class ShipperNotificationsController {
   @ApiForbiddenResponse({ description: 'User is not a SHIPPER (403 - required role missing)' })
   async goOnline(
     @CurrentUser('uid') shipperId: string,
-  ): Promise<{ subscribedCount: number; topic: string }> {
+  ): Promise<{ subscribedCount: number; topic: string; isOnline: boolean }> {
     const shipper = await this.shippersService.findById(shipperId);
     if (!shipper || !shipper.shipperInfo?.shopId) {
       throw new BadRequestException('Shipper profile not found or not assigned to a shop');
@@ -81,9 +130,13 @@ export class ShipperNotificationsController {
       userIds: [shipperId],
     });
 
+    // Save isOnline status to Firestore
+    await this.shippersService.updateOnlineStatus(shipperId, true);
+
     return {
       subscribedCount: result.subscribedCount,
       topic,
+      isOnline: true,
     };
   }
 
@@ -111,6 +164,10 @@ export class ShipperNotificationsController {
           type: 'string',
           example: 'shop_abc123_shippers_active',
         },
+        isOnline: {
+          type: 'boolean',
+          example: false,
+        },
       },
     },
   })
@@ -118,7 +175,7 @@ export class ShipperNotificationsController {
   @ApiForbiddenResponse({ description: 'User is not a SHIPPER (403 - required role missing)' })
   async goOffline(
     @CurrentUser('uid') shipperId: string,
-  ): Promise<{ unsubscribedCount: number; topic: string }> {
+  ): Promise<{ unsubscribedCount: number; topic: string; isOnline: boolean }> {
     const shipper = await this.shippersService.findById(shipperId);
     if (!shipper || !shipper.shipperInfo?.shopId) {
       throw new BadRequestException('Shipper profile not found or not assigned to a shop');
@@ -130,9 +187,13 @@ export class ShipperNotificationsController {
       userIds: [shipperId],
     });
 
+    // Save isOnline status to Firestore
+    await this.shippersService.updateOnlineStatus(shipperId, false);
+
     return {
       unsubscribedCount: result.unsubscribedCount,
       topic,
+      isOnline: false,
     };
   }
 }

@@ -29,6 +29,9 @@ export class ShipperInfoEntity {
   @ApiProperty({ enum: ShipperStatus, example: ShipperStatus.AVAILABLE })
   status: ShipperStatus;
 
+  @ApiProperty({ example: true, description: 'Whether shipper is online to receive order notifications' })
+  isOnline?: boolean;
+
   @ApiProperty({ example: 4.8 })
   rating: number;
 
@@ -40,6 +43,9 @@ export class ShipperInfoEntity {
 
   @ApiProperty()
   joinedAt: Timestamp;
+
+  @ApiProperty({ required: false, description: 'Last time shipper went online' })
+  lastOnlineAt?: Timestamp;
 
   constructor(data: Partial<ShipperInfoEntity>) {
     Object.assign(this, data);
