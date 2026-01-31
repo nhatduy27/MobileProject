@@ -15,7 +15,7 @@ sealed class ApiResult<out T> {
  * {
  *   "success": true,
  *   "data": {
- *     "isFavorited": true      <-- TRỰC TIẾP, không có lớp wrapper bên trong
+ *     "isFavorited": true
  *   },
  *   "timestamp": "2026-01-17T07:20:00.410Z"
  * }
@@ -25,7 +25,7 @@ data class CheckFavoriteResponse @JvmOverloads constructor(
     val success: Boolean = false,
 
     @SerializedName("data")
-    val data: CheckFavoriteData? = null, // <-- CHỈNH: Data trực tiếp, không phải wrapper
+    val data: CheckFavoriteData? = null,
 
     @SerializedName("message")
     val message: String? = null,
@@ -33,28 +33,16 @@ data class CheckFavoriteResponse @JvmOverloads constructor(
     @SerializedName("timestamp")
     val timestamp: String? = null
 ) {
-    // Tính toán isFavorited đơn giản
-    val isFavorited: Boolean
-        get() = data?.isFavorited == true
-
+    val isFavorited: Boolean get() = data?.isFavorited == true
     val isValid: Boolean get() = success && data != null
 }
 
-/**
- * Data chứa isFavorited (trực tiếp)
- * Format: {
- *   "isFavorited": boolean
- * }
- */
 data class CheckFavoriteData @JvmOverloads constructor(
     @SerializedName("isFavorited")
     val isFavorited: Boolean = false
 )
 
-// Extension để lấy isFavorited
-fun CheckFavoriteResponse.isFavorited(): Boolean {
-    return isFavorited
-}
+fun CheckFavoriteResponse.isFavorited(): Boolean = isFavorited
 
 // ============== BASE FAVORITE RESPONSE ==============
 
@@ -68,16 +56,8 @@ data class FavoriteResponse @JvmOverloads constructor(
     val isSuccess: Boolean get() = success
 }
 
-// ============== FAVORITE PRODUCTS API RESPONSE (WRAPPER) ==============
+// ============== FAVORITE PRODUCTS API RESPONSE ==============
 
-/**
- * WRAPPER response cho danh sách sản phẩm yêu thích từ API
- * Format: {
- *   "success": true,
- *   "data": FavoriteProductsData,
- *   "timestamp": "2026-01-16T19:47:14.275Z"
- * }
- */
 data class FavoriteProductsApiResponse @JvmOverloads constructor(
     @SerializedName("success")
     val success: Boolean = false,
@@ -95,21 +75,9 @@ data class FavoriteProductsApiResponse @JvmOverloads constructor(
     val isEmpty: Boolean get() = data?.data?.isEmpty() ?: true
 }
 
-/**
- * DATA chứa danh sách thực sự và phân trang
- * Format: {
- *   "data": [FavoriteProductItem],
- *   "pagination": {
- *     "total": 0,
- *     "page": 1,
- *     "limit": 20,
- *     "hasMore": false
- *   }
- * }
- */
 data class FavoriteProductsData @JvmOverloads constructor(
     @SerializedName("data")
-    val data: List<FavoriteProductItem> = emptyList(),  // ← Chỉ có data và pagination, không có success
+    val data: List<FavoriteProductItem> = emptyList(),
 
     @SerializedName("pagination")
     val pagination: FavoritePagination? = null
@@ -119,12 +87,12 @@ data class FavoriteProductsData @JvmOverloads constructor(
 }
 
 /**
- * Item sản phẩm yêu thích trong danh sách
+ * Item sản phẩm yêu thích
  * Format: {
  *   "productId": "prod_123",
  *   "productName": "Cơm sườn",
  *   "productPrice": 35000,
- *   "productImage": "...",
+ *   "productImages": ["url1", "url2"], // ĐỔI: productImage -> productImages (List)
  *   "shopId": "shop_abc",
  *   "shopName": "Quán A Mập",
  *   "createdAt": "2026-01-05T10:00:00Z"
@@ -152,50 +120,33 @@ data class FavoriteProductItem @JvmOverloads constructor(
     @SerializedName("createdAt")
     val createdAt: String = ""
 ) {
-    // Helper properties
     val formattedPrice: String get() = "%,.0f".format(productPrice) + "đ"
-    val hasImage: Boolean get() = !productImage.isNullOrBlank()
 
-    // Convert sang ProductApiModel nếu cần
-    fun toProductApiModel(): ProductApiModel {
-        return ProductApiModel(
-            id = productId,
-            name = productName,
-            price = productPrice,
-            imageUrl = productImage,
-            shopId = shopId,
-            shopName = shopName,
-            createdAt = createdAt
-        )
-    }
+    val imageUrls: List<String> get() = if (!productImage.isNullOrBlank()) listOf(productImage) else emptyList()
 
-    // Convert sang Product local model
     fun toProduct(): Product {
         return Product(
             id = productId,
             name = productName,
+            description = "",
             price = formattedPrice,
             priceValue = productPrice,
-            imageUrl = productImage,
+            category = FoodCategory.FOOD,
+            imageUrls = imageUrls,
             shopId = shopId,
             shopName = shopName,
-            createdAt = createdAt,
+            rating = 0.0,
+            totalRatings = 0,
+            soldCount = 0,
             isAvailable = true,
-            description = "",
-            category = FoodCategory.FOOD
+            preparationTime = 15,
+            isDeleted = false,
+            createdAt = createdAt,
+            updatedAt = null,
+            isFavorite = true
         )
     }
 }
-
-/**
- * Phân trang cho danh sách yêu thích
- * Format: {
- *   "total": 10,
- *   "page": 1,
- *   "limit": 20,
- *   "hasMore": false
- * }
- */
 data class FavoritePagination @JvmOverloads constructor(
     @SerializedName("total")
     val total: Int = 0,
@@ -209,17 +160,10 @@ data class FavoritePagination @JvmOverloads constructor(
     @SerializedName("hasMore")
     val hasMore: Boolean = false
 ) {
-    // Tính toán total pages
     val totalPages: Int get() = if (total == 0) 1 else (total + limit - 1) / limit
-
-    // Kiểm tra có dữ liệu không
     val hasData: Boolean get() = total > 0
 }
 
-/**
- * DTO cho query parameters khi lấy danh sách yêu thích
- * Sẽ được convert thành: ?page=1&limit=20
- */
 data class FavoriteQueryParams @JvmOverloads constructor(
     @SerializedName("page")
     val page: Int = 1,
@@ -227,71 +171,28 @@ data class FavoriteQueryParams @JvmOverloads constructor(
     @SerializedName("limit")
     val limit: Int = 20
 ) {
-    fun toQueryMap(): Map<String, String> {
-        return mapOf(
-            "page" to page.toString(),
-            "limit" to limit.toString()
-        )
-    }
+    fun toQueryMap(): Map<String, String> = mapOf(
+        "page" to page.toString(),
+        "limit" to limit.toString()
+    )
 
-    // Copy với page mới (cho load more)
-    fun copyWithPage(newPage: Int): FavoriteQueryParams {
-        return this.copy(page = newPage)
-    }
+    fun copyWithPage(newPage: Int): FavoriteQueryParams = copy(page = newPage)
 }
 
 // ============== FAVORITE EXTENSIONS ==============
 
-// Extension để convert FavoriteProductsApiResponse sang list Product
-fun FavoriteProductsApiResponse.toProductList(): List<Product> {
-    return if (isValid && data != null) {
-        data.data.map { it.toProduct() }
-    } else {
-        emptyList()
-    }
-}
-
-// Extension để lấy pagination từ wrapper response
-fun FavoriteProductsApiResponse.getPagination(): FavoritePagination? {
-    return data?.pagination
-}
-
-// Extension để lấy inner data dễ dàng
-fun FavoriteProductsApiResponse.getInnerData(): FavoriteProductsData? {
-    return if (isValid) data else null
-}
-
-// Extension cho FavoriteProductsData
-fun FavoriteProductsData.toProductList(): List<Product> {
-    return data.map { it.toProduct() }
-}
-
-// Extension để lấy productIds từ danh sách yêu thích
-fun FavoriteProductsData.getProductIds(): List<String> {
-    return data.map { it.productId }
-}
-
-// Extension để kiểm tra sản phẩm có trong danh sách yêu thích không
-fun FavoriteProductsData.containsProduct(productId: String): Boolean {
-    return data.any { it.productId == productId }
-}
-
-// Extension cho phân trang
+fun FavoriteProductsApiResponse.toProductList(): List<Product> = data?.data?.map { it.toProduct() } ?: emptyList()
+fun FavoriteProductsApiResponse.getPagination(): FavoritePagination? = data?.pagination
+fun FavoriteProductsApiResponse.getInnerData(): FavoriteProductsData? = if (isValid) data else null
+fun FavoriteProductsData.toProductList(): List<Product> = data.map { it.toProduct() }
+fun FavoriteProductsData.getProductIds(): List<String> = data.map { it.productId }
+fun FavoriteProductsData.containsProduct(productId: String): Boolean = data.any { it.productId == productId }
 fun FavoritePagination.isFirstPage(): Boolean = page == 1
 fun FavoritePagination.isLastPage(): Boolean = !hasMore
 fun FavoritePagination.nextPage(): Int = page + 1
 
 // ============== PRODUCT API RESPONSE MODELS ==============
 
-/**
- * Wrapper response cho Product API (danh sách sản phẩm)
- * Format: {
- *   "success": boolean,
- *   "data": ProductListData,
- *   "message": string,
- *   "timestamp": string
- * }
- */
 data class ProductApiResponse @JvmOverloads constructor(
     @SerializedName("success")
     val success: Boolean = false,
@@ -308,15 +209,6 @@ data class ProductApiResponse @JvmOverloads constructor(
     val isValid: Boolean get() = success && data != null
 }
 
-/**
- * Response cho chi tiết sản phẩm từ API
- * Format: {
- *   "success": boolean,
- *   "data": ProductApiModel,  // ← CHÚ Ý: data là ProductApiModel trực tiếp, không phải ProductListData
- *   "message": string,
- *   "timestamp": string
- * }
- */
 data class ProductDetailApiResponse @JvmOverloads constructor(
     @SerializedName("success")
     val success: Boolean = false,
@@ -333,15 +225,6 @@ data class ProductDetailApiResponse @JvmOverloads constructor(
     val isValid: Boolean get() = success && data != null && data.isValid
 }
 
-/**
- * Data chứa danh sách sản phẩm và phân trang
- * Format: {
- *   "products": [ProductApiModel],
- *   "total": number,
- *   "page": number,
- *   "limit": number
- * }
- */
 data class ProductListData @JvmOverloads constructor(
     @SerializedName("products")
     val products: List<ProductApiModel> = emptyList(),
@@ -360,27 +243,7 @@ data class ProductListData @JvmOverloads constructor(
 }
 
 /**
- * Model sản phẩm từ API
- * Format: {
- *   "id": string,
- *   "shopId": string,
- *   "shopName": string,
- *   "name": string,
- *   "description": string,
- *   "price": number,
- *   "categoryId": string,
- *   "categoryName": string,
- *   "imageUrl": string,
- *   "isAvailable": boolean,
- *   "preparationTime": number,
- *   "rating": number,
- *   "totalRatings": number,
- *   "soldCount": number,
- *   "sortOrder": number,
- *   "isDeleted": boolean,
- *   "createdAt": string,
- *   "updatedAt": string
- * }
+ * Model sản phẩm từ API - KHỚP VỚI Product local model
  */
 data class ProductApiModel @JvmOverloads constructor(
     @SerializedName("id")
@@ -407,8 +270,8 @@ data class ProductApiModel @JvmOverloads constructor(
     @SerializedName("categoryName")
     val categoryName: String = "",
 
-    @SerializedName("imageUrl")
-    val imageUrl: String? = null,
+    @SerializedName("imageUrls") // KHỚP: imageUrls: List<String>
+    val imageUrls: List<String> = emptyList(),
 
     @SerializedName("isAvailable")
     val isAvailable: Boolean = true,
@@ -437,24 +300,25 @@ data class ProductApiModel @JvmOverloads constructor(
     @SerializedName("updatedAt")
     val updatedAt: String? = null
 ) {
-    // Helper methods
+    // Helper methods - KHỚP với Product local model
     val formattedPrice: String get() = "%,.0f".format(price) + "đ"
-    val hasImage: Boolean get() = !imageUrl.isNullOrBlank()
+    val hasImage: Boolean get() = imageUrls.isNotEmpty()
+    val mainImageUrl: String? get() = imageUrls.firstOrNull()
+    val additionalImageUrls: List<String> get() = imageUrls.drop(1)
     val isInStock: Boolean get() = isAvailable && !isDeleted
     val ratingText: String get() = if (totalRatings > 0) "%.1f".format(rating) else "Mới"
+    val imageCount: Int get() = imageUrls.size
+
     val soldCountText: String get() = when {
         soldCount >= 1000000 -> "%.1fM".format(soldCount / 1000000.0)
         soldCount >= 1000 -> "%.1fk".format(soldCount / 1000.0)
         else -> soldCount.toString()
     }
 
-    // Định dạng thời gian chuẩn bị
     val preparationTimeText: String get() = preparationTime?.let { "$it phút" } ?: "10-15 phút"
-
-    // Kiểm tra sản phẩm hợp lệ
     val isValid: Boolean get() = id.isNotBlank() && name.isNotBlank() && !isDeleted
 
-    // Convert sang local Product model
+    // Convert sang Product local model - KHỚP HOÀN TOÀN
     fun toProduct(): Product {
         return Product(
             id = id,
@@ -463,7 +327,7 @@ data class ProductApiModel @JvmOverloads constructor(
             price = formattedPrice,
             priceValue = price,
             category = FoodCategory.fromName(categoryName),
-            imageUrl = imageUrl,
+            imageUrls = imageUrls, // KHỚP: List<String>
             shopId = shopId,
             shopName = shopName,
             rating = rating,
@@ -473,17 +337,14 @@ data class ProductApiModel @JvmOverloads constructor(
             preparationTime = preparationTime ?: 15,
             isDeleted = isDeleted,
             createdAt = createdAt,
-            updatedAt = updatedAt
+            updatedAt = updatedAt,
+            isFavorite = false
         )
     }
 }
 
 // ============== PRODUCT FILTER DTO ==============
 
-/**
- * DTO cho query parameters khi gọi API product feed
- * Sẽ được convert thành query string: ?categoryId=cat_123&q=phở&page=1&limit=20
- */
 data class ProductFilterDto @JvmOverloads constructor(
     @SerializedName("categoryId")
     val categoryId: String? = null,
@@ -501,7 +362,7 @@ data class ProductFilterDto @JvmOverloads constructor(
     val maxPrice: Double? = null,
 
     @SerializedName("sort")
-    val sort: String? = null, // "newest", "popular", "rating", "price"
+    val sort: String? = null,
 
     @SerializedName("page")
     val page: Int = 1,
@@ -512,22 +373,18 @@ data class ProductFilterDto @JvmOverloads constructor(
     @SerializedName("isAvailable")
     val isAvailable: Boolean? = null
 ) {
-    // Convert thành Map<String, String> cho query parameters
-    fun toQueryMap(): Map<String, String> {
-        return buildMap {
-            categoryId?.let { put("categoryId", it) }
-            shopId?.let { put("shopId", it) }
-            searchQuery?.let { put("q", it) }
-            minPrice?.let { put("minPrice", it.toString()) }
-            maxPrice?.let { put("maxPrice", it.toString()) }
-            sort?.let { put("sort", it) }
-            put("page", page.toString())
-            put("limit", limit.toString())
-            isAvailable?.let { put("isAvailable", it.toString()) }
-        }
+    fun toQueryMap(): Map<String, String> = buildMap {
+        categoryId?.let { put("categoryId", it) }
+        shopId?.let { put("shopId", it) }
+        searchQuery?.let { put("q", it) }
+        minPrice?.let { put("minPrice", it.toString()) }
+        maxPrice?.let { put("maxPrice", it.toString()) }
+        sort?.let { put("sort", it) }
+        put("page", page.toString())
+        put("limit", limit.toString())
+        isAvailable?.let { put("isAvailable", it.toString()) }
     }
 
-    // Check xem có filter nào không
     val hasFilters: Boolean get() =
         !categoryId.isNullOrBlank() ||
                 !shopId.isNullOrBlank() ||
@@ -536,42 +393,25 @@ data class ProductFilterDto @JvmOverloads constructor(
                 maxPrice != null ||
                 sort != null
 
-    // Copy với page mới (cho phân trang)
-    fun copyWithPage(newPage: Int): ProductFilterDto {
-        return this.copy(page = newPage)
-    }
+    fun copyWithPage(newPage: Int): ProductFilterDto = copy(page = newPage)
 }
 
 // ============== REQUEST/API MODELS ==============
 
-/**
- * Request cho lấy chi tiết sản phẩm
- */
 data class ProductDetailRequest(
     @SerializedName("id")
     val productId: String
 )
 
-
-/**
- * DTO cho query parameters khi tìm kiếm sản phẩm với fuzzy search
- * Format chính xác theo API spec:
- * - q * required    Search query (min 2 chars)
- * - shoplid    shopld (query)
- * - categoryld    categoryld (query)
- * - minPrice    minPrice (query)
- * - maxPrice    maxPrice (query)
- * - limit    20 (query)
- */
 data class SearchProductsRequestDto @JvmOverloads constructor(
     @SerializedName("q")
-    val q: String = "", // *required, min 2 chars - ĐÚNG TÊN "q" như spec
+    val q: String = "",
 
     @SerializedName("shopId")
     val shoplid: String? = null,
 
     @SerializedName("categoryId")
-    val categoryld: String? = null, // ĐÚNG TÊN "categoryld" như spec
+    val categoryld: String? = null,
 
     @SerializedName("minPrice")
     val minPrice: Double? = null,
@@ -584,28 +424,16 @@ data class SearchProductsRequestDto @JvmOverloads constructor(
 ) {
     val isValid: Boolean get() = q.length >= 2
 
-    fun toQueryMap(): Map<String, String> {
-        return buildMap {
-            if (q.isNotBlank()) put("q", q)
-            shoplid?.let { put("shoplid", it) }
-            categoryld?.let { put("categoryld", it) }
-            minPrice?.let { put("minPrice", it.toString()) }
-            maxPrice?.let { put("maxPrice", it.toString()) }
-            put("limit", limit.toString())
-        }
+    fun toQueryMap(): Map<String, String> = buildMap {
+        if (q.isNotBlank()) put("q", q)
+        shoplid?.let { put("shoplid", it) }
+        categoryld?.let { put("categoryld", it) }
+        minPrice?.let { put("minPrice", it.toString()) }
+        maxPrice?.let { put("maxPrice", it.toString()) }
+        put("limit", limit.toString())
     }
 }
 
-/**
- * Wrapper response cho API search products với fuzzy search
- * Format: {
- *   "success": true,
- *   "data": {
- *     "products": [...],
- *     "total": 1
- *   }
- * }
- */
 data class SearchProductsApiResponse @JvmOverloads constructor(
     @SerializedName("success")
     val success: Boolean = false,
@@ -616,16 +444,9 @@ data class SearchProductsApiResponse @JvmOverloads constructor(
     val isValid: Boolean get() = success && data != null
 }
 
-/**
- * Data chứa danh sách sản phẩm tìm kiếm và tổng số
- * Format: {
- *   "products": [ProductApiModel], // ← DÙNG LẠI ProductApiModel đã có
- *   "total": 1
- * }
- */
 data class SearchProductsData @JvmOverloads constructor(
     @SerializedName("products")
-    val products: List<ProductApiModel> = emptyList(), // ← Dùng ProductApiModel đã có
+    val products: List<ProductApiModel> = emptyList(),
 
     @SerializedName("total")
     val total: Int = 0
@@ -634,75 +455,39 @@ data class SearchProductsData @JvmOverloads constructor(
     val isEmpty: Boolean get() = products.isEmpty()
 }
 
-
 // ============== EXTENSIONS ==============
 
-// Extension để hỗ trợ FoodCategory
+// KHỚP VỚI FoodCategory trong Product local model
 fun FoodCategory.Companion.fromName(name: String): FoodCategory {
-    return when (name.trim().lowercase()) {
-        "cơm", "com", "rice", "món ăn", "food", "đồ ăn" -> FoodCategory.FOOD
-        "nước", "nuoc", "drink", "đồ uống", "beverage", "thức uống" -> FoodCategory.DRINK
-        "snack", "ăn vặt", "an vat", "đồ ăn vặt", "món phụ" -> FoodCategory.SNACK
-        "all", "tất cả", "", "null" -> FoodCategory.ALL
-        else -> {
-            // Log để debug nếu có category mới
-            println("⚠️ Unknown category from API: '$name', defaulting to FOOD")
-            FoodCategory.FOOD
-        }
+    return when (name.lowercase()) {
+        "all", "tất cả" -> FoodCategory.ALL
+        "food", "món ăn", "com", "cơm" -> FoodCategory.FOOD
+        "drink", "đồ uống", "nước", "trà sữa & đồ uống" -> FoodCategory.DRINK
+        "snack", "ăn vặt", "đồ ăn vặt" -> FoodCategory.SNACK
+        else -> FoodCategory.ALL
     }
 }
 
-// Extension để chuyển đổi list ProductApiModel
-fun List<ProductApiModel>.toProductList(): List<Product> {
-    return this.mapNotNull { apiModel ->
-        if (apiModel.isValid) apiModel.toProduct() else null
-    }
+fun List<ProductApiModel>.toProductList(): List<Product> = mapNotNull {
+    if (it.isValid) it.toProduct() else null
 }
 
-// Extension cho ProductApiResponse để lấy products dễ dàng
-fun ProductApiResponse.toProductList(): List<Product> {
-    return if (isValid && data != null) {
-        data.products.toProductList()
-    } else {
-        emptyList()
-    }
-}
+fun ProductApiResponse.toProductList(): List<Product> =
+    if (isValid && data != null) data.products.toProductList() else emptyList()
 
-// Extension cho ProductListData
-fun ProductListData.toProductList(): List<Product> {
-    return products.toProductList()
-}
+fun ProductListData.toProductList(): List<Product> = products.toProductList()
+fun FavoriteProductsData.isProductFavorite(productId: String): Boolean = containsProduct(productId)
+fun FavoriteProductsApiResponse.getProductIds(): List<String> = data?.getProductIds() ?: emptyList()
+fun FavoriteProductsApiResponse.isProductFavorite(productId: String): Boolean = data?.containsProduct(productId) ?: false
 
-// Extension để kiểm tra sản phẩm có trong danh sách không (tiện lợi)
-fun FavoriteProductsData.isProductFavorite(productId: String): Boolean {
-    return containsProduct(productId)
-}
+// ============== CHECK FAVORITE EXTENSIONS ==============
 
-// Extension để lấy danh sách productIds từ FavoriteProductsApiResponse
-fun FavoriteProductsApiResponse.getProductIds(): List<String> {
-    return data?.getProductIds() ?: emptyList()
-}
+fun CheckFavoriteResponse.toApiResult(): ApiResult<Boolean> =
+    if (success && data != null) ApiResult.Success(data.isFavorited)
+    else ApiResult.Failure(Exception(message ?: "Check favorite failed"))
 
-// Extension để kiểm tra sản phẩm có trong danh sách yêu thích từ wrapper response
-fun FavoriteProductsApiResponse.isProductFavorite(productId: String): Boolean {
-    return data?.containsProduct(productId) ?: false
-}
-
-// ============== NEW EXTENSIONS FOR CHECK FAVORITE ==============
-
-// Extension để parse check favorite response
-fun CheckFavoriteResponse.toApiResult(): ApiResult<Boolean> {
-    return if (success && data != null) {
-        ApiResult.Success(data.isFavorited)
-    } else {
-        ApiResult.Failure(Exception(message ?: "Check favorite failed"))
-    }
-}
-
-// Extension để get boolean directly
 fun CheckFavoriteResponse.getIsFavorited(): Boolean = data?.isFavorited ?: false
 
-// Extension cho repository để parse response đúng
 fun CheckFavoriteResponse.parseToBoolean(): Boolean {
     println("DEBUG: [CheckFavoriteResponse] Parsing: success=$success, data=$data, isFavorited=${data?.isFavorited}")
     return data?.isFavorited ?: false

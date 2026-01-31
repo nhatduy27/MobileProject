@@ -459,14 +459,7 @@ private fun handleCheckoutShop(
     println("🔴 Items count: ${shopGroup.items.size}")
 
     val products = shopGroup.items.map { cartItem ->
-        // DEBUG từng CartItem
-        println("🔴 CartItem: ${cartItem.name}")
-        println("🔴   - id: ${cartItem.id}")
-        println("🔴   - imageUrl: '${cartItem.imageUrl}'")
-        println("🔴   - imageUrl is null? ${cartItem.imageUrl == null}")
-        println("🔴   - imageUrl is empty? ${cartItem.imageUrl.isNullOrEmpty()}")
 
-        // Tạo Product với fallback nếu imageUrl null
         Product(
             id = cartItem.id,
             name = cartItem.name,
@@ -474,19 +467,29 @@ private fun handleCheckoutShop(
             price = cartItem.formattedPrice,
             priceValue = cartItem.price,
             category = FoodCategory.FOOD,
-            imageUrl = cartItem.imageUrl ?: run {
-                println("⚠️ WARNING: imageUrl is null for ${cartItem.name}, using placeholder")
-                "https://via.placeholder.com/150" // Fallback URL
+            imageUrls = if (!cartItem.imageUrl.isNullOrBlank()) {
+                listOf(cartItem.imageUrl)
+            } else {
+                listOf(
+                    "https://firebasestorage.googleapis.com/v0/b/foodappproject-7c136.firebasestorage.app/o/default%2Ffood_default.jpg?alt=media"
+                )
             },
             shopId = shopGroup.shopId,
-            shopName = shopGroup.shopName
+            shopName = shopGroup.shopName,
+            rating = 0.0,
+            totalRatings = 0,
+            soldCount = 0,
+            isAvailable = true,
+            preparationTime = 15,
+            isDeleted = false,
+            isFavorite = false
         )
     }
 
     // Debug Product đã tạo
     products.forEachIndexed { index, product ->
         println("🟢 Product $index: ${product.name}")
-        println("🟢   - imageUrl: '${product.imageUrl}'")
+        println("🟢   - imageUrl: '${product.imageUrls[0]}'")
     }
 
     val quantities = shopGroup.items.map { it.quantity }
@@ -513,7 +516,7 @@ private fun handleCheckoutAll(
                         price = cartItem.formattedPrice,
                         priceValue = cartItem.price,
                         category = FoodCategory.FOOD,
-                        imageUrl = cartItem.imageUrl ?: "",
+                        imageUrls = cartItem.imageUrl?.let { listOf(it) } ?: emptyList(),
                         shopId = shopGroup.shopId,
                         shopName = shopGroup.shopName
                     )

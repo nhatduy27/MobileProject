@@ -37,10 +37,10 @@ fun ProductDetailContent(
                 .fillMaxWidth()
                 .height(350.dp)
         ) {
-            if (product.imageUrl != null && product.imageUrl.isNotBlank()) {
+            if (product.imageUrls[0] != null && !product.imageUrls.isEmpty()) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(product.imageUrl)
+                        .data(product.imageUrls[0])
                         .crossfade(true)
                         .build(),
                     contentDescription = product.name,

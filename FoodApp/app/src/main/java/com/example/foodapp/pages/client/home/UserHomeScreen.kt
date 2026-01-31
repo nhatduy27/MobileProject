@@ -59,7 +59,7 @@ fun UserHomeScreen(
         totalItems = totalItems,
         onProductClick = onProductClick,
         onProfileClick = onProfileClick,
-        onChatBotClick = onChatBotClick, // THÊM: Truyền callback
+        onChatBotClick = onChatBotClick,
         onSearch = viewModel::searchProducts,
         onClearSearch = viewModel::clearSearch,
         onRefresh = viewModel::refresh,
