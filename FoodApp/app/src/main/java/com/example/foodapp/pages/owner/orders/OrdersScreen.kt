@@ -269,15 +269,31 @@ fun OrdersFilterRow(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        filters.forEach { filter ->
+        filters.forEach { filterKey ->
             OrderFilterChip(
-                text = filter,
-                isSelected = filter == selectedFilter,
-                onClick = { onFilterSelected(filter) }
+                text = getFilterDisplayName(filterKey),
+                isSelected = filterKey == selectedFilter,
+                onClick = { onFilterSelected(filterKey) }
             )
         }
     }
 }
+
+@Composable
+fun getFilterDisplayName(filterKey: String): String {
+    return when (filterKey) {
+        OrderUiState.FILTER_ALL -> stringResource(R.string.orders_filter_all)
+        OrderUiState.FILTER_PENDING -> stringResource(R.string.orders_filter_pending)
+        OrderUiState.FILTER_CONFIRMED -> stringResource(R.string.orders_filter_confirmed)
+        OrderUiState.FILTER_PREPARING -> stringResource(R.string.orders_filter_preparing)
+        OrderUiState.FILTER_READY -> stringResource(R.string.orders_filter_ready)
+        OrderUiState.FILTER_SHIPPING -> stringResource(R.string.orders_filter_shipping)
+        OrderUiState.FILTER_DELIVERED -> stringResource(R.string.orders_filter_delivered)
+        OrderUiState.FILTER_CANCELLED -> stringResource(R.string.orders_filter_cancelled)
+        else -> filterKey
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -10,9 +10,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.data.model.owner.revenue.TimeSlotData
 import com.example.foodapp.pages.owner.theme.OwnerColors
 import com.example.foodapp.pages.owner.theme.OwnerDimens
@@ -63,7 +65,7 @@ fun TimeSlotCard(timeSlot: TimeSlotData) {
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "${timeSlot.ordersCount} đơn hàng • ${timeSlot.percentage}% tổng doanh thu",
+                    text = stringResource(R.string.revenue_time_slot_info, timeSlot.ordersCount, timeSlot.percentage),
                     fontSize = 12.sp,
                     color = OwnerColors.TextSecondary
                 )
@@ -78,3 +80,4 @@ fun TimeSlotCard(timeSlot: TimeSlotData) {
         }
     }
 }
+

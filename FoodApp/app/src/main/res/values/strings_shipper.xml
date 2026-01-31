@@ -58,6 +58,37 @@
     <string name="shipper_orders_distance">Khoảng cách</string>
     <string name="shipper_orders_earning">Thu nhập</string>
     
+    <!-- Order Detail Screen -->
+    <string name="shipper_order_detail_title">Chi tiết đơn hàng</string>
+    <string name="shipper_order_timeline_created">Tạo đơn</string>
+    <string name="shipper_order_timeline_ready">Sẵn sàng</string>
+    <string name="shipper_order_timeline_shipping">Đang giao</string>
+    <string name="shipper_order_timeline_delivered">Giao xong</string>
+    <string name="shipper_order_delivery_info">Thông tin giao hàng</string>
+    <string name="shipper_order_customer_default">Khách hàng</string>
+    <string name="shipper_order_call_customer">Gọi khách</string>
+    <string name="shipper_order_no_address">Chưa có địa chỉ</string>
+    <string name="shipper_order_building">Tòa %1$s</string>
+    <string name="shipper_order_room">Phòng %1$s</string>
+    <string name="shipper_order_delivery_note">Ghi chú giao hàng</string>
+    <string name="shipper_order_shop">Cửa hàng</string>
+    <string name="shipper_order_shop_default">Cửa hàng</string>
+    <string name="shipper_order_items">Đơn hàng (%1$d món)</string>
+    <string name="shipper_order_payment">Thanh toán</string>
+    <string name="shipper_order_payment_method">Phương thức</string>
+    <string name="shipper_order_subtotal">Tạm tính</string>
+    <string name="shipper_order_shipping_fee">Phí giao hàng</string>
+    <string name="shipper_order_discount">Giảm giá</string>
+    <string name="shipper_order_total">TỔNG CỘNG</string>
+    <string name="shipper_order_cod_note">Thu tiền mặt khi giao hàng</string>
+    <string name="shipper_order_accept_btn">NHẬN ĐƠN HÀNG</string>
+    <string name="shipper_order_start_delivery_btn">BẮT ĐẦU GIAO HÀNG</string>
+    <string name="shipper_order_confirm_delivered_btn">XÁC NHẬN ĐÃ GIAO</string>
+    <string name="shipper_order_completed">Đơn hàng đã hoàn thành</string>
+    <string name="shipper_order_cancelled_title">Đơn hàng đã hủy</string>
+    <string name="shipper_order_cancel_reason">Lý do: %1$s</string>
+    <string name="shipper_order_processing">Đơn hàng đang được xử lý</string>
+    
     <!-- ==================== HISTORY ==================== -->
     <string name="shipper_history_title">Lịch sử giao hàng</string>
     <string name="shipper_history_no_orders">Chưa có lịch sử giao hàng</string>
@@ -65,6 +96,9 @@
     <string name="shipper_history_filter_today">Hôm nay</string>
     <string name="shipper_history_filter_week">Tuần này</string>
     <string name="shipper_history_filter_month">Tháng này</string>
+    <string name="shipper_history_filter_delivered">Đã giao</string>
+    <string name="shipper_history_filter_cancelled">Đã hủy</string>
+    <string name="shipper_history_empty">Không có lịch sử đơn hàng</string>
     
     <!-- ==================== EARNINGS ==================== -->
     <string name="shipper_earnings_title">Thu nhập</string>
@@ -78,6 +112,10 @@
     <string name="shipper_earnings_today">Hôm nay</string>
     <string name="shipper_earnings_this_week">Tuần này</string>
     <string name="shipper_earnings_this_month">Tháng này</string>
+    <string name="shipper_earnings_transaction_history">Lịch sử giao dịch</string>
+    <string name="shipper_earnings_refresh">Làm mới</string>
+    <string name="shipper_earnings_no_transactions">Chưa có giao dịch nào</string>
+    <string name="shipper_earnings_reload">Tải lại</string>
     
     <!-- ==================== PROFILE ==================== -->
     <string name="shipper_profile_title">Hồ sơ</string>
@@ -167,4 +205,244 @@
     <string name="shipper_success_saved">Đã lưu thành công</string>
     <string name="shipper_success_deleted">Đã xóa thành công</string>
     <string name="shipper_success_updated">Đã cập nhật thành công</string>
+    
+    <!-- ==================== NOTIFICATIONS EXTENDED ==================== -->
+    <string name="shipper_notif_unread_count">%1$d thông báo chưa đọc</string>
+    <string name="shipper_notif_load_error">Không thể tải thông báo</string>
+    <string name="shipper_notif_time_just_now">Vừa xong</string>
+    <string name="shipper_notif_time_minutes_ago">%1$d phút trước</string>
+    <string name="shipper_notif_time_hours_ago">%1$d giờ trước</string>
+    <string name="shipper_notif_time_days_ago">%1$d ngày trước</string>
+    <string name="shipper_notif_time_unknown">Không xác định</string>
+    <!-- Notification titles -->
+    <string name="shipper_notif_new_order">Đơn hàng mới</string>
+    <string name="shipper_notif_order_confirmed">Đơn hàng đã xác nhận</string>
+    <string name="shipper_notif_order_preparing">Đơn hàng đang chuẩn bị</string>
+    <string name="shipper_notif_order_ready">Đơn hàng sẵn sàng</string>
+    <string name="shipper_notif_order_shipping">Đang giao hàng</string>
+    <string name="shipper_notif_order_delivered">Đã giao hàng</string>
+    <string name="shipper_notif_order_cancelled">Đơn hàng đã hủy</string>
+    <string name="shipper_notif_payment_success">Thanh toán thành công</string>
+    <string name="shipper_notif_payment_failed">Thanh toán thất bại</string>
+    <string name="shipper_notif_payment_refunded">Đã hoàn tiền</string>
+    <string name="shipper_notif_shipper_assigned">Bạn được phân đơn</string>
+    <string name="shipper_notif_shipper_applied">Có shipper ứng tuyển</string>
+    <string name="shipper_notif_app_approved">Đơn ứng tuyển đã duyệt</string>
+    <string name="shipper_notif_app_rejected">Đơn ứng tuyển bị từ chối</string>
+    <string name="shipper_notif_daily_summary">Tổng kết hôm nay</string>
+    <string name="shipper_notif_subscription_expiring">Gói sắp hết hạn</string>
+    <string name="shipper_notif_promotion">Khuyến mãi</string>
+    <string name="shipper_notif_voucher_available">Voucher mới</string>
+    <!-- Notification body messages -->
+    <string name="shipper_notif_new_order_id">Có đơn hàng mới #%1$s</string>
+    <string name="shipper_notif_new_order_generic">Có đơn hàng mới</string>
+    <string name="shipper_notif_order_confirmed_id">Đơn #%1$s đã được xác nhận</string>
+    <string name="shipper_notif_order_confirmed_generic">Đơn hàng đã được xác nhận</string>
+    <string name="shipper_notif_order_preparing_id">Đơn #%1$s đang được chuẩn bị</string>
+    <string name="shipper_notif_order_preparing_generic">Đơn hàng đang được chuẩn bị</string>
+    <string name="shipper_notif_order_ready_id">Đơn #%1$s đã sẵn sàng để giao</string>
+    <string name="shipper_notif_order_ready_generic">Đơn hàng đã sẵn sàng để giao</string>
+    <string name="shipper_notif_order_shipping_id">Đơn #%1$s đang được giao</string>
+    <string name="shipper_notif_order_shipping_generic">Đơn hàng đang được giao</string>
+    <string name="shipper_notif_order_delivered_id">Đơn #%1$s đã giao thành công</string>
+    <string name="shipper_notif_order_delivered_generic">Đơn hàng đã giao thành công</string>
+    <string name="shipper_notif_order_cancelled_id">Đơn #%1$s đã bị hủy</string>
+    <string name="shipper_notif_order_cancelled_generic">Đơn hàng đã bị hủy</string>
+    <string name="shipper_notif_payment_success_body">Thanh toán đã được xử lý thành công</string>
+    <string name="shipper_notif_payment_failed_body">Thanh toán không thành công</string>
+    <string name="shipper_notif_payment_refunded_body">Đã hoàn tiền về phương thức thanh toán</string>
+    <string name="shipper_notif_shipper_assigned_body">Bạn đã được phân cho một đơn mới</string>
+    <string name="shipper_notif_shipper_applied_body">Có shipper mới ứng tuyển</string>
+    <string name="shipper_notif_app_approved_body">Đơn ứng tuyển của bạn đã được duyệt</string>
+    <string name="shipper_notif_app_rejected_body">Đơn ứng tuyển của bạn bị từ chối</string>
+    <string name="shipper_notif_daily_summary_body">Tổng kết hoạt động trong ngày</string>
+    <string name="shipper_notif_subscription_expiring_body">Gói dịch vụ sắp hết hạn</string>
+    <string name="shipper_notif_promotion_body">Có chương trình khuyến mãi mới</string>
+    <string name="shipper_notif_voucher_available_body">Có voucher mới dành cho bạn</string>
+    
+    <!-- ==================== TRIP DETAIL EXTENDED ==================== -->
+    <string name="shipper_trip_info">Thông tin chuyến đi</string>
+    <string name="shipper_trip_route">Lộ trình (%1$d điểm dừng)</string>
+    <string name="shipper_trip_stops">Điểm dừng</string>
+    <string name="shipper_trip_orders">Đơn hàng</string>
+    <string name="shipper_trip_estimated">Ước tính</string>
+    <string name="shipper_trip_status_pending">Chờ bắt đầu</string>
+    <string name="shipper_trip_status_started">Đang giao</string>
+    <string name="shipper_trip_status_finished">Hoàn thành</string>
+    <string name="shipper_trip_status_cancelled">Đã hủy</string>
+    <string name="shipper_trip_building">Tòa %1$s</string>
+    <string name="shipper_trip_point">Điểm %1$d</string>
+    <string name="shipper_trip_orders_count">%1$d đơn</string>
+    <string name="shipper_trip_start_delivery">Bắt đầu giao hàng</string>
+    <string name="shipper_trip_cancel">Hủy chuyến</string>
+    <string name="shipper_trip_finish">Hoàn thành giao hàng</string>
+    <string name="shipper_trip_completed">Chuyến đi hoàn thành!</string>
+    <string name="shipper_trip_delivered_count">Đã giao %1$d đơn hàng</string>
+    <string name="shipper_trip_cancelled_title">Chuyến đi đã hủy</string>
+    <string name="shipper_trip_cancel_reason">Lý do: %1$s</string>
+    <string name="shipper_trip_cancel_dialog_title">Hủy chuyến đi?</string>
+    <string name="shipper_trip_cancel_dialog_message">Bạn có chắc muốn hủy chuyến này? Các đơn hàng sẽ quay lại trạng thái sẵn sàng.</string>
+    <string name="shipper_trip_cancel_reason_hint">Lý do hủy (tùy chọn)</string>
+    <string name="shipper_trip_error_prefix">Lỗi: %1$s</string>
+    
+    <!-- ==================== HOME EXTENDED ==================== -->
+    <string name="shipper_home_new_orders">Đơn mới (%1$d)</string>
+    <string name="shipper_home_my_orders">Đơn của tôi (%1$d)</string>
+    <string name="shipper_home_no_new_orders">Không có đơn hàng mới</string>
+    <string name="shipper_home_no_accepted_orders">Bạn chưa nhận đơn nào</string>
+    <string name="shipper_home_not_assigned_title">Chưa đăng ký cửa hàng</string>
+    <string name="shipper_home_not_assigned_message">Bạn cần đăng ký làm shipper cho một cửa hàng để có thể nhận và giao đơn hàng.</string>
+    <string name="shipper_home_register_shop">Đăng ký cửa hàng</string>
+    <string name="shipper_home_check_again">Kiểm tra lại</string>
+    <string name="shipper_home_pending_approval">Nếu bạn đã gửi đơn, vui lòng đợi chủ cửa hàng phê duyệt.</string>
+    
+    <!-- ==================== WALLET/EARNINGS COMPONENTS ==================== -->
+    <string name="shipper_wallet_balance">Số dư ví</string>
+    <string name="shipper_wallet_withdraw">Rút tiền</string>
+    <string name="shipper_wallet_total_earned">Tổng đã kiếm</string>
+    <string name="shipper_wallet_total_withdrawn">Đã rút</string>
+    <string name="shipper_wallet_today">Hôm nay</string>
+    <string name="shipper_wallet_this_week">Tuần này</string>
+    <string name="shipper_wallet_this_month">Tháng này</string>
+    <string name="shipper_wallet_all_time">Tất cả</string>
+    <string name="shipper_wallet_revenue_chart">Biểu đồ doanh thu</string>
+    <string name="shipper_wallet_no_data">Chưa có dữ liệu</string>
+    <string name="shipper_wallet_revenue_vnd">Doanh thu (đ)</string>
+    
+    <!-- Payout Dialog -->
+    <string name="shipper_payout_title">Yêu cầu rút tiền</string>
+    <string name="shipper_payout_close">Đóng</string>
+    <string name="shipper_payout_current_balance">Số dư hiện tại: %1$s</string>
+    <string name="shipper_payout_amount">Số tiền rút (đ)</string>
+    <string name="shipper_payout_min_amount">Tối thiểu 50,000đ</string>
+    <string name="shipper_payout_bank">Ngân hàng</string>
+    <string name="shipper_payout_account_number">Số tài khoản</string>
+    <string name="shipper_payout_account_name">Tên chủ tài khoản</string>
+    <string name="shipper_payout_account_name_hint">VD: NGUYEN VAN A</string>
+    <string name="shipper_payout_note">Ghi chú (tuỳ chọn)</string>
+    <string name="shipper_payout_submit">Gửi yêu cầu rút tiền</string>
+    <string name="shipper_payout_processing_note">* Yêu cầu sẽ được xử lý trong 1-3 ngày làm việc</string>
+    
+    <!-- ==================== CHAT/CONVERSATIONS ==================== -->
+    <string name="shipper_conv_no_conversations">Chưa có cuộc trò chuyện nào</string>
+    <string name="shipper_conv_empty_desc">Các cuộc trò chuyện với khách hàng và chủ shop sẽ xuất hiện ở đây</string>
+    <string name="shipper_conv_shop_owner">Chủ shop</string>
+    <string name="shipper_conv_customer">Khách hàng</string>
+    <string name="shipper_conv_shipper">Shipper</string>
+    <string name="shipper_conv_start_chat">Bắt đầu cuộc trò chuyện</string>
+    <string name="shipper_conv_just_now">Vừa xong</string>
+    
+    <!-- ==================== DELIVERY MAP ==================== -->
+    <string name="shipper_map_delivery_route">Lộ trình giao hàng</string>
+    <string name="shipper_map_finish_title">Hoàn thành giao hàng?</string>
+    <string name="shipper_map_finish_message">Bạn đã giao hết %1$d đơn hàng? Trạng thái các đơn sẽ được cập nhật thành \'Đã giao\'.</string>
+    <string name="shipper_map_confirm">Xác nhận</string>
+    <string name="shipper_map_back">Quay lại</string>
+    <string name="shipper_map_delivering">Đang giao</string>
+    <string name="shipper_map_points">điểm</string>
+    <string name="shipper_map_orders">đơn</string>
+    <string name="shipper_map_complete_delivery">Hoàn thành giao hàng</string>
+    <string name="shipper_map_origin">Điểm xuất phát</string>
+    <string name="shipper_map_building">Tòa %1$s</string>
+    <string name="shipper_map_stop">Điểm dừng %1$d</string>
+    <string name="shipper_map_your_location">Vị trí của bạn</string>
+    <string name="shipper_map_next_stop">Điểm dừng tiếp theo</string>
+    <string name="shipper_map_orders_count">%1$d đơn hàng</string>
+    <string name="shipper_map_directions">Chỉ đường</string>
+    
+    <!-- ==================== GPS SCREEN ==================== -->
+    <string name="shipper_gps_title_manage">Lộ trình giao hàng</string>
+    <string name="shipper_gps_subtitle">Quản lý đơn hàng và lộ trình</string>
+    <string name="shipper_gps_trip_history">Lịch sử chuyến</string>
+    <string name="shipper_gps_ready_tab">Chờ giao (%1$d)</string>
+    <string name="shipper_gps_shipping_tab">Đang giao (%1$d)</string>
+    <string name="shipper_gps_no_orders_ready">Chưa có đơn hàng sẵn sàng để giao</string>
+    <string name="shipper_gps_no_orders_shipping">Chưa có đơn hàng đang giao</string>
+    <string name="shipper_gps_orders_shipping_count">%1$d đơn đang giao</string>
+    <string name="shipper_gps_status_shipping">Đang giao</string>
+    <string name="shipper_gps_customer_default">Khách hàng</string>
+    <string name="shipper_gps_trip_delivering">Đang giao hàng</string>
+    <string name="shipper_gps_trip_pending">Chuyến đang chờ</string>
+    <string name="shipper_gps_trip_default">Chuyến đi</string>
+    <string name="shipper_gps_trip_stats">%1$d điểm • %2$d đơn • %3$s</string>
+    <string name="shipper_gps_selected">Đã chọn (%1$d/%2$d)</string>
+    <string name="shipper_gps_clear">Xóa</string>
+    <string name="shipper_gps_create_route">Tạo lộ trình</string>
+    <string name="shipper_gps_orders_ready_count">%1$d đơn hàng sẵn sàng</string>
+    <string name="shipper_gps_select_all">Chọn tất cả</string>
+    <string name="shipper_gps_deselect">Bỏ chọn</string>
+    <string name="shipper_gps_empty_title">Không có đơn hàng</string>
+    <string name="shipper_gps_refresh">Làm mới</string>
+    <string name="shipper_gps_error_prefix">Lỗi: %1$s</string>
+    
+    <!-- ==================== REMOVAL REQUEST ==================== -->
+    <string name="shipper_removal_title">Yêu cầu rời shop</string>
+    <string name="shipper_removal_back">Quay lại</string>
+    <string name="shipper_removal_list">Danh sách yêu cầu</string>
+    <string name="shipper_removal_count">%1$d yêu cầu</string>
+    <string name="shipper_removal_create">Tạo yêu cầu</string>
+    <string name="shipper_removal_no_shop">Bạn chưa được duyệt làm việc tại shop nào. Không thể tạo yêu cầu rời shop.</string>
+    <string name="shipper_removal_filter_all">Tất cả</string>
+    <string name="shipper_removal_filter_pending">Đang chờ</string>
+    <string name="shipper_removal_filter_approved">Đã duyệt</string>
+    <string name="shipper_removal_filter_rejected">Từ chối</string>
+    <string name="shipper_removal_empty">Chưa có yêu cầu nào</string>
+    <string name="shipper_removal_empty_desc">Bạn chưa tạo yêu cầu rời shop nào</string>
+    <string name="shipper_removal_refresh">Làm mới</string>
+    <string name="shipper_removal_error">Lỗi: %1$s</string>
+    <string name="shipper_removal_select_shop">Chọn shop</string>
+    <string name="shipper_removal_please_select_shop">Vui lòng chọn shop</string>
+    
+    <!-- Create Dialog -->
+    <string name="shipper_removal_dialog_title">Tạo yêu cầu rời shop</string>
+    <string name="shipper_removal_select_shop_label">Chọn shop</string>
+    <string name="shipper_removal_type_label">Loại yêu cầu</string>
+    <string name="shipper_removal_type_quit">Nghỉ việc</string>
+    <string name="shipper_removal_type_transfer">Chuyển shop</string>
+    <string name="shipper_removal_quit_desc">Bạn sẽ ngừng làm shipper và trở thành khách hàng thông thường</string>
+    <string name="shipper_removal_transfer_desc">Bạn sẽ rời shop này nhưng vẫn giữ vai trò shipper để ứng tuyển shop khác</string>
+    <string name="shipper_removal_reason_label">Lý do (tùy chọn)</string>
+    <string name="shipper_removal_reason_hint">Nhập lý do bạn muốn rời shop...</string>
+    <string name="shipper_removal_submit">Gửi yêu cầu</string>
+    <string name="shipper_removal_sent_success">Đã gửi yêu cầu thành công</string>
+    
+    <!-- Request Card -->
+    <string name="shipper_removal_reason">Lý do: %1$s</string>
+    <string name="shipper_removal_rejection_reason">Lý do từ chối: %1$s</string>
+    <string name="shipper_removal_created">Ngày tạo: %1$s</string>
+    <string name="shipper_removal_processed">Xử lý: %1$s</string>
+    <string name="shipper_removal_status_pending">Đang chờ</string>
+    <string name="shipper_removal_status_approved">Đã duyệt</string>
+    <string name="shipper_removal_status_rejected">Từ chối</string>
+    
+    <!-- ==================== HELP SCREEN ==================== -->
+    <string name="shipper_help_categories">Danh mục trợ giúp</string>
+    
+    <!-- Help Categories -->
+    <string name="shipper_help_cat_getting_started">Bắt đầu với FoodApp</string>
+    <string name="shipper_help_cat_getting_started_desc">Hướng dẫn cho người mới</string>
+    <string name="shipper_help_cat_orders">Quản lý đơn hàng</string>
+    <string name="shipper_help_cat_orders_desc">Nhận, giao và hoàn thành đơn</string>
+    <string name="shipper_help_cat_earnings">Thu nhập &amp; Thanh toán</string>
+    <string name="shipper_help_cat_earnings_desc">Cách tính phí và nhận tiền</string>
+    <string name="shipper_help_cat_account">Cài đặt tài khoản</string>
+    <string name="shipper_help_cat_account_desc">Quản lý thông tin cá nhân</string>
+    <string name="shipper_help_cat_other">Khác</string>
+    <string name="shipper_help_cat_other_desc">Các câu hỏi khác</string>
+    
+    <!-- FAQ -->
+    <string name="shipper_help_faq1_q">Làm thế nào để nhận đơn hàng?</string>
+    <string name="shipper_help_faq1_a">Khi có đơn hàng mới phù hợp với khu vực của bạn, hệ thống sẽ gửi thông báo. Bạn nhấn \'Nhận đơn\' để xác nhận nhận đơn hàng đó.</string>
+    <string name="shipper_help_faq2_q">Tôi có thể hủy đơn hàng không?</string>
+    <string name="shipper_help_faq2_a">Bạn có thể hủy đơn hàng trước khi lấy hàng. Sau khi đã lấy hàng, vui lòng liên hệ hotline để được hỗ trợ.</string>
+    <string name="shipper_help_faq3_q">Khi nào tôi nhận được tiền?</string>
+    <string name="shipper_help_faq3_a">Tiền sẽ được chuyển vào tài khoản ngân hàng của bạn vào mỗi thứ 2 hàng tuần cho tất cả đơn hàng hoàn thành tuần trước.</string>
+    <string name="shipper_help_faq4_q">Làm sao để tăng thu nhập?</string>
+    <string name="shipper_help_faq4_a">Bạn có thể tăng thu nhập bằng cách: (1) Hoạt động trong khung giờ cao điểm, (2) Duy trì tỷ lệ hoàn thành đơn cao, (3) Nhận đánh giá tốt từ khách hàng.</string>
+    
+    <!-- Contact Support -->
+    <string name="shipper_help_need_support">Cần hỗ trợ ngay?</string>
+    <string name="shipper_help_contact_channels">Liên hệ với chúng tôi qua các kênh sau</string>
+    <string name="shipper_help_call_now">Gọi ngay</string>
+    <string name="shipper_help_email_btn">Email</string>
 </resources>

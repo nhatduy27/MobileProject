@@ -8,11 +8,13 @@ import java.util.Locale
 
 /**
  * Language Manager - Quản lý đa ngôn ngữ cho ứng dụng
+ * Sync với LocaleHelper để đảm bảo tính nhất quán
  */
 object LanguageManager {
     
-    private const val PREFS_NAME = "language_prefs"
-    private const val LANGUAGE_KEY = "selected_language"
+    // Sử dụng cùng SharedPreferences và key với LocaleHelper
+    private const val PREFS_NAME = "app_preferences"
+    private const val LANGUAGE_KEY = "Locale.Helper.Selected.Language"
     
     /**
      * Các ngôn ngữ được hỗ trợ
@@ -36,7 +38,35 @@ object LanguageManager {
      */
     fun saveLanguage(context: Context, language: Language) {
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        prefs.edit().putString(LANGUAGE_KEY, language.code).apply()
+        prefs.edit().apply {
+            putString(LANGUAGE_KEY, language.code)
+            putString("Locale.Helper.Selected.Country", if (language.code == "vi") "VN" else "US")
+            apply()
+        }
+        
+        // Apply locale immediately
+        applyLocale(context, language)
+    }
+    
+    /**
+     * Áp dụng locale ngay lập tức
+     */
+    @Suppress("DEPRECATION")
+    private fun applyLocale(context: Context, language: Language) {
+        val locale = Locale(language.code, if (language.code == "vi") "VN" else "US")
+        Locale.setDefault(locale)
+        
+        val resources = context.resources
+        val configuration = Configuration(resources.configuration)
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            configuration.setLocale(locale)
+            configuration.setLayoutDirection(locale)
+        } else {
+            configuration.locale = locale
+        }
+        
+        resources.updateConfiguration(configuration, resources.displayMetrics)
     }
     
     /**
@@ -70,3 +100,4 @@ object LanguageManager {
         return applyLanguage(context, language)
     }
 }
+

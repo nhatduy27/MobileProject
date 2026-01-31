@@ -15,12 +15,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.data.model.shipper.order.ShipperOrder
 import com.example.foodapp.pages.shipper.theme.ShipperColors
+import com.example.foodapp.R
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 
@@ -88,7 +90,7 @@ fun ShipperHomeScreen(
                         unselectedContentColor = ShipperColors.TextSecondary,
                         text = { 
                             Text(
-                                "Đơn mới (${uiState.availableOrders.size})", 
+                                stringResource(R.string.shipper_home_new_orders, uiState.availableOrders.size), 
                                 fontWeight = if(uiState.selectedTab == 0) FontWeight.SemiBold else FontWeight.Normal
                             ) 
                         }
@@ -100,7 +102,7 @@ fun ShipperHomeScreen(
                         unselectedContentColor = ShipperColors.TextSecondary,
                         text = { 
                             Text(
-                                "Đơn của tôi (${uiState.myOrders.size})",
+                                stringResource(R.string.shipper_home_my_orders, uiState.myOrders.size),
                                 fontWeight = if(uiState.selectedTab == 1) FontWeight.SemiBold else FontWeight.Normal
                             ) 
                         }
@@ -178,7 +180,7 @@ fun NotAssignedToShopContent(
                 Spacer(modifier = Modifier.height(20.dp))
                 
                 Text(
-                    text = "Chưa đăng ký cửa hàng",
+                    text = stringResource(R.string.shipper_home_not_assigned_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = ShipperColors.TextPrimary
@@ -187,7 +189,7 @@ fun NotAssignedToShopContent(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "Bạn cần đăng ký làm shipper cho một cửa hàng để có thể nhận và giao đơn hàng.",
+                    text = stringResource(R.string.shipper_home_not_assigned_message),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     color = ShipperColors.TextSecondary
@@ -203,7 +205,7 @@ fun NotAssignedToShopContent(
                         containerColor = ShipperColors.Primary
                     )
                 ) {
-                    Text("Đăng ký cửa hàng", fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.shipper_home_register_shop), fontWeight = FontWeight.SemiBold)
                 }
                 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -216,7 +218,7 @@ fun NotAssignedToShopContent(
                         contentColor = ShipperColors.TextSecondary
                     )
                 ) {
-                    Text("Kiểm tra lại")
+                    Text(stringResource(R.string.shipper_home_check_again))
                 }
             }
         }
@@ -224,7 +226,7 @@ fun NotAssignedToShopContent(
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            text = "Nếu bạn đã gửi đơn, vui lòng đợi chủ cửa hàng phê duyệt.",
+            text = stringResource(R.string.shipper_home_pending_approval),
             style = MaterialTheme.typography.bodySmall,
             textAlign = TextAlign.Center,
             color = ShipperColors.TextSecondary
@@ -267,7 +269,8 @@ fun OrdersList(
                         tint = ShipperColors.TextTertiary
                     )
                     Text(
-                        text = if (isMyOrder) "Bạn chưa nhận đơn nào" else "Không có đơn hàng mới",
+                        text = if (isMyOrder) stringResource(R.string.shipper_home_no_accepted_orders) 
+                               else stringResource(R.string.shipper_home_no_new_orders),
                         style = MaterialTheme.typography.bodyLarge,
                         color = ShipperColors.TextSecondary
                     )

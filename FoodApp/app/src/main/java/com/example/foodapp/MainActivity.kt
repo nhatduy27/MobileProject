@@ -18,7 +18,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.foodapp.navigation.FoodAppNavHost
 import com.example.foodapp.ui.theme.FoodAppTheme
 import com.example.foodapp.data.remote.api.ApiClient
-import com.example.foodapp.utils.LocaleHelper
 import com.example.foodapp.utils.LanguageManager
 
 class MainActivity : ComponentActivity() {
@@ -33,10 +32,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         ApiClient.init(this)
 
-        // Áp dụng locale đã lưu khi khởi động
-        val currentLanguage = LocaleHelper.getCurrentLanguage(this)
-        val country = if (currentLanguage == "vi") "VN" else "US"
-        LocaleHelper.setLocale(this, currentLanguage, country)
+        // Áp dụng locale - LanguageManager đã sync với LocaleHelper
+        val currentLanguage = LanguageManager.getCurrentLanguage(this)
+        LanguageManager.saveLanguage(this, currentLanguage) // Ensure locale is applied
+
 
         setContent {
             FoodAppTheme {

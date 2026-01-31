@@ -14,8 +14,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.pages.shipper.home.ShipperOrderCard
 import com.example.foodapp.pages.shipper.theme.ShipperColors
 
@@ -44,7 +46,7 @@ fun HistoryScreen(
             FilterChip(
                 selected = uiState.selectedStatus == null,
                 onClick = { viewModel.onStatusSelected(null) },
-                label = { Text("Tất cả") },
+                label = { Text(stringResource(R.string.shipper_history_filter_all)) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = ShipperColors.PrimaryLight,
                     selectedLabelColor = ShipperColors.Primary
@@ -53,7 +55,7 @@ fun HistoryScreen(
             FilterChip(
                 selected = uiState.selectedStatus == "DELIVERED",
                 onClick = { viewModel.onStatusSelected("DELIVERED") },
-                label = { Text("Đã giao") },
+                label = { Text(stringResource(R.string.shipper_history_filter_delivered)) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = ShipperColors.SuccessLight,
                     selectedLabelColor = ShipperColors.Success
@@ -62,7 +64,7 @@ fun HistoryScreen(
             FilterChip(
                 selected = uiState.selectedStatus == "CANCELLED",
                 onClick = { viewModel.onStatusSelected("CANCELLED") },
-                label = { Text("Đã hủy") },
+                label = { Text(stringResource(R.string.shipper_history_filter_cancelled)) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = ShipperColors.ErrorLight,
                     selectedLabelColor = ShipperColors.Error
@@ -86,7 +88,7 @@ fun HistoryScreen(
                         modifier = Modifier.size(48.dp),
                         tint = ShipperColors.TextTertiary
                     )
-                    Text("Không có lịch sử đơn hàng", color = ShipperColors.TextSecondary)
+                    Text(stringResource(R.string.shipper_history_empty), color = ShipperColors.TextSecondary)
                 }
             }
         } else {

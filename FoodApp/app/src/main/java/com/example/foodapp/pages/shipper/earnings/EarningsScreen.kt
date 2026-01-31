@@ -13,10 +13,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.pages.shipper.theme.ShipperColors
 
 /**
@@ -132,7 +134,7 @@ fun EarningsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Lịch sử giao dịch",
+                    text = stringResource(R.string.shipper_earnings_transaction_history),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold,
                     color = ShipperColors.TextPrimary
@@ -155,7 +157,7 @@ fun EarningsScreen(
                     ) {
                         Icon(
                             Icons.Outlined.Refresh,
-                            contentDescription = "Làm mới",
+                            contentDescription = stringResource(R.string.shipper_earnings_refresh),
                             tint = ShipperColors.TextSecondary,
                             modifier = Modifier.size(20.dp)
                         )
@@ -175,7 +177,7 @@ fun EarningsScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Chưa có giao dịch nào",
+                            text = stringResource(R.string.shipper_earnings_no_transactions),
                             color = ShipperColors.TextSecondary,
                             fontSize = 14.sp
                         )
@@ -189,7 +191,7 @@ fun EarningsScreen(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Tải lại")
+                            Text(stringResource(R.string.shipper_earnings_reload))
                         }
                     }
                 }

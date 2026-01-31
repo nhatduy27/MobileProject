@@ -1,5 +1,6 @@
 package com.example.foodapp.pages.shipper.notifications
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,10 +16,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.pages.shipper.theme.ShipperColors
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -29,6 +33,7 @@ import java.util.TimeZone
 fun NotificationsScreen() {
     val viewModel: NotificationsViewModel = viewModel()
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -37,7 +42,7 @@ fun NotificationsScreen() {
     ) {
         if (uiState.unreadCount > 0) {
             Text(
-                text = "${uiState.unreadCount} thông báo chưa đọc",
+                text = stringResource(R.string.shipper_notif_unread_count, uiState.unreadCount),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = ShipperColors.Primary,
@@ -56,7 +61,7 @@ fun NotificationsScreen() {
             }
             uiState.error != null && uiState.notifications.isEmpty() -> {
                 Text(
-                    text = uiState.error ?: "Không thể tải thông báo",
+                    text = uiState.error ?: stringResource(R.string.shipper_notif_load_error),
                     fontSize = 14.sp,
                     color = ShipperColors.Error,
                     modifier = Modifier.padding(16.dp)
@@ -72,11 +77,11 @@ fun NotificationsScreen() {
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     uiState.notifications.forEach { notification ->
-                        val titleText = mapTitle(notification)
-                        val bodyText = mapBody(notification)
+                        val titleText = mapTitle(notification, context)
+                        val bodyText = mapBody(notification, context)
                         NotificationCard(
                             notification = notification,
-                            timeText = formatNotificationTime(notification.createdAt),
+                            timeText = formatNotificationTime(notification.createdAt, context),
                             titleText = titleText,
                             bodyText = bodyText,
                             onClick = {
@@ -92,7 +97,7 @@ fun NotificationsScreen() {
     }
 }
 
-private fun formatNotificationTime(timestamp: String): String {
+private fun formatNotificationTime(timestamp: String, context: Context): String {
     return try {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
         dateFormat.timeZone = TimeZone.getTimeZone("UTC")
@@ -102,81 +107,88 @@ private fun formatNotificationTime(timestamp: String): String {
         val diff = now.time - (date?.time ?: 0)
 
         when {
-            diff < 60000 -> "Vừa xong"
-            diff < 3600000 -> "${diff / 60000} phút trước"
-            diff < 86400000 -> "${diff / 3600000} giờ trước"
-            diff < 604800000 -> "${diff / 86400000} ngày trước"
+            diff < 60000 -> context.getString(R.string.shipper_notif_time_just_now)
+            diff < 3600000 -> context.getString(R.string.shipper_notif_time_minutes_ago, (diff / 60000).toInt())
+            diff < 86400000 -> context.getString(R.string.shipper_notif_time_hours_ago, (diff / 3600000).toInt())
+            diff < 604800000 -> context.getString(R.string.shipper_notif_time_days_ago, (diff / 86400000).toInt())
             else -> {
                 val displayFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 displayFormat.format(date ?: Date())
             }
         }
     } catch (e: Exception) {
-        "Không xác định"
+        context.getString(R.string.shipper_notif_time_unknown)
     }
 }
 
-private fun mapTitle(notification: Notification): String {
+private fun mapTitle(notification: Notification, context: Context): String {
     return when (notification.type) {
-        NotificationType.NEW_ORDER -> "Đơn hàng mới"
-        NotificationType.ORDER_CONFIRMED -> "Đơn hàng đã xác nhận"
-        NotificationType.ORDER_PREPARING -> "Đơn hàng đang chuẩn bị"
-        NotificationType.ORDER_READY -> "Đơn hàng sẵn sàng"
-        NotificationType.ORDER_SHIPPING -> "Đang giao hàng"
-        NotificationType.ORDER_DELIVERED -> "Đã giao hàng"
-        NotificationType.ORDER_CANCELLED -> "Đơn hàng đã hủy"
+        NotificationType.NEW_ORDER -> context.getString(R.string.shipper_notif_new_order)
+        NotificationType.ORDER_CONFIRMED -> context.getString(R.string.shipper_notif_order_confirmed)
+        NotificationType.ORDER_PREPARING -> context.getString(R.string.shipper_notif_order_preparing)
+        NotificationType.ORDER_READY -> context.getString(R.string.shipper_notif_order_ready)
+        NotificationType.ORDER_SHIPPING -> context.getString(R.string.shipper_notif_order_shipping)
+        NotificationType.ORDER_DELIVERED -> context.getString(R.string.shipper_notif_order_delivered)
+        NotificationType.ORDER_CANCELLED -> context.getString(R.string.shipper_notif_order_cancelled)
 
-        NotificationType.PAYMENT_SUCCESS -> "Thanh toán thành công"
-        NotificationType.PAYMENT_FAILED -> "Thanh toán thất bại"
-        NotificationType.PAYMENT_REFOUNDED -> "Đã hoàn tiền"
+        NotificationType.PAYMENT_SUCCESS -> context.getString(R.string.shipper_notif_payment_success)
+        NotificationType.PAYMENT_FAILED -> context.getString(R.string.shipper_notif_payment_failed)
+        NotificationType.PAYMENT_REFOUNDED -> context.getString(R.string.shipper_notif_payment_refunded)
 
-        NotificationType.SHIPPER_ASSIGNED -> "Bạn được phân đơn"
-        NotificationType.SHIPPER_APPLIED -> "Có shipper ứng tuyển"
-        NotificationType.SHIPPER_APPLICATION_APPROVED -> "Đơn ứng tuyển đã duyệt"
-        NotificationType.SHIPPER_APPLICATION_REJECTED -> "Đơn ứng tuyển bị từ chối"
+        NotificationType.SHIPPER_ASSIGNED -> context.getString(R.string.shipper_notif_shipper_assigned)
+        NotificationType.SHIPPER_APPLIED -> context.getString(R.string.shipper_notif_shipper_applied)
+        NotificationType.SHIPPER_APPLICATION_APPROVED -> context.getString(R.string.shipper_notif_app_approved)
+        NotificationType.SHIPPER_APPLICATION_REJECTED -> context.getString(R.string.shipper_notif_app_rejected)
 
-        NotificationType.DAILY_SUMMARY -> "Tổng kết hôm nay"
-        NotificationType.SUBSCRIPTION_EXPIRING -> "Gói sắp hết hạn"
+        NotificationType.DAILY_SUMMARY -> context.getString(R.string.shipper_notif_daily_summary)
+        NotificationType.SUBSCRIPTION_EXPIRING -> context.getString(R.string.shipper_notif_subscription_expiring)
 
-        NotificationType.PROMOTION -> "Khuyến mãi"
-        NotificationType.VOUCHER_AVAILABLE -> "Voucher mới"
+        NotificationType.PROMOTION -> context.getString(R.string.shipper_notif_promotion)
+        NotificationType.VOUCHER_AVAILABLE -> context.getString(R.string.shipper_notif_voucher_available)
 
         NotificationType.UNKNOWN -> notification.title
     }
 }
 
-private fun mapBody(notification: Notification): String {
+private fun mapBody(notification: Notification, context: Context): String {
     val orderId = notification.orderId
     return when (notification.type) {
         NotificationType.NEW_ORDER ->
-            if (orderId != null) "Có đơn hàng mới #$orderId" else "Có đơn hàng mới"
+            if (orderId != null) context.getString(R.string.shipper_notif_new_order_id, orderId)
+            else context.getString(R.string.shipper_notif_new_order_generic)
         NotificationType.ORDER_CONFIRMED ->
-            if (orderId != null) "Đơn #$orderId đã được xác nhận" else "Đơn hàng đã được xác nhận"
+            if (orderId != null) context.getString(R.string.shipper_notif_order_confirmed_id, orderId)
+            else context.getString(R.string.shipper_notif_order_confirmed_generic)
         NotificationType.ORDER_PREPARING ->
-            if (orderId != null) "Đơn #$orderId đang được chuẩn bị" else "Đơn hàng đang được chuẩn bị"
+            if (orderId != null) context.getString(R.string.shipper_notif_order_preparing_id, orderId)
+            else context.getString(R.string.shipper_notif_order_preparing_generic)
         NotificationType.ORDER_READY ->
-            if (orderId != null) "Đơn #$orderId đã sẵn sàng để giao" else "Đơn hàng đã sẵn sàng để giao"
+            if (orderId != null) context.getString(R.string.shipper_notif_order_ready_id, orderId)
+            else context.getString(R.string.shipper_notif_order_ready_generic)
         NotificationType.ORDER_SHIPPING ->
-            if (orderId != null) "Đơn #$orderId đang được giao" else "Đơn hàng đang được giao"
+            if (orderId != null) context.getString(R.string.shipper_notif_order_shipping_id, orderId)
+            else context.getString(R.string.shipper_notif_order_shipping_generic)
         NotificationType.ORDER_DELIVERED ->
-            if (orderId != null) "Đơn #$orderId đã giao thành công" else "Đơn hàng đã giao thành công"
+            if (orderId != null) context.getString(R.string.shipper_notif_order_delivered_id, orderId)
+            else context.getString(R.string.shipper_notif_order_delivered_generic)
         NotificationType.ORDER_CANCELLED ->
-            if (orderId != null) "Đơn #$orderId đã bị hủy" else "Đơn hàng đã bị hủy"
+            if (orderId != null) context.getString(R.string.shipper_notif_order_cancelled_id, orderId)
+            else context.getString(R.string.shipper_notif_order_cancelled_generic)
 
-        NotificationType.PAYMENT_SUCCESS -> "Thanh toán đã được xử lý thành công"
-        NotificationType.PAYMENT_FAILED -> "Thanh toán không thành công"
-        NotificationType.PAYMENT_REFOUNDED -> "Đã hoàn tiền về phương thức thanh toán"
+        NotificationType.PAYMENT_SUCCESS -> context.getString(R.string.shipper_notif_payment_success_body)
+        NotificationType.PAYMENT_FAILED -> context.getString(R.string.shipper_notif_payment_failed_body)
+        NotificationType.PAYMENT_REFOUNDED -> context.getString(R.string.shipper_notif_payment_refunded_body)
 
-        NotificationType.SHIPPER_ASSIGNED -> "Bạn đã được phân cho một đơn mới"
-        NotificationType.SHIPPER_APPLIED -> "Có shipper mới ứng tuyển"
-        NotificationType.SHIPPER_APPLICATION_APPROVED -> "Đơn ứng tuyển của bạn đã được duyệt"
-        NotificationType.SHIPPER_APPLICATION_REJECTED -> "Đơn ứng tuyển của bạn bị từ chối"
+        NotificationType.SHIPPER_ASSIGNED -> context.getString(R.string.shipper_notif_shipper_assigned_body)
+        NotificationType.SHIPPER_APPLIED -> context.getString(R.string.shipper_notif_shipper_applied_body)
+        NotificationType.SHIPPER_APPLICATION_APPROVED -> context.getString(R.string.shipper_notif_app_approved_body)
+        NotificationType.SHIPPER_APPLICATION_REJECTED -> context.getString(R.string.shipper_notif_app_rejected_body)
 
-        NotificationType.DAILY_SUMMARY -> "Tổng kết hoạt động trong ngày"
-        NotificationType.SUBSCRIPTION_EXPIRING -> "Gói dịch vụ sắp hết hạn"
+        NotificationType.DAILY_SUMMARY -> context.getString(R.string.shipper_notif_daily_summary_body)
+        NotificationType.SUBSCRIPTION_EXPIRING -> context.getString(R.string.shipper_notif_subscription_expiring_body)
 
-        NotificationType.PROMOTION -> "Có chương trình khuyến mãi mới"
-        NotificationType.VOUCHER_AVAILABLE -> "Có voucher mới dành cho bạn"
+        NotificationType.PROMOTION -> context.getString(R.string.shipper_notif_promotion_body)
+        NotificationType.VOUCHER_AVAILABLE -> context.getString(R.string.shipper_notif_voucher_available_body)
 
         NotificationType.UNKNOWN -> notification.body
     }

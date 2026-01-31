@@ -46,6 +46,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.res.stringResource
+import com.example.foodapp.R
 import com.example.foodapp.pages.owner.notifications.NotificationsViewModel
 import com.example.foodapp.utils.LanguageManager
 
@@ -65,14 +67,14 @@ fun SettingsScreen(
 
     val accountItems = listOf(
         SettingItem(
-            title = "Thông tin cá nhân",
-            subtitle = "Chỉnh sửa thông tin tài khoản",
+            title = stringResource(R.string.settings_personal_info),
+            subtitle = stringResource(R.string.settings_personal_info_desc),
             icon = Icons.Outlined.Person,
             onClick = { navController.navigate("personal_info") }
         ),
         SettingItem(
-            title = "Đổi mật khẩu",
-            subtitle = "Thay đổi mật khẩu đăng nhập",
+            title = stringResource(R.string.settings_change_password),
+            subtitle = stringResource(R.string.settings_change_password_desc),
             icon = Icons.Outlined.Lock,
             onClick = { navController.navigate("change_password") }
         )
@@ -80,14 +82,14 @@ fun SettingsScreen(
 
     val storeItems = listOf(
         SettingItem(
-            title = "Thông tin cửa hàng",
-            subtitle = "Tên, địa chỉ, giờ mở cửa",
+            title = stringResource(R.string.settings_store_info),
+            subtitle = stringResource(R.string.settings_store_info_desc),
             icon = Icons.Outlined.Store,
             onClick = { navController.navigate("store_info") }
         ),
         SettingItem(
-            title = "Phương thức thanh toán",
-            subtitle = "Quản lý tài khoản ngân hàng",
+            title = stringResource(R.string.settings_payment_method),
+            subtitle = stringResource(R.string.settings_payment_method_desc),
             icon = Icons.Outlined.CreditCard,
             onClick = { navController.navigate("payment_method") }
         )
@@ -95,38 +97,38 @@ fun SettingsScreen(
 
     val securityItems = listOf(
         SettingItem(
-            title = "Xác thực 2 bước",
-            subtitle = "Tăng cường bảo mật tài khoản",
+            title = stringResource(R.string.settings_2fa),
+            subtitle = stringResource(R.string.settings_2fa_desc),
             icon = Icons.Outlined.Security,
             hasSwitch = true,
             isEnabled = false,
-            isDisabled = true // Tính năng chưa phát triển
+            isDisabled = true
         ),
         SettingItem(
-            title = "Lịch sử đăng nhập",
-            subtitle = "Xem các phiên đăng nhập gần đây",
+            title = stringResource(R.string.settings_login_history),
+            subtitle = stringResource(R.string.settings_login_history_desc),
             icon = Icons.Outlined.History,
             onClick = { navController.navigate("login_history") },
-            isDisabled = true // Tính năng chưa phát triển
+            isDisabled = true
         )
     )
 
     val aboutItems = listOf(
         SettingItem(
-            title = "Điều khoản sử dụng",
-            subtitle = "Quy định và chính sách",
+            title = stringResource(R.string.settings_terms),
+            subtitle = stringResource(R.string.settings_terms_desc),
             icon = Icons.Default.List,
             onClick = { navController.navigate("terms") }
         ),
         SettingItem(
-            title = "Chính sách bảo mật",
-            subtitle = "Cách chúng tôi bảo vệ dữ liệu",
+            title = stringResource(R.string.settings_privacy),
+            subtitle = stringResource(R.string.settings_privacy_desc),
             icon = Icons.Outlined.PrivacyTip,
             onClick = { navController.navigate("privacy") }
         ),
         SettingItem(
-            title = "Trợ giúp & Hỗ trợ",
-            subtitle = "Liên hệ với chúng tôi",
+            title = stringResource(R.string.settings_support),
+            subtitle = stringResource(R.string.settings_support_desc),
             icon = Icons.Outlined.SupportAgent,
             onClick = { navController.navigate("support") }
         )
@@ -152,11 +154,11 @@ fun SettingsScreen(
                 .padding(top = 16.dp, bottom = 80.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            // Tài khoản
-            SettingSectionCard(title = "TÀI KHOẢN", items = accountItems)
+            // Account
+            SettingSectionCard(title = stringResource(R.string.settings_section_account), items = accountItems)
             
-            // Cửa hàng
-            SettingSectionCard(title = "CỬA HÀNG", items = storeItems)
+            // Store
+            SettingSectionCard(title = stringResource(R.string.settings_section_store), items = storeItems)
             
             // Thông báo - with API integration
             NotificationSettingsSection(
@@ -182,11 +184,11 @@ fun SettingsScreen(
                 onLanguageClick = { showLanguageDialog = true }
             )
             
-            // Bảo mật
-            SettingSectionCard(title = "BẢO MẬT", items = securityItems)
+            // Security
+            SettingSectionCard(title = stringResource(R.string.settings_section_security), items = securityItems)
             
-            // Về ứng dụng
-            SettingSectionCard(title = "VỀ ỨNG DỤNG", items = aboutItems)
+            // About
+            SettingSectionCard(title = stringResource(R.string.settings_section_about), items = aboutItems)
 
             // Nút đăng xuất
             Button(
@@ -198,12 +200,12 @@ fun SettingsScreen(
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.2f)),
                 shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)
             ) {
-                Text("Đăng xuất", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                Text(stringResource(R.string.settings_logout), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
             }
 
             // Version Info
             Text(
-                text = "KTX Food Store v1.0.0",
+                text = stringResource(R.string.settings_version),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha=0.5f),
                 textAlign = TextAlign.Center,
@@ -279,7 +281,7 @@ private fun NotificationSettingsSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(
-            text = "THÔNG BÁO",
+            text = stringResource(R.string.settings_section_notification),
             style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
             color = MaterialTheme.colorScheme.primary
         )
@@ -289,10 +291,10 @@ private fun NotificationSettingsSection(
             elevation = CardDefaults.cardElevation(2.dp)
         ) {
             Column {
-                // Đơn hàng & Thanh toán - Luôn bật, không thể tắt
+                // Orders & Payments - Always on
                 NotificationToggleItem(
-                    title = "Đơn hàng & Thanh toán",
-                    subtitle = "Thông báo quan trọng, không thể tắt",
+                    title = stringResource(R.string.settings_notif_orders),
+                    subtitle = stringResource(R.string.settings_notif_orders_desc),
                     icon = Icons.Default.ShoppingCart,
                     checked = true,
                     enabled = false,
@@ -305,10 +307,10 @@ private fun NotificationSettingsSection(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 
-                // Cập nhật & Tổng kết (informational)
+                // Updates & Summary (informational)
                 NotificationToggleItem(
-                    title = "Cập nhật & Tổng kết",
-                    subtitle = "Tổng kết doanh thu, cập nhật hệ thống",
+                    title = stringResource(R.string.settings_notif_updates),
+                    subtitle = stringResource(R.string.settings_notif_updates_desc),
                     icon = Icons.Default.Update,
                     checked = preferences?.informational ?: true,
                     enabled = preferences != null,
@@ -321,10 +323,10 @@ private fun NotificationSettingsSection(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 
-                // Khuyến mãi (marketing)
+                // Promotions (marketing)
                 NotificationToggleItem(
-                    title = "Khuyến mãi",
-                    subtitle = "Voucher mới, chương trình khuyến mãi",
+                    title = stringResource(R.string.settings_notif_promo),
+                    subtitle = stringResource(R.string.settings_notif_promo_desc),
                     icon = Icons.Default.LocalOffer,
                     checked = preferences?.marketing ?: true,
                     enabled = preferences != null,

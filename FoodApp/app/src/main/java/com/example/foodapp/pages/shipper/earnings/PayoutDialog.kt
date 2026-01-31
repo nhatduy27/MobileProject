@@ -14,6 +14,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.res.stringResource
+import com.example.foodapp.R
 import com.example.foodapp.pages.shipper.theme.ShipperColors
 
 /**
@@ -74,7 +76,7 @@ fun PayoutDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Yêu cầu rút tiền",
+                        text = stringResource(R.string.shipper_payout_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = ShipperColors.TextPrimary
@@ -82,7 +84,7 @@ fun PayoutDialog(
                     IconButton(onClick = onDismiss) {
                         Icon(
                             Icons.Outlined.Close,
-                            contentDescription = "Đóng",
+                            contentDescription = stringResource(R.string.shipper_payout_close),
                             tint = ShipperColors.TextSecondary
                         )
                     }
@@ -92,7 +94,7 @@ fun PayoutDialog(
                 
                 // Số dư hiện tại
                 Text(
-                    text = "Số dư hiện tại: ${String.format("%,d", currentBalance)}đ",
+                    text = stringResource(R.string.shipper_payout_current_balance, String.format("%,d", currentBalance) + "đ"),
                     fontSize = 14.sp,
                     color = ShipperColors.Primary,
                     fontWeight = FontWeight.Medium
@@ -109,8 +111,8 @@ fun PayoutDialog(
                             onAmountChange(value)
                         }
                     },
-                    label = { Text("Số tiền rút (đ)") },
-                    placeholder = { Text("Tối thiểu 50,000đ") },
+                    label = { Text(stringResource(R.string.shipper_payout_amount)) },
+                    placeholder = { Text(stringResource(R.string.shipper_payout_min_amount)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
@@ -131,7 +133,7 @@ fun PayoutDialog(
                         value = selectedBank?.second ?: "",
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Ngân hàng") },
+                        label = { Text(stringResource(R.string.shipper_payout_bank)) },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = bankExpanded) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -168,7 +170,7 @@ fun PayoutDialog(
                             onAccountNumberChange(value)
                         }
                     },
-                    label = { Text("Số tài khoản") },
+                    label = { Text(stringResource(R.string.shipper_payout_account_number)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
@@ -184,8 +186,8 @@ fun PayoutDialog(
                 OutlinedTextField(
                     value = accountName,
                     onValueChange = { onAccountNameChange(it.uppercase()) },
-                    label = { Text("Tên chủ tài khoản") },
-                    placeholder = { Text("VD: NGUYEN VAN A") },
+                    label = { Text(stringResource(R.string.shipper_payout_account_name)) },
+                    placeholder = { Text(stringResource(R.string.shipper_payout_account_name_hint)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -200,7 +202,7 @@ fun PayoutDialog(
                 OutlinedTextField(
                     value = note,
                     onValueChange = onNoteChange,
-                    label = { Text("Ghi chú (tuỳ chọn)") },
+                    label = { Text(stringResource(R.string.shipper_payout_note)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
@@ -230,7 +232,7 @@ fun PayoutDialog(
                         )
                     } else {
                         Text(
-                            text = "Gửi yêu cầu rút tiền",
+                            text = stringResource(R.string.shipper_payout_submit),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -241,7 +243,7 @@ fun PayoutDialog(
                 
                 // Lưu ý
                 Text(
-                    text = "* Yêu cầu sẽ được xử lý trong 1-3 ngày làm việc",
+                    text = stringResource(R.string.shipper_payout_processing_note),
                     fontSize = 12.sp,
                     color = ShipperColors.TextTertiary
                 )

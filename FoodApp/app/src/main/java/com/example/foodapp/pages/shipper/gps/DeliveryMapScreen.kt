@@ -30,6 +30,8 @@ import com.example.foodapp.data.model.shipper.gps.TripLocation
 import com.example.foodapp.data.model.shipper.gps.TripStatus
 import com.example.foodapp.data.model.shipper.gps.TripWaypoint
 import com.example.foodapp.pages.shipper.theme.ShipperColors
+import com.example.foodapp.R
+import androidx.compose.ui.res.stringResource
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.PolyUtil
@@ -118,10 +120,9 @@ fun DeliveryMapScreen(
     if (showFinishDialog) {
         AlertDialog(
             onDismissRequest = { showFinishDialog = false },
-            title = { Text("Hoàn thành giao hàng?") },
+            title = { Text(stringResource(R.string.shipper_map_finish_title)) },
             text = { 
-                Text("Bạn đã giao hết ${uiState.currentTrip?.totalOrders} đơn hàng? " +
-                     "Trạng thái các đơn sẽ được cập nhật thành 'Đã giao'.")
+                Text(stringResource(R.string.shipper_map_finish_message, uiState.currentTrip?.totalOrders ?: 0))
             },
             confirmButton = {
                 Button(
@@ -131,12 +132,12 @@ fun DeliveryMapScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ShipperColors.Success)
                 ) {
-                    Text("Xác nhận")
+                    Text(stringResource(R.string.shipper_map_confirm))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showFinishDialog = false }) {
-                    Text("Hủy")
+                    Text(stringResource(R.string.shipper_cancel))
                 }
             }
         )
@@ -272,7 +273,7 @@ private fun DeliveryMapContent(
         // Origin marker
         Marker(
             state = MarkerState(position = LatLng(trip.origin.lat, trip.origin.lng)),
-            title = trip.origin.name ?: "Điểm xuất phát",
+            title = trip.origin.name ?: stringResource(R.string.shipper_map_origin),
             icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN)
         )
         
@@ -280,8 +281,8 @@ private fun DeliveryMapContent(
         trip.waypoints.forEachIndexed { index, waypoint ->
             Marker(
                 state = MarkerState(position = LatLng(waypoint.location.lat, waypoint.location.lng)),
-                title = "Tòa ${waypoint.buildingCode}",
-                snippet = "Điểm dừng ${index + 1}",
+                title = stringResource(R.string.shipper_map_building, waypoint.buildingCode),
+                snippet = stringResource(R.string.shipper_map_stop, index + 1),
                 icon = BitmapDescriptorFactory.defaultMarker(
                     if (index < trip.waypoints.size - 1) 
                         BitmapDescriptorFactory.HUE_ORANGE 
@@ -302,7 +303,7 @@ private fun DeliveryMapContent(
             )
             Marker(
                 state = MarkerState(position = LatLng(location.lat, location.lng)),
-                title = "Vị trí của bạn",
+                title = stringResource(R.string.shipper_map_your_location),
                 icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE)
             )
         }
@@ -344,7 +345,7 @@ private fun TopBarOverlay(
                     ) {
                         Icon(
                             Icons.Outlined.ArrowBack,
-                            contentDescription = "Quay lại",
+                            contentDescription = stringResource(R.string.shipper_map_back),
                             tint = ShipperColors.Primary
                         )
                     }
@@ -365,7 +366,7 @@ private fun TopBarOverlay(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                "Đang giao",
+                                stringResource(R.string.shipper_map_delivering),
                                 color = ShipperColors.Success,
                                 fontWeight = FontWeight.Medium,
                                 fontSize = 13.sp
@@ -384,12 +385,12 @@ private fun TopBarOverlay(
                     RouteStatItem(
                         icon = Icons.Outlined.LocationOn,
                         value = "${trip.waypoints.size}",
-                        label = "điểm"
+                        label = stringResource(R.string.shipper_map_points)
                     )
                     RouteStatItem(
                         icon = Icons.Outlined.ShoppingBag,
                         value = "${trip.totalOrders}",
-                        label = "đơn"
+                        label = stringResource(R.string.shipper_map_orders)
                     )
                     RouteStatItem(
                         icon = Icons.Outlined.Straighten,
@@ -473,7 +474,7 @@ private fun BottomControlPanel(
                 Icon(Icons.Outlined.CheckCircle, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Hoàn thành giao hàng",
+                    stringResource(R.string.shipper_map_complete_delivery),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp
                 )
@@ -519,18 +520,18 @@ private fun NextWaypointCard(
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    "Điểm dừng tiếp theo",
+                    stringResource(R.string.shipper_map_next_stop),
                     fontSize = 12.sp,
                     color = ShipperColors.TextSecondary
                 )
                 Text(
-                    "Tòa ${waypoint.buildingCode}",
+                    stringResource(R.string.shipper_map_building, waypoint.buildingCode),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = ShipperColors.TextPrimary
                 )
                 Text(
-                    "${trip.getOrdersForStop(waypoint.order).size} đơn hàng",
+                    stringResource(R.string.shipper_map_orders_count, trip.getOrdersForStop(waypoint.order).size),
                     fontSize = 14.sp,
                     color = ShipperColors.Primary
                 )
@@ -546,7 +547,7 @@ private fun NextWaypointCard(
             ) {
                 Icon(
                     Icons.Outlined.Directions,
-                    contentDescription = "Chỉ đường",
+                    contentDescription = stringResource(R.string.shipper_map_directions),
                     tint = Color.White,
                     modifier = Modifier.size(28.dp)
                 )
