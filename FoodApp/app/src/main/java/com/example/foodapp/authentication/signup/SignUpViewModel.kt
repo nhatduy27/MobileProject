@@ -108,14 +108,15 @@ class SignUpViewModel(
 
                 when (result) {
                     is com.example.foodapp.data.remote.client.response.notification.ApiResult.Success -> {
+                        Log.d("SignUpViewModel", ">> Đã đăng ký device token thành công")
                     }
                     is com.example.foodapp.data.remote.client.response.notification.ApiResult.Failure -> {
-                        result.exception.printStackTrace()
+                        Log.e("SignUpViewModel", ">> Lỗi đăng ký device token", result.exception)
                     }
                     else -> {}
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                Log.e("SignUpViewModel", "Lỗi khi lấy FCM token", e)
             }
         }
     }

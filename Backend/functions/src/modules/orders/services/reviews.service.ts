@@ -300,7 +300,7 @@ export class ReviewsService {
       customerName: r.review.customerName || 'Khách hàng',
       rating: r.productReview.rating as number,
       comment: r.productReview.comment as string | undefined,
-      createdAt: r.review.createdAt,
+      createdAt: r.review.createdAt?.toDate?.()?.toISOString?.() ?? r.review.createdAt,
     }));
 
     // Calculate average rating

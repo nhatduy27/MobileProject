@@ -1,6 +1,23 @@
 import { Controller, Get, Param } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CategoriesService } from './categories.service';
+import { CategoryEntity } from './entities/category.entity';
+
+// Helper để serialize Timestamp → ISO string
+const serializeTimestamp = (ts: any): string | null => {
+  if (!ts) return null;
+  if (typeof ts === 'string') return ts;
+  if (ts.toDate) return ts.toDate().toISOString();
+  if (ts._seconds) return new Date(ts._seconds * 1000).toISOString();
+  return null;
+};
+
+// Helper để serialize category
+const serializeCategory = (category: CategoryEntity) => ({
+  ...category,
+  createdAt: serializeTimestamp(category.createdAt),
+  updatedAt: serializeTimestamp(category.updatedAt),
+});
 
 /**
  * Categories Controller - Public API
@@ -28,7 +45,8 @@ export class CategoriesController {
     description: 'Danh sách categories',
   })
   async findActive() {
-    return this.categoriesService.findActive();
+    const categories = await this.categoriesService.findActive();
+    return categories.map(serializeCategory);
   }
 
   /**
@@ -51,6 +69,6 @@ export class CategoriesController {
       category = await this.categoriesService.findById(idOrSlug);
     }
 
-    return category;
+    return serializeCategory(category);
   }
 }

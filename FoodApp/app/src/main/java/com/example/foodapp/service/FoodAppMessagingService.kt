@@ -52,21 +52,33 @@ class FoodAppMessagingService : FirebaseMessagingService() {
         super.onMessageReceived(remoteMessage)
         
         Log.d(TAG, "📩 Message received from: ${remoteMessage.from}")
+        Log.d(TAG, "📦 Data payload: ${remoteMessage.data}")
+        Log.d(TAG, "🔔 Notification payload: ${remoteMessage.notification?.title} - ${remoteMessage.notification?.body}")
         
-        // Check if message contains data payload
-        remoteMessage.data.isNotEmpty().let {
-            Log.d(TAG, "📦 Data payload: ${remoteMessage.data}")
-            handleDataMessage(remoteMessage.data)
-        }
-        
-        // Check if message contains notification payload
-        remoteMessage.notification?.let { notification ->
-            Log.d(TAG, "🔔 Notification: ${notification.title} - ${notification.body}")
+        // Ưu tiên notification payload nếu có
+        val notification = remoteMessage.notification
+        if (notification != null) {
+            // Backend gửi notification + data payload
+            val title = notification.title ?: getString(R.string.app_name)
+            val body = notification.body ?: ""
+            val type = remoteMessage.data["type"] ?: "general"
+            
+            // Chọn channel dựa trên type
+            val channelId = when {
+                type.contains("ORDER", ignoreCase = true) -> CHANNEL_ORDERS
+                type.contains("MESSAGE", ignoreCase = true) || type.contains("CHAT", ignoreCase = true) -> CHANNEL_CHAT
+                else -> CHANNEL_GENERAL
+            }
+            
             showNotification(
-                title = notification.title ?: getString(R.string.app_name),
-                body = notification.body ?: "",
+                title = title,
+                body = body,
+                channelId = channelId,
                 data = remoteMessage.data
             )
+        } else if (remoteMessage.data.isNotEmpty()) {
+            // Data-only message (không có notification payload)
+            handleDataMessage(remoteMessage.data)
         }
     }
 

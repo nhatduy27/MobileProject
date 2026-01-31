@@ -7,6 +7,7 @@ import com.example.foodapp.data.model.shipper.removal.WrappedRemovalRequestListR
 import com.example.foodapp.data.model.shipper.removal.WrappedRemovalRequestResponse
 import com.example.foodapp.data.remote.shipper.response.GoOnlineResponse
 import com.example.foodapp.data.remote.shipper.response.GoOfflineResponse
+import com.example.foodapp.data.remote.shipper.response.GetOnlineStatusResponse
 import retrofit2.Response
 import retrofit2.http.*
 
@@ -42,6 +43,10 @@ interface ShipperApiService {
     // Mark delivered
     @PUT("orders/{id}/delivered")
     suspend fun markDelivered(@Path("id") id: String): Response<WrappedShipperOrderResponse>
+    
+    // Get shipper online status
+    @GET("shippers/notifications/online")
+    suspend fun getOnlineStatus(): Response<GetOnlineStatusResponse>
     
     // Shipper goes online - subscribe to topic for ORDER_READY broadcasts
     @POST("shippers/notifications/online")

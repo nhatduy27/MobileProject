@@ -14,6 +14,9 @@ import { PaymentEntity, PaymentMethod, PaymentStatus } from './entities';
 import { PaymentStatus as OrderPaymentStatus } from '../orders/entities';
 import { CreatePaymentDto } from './dto';
 import { ConfigService } from '../../core/config/config.service';
+import { NotificationsService } from '../notifications/services/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
+import { NotificationCategory } from '../notifications/dto/admin-batch-send.dto';
 import axios from 'axios';
 
 @Injectable()
@@ -26,6 +29,7 @@ export class PaymentsService {
     @Inject(ORDERS_REPOSITORY)
     private readonly ordersRepo: IOrdersRepository,
     private readonly configService: ConfigService,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   /**
@@ -136,6 +140,26 @@ export class PaymentsService {
         paymentStatus: OrderPaymentStatus.PAID,
       });
       this.logger.log(`Order ${order.orderNumber} marked as PAID (COD)`);
+
+      // NOTIF-008: Send payment success notification (COD)
+      try {
+        await this.notificationsService.send({
+          userId: customerId,
+          title: 'Thanh toán thành công',
+          body: `Đơn hàng ${order.orderNumber} sẽ được thanh toán bằng tiền mặt khi nhận hàng`,
+          type: NotificationType.PAYMENT_SUCCESS,
+          category: NotificationCategory.TRANSACTIONAL,
+          orderId,
+          shopId: order.shopId,
+          data: {
+            paymentMethod: 'COD',
+            amount: order.total,
+          },
+        });
+      } catch (error) {
+        this.logger.error(`Failed to send PAYMENT_SUCCESS notification for order ${orderId}:`, error);
+        // Non-blocking: do not throw
+      }
     } else if (paymentStatus === PaymentStatus.PROCESSING) {
       await this.ordersRepo.update(orderId, {
         paymentStatus: OrderPaymentStatus.PROCESSING,
@@ -317,6 +341,26 @@ export class PaymentsService {
 
       this.logger.log(`Order ${order.orderNumber} SEPAY payment verified`);
 
+      // NOTIF-008: Send payment success notification (SEPAY via polling)
+      try {
+        await this.notificationsService.send({
+          userId: order.customerId,
+          title: 'Thanh toán thành công',
+          body: `Đơn hàng ${order.orderNumber} đã được thanh toán qua chuyển khoản SePay`,
+          type: NotificationType.PAYMENT_SUCCESS,
+          category: NotificationCategory.TRANSACTIONAL,
+          orderId: order.id,
+          shopId: order.shopId,
+          data: {
+            paymentMethod: 'SEPAY',
+            amount: payment.amount,
+          },
+        });
+      } catch (error) {
+        this.logger.error(`Failed to send PAYMENT_SUCCESS notification for order ${orderId}:`, error);
+        // Non-blocking: do not throw
+      }
+
       // Fetch updated payment
       const updatedPayment = (await this.paymentsRepo.findByOrderId(orderId))!;
       return { matched: true, payment: updatedPayment };
@@ -455,6 +499,28 @@ export class PaymentsService {
     this.logger.log(
       `SEPAY payment confirmed: Order ${order.orderNumber}, Amount ${amount}đ, TxnId ${transactionId}`,
     );
+
+    // NOTIF-008: Send payment success notification (SEPAY)
+    try {
+      await this.notificationsService.send({
+        userId: order.customerId,
+        title: 'Thanh toán thành công',
+        body: `Đơn hàng ${order.orderNumber} đã được thanh toán qua chuyển khoản SePay`,
+        type: NotificationType.PAYMENT_SUCCESS,
+        category: NotificationCategory.TRANSACTIONAL,
+        orderId: order.id,
+        shopId: order.shopId,
+        data: {
+          paymentMethod: 'SEPAY',
+          amount: amount,
+          transactionId: transactionId,
+          bankCode: bankCode,
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send PAYMENT_SUCCESS notification for order ${orderId}:`, error);
+      // Non-blocking: do not throw
+    }
   }
 
   /**
@@ -495,7 +561,33 @@ export class PaymentsService {
 
     this.logger.log(`Payment refunded for order ${orderId}: reason="${reason}", status=REFUNDED`);
 
-    // 5. Return updated payment
+    // 5. Get order for notification
+    const order = await this.ordersRepo.findById(orderId);
+
+    // NOTIF-008: Send refund notification
+    if (order) {
+      try {
+        await this.notificationsService.send({
+          userId: payment.customerId,
+          title: 'Hoàn tiền thành công',
+          body: `Đơn hàng ${order.orderNumber} đã được hoàn ${payment.amount.toLocaleString('vi-VN')}đ. Lý do: ${reason}`,
+          type: NotificationType.PAYMENT_REFUNDED,
+          category: NotificationCategory.TRANSACTIONAL,
+          orderId: order.id,
+          shopId: payment.shopId,
+          data: {
+            refundAmount: payment.amount,
+            refundReason: reason,
+            originalMethod: payment.method,
+          },
+        });
+      } catch (error) {
+        this.logger.error(`Failed to send PAYMENT_REFUNDED notification for order ${orderId}:`, error);
+        // Non-blocking: do not throw
+      }
+    }
+
+    // 6. Return updated payment
     return this.paymentsRepo.findById(payment.id!);
   }
 }
