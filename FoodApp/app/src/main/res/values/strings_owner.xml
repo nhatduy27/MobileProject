@@ -80,6 +80,15 @@
     <string name="orders_cancel_order">Hủy đơn hàng</string>
     <string name="orders_cancel_confirm">Bạn có chắc chắn muốn hủy đơn hàng này?</string>
     <string name="orders_cancel_reason">Lý do hủy (không bắt buộc)</string>
+    <!-- Orders Filters -->
+    <string name="orders_filter_all">Tất cả</string>
+    <string name="orders_filter_pending">Chờ xác nhận</string>
+    <string name="orders_filter_confirmed">Đã xác nhận</string>
+    <string name="orders_filter_preparing">Đang chuẩn bị</string>
+    <string name="orders_filter_ready">Sẵn sàng</string>
+    <string name="orders_filter_shipping">Đang giao</string>
+    <string name="orders_filter_delivered">Đã giao</string>
+    <string name="orders_filter_cancelled">Đã hủy</string>
     
     <!-- ==================== FOODS ==================== -->
     <string name="foods_title">Quản lý món ăn</string>
@@ -114,6 +123,38 @@
     <string name="shippers_total_deliveries">Tổng đơn giao</string>
     <string name="shippers_rating">Đánh giá</string>
     <string name="shippers_removal_requests">Yêu cầu xóa</string>
+    <!-- Shippers tabs -->
+    <string name="shippers_tab_applications">Đơn ứng tuyển</string>
+    <string name="shippers_tab_shippers">Shipper</string>
+    <string name="shippers_tab_removal">Yêu cầu rời</string>
+    <!-- Shippers stats -->
+    <string name="shippers_stat_total_applications">Tổng đơn</string>
+    <string name="shippers_stat_pending">Chờ duyệt</string>
+    <string name="shippers_stat_total_shippers">Tổng shipper</string>
+    <string name="shippers_stat_available">Sẵn sàng</string>
+    <string name="shippers_stat_delivery">Đang giao</string>
+    <string name="shippers_stat_total_requests">Tổng yêu cầu</string>
+    <string name="shippers_stat_pending_requests">Chờ xử lý</string>
+    <!-- Shippers filters -->
+    <string name="shippers_filter_all">Tất cả</string>
+    <string name="shippers_filter_pending">Chờ duyệt</string>
+    <string name="shippers_filter_approved">Đã duyệt</string>
+    <string name="shippers_filter_rejected">Đã từ chối</string>
+    <string name="shippers_filter_pending_process">Chờ xử lý</string>
+    <!-- Shippers empty states -->
+    <string name="shippers_empty_no_applications">Chưa có đơn xin làm shipper</string>
+    <string name="shippers_empty_no_applications_search">Không tìm thấy đơn nào</string>
+    <string name="shippers_empty_no_shippers">Chưa có shipper nào</string>
+    <string name="shippers_empty_no_shippers_search">Không tìm thấy shipper nào</string>
+    <string name="shippers_empty_no_requests">Chưa có yêu cầu rời shop nào</string>
+    <string name="shippers_empty_no_requests_search">Không tìm thấy yêu cầu nào</string>
+    <!-- Shippers buttons -->
+    <string name="shippers_btn_reject">Từ chối</string>
+    <string name="shippers_btn_accept">Chấp nhận</string>
+    <!-- Shippers status -->
+    <string name="shippers_status_pending">Chờ xử lý</string>
+    <string name="shippers_status_approved">Đã chấp nhận</string>
+    <string name="shippers_status_rejected">Đã từ chối</string>
     
     <!-- ==================== VOUCHERS ==================== -->
     <string name="vouchers_title">Quản lý Voucher</string>
@@ -142,6 +183,32 @@
     <string name="vouchers_delete_success">Đã xóa voucher</string>
     <string name="vouchers_status_on">Đã kích hoạt voucher</string>
     <string name="vouchers_status_off">Đã tắt voucher</string>
+    <!-- Vouchers Filters -->
+    <string name="vouchers_filter_all">Tất cả</string>
+    <string name="vouchers_filter_active">Đang hoạt động</string>
+    <string name="vouchers_filter_inactive">Đã tắt</string>
+    <string name="vouchers_filter_expired">Hết hạn</string>
+    <!-- Vouchers Stats -->
+    <string name="vouchers_stat_total">Tổng voucher</string>
+    <string name="vouchers_stat_active">Đang hoạt động</string>
+    <string name="vouchers_stat_expired">Hết hạn</string>
+    <!-- Vouchers Search -->
+    <string name="vouchers_search_hint">Tìm mã voucher, tên...</string>
+    <!-- Vouchers Card -->
+    <string name="vouchers_discount">Giảm</string>
+    <string name="vouchers_usage">Đã dùng</string>
+    <string name="vouchers_validity">Hiệu lực</string>
+    <string name="vouchers_btn_on">Bật</string>
+    <string name="vouchers_btn_off">Tắt</string>
+    <string name="vouchers_btn_edit">Sửa</string>
+    <string name="vouchers_btn_delete">Xóa</string>
+    <!-- Vouchers Empty -->
+    <string name="vouchers_empty_title">Chưa có voucher nào</string>
+    <string name="vouchers_empty_subtitle">Tạo voucher để thu hút khách hàng</string>
+    <string name="vouchers_create_new">Tạo voucher mới</string>
+    <string name="vouchers_reload">Tải lại</string>
+    <string name="vouchers_max_discount_fmt">tối đa %1$s</string>
+    <string name="vouchers_free_ship_fmt">Miễn phí ship %1$d%%</string>
     
     <!-- ==================== CUSTOMERS/BUYERS ==================== -->
     <string name="customers_title">Khách hàng</string>
@@ -213,10 +280,48 @@
     <string name="revenue_chart">Biểu đồ</string>
     <string name="revenue_time_slots">Khung giờ</string>
     <string name="revenue_top_products">Sản phẩm bán chạy</string>
-    <string name="revenue_no_data">Chưa có dữ liệu</string>
+    <string name="revenue_no_data">Chưa có dữ liệu doanh thu</string>
+    <string name="revenue_time_slots_detail">Chi tiết doanh thu theo khung giờ</string>
+    <string name="revenue_top_products_period">Sản phẩm bán chạy %1$s</string>
+    <string name="revenue_subtitle">Thống kê và phân tích tài chính</string>
+    <string name="revenue_chart_7_days">Biểu đồ doanh thu 7 ngày</string>
+    <string name="revenue_time_slot_info">%1$d đơn hàng • %2$d%% tổng doanh thu</string>
+    <string name="revenue_product_info">%1$d phần • %2$sđ/phần</string>
+    <string name="revenue_day_mon">T2</string>
+    <string name="revenue_day_tue">T3</string>
+    <string name="revenue_day_wed">T4</string>
+    <string name="revenue_day_thu">T5</string>
+    <string name="revenue_day_fri">T6</string>
+    <string name="revenue_day_sat">T7</string>
+    <string name="revenue_day_sun">CN</string>
+    <!-- Revenue Stat Titles (for mapping API responses) -->
+    <string name="revenue_stat_total_revenue">Tổng doanh thu</string>
+    <string name="revenue_stat_order_count">Số đơn hàng</string>
+    <string name="revenue_stat_avg_order">Trung bình/đơn</string>
+    <string name="revenue_stat_pending">Đang xử lý</string>
+    <string name="revenue_stat_completed">Hoàn thành</string>
+    <string name="revenue_stat_cancelled">Đã hủy</string>
+    <string name="revenue_stat_growth">Tăng trưởng</string>
+    <!-- Revenue Stat Subtitles -->
+    <string name="revenue_stat_vs_yesterday">so với hôm qua</string>
+    <string name="revenue_stat_vs_last_week">so với tuần trước</string>
+    <string name="revenue_stat_vs_last_month">so với tháng trước</string>
+    <string name="revenue_stat_vs_last_year">so với năm trước</string>
+    <string name="revenue_stat_up">↑ %1$s%% %2$s</string>
+    <string name="revenue_stat_down">↓ %1$s%% %2$s</string>
+    <string name="revenue_stat_no_revenue">Không có doanh thu</string>
+    <string name="revenue_stat_no_orders">Không có đơn hàng</string>
+    <string name="revenue_stat_no_data">Chưa có dữ liệu</string>
+    <string name="revenue_stat_first_days">%1$d ngày đầu tháng</string>
+    <string name="revenue_stat_first_weeks">%1$d tuần đầu năm</string>
+    <string name="revenue_stat_first_month">Tháng đầu tiên</string>
+    <string name="revenue_stat_first_time">Lần đầu tiên</string>
+    <string name="revenue_stat_today_only">Chỉ tính hôm nay</string>
+    <string name="revenue_stat_this_week">Tuần này</string>
+    <string name="revenue_stat_this_month">Tháng này</string>
+    <string name="revenue_stat_this_year">Năm nay</string>
     
     <!-- ==================== REVIEWS ==================== -->
-    <string name="reviews_title">Đánh giá</string>
     <string name="reviews_no_reviews">Chưa có đánh giá nào</string>
     <string name="reviews_average_rating">Đánh giá trung bình</string>
     <string name="reviews_total_reviews">Tổng đánh giá</string>
@@ -236,7 +341,6 @@
     <string name="chatbot_type_message">Nhập câu hỏi...</string>
     
     <!-- ==================== SETTINGS ==================== -->
-    <string name="settings_title">Cài đặt</string>
     <string name="settings_shop_info">Thông tin cửa hàng</string>
     <string name="settings_shop_name">Tên cửa hàng</string>
     <string name="settings_shop_address">Địa chỉ</string>
@@ -254,9 +358,49 @@
     <string name="settings_logout">Đăng xuất</string>
     <string name="settings_logout_confirm">Xác nhận đăng xuất</string>
     <string name="settings_logout_message">Bạn có chắc muốn đăng xuất?</string>
+    <string name="settings_subtitle">Quản lý tài khoản và ứng dụng</string>
+    <!-- Settings Account Items -->
+    <string name="settings_personal_info">Thông tin cá nhân</string>
+    <string name="settings_personal_info_desc">Chỉnh sửa thông tin tài khoản</string>
+    <string name="settings_change_password">Đổi mật khẩu</string>
+    <string name="settings_change_password_desc">Thay đổi mật khẩu đăng nhập</string>
+    <!-- Settings Store Items -->
+    <string name="settings_section_account">TÀI KHOẢN</string>
+    <string name="settings_section_store">CỬA HÀNG</string>
+    <string name="settings_section_notification">THÔNG BÁO</string>
+    <string name="settings_section_language">NGÔN NGỮ / LANGUAGE</string>
+    <string name="settings_section_security">BẢO MẬT</string>
+    <string name="settings_section_about">VỀ ỨNG DỤNG</string>
+    <string name="settings_store_info">Thông tin cửa hàng</string>
+    <string name="settings_store_info_desc">Tên, địa chỉ, giờ mở cửa</string>
+    <string name="settings_payment_method">Phương thức thanh toán</string>
+    <string name="settings_payment_method_desc">Quản lý tài khoản ngân hàng</string>
+    <!-- Settings Notification Items -->
+    <string name="settings_notif_orders">Đơn hàng \u0026 Thanh toán</string>
+    <string name="settings_notif_orders_desc">Thông báo quan trọng, không thể tắt</string>
+    <string name="settings_notif_updates">Cập nhật \u0026 Tổng kết</string>
+    <string name="settings_notif_updates_desc">Tổng kết doanh thu, cập nhật hệ thống</string>
+    <string name="settings_notif_promo">Khuyến mãi</string>
+    <string name="settings_notif_promo_desc">Voucher mới, chương trình khuyến mãi</string>
+    <!-- Settings Security Items -->
+    <string name="settings_2fa">Xác thực 2 bước</string>
+    <string name="settings_2fa_desc">Tăng cường bảo mật tài khoản</string>
+    <string name="settings_login_history">Lịch sử đăng nhập</string>
+    <string name="settings_login_history_desc">Xem các phiên đăng nhập gần đây</string>
+    <!-- Settings About Items -->
+    <string name="settings_terms">Điều khoản sử dụng</string>
+    <string name="settings_terms_desc">Quy định và chính sách</string>
+    <string name="settings_privacy">Chính sách bảo mật</string>
+    <string name="settings_privacy_desc">Cách chúng tôi bảo vệ dữ liệu</string>
+    <string name="settings_support">Trợ giúp \u0026 Hỗ trợ</string>
+    <string name="settings_support_desc">Liên hệ với chúng tôi</string>
+    <!-- Settings Language Dialog -->
+    <string name="settings_language_title">Ngôn ngữ / Language</string>
+    <string name="settings_select_language">Chọn ngôn ngữ / Select Language</string>
+    <string name="settings_close">Đóng / Close</string>
+    <string name="settings_version">KTX Food Store v1.0.0</string>
     
     <!-- ==================== NOTIFICATIONS ==================== -->
-    <string name="notifications_title">Thông báo</string>
     <string name="notifications_no_notifications">Không có thông báo mới</string>
     <string name="notifications_mark_read">Đánh dấu đã đọc</string>
     <string name="notifications_mark_all_read">Đánh dấu tất cả đã đọc</string>
@@ -272,4 +416,40 @@
     <string name="success_saved">Đã lưu thành công</string>
     <string name="success_deleted">Đã xóa thành công</string>
     <string name="success_updated">Đã cập nhật thành công</string>
+    
+    <!-- ==================== NOTIFICATIONS ==================== -->
+    <string name="notifications_filter_all">Tất cả</string>
+    <string name="notifications_filter_unread">Chưa đọc</string>
+    <string name="notifications_filter_unread_count">Chưa đọc (%1$d)</string>
+    <string name="notifications_filter_read">Đã đọc</string>
+    <string name="notifications_filter_order">Đơn hàng</string>
+    <string name="notifications_filter_system">Hệ thống</string>
+    <string name="notifications_filter_promotion">Khuyến mãi</string>
+    <string name="notifications_loading">Đang tải thông báo...</string>
+    <string name="notifications_settings">Cài đặt thông báo</string>
+    
+    <!-- ==================== REVIEWS ==================== -->
+    <string name="owner_reviews_title">Đánh giá</string>
+    <string name="reviews_from_customers">Đánh giá của khách</string>
+    <string name="reviews_empty_message">Đánh giá của khách sẽ xuất hiện ở đây</string>
+    <string name="owner_reviews_count">%1$d đánh giá</string>
+    <string name="reviews_unreplied_count">%1$d đánh giá chưa phản hồi</string>
+    <string name="reviews_empty_no_reviews">Chưa có đánh giá nào</string>
+    <string name="reviews_empty_no_match">Không có đánh giá phù hợp</string>
+    <string name="reviews_try_other_filter">Thử chọn bộ lọc khác</string>
+    <string name="reviews_your_reply">Phản hồi của bạn</string>
+    <string name="reviews_reply_btn">Phản hồi</string>
+    <string name="reviews_reply_dialog_title">Phản hồi đánh giá</string>
+    <string name="reviews_reply_content">Nội dung phản hồi</string>
+    <string name="reviews_reply_placeholder">Cảm ơn bạn đã đánh giá...</string>
+    
+    <!-- ==================== FOODS FILTERS ==================== -->
+    <string name="foods_filter_all">Tất cả</string>
+    
+    <!-- ==================== CUSTOMERS FILTERS ==================== -->
+    <string name="customers_filter_all">Tất cả</string>
+    
+    <!-- ==================== GENERAL UI ==================== -->
+    <string name="general_loading">Đang tải...</string>
+    <string name="general_cancel">Hủy</string>
 </resources>

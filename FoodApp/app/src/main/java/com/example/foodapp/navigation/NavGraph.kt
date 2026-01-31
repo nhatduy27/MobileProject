@@ -1,5 +1,6 @@
 package com.example.foodapp.navigation
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -122,6 +123,7 @@ sealed class Screen(val route: String) {
 @Composable
 fun FoodAppNavHost(
     navController: NavHostController,
+    onLanguageChanged: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val repository = remember { UserFirebaseRepository(context) }
@@ -543,6 +545,10 @@ fun FoodAppNavHost(
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onLanguageChanged = {
+                    // Gọi recreate() để restart activity với ngôn ngữ mới
+                    (context as? ComponentActivity)?.recreate()
                 }
             )
         }

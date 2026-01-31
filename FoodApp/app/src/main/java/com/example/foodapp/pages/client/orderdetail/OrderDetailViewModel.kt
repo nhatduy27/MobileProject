@@ -9,8 +9,11 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.example.foodapp.data.repository.firebase.AuthManager
 import com.example.foodapp.data.remote.client.response.order.*
+import com.example.foodapp.data.remote.client.response.payment.GetPaymentData
+import com.example.foodapp.data.remote.client.response.payment.ApiResult as PaymentApiResult
 import com.example.foodapp.data.remote.client.response.review.ProductReviewRequest
 import com.example.foodapp.data.repository.client.order.OrderRepository
+import com.example.foodapp.data.repository.client.payment.PaymentRepository
 import com.example.foodapp.data.repository.client.review.*
 import com.example.foodapp.data.repository.client.review.ReviewRepository
 import kotlinx.coroutines.launch
@@ -39,6 +42,15 @@ sealed class ReviewState {
     object Loading : ReviewState()
     data class Success(val message: String) : ReviewState()
     data class Error(val message: String) : ReviewState()
+}
+
+// ============== PAYMENT INFO STATES ==============
+
+sealed class PaymentInfoState {
+    object Idle : PaymentInfoState()
+    object Loading : PaymentInfoState()
+    data class Success(val paymentData: GetPaymentData) : PaymentInfoState()
+    data class Error(val message: String) : PaymentInfoState()
 }
 
 // Data class for product review in UI
@@ -72,6 +84,12 @@ class OrderDetailViewModel(
 
     private val _hasReviewed = MutableLiveData<Boolean>(false)
     val hasReviewed: LiveData<Boolean> = _hasReviewed
+
+
+    // THÊM MỚI: Payment Repository và State
+    private val paymentRepository = PaymentRepository()
+    private val _paymentInfoState = MutableLiveData<PaymentInfoState>(PaymentInfoState.Idle)
+    val paymentInfoState: LiveData<PaymentInfoState> = _paymentInfoState
 
     // ============== ORDER DETAIL FUNCTIONS ==============
 
@@ -119,6 +137,54 @@ class OrderDetailViewModel(
                 )
             }
         }
+    }
+
+
+    fun fetchPaymentInfo(orderId: String) {
+        println("DEBUG: [OrderDetailViewModel] Fetching payment info for order: $orderId")
+
+        _paymentInfoState.value = PaymentInfoState.Loading
+
+        viewModelScope.launch {
+            try {
+                val accessToken = authManager.getCurrentToken()
+
+                if (accessToken.isNullOrEmpty()) {
+                    _paymentInfoState.value = PaymentInfoState.Error("Bạn cần đăng nhập để xem thông tin thanh toán")
+                    return@launch
+                }
+
+                val result = paymentRepository.getPaymentByOrder(
+                    accessToken = accessToken,
+                    orderId = orderId
+                )
+
+                when (result) {
+                    is PaymentApiResult.Success<*> -> {
+                        println("DEBUG: [OrderDetailViewModel] Payment info loaded successfully")
+                        val paymentData = result.data as GetPaymentData
+                        _paymentInfoState.value = PaymentInfoState.Success(paymentData)
+                    }
+                    is PaymentApiResult.Failure -> {
+                        println("DEBUG: [OrderDetailViewModel] Payment info failed: ${result.exception.message}")
+                        _paymentInfoState.value = PaymentInfoState.Error(
+                            result.exception.message ?: "Không thể tải thông tin thanh toán"
+                        )
+                    }
+                    else -> {}
+                }
+            } catch (e: Exception) {
+                println("DEBUG: [OrderDetailViewModel] Exception in fetchPaymentInfo: ${e.message}")
+                e.printStackTrace()
+                _paymentInfoState.value = PaymentInfoState.Error(
+                    e.message ?: "Lỗi kết nối"
+                )
+            }
+        }
+    }
+
+    fun resetPaymentInfoState() {
+        _paymentInfoState.value = PaymentInfoState.Idle
     }
 
     // ============== REVIEW FUNCTIONS ==============

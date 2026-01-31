@@ -38,7 +38,7 @@ fun IntroScreen(
         // Banner Image
         Image(
             painter = painterResource(id = R.drawable.banner),
-            contentDescription = "Food App Banner",
+            contentDescription = stringResource(R.string.banner_description), // Thay
             modifier = Modifier
                 .fillMaxWidth()
                 .height(515.dp),
@@ -81,7 +81,7 @@ fun IntroScreen(
                 shape = MaterialTheme.shapes.extraLarge
             ) {
                 Text(
-                    text = "Bắt đầu ngay",
+                    text = stringResource(R.string.get_started), // Thay
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -96,7 +96,7 @@ fun IntroScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Bạn đã có tài khoản?",
+                    text = stringResource(R.string.already_have_account), // Thay
                     color = Color(0xFF666666),
                     fontSize = 14.sp,
                     modifier = Modifier.padding(end = 4.dp)
@@ -109,7 +109,7 @@ fun IntroScreen(
                     )
                 ) {
                     Text(
-                        text = "Đăng nhập",
+                        text = stringResource(R.string.intro_login), // Thay
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )

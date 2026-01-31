@@ -21,9 +21,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.data.model.shipper.wallet.DailyRevenue
 import com.example.foodapp.pages.shipper.theme.ShipperColors
 
@@ -49,7 +51,7 @@ fun RevenueChartSection(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Biểu đồ doanh thu",
+                text = stringResource(R.string.shipper_wallet_revenue_chart),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = ShipperColors.TextPrimary
@@ -78,7 +80,7 @@ fun RevenueChartSection(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Chưa có dữ liệu",
+                        text = stringResource(R.string.shipper_wallet_no_data),
                         color = ShipperColors.TextSecondary,
                         fontSize = 14.sp
                     )
@@ -107,7 +109,7 @@ fun RevenueChartSection(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Doanh thu (đ)",
+                        text = stringResource(R.string.shipper_wallet_revenue_vnd),
                         fontSize = 12.sp,
                         color = ShipperColors.TextSecondary
                     )

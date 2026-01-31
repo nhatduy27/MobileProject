@@ -1,0 +1,852 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Food Ordering</string>
+    <string name="intro_title">Experience <font color="#FF9966">Easy Ordering</font>\n<font color="#FF9966">Fast Delivery</font></string>
+    <string name="default_web_client_id">884959847866-uspb993ug023ife0s7dhhp7o384rj6db.apps.googleusercontent.com</string>
+
+    <!-- IntroScreen strings -->
+    <string name="banner_description">Food App Banner</string>
+    <string name="get_started">Get Started</string>
+    <string name="already_have_account">Already have an account?</string>
+    <string name="intro_login">Login</string>
+
+    <!-- LOGIN -->
+    <string name="login_welcome_back">Welcome Back!</string>
+    <string name="login_subtitle">Login to continue</string>
+    <string name="login_success_email">Login successful!</string>
+    <string name="login_success_google">Google login successful!</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Password</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="error_email_required">Please enter email</string>
+    <string name="error_invalid_email">Invalid email</string>
+    <string name="error_password_required">Please enter password</string>
+    <string name="error_password_length">Password must be at least 6 characters</string>
+    <string name="logging_in">Logging in...</string>
+    <string name="success">Success!</string>
+    <string name="login_button">Login</string>
+    <string name="connecting">Connecting...</string>
+    <string name="connected">Connected!</string>
+    <string name="continue_with_google">Continue with Google</string>
+    <string name="no_account">Don\'t have an account? </string>
+    <string name="sign_up_now">Sign up now</string>
+    <string name="hide_password">Hide password</string>
+    <string name="show_password">Show password</string>
+
+    <!-- OTP Verification Screen Strings -->
+    <string name="loading_email">Loading email...</string>
+    <string name="otp_verification_title">OTP Verification</string>
+    <string name="otp_sent_message">6-digit OTP has been sent to:</string>
+    <string name="resend_in">Resend in: </string>
+    <string name="did_not_receive_code">Didn\'t receive code? </string>
+    <string name="resend">Resend</string>
+    <string name="verifying">Verifying...</string>
+    <string name="verify">Verify</string>
+    <string name="enter_6_digit_otp">Enter 6-digit OTP</string>
+    <string name="otp_info_message">If you don\'t receive the code, please check your spam folder or try again in a few minutes.</string>
+
+    <!-- Role Selection Screen Strings -->
+    <string name="role_selection_title">Select Your Role</string>
+    <string name="role_selection_subtitle">This choice will determine your experience in the app</string>
+    <string name="role_customer">Customer</string>
+    <string name="role_owner">Seller</string>
+    <string name="role_shipper">Shipper</string>
+    <string name="role_customer_desc">Order food and review restaurants</string>
+    <string name="role_owner_desc">Manage shop and menu</string>
+    <string name="role_shipper_desc">Accept orders and deliver</string>
+    <string name="confirm_button">Confirm</string>
+
+    <!-- Sign Up Screen Strings -->
+    <string name="signup_title">Create New Account</string>
+    <string name="signup_subtitle">Fill in information to get started</string>
+    <string name="full_name_hint">Full Name</string>
+    <string name="password_signup_hint">Password (at least 6 characters)</string>
+    <string name="confirm_password_hint">Confirm Password</string>
+    <string name="password_requirements_title">Password requirements:</string>
+    <string name="password_length_requirement">At least 6 characters</string>
+    <string name="password_match_requirement">Passwords match</string>
+    <string name="processing">Processing...</string>
+    <string name="signup_button">Sign Up</string>
+    <string name="or_divider">or</string>
+    <string name="login_now">Login now</string>
+    <string name="error_full_name_required">Please enter full name</string>
+    <string name="error_full_name_length">Name must be at least 2 characters</string>
+    <string name="error_password_mismatch">Confirm password does not match</string>
+
+    <!-- Cart Screen Strings -->
+    <string name="cart_title">Cart</string>
+    <string name="cart_filter_info_selected">Viewing: %1$s • %2$d products</string>
+    <string name="cart_filter_info_all">%1$d shops • %2$d products</string>
+    <string name="used_vouchers_description">Used vouchers</string>
+    <string name="filter_shops_description">Filter shops</string>
+    <string name="filter_by_shop_title">Filter by Shop</string>
+    <string name="shop_item_count">%1$d products • %2$d items</string>
+    <string name="selected_description">Selected</string>
+    <string name="clear_all_cart_description">Clear all cart</string>
+    <string name="save_changes_description">Save changes</string>
+    <string name="used_vouchers_title">Used Vouchers</string>
+    <string name="used_vouchers_subtitle">Review vouchers you have used</string>
+    <string name="all_shops">All Shops</string>
+    <string name="shop_total_label">Shop Total:</string>
+    <string name="checkout_this_shop">Checkout this shop</string>
+    <string name="shop_icon_description">Shop</string>
+    <string name="shop_status_open">🟢 Open</string>
+    <string name="shop_status_closed">🔴 Closed</string>
+    <string name="delete_shop_description">Delete shop</string>
+    <string name="delete_item_description">Delete item</string>
+    <string name="deleting_in_progress">Deleting...</string>
+    <string name="delete_shop_title">Delete Shop Products</string>
+    <string name="delete_shop_confirmation">Are you sure you want to delete %1$d products from this shop?</string>
+    <string name="number_of_products_label">Number of products:</string>
+    <string name="products_count">%1$d products</string>
+    <string name="total_quantity_label">Total quantity:</string>
+    <string name="items_count">%1$d items</string>
+    <string name="total_amount_label">Total amount:</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete_shop_button">Delete Shop</string>
+    <string name="viewing_filter_info">Viewing: %1$s</string>
+    <string name="filter_product_count">%1$d products • %2$d items</string>
+    <string name="clear_filter_button">Clear Filter</string>
+    <string name="clear_all_cart_title">Clear All Cart</string>
+    <string name="clear_all_cart_confirmation">Are you sure you want to delete all products in cart?</string>
+    <string name="delete_button">Delete</string>
+    <string name="subtotal_label">Subtotal:</string>
+    <string name="total_label">Total:</string>
+    <string name="checkout_all_button">Checkout All</string>
+    <string name="empty_cart_title">Empty Cart</string>
+    <string name="empty_cart_message">Add products to continue shopping</string>
+    <string name="retry">Retry</string>
+
+    <!-- CHAT SCREEN -->
+    <string name="chat_screen_title">Chat</string>
+    <string name="chat_screen_support">Customer Support</string>
+    <string name="loading_messages">Loading</string>
+    <string name="message_status_sent">Sent</string>
+    <string name="message_status_failed">Failed</string>
+    <string name="message_input_placeholder">Type a message…</string>
+    <string name="send_message_button">Send message</string>
+    <string name="loading_messages_view">Loading messages…</string>
+    <string name="error_messages_title">An error occurred</string>
+
+    <!-- CHATBOT SCREEN -->
+    <string name="chatbot_screen_title">Chat with Support Bot</string>
+    <string name="clear_chat_button">Clear Chat</string>
+    <string name="bot_responding">Bot is responding...</string>
+    <string name="rate_limit_message">Please wait %d seconds before sending again</string>
+    <string name="chatbot_input_placeholder">Enter your question...</string>
+    <string name="chatbot_welcome_title">Hello! I\'m FoodApp support bot</string>
+    <string name="chatbot_welcome_subtitle">Ask me anything about orders, \nproducts or shops</string>
+    <string name="loading_quick_replies">Loading suggested questions...</string>
+    <string name="common_questions_title">Frequently Asked Questions:</string>
+    <string name="load_quick_replies_error">Failed to load quick replies</string>
+    <string name="suggested_questions_title">Suggested Questions:</string>
+    <string name="quick_questions_title">Quick Questions:</string>
+
+    <!-- FAVOURITE SCREEN -->
+    <string name="favorites_title">Favorites</string>
+    <string name="product_count">%d products</string>
+    <string name="refresh_button">Refresh</string>
+    <string name="removing_favorite">Removing...</string>
+    <string name="removed_from_favorites">Removed from favorites</string>
+    <string name="default_shop_name">Shop</string>
+    <string name="remove_from_favorites_button">Remove from favorites</string>
+    <string name="loading_favorites">Loading favorites...</string>
+    <string name="load_favorites_error_title">Unable to load data</string>
+    <string name="empty_favorites_title">No favorite products</string>
+    <string name="empty_favorites_subtitle">Explore and add your favorite \ndishes to the list</string>
+
+    <!-- LIST CHAT SCREEN -->
+    <string name="conversations_title">Chats</string>
+    <string name="avatar_content_description">Avatar</string>
+    <string name="no_messages">No messages</string>
+    <string name="role_display">• %s</string>
+    <string name="loading_conversations">Loading chats...</string>
+    <string name="error_content_description">Error</string>
+    <string name="empty_conversations_content_description">No chat</string>
+    <string name="empty_conversations_title">No chats yet</string>
+    <string name="empty_conversations_subtitle">Start chatting with sellers or support agents</string>
+    <string name="just_now">Just now</string>
+    <string name="minutes_ago">%d minutes ago</string>
+    <string name="hours_ago">%d hours ago</string>
+    <string name="days_ago">%d days ago</string>
+
+    <!-- NOTIFICATION SCREEN -->
+    <string name="notifications_title">Notifications</string>
+    <string name="filter_notifications_button">Filter Notifications</string>
+    <string name="filter_notifications_dialog_title">Filter Notifications</string>
+    <string name="filter_all">All</string>
+    <string name="filter_unread">Unread</string>
+    <string name="filter_order">Order</string>
+    <string name="filter_system">System</string>
+    <string name="loading_notifications">Loading notifications...</string>
+    <string name="load_notifications_error_title">Unable to load notifications</string>
+    <string name="marked_as_read_success">Marked as read</string>
+    <string name="mark_as_read_error">Error: %s</string>
+    <string name="notification_default_title">Notification</string>
+    <string name="notification_status_new">New</string>
+    <string name="notification_status_read">Read</string>
+    <string name="empty_notifications_content_description">No notifications</string>
+    <string name="empty_notifications_all">No notifications</string>
+    <string name="empty_notifications_unread">No unread notifications</string>
+    <string name="empty_notifications_order">No order notifications</string>
+    <string name="empty_notifications_system">No system notifications</string>
+    <string name="empty_notifications_subtitle">We\'ll notify you when there\'s news</string>
+    <string name="unknown_time">Unknown time</string>
+
+    <!-- Order Screen Strings -->
+    <string name="my_orders_title">My Orders</string>
+    <string name="filter_orders_button">Filter Orders</string>
+    <string name="filter_shipping">Shipping</string>
+    <string name="filter_pending">Pending</string>
+    <string name="filter_delivered">Delivered</string>
+    <string name="filter_cancelled">Cancelled</string>
+    <string name="loading_orders">Loading orders...</string>
+    <string name="no_orders_content_description">No orders</string>
+    <string name="no_orders_title">No orders yet</string>
+    <string name="no_orders_subtitle">Order now to experience \nfast delivery service!</string>
+    <string name="error_loading_orders_title">An error occurred</string>
+
+    <!-- Delete Order Strings -->
+    <string name="delete_reason_wrong_order">Wrong order placed</string>
+    <string name="delete_reason_change_mind">Changed mind about purchase</string>
+    <string name="delete_reason_incorrect_info">Incorrect order information</string>
+    <string name="delete_reason_better_product">Found better product</string>
+    <string name="delete_reason_other">Other reason</string>
+    <string name="delete_order_success">Order deleted successfully</string>
+    <string name="delete_order_reason_title">Delete Order Reason</string>
+    <string name="total_price_label">Total: %s</string>
+    <string name="choose_delete_reason_hint">Please select why you want to delete this order:</string>
+    <string name="enter_other_reason_label">Enter other reason</string>
+    <string name="enter_other_reason_placeholder">Please enter specific reason...</string>
+    <string name="please_choose_delete_reason">Please select or enter delete reason</string>
+    <string name="continue_button">Continue</string>
+    <string name="confirm_delete_order_title">Confirm Delete Order</string>
+    <string name="warning_content_description">Warning</string>
+    <string name="about_to_delete_order">You\'re about to delete this order:</string>
+    <string name="order_code_display">📦 Order Code: #%s</string>
+    <string name="shop_name_display">🏪 Shop: %s</string>
+    <string name="total_price_display">💰 Total: %s</string>
+    <string name="order_date_display">📅 Order Date: %s</string>
+    <string name="delete_reason_display">Delete Reason:</string>
+    <string name="irreversible_warning">This action CANNOT be undone!</string>
+    <string name="delete_order_button">DELETE ORDER</string>
+    <string name="ok">OK</string>
+
+    <!-- Order Detail Screen Strings -->
+    <string name="order_detail_title">Order Details</string>
+    <string name="cancel_order_title">Cancel Order</string>
+    <string name="cancel_order_confirmation">Are you sure you want to cancel this order?</string>
+    <string name="cancel_order_button">Cancel Order</string>
+    <string name="success_title">Success!</string>
+    <string name="review_submitted_success">Your review has been submitted successfully.</string>
+    <string name="sepay_payment_title">SEPAY Payment</string>
+    <string name="qr_code_content_description">QR Code payment</string>
+    <string name="scan_qr_to_pay">Scan QR code to pay</string>
+    <string name="transaction_code">Transaction Code</string>
+    <string name="amount_label">Amount</string>
+    <string name="account_number_label">Account Number</string>
+    <string name="account_name_label">Account Name</string>
+    <string name="bank_name_label">Bank</string>
+    <string name="order_review_title">Order Review</string>
+    <string name="shop_review_title">Shop Review</string>
+    <string name="shop_review_subtitle">Are you satisfied with this shop?</string>
+    <string name="shipper_review_title">Shipper Review</string>
+    <string name="shipper_review_subtitle">How was the shipper?</string>
+    <string name="optional_label">(Optional)</string>
+    <string name="product_review_title">Review Each Item</string>
+    <string name="star_rating_description">%d stars</string>
+    <string name="product_comment_placeholder">Comments about the dish...</string>
+    <string name="review_validation_error">Please review shop and all products</string>
+    <string name="submit_review_button">Submit Review</string>
+    <string name="optional_comment_placeholder">Comment (optional)...</string>
+    <string name="shop_comment_placeholder">Comments about the shop...</string>
+    <string name="qr_code_payment_button">QR Code Payment</string>
+    <string name="review_order_button">Review Order</string>
+    <string name="already_reviewed_button">Already Reviewed</string>
+    <string name="order_status_title">Order Status</string>
+    <string name="order_status_pending">Order placed</string>
+    <string name="order_status_confirmed">Confirmed</string>
+    <string name="order_status_preparing">Preparing</string>
+    <string name="order_status_shipping">Shipping</string>
+    <string name="order_status_delivered">Delivered</string>
+    <string name="order_items_title">Ordered Items</string>
+    <string name="quantity_label">%dx</string>
+    <string name="delivery_info_title">Delivery Information</string>
+    <string name="building_label">Building: %s</string>
+    <string name="room_label">Room: %s</string>
+    <string name="note_label">Note: %s</string>
+    <string name="payment_method_title">Payment Method</string>
+    <string name="payment_method_cod">Cash on Delivery</string>
+    <string name="payment_method_momo">MoMo Wallet</string>
+    <string name="payment_method_banking">Bank Transfer</string>
+    <string name="payment_status_paid">Paid</string>
+    <string name="payment_status_unpaid">Unpaid</string>
+    <string name="payment_status_failed">Failed</string>
+    <string name="payment_status_refunded">Refunded</string>
+    <string name="order_summary_title">Order Summary</string>
+    <string name="shipping_fee_label">Shipping Fee</string>
+    <string name="discount_label">Discount</string>
+    <string name="discount_value">-%s</string>
+    <string name="no_order_content_description">No order</string>
+    <string name="no_order_found">Order not found</string>
+
+    <!-- Order Success Screen Strings -->
+    <string name="order_success_title">Order Success</string>
+    <string name="loading_order_info">Loading order info...</string>
+    <string name="success_content_description">Success</string>
+    <string name="order_success_header">🎉 Order Successful!</string>
+    <string name="order_success_message">Thank you for your order. Your order has been confirmed and is being processed.</string>
+    <string name="info_content_description">Information</string>
+    <string name="shop_info_title">Shop Information</string>
+    <string name="shop_info_message">The shop will contact you shortly to confirm your order and delivery time.</string>
+    <string name="next_steps_title">You can:</string>
+    <string name="continue_shopping_title">Continue Shopping</string>
+    <string name="continue_shopping_desc">Return to homepage to see more products</string>
+    <string name="view_order_details_title">View Order Details</string>
+    <string name="view_order_details_desc">Track status and order details</string>
+    <string name="check_order_history_title">Check Order History</string>
+    <string name="check_order_history_desc">View all your orders</string>
+    <string name="ordered_products_title">📦 Ordered Products</string>
+    <string name="quantity_display">x%d</string>
+    <string name="order_information_title">📋 Order Information</string>
+    <string name="order_code_label">Order Code:</string>
+    <string name="shop_name_label">Shop:</string>
+    <string name="product_count_label">Product Count:</string>
+    <string name="product_count_value">%d products</string>
+    <string name="payment_method_label">Payment Method:</string>
+    <string name="payment_method_sepay">Bank Transfer</string>
+    <string name="order_status_label">Status:</string>
+    <string name="order_status_ready">Ready for delivery</string>
+    <string name="delivery_address_label">Delivery Address:</string>
+    <string name="delivery_address_value">%s%s</string>
+    <string name="details_content_description">Details</string>
+    <string name="view_order_details_button">View Order Details</string>
+    <string name="home_content_description">Home</string>
+    <string name="continue_shopping_button">Continue Shopping</string>
+
+    <!-- Payment Screen Strings -->
+    <string name="select_delivery_address_warning">Please select delivery address to continue</string>
+    <string name="notification_title">Notification</string>
+    <string name="creating_order">Creating order...</string>
+    <string name="total_payment_label">Total Payment</string>
+    <string name="place_order_button">PLACE ORDER</string>
+    <string name="scan_qr_to_pay_title">Scan QR Code to Pay</string>
+    <string name="manual_transfer_option">Or manual transfer:</string>
+    <string name="bank_display">MB (%s)</string>
+    <string name="transaction_content_label">Content:</string>
+    <string name="payment_note">⚠️ Note: Please transfer with exact content and amount for automatic payment confirmation.</string>
+    <string name="close">Close</string>
+
+    <!-- Product Detail Screen Strings -->
+    <string name="loading_product_info">Loading product info...</string>
+    <string name="error_occurred_title">An error occurred</string>
+    <string name="back_button">Back</string>
+
+    <!-- Profile Screen -->
+    <string name="profile_orders">My Orders</string>
+    <string name="profile_chats">Chats</string>
+    <string name="profile_reviews">My Reviews</string>
+    <string name="profile_user_info">Personal Info</string>
+
+    <!-- Common Strings -->
+    <string name="delete">Delete</string>
+    <string name="agree">Agree</string>
+    <string name="view_details">View Details</string>
+    <string name="delete_confirmation_title">Confirm Delete</string>
+    <string name="set_default_address_title">Set Default Address</string>
+    <string name="delete_address_confirmation">Are you sure you want to delete this address?</string>
+    <string name="set_default_address_confirmation">Set this address as default?</string>
+    <string name="address_section_title">Address</string>
+    <string name="add_address">Add Address</string>
+    <string name="no_address_message">No addresses yet. Add a new address!</string>
+    <string name="default_address">Default</string>
+    <string name="settings_section_title">Settings</string>
+    <string name="change_password">Change Password</string>
+    <string name="profile_title">Profile</string>
+    <string name="refresh">Refresh</string>
+    <string name="error_loading_profile">Cannot load user info. Please try again!</string>
+    <string name="loading">Loading...</string>
+    <string name="user_info_title">Personal Information</string>
+    <string name="edit_profile">Edit Profile</string>
+    <string name="action_orders">Orders</string>
+    <string name="action_chats">Messages</string>
+    <string name="action_reviews">Reviews</string>
+
+    <!-- Reviews Screen -->
+    <string name="my_reviews_title">My Reviews</string>
+    <string name="go_back">Go Back</string>
+    <string name="delete_review_title">Confirm Delete</string>
+    <string name="delete_review_confirmation">Are you sure you want to delete this review? This action cannot be undone.</string>
+    <string name="edit">Edit</string>
+    <string name="order_code">Order: %s</string>
+    <string name="shop">Shop</string>
+    <string name="shipper">Shipper</string>
+    <string name="product_reviews_title">Product Reviews:</string>
+    <string name="product">Product</string>
+    <string name="shop_response_title">Shop Response</string>
+    <string name="rating_value">%d.0</string>
+
+    <!-- No Reviews State -->
+    <string name="no_reviews_icon_desc">No reviews</string>
+    <string name="no_reviews_title">No reviews yet</string>
+    <string name="no_reviews_message">Review your purchased orders to share your experience</string>
+
+    <!-- Loading & Error States -->
+    <string name="error_icon_desc">Error</string>
+    <string name="error_title">An error occurred</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+
+    <!-- Notification Settings -->
+    <string name="notification_settings_title">Notification Settings</string>
+    <string name="info_notification_title">Info Notifications</string>
+    <string name="info_notification_desc">Updates, system notifications</string>
+    <string name="marketing_notification_title">Promotional Notifications</string>
+    <string name="marketing_notification_desc">Promotions, special offers</string>
+
+    <!-- Account Section -->
+    <string name="account_section_title">Account</string>
+    <string name="change_password_title">Change Password</string>
+    <string name="change_password_desc">Change login password</string>
+    <string name="delete_account_title">Delete Account</string>
+    <string name="delete_account_desc">Permanently delete your account</string>
+
+    <!-- System Section -->
+    <string name="system_section_title">System</string>
+    <string name="logout_title">Logout</string>
+    <string name="logout_desc">Logout from current account</string>
+
+    <!-- Dialog Titles and Messages -->
+    <string name="logout_confirm_title">Confirm Logout</string>
+    <string name="logout_confirm_message">Are you sure you want to logout from this account?</string>
+    <string name="change_password_dialog_title">Change Password</string>
+    <string name="delete_account_dialog_title">Delete Account</string>
+
+    <!-- Password Fields -->
+    <string name="current_password">Current Password</string>
+    <string name="new_password">New Password</string>
+    <string name="confirm_new_password">Confirm New Password</string>
+    <string name="password_mismatch">Passwords do not match</string>
+
+    <!-- Delete Account Dialog -->
+    <string name="warning">Warning</string>
+    <string name="delete_account_warning_message">Are you sure you want to delete this account? This action will:</string>
+    <string name="delete_account_point_1">• Permanently delete your account</string>
+    <string name="delete_account_point_2">• Delete all related data</string>
+    <string name="delete_account_point_3">• Cannot be recovered</string>
+    <string name="delete_account_terms_confirmation">I understand the consequences and want to delete account</string>
+
+    <!-- Buttons -->
+    <string name="logout">Logout</string>
+    <string name="confirm">Confirm</string>
+    <string name="delete_account_button">Delete Account</string>
+
+    <!-- Error Messages -->
+    <string name="error">Error</string>
+
+    <!-- Shop List Screen -->
+    <string name="shop_list_title">Shop List</string>
+    <string name="search_shop_placeholder">Search shops...</string>
+    <string name="search">Search</string>
+    <string name="clear">Clear</string>
+
+    <!-- Filter Chips -->
+    <string name="open_shops">Open</string>
+    <string name="closed_shops">Closed</string>
+
+    <!-- Results Header -->
+    <string name="search_results_count">%d search results</string>
+    <string name="shops_count">%s • %d shops</string>
+    <string name="clear_filters">Clear</string>
+
+    <!-- Shop Item -->
+    <string name="rating_count">(%d)</string>
+    <string name="shop_hours">%s - %s</string>
+    <string name="delivery_fee">%s</string>
+    <string name="min_order">Min %s</string>
+    <string name="open_status">Open</string>
+    <string name="closed_status">Closed</string>
+
+    <!-- Loading States -->
+    <string name="loading_shops">Loading shops...</string>
+    <string name="loading_more">Loading more...</string>
+    <string name="load_more">Load More</string>
+
+    <!-- Empty State -->
+    <string name="no_shops_found">No shops found</string>
+    <string name="no_shops_message">Try adjusting filters or different search</string>
+
+    <!-- Pagination -->
+    <string name="pagination_info">Page %d/%d • Total %d shops</string>
+
+    <!-- Shop Detail Screen -->
+    <string name="shop_details">Shop Details</string>
+    <string name="view_reviews">View Reviews</string>
+    <string name="shop_logo">Shop logo</string>
+    <string name="shop_cover_image">Shop cover image</string>
+    <string name="chat_with">Chat with</string>
+    <string name="message">Message</string>
+    <string name="message_button">Message</string>
+    <string name="message_shop">Message Shop</string>
+    <string name="creating_conversation">Creating conversation...</string>
+    <string name="creating">Creating...</string>
+
+    <!-- Reviews Dialog -->
+    <string name="reviews_for_shop">Reviews (%s)</string>
+    <string name="reviews_title">Reviews</string>
+    <string name="shop_comment">Shop: %s</string>
+    <string name="shop_response">💬 Shop Response</string>
+    <string name="cannot_load_reviews">Cannot load reviews</string>
+    <string name="view_all_reviews">View All Reviews</string>
+    <string name="view_more_reviews">View %d more reviews</string>
+
+    <!-- Shop Information -->
+    <string name="contact_info">Contact Info</string>
+    <string name="address">Address</string>
+    <string name="phone">Phone</string>
+    <string name="statistics">Statistics</string>
+    <string name="rating">Rating</string>
+    <string name="reviews">Reviews</string>
+    <string name="orders">Orders</string>
+
+    <!-- Order Info -->
+    <string name="price_value">%s</string>
+
+    <!-- Loading & Error States -->
+    <string name="loading_shop_info">Loading shop info...</string>
+    <string name="shop_not_found">Shop not found</string>
+    <string name="error_occurred">An error occurred</string>
+
+    <!-- Common Strings -->
+    <string name="no_reviews_yet">No reviews yet</string>
+    <string name="reviews_count">%d reviews</string>
+
+    <!-- User Info Screen -->
+    <string name="avatar">Avatar</string>
+    <string name="change_avatar">Change Avatar</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="not_updated">Not updated</string>
+    <string name="no_email">No email</string>
+    <string name="click_to_change_photo">Tap photo to change</string>
+
+    <!-- Personal Information -->
+    <string name="personal_info">Personal Information</string>
+    <string name="full_name">Full Name</string>
+    <string name="phone_number">Phone Number</string>
+
+    <!-- Account Information -->
+    <string name="account_status">Account Status</string>
+    <string name="account_verification">Account Verification</string>
+    <string name="verified">Verified</string>
+    <string name="not_verified">Not Verified</string>
+    <string name="account_info">Account Information</string>
+    <string name="role">Role</string>
+    <string name="email">Email</string>
+    <string name="status">Status</string>
+
+    <!-- Roles -->
+    <string name="role_client">Customer</string>
+    <string name="role_admin">Administrator</string>
+
+    <!-- Success Messages -->
+    <string name="avatar_upload_success">Avatar updated successfully</string>
+    <string name="update_profile_success">Profile updated successfully</string>
+    <string name="refreshing_info">Refreshing info...</string>
+
+    <!-- Error Messages -->
+    <string name="cannot_read_image">Cannot read image file</string>
+    <string name="error_with_message">Error: %s</string>
+
+    <!-- Voucher History Screen -->
+    <string name="voucher_history_title">Voucher History</string>
+    <string name="loading_history">Loading history…</string>
+    <string name="no_history">No history</string>
+    <string name="no_history_title">No usage history</string>
+    <string name="no_history_message">Vouchers you\'ve used will appear here</string>
+    <string name="total_usage">TOTAL USAGE COUNT</string>
+    <string name="page_info">Page %d/%d</string>
+    <string name="no_data">No data</string>
+    <string name="pull_to_load_more">Pull to load more…</string>
+    <string name="all_items_displayed">All items displayed</string>
+
+    <!-- Voucher History Item -->
+    <string name="order_label">Order</string>
+    <string name="shop_label">Shop</string>
+    <string name="time_label">Time</string>
+
+    <!-- Results Header -->
+    <string name="search_results_for">Results for \'%s\'</string>
+    <string name="filtered_by">Filtered by: %s</string>
+    <string name="results_count">%d results</string>
+    <string name="popular_dishes">Popular Dishes</string>
+    <string name="category">Category</string>
+    <string name="clear_search">Clear search</string>
+    <string name="clear_filter">Clear filter</string>
+
+    <!-- Error View -->
+    <string name="empty">Empty</string>
+
+    <!-- Empty View -->
+    <string name="no_products_yet">No products yet.</string>
+    <string name="reload">Reload</string>
+
+    <!-- No Results View -->
+    <string name="no_results">No results</string>
+    <string name="no_results_found">No matching results found.</string>
+
+    <!-- Load More Section -->
+    <string name="end_of_products">You\'ve seen all products</string>
+
+    <!-- Bottom Navigation -->
+    <string name="home">Home</string>
+    <string name="cart">Cart</string>
+    <string name="favorites">Favorites</string>
+    <string name="notifications">Notifications</string>
+    <string name="me">Me</string>
+
+    <!-- Home Content -->
+    <string name="all_categories">All</string>
+    <string name="chat_with_bot">Chat with support bot</string>
+    <string name="view_all_shops">View All Shops</string>
+    <string name="searching_for">Searching for \"%s\"…</string>
+    <string name="found_results_count">Found %d results</string>
+    <string name="products_found_count">%d products found</string>
+    <string name="category_and_products_count">%s • %d products</string>
+    <string name="pagination_summary">%d products • Page %d/%d</string>
+    <string name="previous_page">Previous Page</string>
+    <string name="next_page">Next Page</string>
+
+    <!-- Home Header Section -->
+    <string name="guest">Guest</string>
+    <string name="welcome">Welcome,</string>
+    <string name="search_favorite_foods">Search favorite foods…</string>
+    <string name="filter">Filter</string>
+
+    <!-- Product Card -->
+    <string name="out_of_stock">OUT OF STOCK</string>
+    <string name="no_image">No image</string>
+    <string name="rating_count_parentheses"> (%d)</string>
+    <string name="no_ratings_yet">No ratings yet</string>
+    <string name="sold_count">Sold %s</string>
+    <string name="preparation_time">Preparation Time</string>
+    <string name="preparation_time_minutes">%d minutes</string>
+
+    <!-- Order Card -->
+    <string name="order_number">#%s</string>
+    <string name="delete_order">Delete Order</string>
+
+    <!-- Order Statuses -->
+    <string name="status_pending">Pending</string>
+    <string name="status_confirmed">Confirmed</string>
+    <string name="status_preparing">Preparing</string>
+    <string name="status_shipping">Shipping</string>
+    <string name="status_delivered">Delivered</string>
+
+    <!-- Payment Statuses -->
+    <string name="payment_unpaid">Unpaid</string>
+    <string name="payment_paid">Paid</string>
+    <string name="payment_failed">Failed</string>
+    <string name="payment_refunded">Refunded</string>
+
+    <!-- Order Items -->
+    <string name="quantity_x">%dx</string>
+    <string name="more_items_count">+ %d more items</string>
+    <string name="total">Total</string>
+    <string name="time">Time</string>
+
+    <!-- Address Selection Dialog -->
+    <string name="select_delivery_address">Select Delivery Address</string>
+    <string name="no_addresses">No addresses</string>
+    <string name="no_addresses_message">No addresses yet</string>
+    <string name="default_address_badge">Default</string>
+    <string name="selected">Selected</string>
+    <string name="room_prefix">Room %s</string>
+
+    <!-- Delivery Info Section -->
+    <string name="delivery_address_title">Delivery Address</string>
+    <string name="change_address">Change</string>
+    <string name="please_select_address">Please select delivery address</string>
+
+    <string name="product_price_label">Product Price</string>
+    <string name="currency_format">%,.0fđ</string>
+
+    <string name="payment_total_label">Total</string>
+    <string name="currency_vnd_format">%,.0fđ</string>
+    <string name="shipping_fee">Shipping Fee</string>
+
+    <string name="payment_cod_title">Cash on Delivery</string>
+    <string name="payment_cod_description">Pay cash to shipper</string>
+    <string name="payment_bank_title">Bank Account Payment</string>
+    <string name="payment_bank_description">Bank transfer/E-wallet</string>
+    <string name="payment_icon_description">Payment method icon</string>
+    <string name="payment_cod_icon_description">Cash icon</string>
+    <string name="payment_bank_icon_description">Bank icon</string>
+
+    <string name="payment_screen_title">Payment</string>
+
+    <string name="selected_products_title">Selected Products</string>
+    <string name="product_quantity_label">Quantity: %d</string>
+    <string name="product_shopping_bag_icon">Shopping bag</string>
+
+    <string name="decrease_quantity">Decrease quantity</string>
+    <string name="increase_quantity">Increase quantity</string>
+
+    <string name="voucher_title">Promotion Voucher</string>
+    <string name="voucher_placeholder">Select voucher for discount</string>
+    <string name="voucher_no_selected_option">Don\'t use voucher</string>
+    <string name="voucher_no_available">No available vouchers</string>
+    <string name="voucher_arrow_down_icon">Open voucher list</string>
+    <string name="voucher_discount_percentage">-%d%%</string>
+    <string name="voucher_discount_fixed">-%s</string>
+    <string name="voucher_close_icon">Close</string>
+    <string name="voucher_info_icon">Voucher info</string>
+    <string name="voucher_discount_label">Discount</string>
+    <string name="voucher_min_order">Order from %s</string>
+    <string name="voucher_remaining_uses">%d uses left</string>
+    <string name="voucher_deselect">Deselect</string>
+    <string name="voucher_warning_icon">Warning</string>
+    <string name="voucher_check_icon">Check</string>
+    <string name="voucher_error_icon">Error</string>
+    <string name="voucher_loading">Loading voucher</string>
+    <string name="voucher_validation_loading">Validating voucher</string>
+    <string name="voucher_expires">Expires: %s</string>
+    <string name="voucher_apply_success">Voucher applied successfully</string>
+
+    <string name="remove_from_favorites">Remove from favorites</string>
+    <string name="add_to_favorites">Add to favorites</string>
+
+    <string name="add_to_cart_button">Add to Cart</string>
+    <string name="loading_cart">Adding to cart...</string>
+    <string name="product_unavailable">Product unavailable</string>
+
+    <string name="product_no_image">No image</string>
+    <string name="product_out_of_stock">OUT OF STOCK</string>
+    <string name="product_rating">Rating</string>
+    <string name="product_sold">Sold</string>
+    <string name="product_description_label">Product Description</string>
+    <string name="product_no_description">No description</string>
+    <string name="product_store_label">Shop</string>
+    <string name="product_store_unknown">No information</string>
+    <string name="product_preparation_time_label">Preparation</string>
+    <string name="product_status_label">Status</string>
+    <string name="product_status_in_stock">In Stock</string>
+    <string name="product_status_out_of_stock">Out of Stock</string>
+    <string name="product_rating_icon">Rating</string>
+    <string name="product_sold_icon">Sold count</string>
+    <string name="product_price_icon">Product price</string>
+    <string name="product_store_icon">Shop</string>
+    <string name="product_preparation_time_icon">Preparation time</string>
+    <string name="product_availability_icon">Product availability</string>
+    <string name="product_close_icon">Close</string>
+    <string name="product_check_icon">Available</string>
+    <string name="product_time_format">%d minutes</string>
+    <string name="product_sold_format">%d</string>
+    <string name="product_rating_format">%.1f</string>
+    <string name="product_ratings_count_format">%d reviews</string>
+
+    <string name="product_detail_title">Product Details</string>
+
+    <string name="account_info_title">Account Information</string>
+    <string name="role_label">Role</string>
+    <string name="join_date_label">Join Date</string>
+    <string name="verification_label">Verification</string>
+    <string name="verified_status">Verified</string>
+    <string name="unverified_status">Unverified</string>
+    <string name="role_icon">Role icon</string>
+    <string name="calendar_icon">Calendar icon</string>
+    <string name="verified_icon">Verification icon</string>
+
+    <string name="account_status_title">Account Status</string>
+    <string name="verification_chip_label">Verification</string>
+    <string name="status_chip_label">Status</string>
+    <string name="verified_true">Verified</string>
+    <string name="verified_false">Unverified</string>
+    <string name="account_active">Active</string>
+    <string name="account_inactive">Inactive</string>
+    <string name="verification_icon_description">Verification icon</string>
+    <string name="status_icon_description">Status icon</string>
+
+    <!-- Add Address Dialog -->
+    <string name="add_address_title">Add New Address</string>
+    <string name="address_label_field">Address Label</string>
+    <string name="address_label_placeholder">E.g., Home, Office, ...</string>
+    <string name="address_label_required">Please enter address label</string>
+    <string name="building_field_label">Building *</string>
+    <string name="loading_buildings">Loading buildings...</string>
+    <string name="select_building_placeholder">Select building</string>
+    <string name="building_required">Please select building</string>
+    <string name="no_buildings_available">No buildings available</string>
+    <string name="building_info_title">Building Info:</string>
+    <string name="building_code_label">Code: %s</string>
+    <string name="building_name_label">Name: %s</string>
+    <string name="building_note_label">Note: %s</string>
+    <string name="room_field_label">Room/Apartment Number *</string>
+    <string name="room_placeholder">E.g., Room 101, Apartment 302</string>
+    <string name="room_required">Please enter room number</string>
+    <string name="note_field_label">Note</string>
+    <string name="note_placeholder">E.g., Daytime delivery, call 30 mins before</string>
+    <string name="set_default_address">Set as default address</string>
+    <string name="add_address_button">Add Address</string>
+    <string name="adding_address">Adding...</string>
+    <string name="error_generic">An error occurred: %s</string>
+    <string name="label_icon">Label icon</string>
+    <string name="apartment_icon">Building icon</string>
+    <string name="door_icon">Room icon</string>
+    <string name="note_icon">Note icon</string>
+    <string name="dropdown_arrow">Open list</string>
+
+    <string name="shipping_address_title">Shipping Address</string>
+    <string name="no_shipping_address">No shipping address</string>
+    <string name="add_new_address_button">Add New Address</string>
+    <string name="add_address_icon">Add address</string>
+    <string name="location_icon">Address icon</string>
+    <string name="address_default_badge">Default</string>
+    <string name="address_options_icon">Address options</string>
+    <string name="set_as_default_option">Set as default</string>
+    <string name="edit_option">Edit</string>
+    <string name="delete_option">Delete</string>
+    <string name="address_note_label">📝 %s</string>
+
+    <!-- Edit Address Dialog -->
+    <string name="edit_address_title">Edit Address</string>
+    <string name="building_not_exist">Building no longer exists, please reselect</string>
+    <string name="full_address_preview">Full address will be:</string>
+    <string name="address_preview">%s, %s</string>
+    <string name="preview_note_label">Note: %s</string>
+    <string name="save_changes_button">Save Changes</string>
+    <string name="saving_changes">Saving...</string>
+
+    <string name="empty_address_title">No addresses yet</string>
+    <string name="empty_address_icon">No address</string>
+    <string name="add_first_address_button">Add First Address</string>
+    <string name="add_first_address_icon">Add address</string>
+
+    <string name="error_icon">Error</string>
+    <string name="loading_info">Loading info...</string>
+    <string name="settings_option">Settings</string>
+    <string name="settings_icon">Settings icon</string>
+    <string name="next_icon">Next</string>
+
+    <string name="user_info_button_title">User Information</string>
+    <string name="user_info_button_description">View and manage personal information</string>
+    <string name="user_info_icon">User icon</string>
+    <string name="go_to_icon">Go to</string>
+
+    <!-- Edit User Info Dialog -->
+    <string name="edit_user_info_title">Edit Information</string>
+    <string name="close_icon">Close</string>
+    <string name="full_name_label">Full Name</string>
+    <string name="full_name_placeholder">Enter full name</string>
+    <string name="phone_label">Phone Number</string>
+    <string name="phone_placeholder">Enter phone number</string>
+    <string name="email_label">Email</string>
+    <!-- Order Status -->
+    <string name="order_status_cancelled">Cancelled</string>
+
+    <string name="language_settings">Language</string>
+    <string name="language">Language</string>
+    <string name="language_vietnamese">Vietnamese</string>
+    <string name="language_english">English</string>
+    <string name="change_language">Change Language</string>
+</resources>

@@ -1,5 +1,6 @@
 package com.example.foodapp.pages.client.userInfo
 
+import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,11 +25,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.foodapp.R
 import com.example.foodapp.data.model.client.Client
 import com.example.foodapp.pages.client.components.profile.EditUserInfoDialog
 import kotlinx.coroutines.launch
@@ -39,9 +42,9 @@ import java.io.File
 fun UserInfoScreen(
     onBackClick: () -> Unit = {},
 ) {
-
-
+    // 1. Khai báo context ở đây (Scope Composable) để dùng cho các callback bên dưới
     val context = LocalContext.current
+
     val viewModel: UserInfoViewModel = viewModel(
         factory = UserInfoViewModel.factory(context)
     )
@@ -62,6 +65,7 @@ fun UserInfoScreen(
         onResult = { uri ->
             uri?.let {
                 coroutineScope.launch {
+                    // Truyền context vào hàm helper (hàm này không được là @Composable)
                     handleImageSelection(it, context, viewModel, snackbarHostState)
                 }
             }
@@ -72,10 +76,10 @@ fun UserInfoScreen(
     LaunchedEffect(uploadAvatarState) {
         when (val state = uploadAvatarState) {
             is UploadAvatarState.Loading -> {
-                // Đang tải lên, có thể hiển thị loading nếu muốn
+                // Có thể hiển thị một loading indicator toàn màn hình nếu cần
             }
             is UploadAvatarState.Success -> {
-                val message = "Cập nhật ảnh đại diện thành công"
+                val message = R.string.avatar_upload_success.toString()
                 viewModel.resetUploadAvatarState()
                 snackbarHostState.showSnackbar(
                     message = message,
@@ -100,7 +104,7 @@ fun UserInfoScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Thông tin người dùng",
+                        text = stringResource(R.string.user_info_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -109,18 +113,18 @@ fun UserInfoScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Quay lại"
+                            contentDescription = stringResource(R.string.go_back)
                         )
                     }
                 },
                 actions = {
-                    // Thêm nút refresh ở đây
                     IconButton(
                         onClick = {
                             viewModel.fetchUserData()
                             coroutineScope.launch {
+                                // SỬA: Dùng context.getString trong onClick
                                 snackbarHostState.showSnackbar(
-                                    message = "Đang tải lại thông tin...",
+                                    message = R.string.refreshing_info.toString(),
                                     duration = SnackbarDuration.Short
                                 )
                             }
@@ -128,16 +132,12 @@ fun UserInfoScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = "Tải lại trang",
-                            tint = MaterialTheme.colorScheme.primary
+                            contentDescription = stringResource(R.string.refresh)
                         )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.White,
-                    titleContentColor = Color.Black,
-                    navigationIconContentColor = Color.Black,
-                    actionIconContentColor = MaterialTheme.colorScheme.primary
+                    containerColor = Color.White
                 )
             )
         },
@@ -145,30 +145,26 @@ fun UserInfoScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showEditProfileDialog = true },
-                containerColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(16.dp)
+                containerColor = MaterialTheme.colorScheme.primary
             ) {
                 Icon(
                     imageVector = Icons.Default.Edit,
-                    contentDescription = "Chỉnh sửa thông tin",
+                    contentDescription = stringResource(R.string.edit_profile),
                     tint = Color.White
                 )
             }
         }
     ) { padding ->
-        // Popup chỉnh sửa profile
         if (showEditProfileDialog) {
             EditUserInfoDialog(
                 currentUser = currentUser,
-                onDismiss = {
-                    showEditProfileDialog = false
-                },
+                onDismiss = { showEditProfileDialog = false },
                 onUpdateSuccess = {
-                    // Refresh lại data sau khi cập nhật thành công
                     viewModel.fetchUserData()
                     coroutineScope.launch {
+                        // SỬA: Dùng context.getString trong callback
                         snackbarHostState.showSnackbar(
-                            message = "Cập nhật thông tin thành công",
+                            message = R.string.update_profile_success.toString(),
                             duration = SnackbarDuration.Short
                         )
                     }
@@ -177,33 +173,21 @@ fun UserInfoScreen(
         }
 
         when (val state = userState) {
-            is UserInfoState.Loading -> {
-                LoadingScreen(modifier = Modifier.padding(padding))
-            }
-            is UserInfoState.Error -> {
-                ErrorScreen(
-                    errorMessage = state.message,
-                    onRetryClick = { viewModel.fetchUserData() },
-                    modifier = Modifier.padding(padding)
-                )
-            }
-            is UserInfoState.Success -> {
-                UserInfoContent(
-                    user = state.user,
-                    onAvatarClick = {
-                        // Mở image picker khi nhấn vào avatar
-                        imagePickerLauncher.launch("image/*")
-                    },
-                    modifier = Modifier
-                        .background(Color.White)
-                        .fillMaxSize()
-                        .padding(padding)
-                        .verticalScroll(rememberScrollState())
-                )
-            }
-            else -> {
-                LoadingScreen(modifier = Modifier.padding(padding))
-            }
+            is UserInfoState.Loading -> LoadingScreen(modifier = Modifier.padding(padding))
+            is UserInfoState.Error -> ErrorScreen(
+                errorMessage = state.message,
+                onRetryClick = { viewModel.fetchUserData() },
+                modifier = Modifier.padding(padding)
+            )
+            is UserInfoState.Success -> UserInfoContent(
+                user = state.user,
+                onAvatarClick = { imagePickerLauncher.launch("image/*") },
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+            )
+            else -> LoadingScreen(modifier = Modifier.padding(padding))
         }
     }
 }
@@ -223,13 +207,13 @@ private suspend fun handleImageSelection(
             viewModel.uploadAvatar(file)
         } else {
             snackbarHostState.showSnackbar(
-                message = "Không thể đọc file ảnh",
+                message = context.getString(R.string.cannot_read_image),
                 duration = SnackbarDuration.Short
             )
         }
     } catch (e: Exception) {
         snackbarHostState.showSnackbar(
-            message = "Lỗi: ${e.message}",
+            message = context.getString(R.string.error_with_message, e.message ?: ""),
             duration = SnackbarDuration.Short
         )
     }
@@ -257,13 +241,13 @@ private fun Uri.toFile(context: android.content.Context): File? {
 fun UserInfoContent(
     user: Client,
     onAvatarClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     // Format role để hiển thị
     val roleDisplay = remember(user.role) {
         when (user.role) {
-            "client" -> "Khách hàng"
-            "admin" -> "Quản trị viên"
+            "client" -> R.string.role_client
+            "admin" -> R.string.role_admin
             else -> user.role
         }
     }
@@ -284,7 +268,7 @@ fun UserInfoContent(
 
         // Thông tin tài khoản
         AccountInfoCard(
-            role = roleDisplay,
+            role = roleDisplay.toString(),
             isVerified = user.isVerify
         )
 
@@ -329,7 +313,7 @@ fun UserAvatarSection(
                             .data(user.imageAvatar)
                             .crossfade(true)
                             .build(),
-                        contentDescription = "Avatar",
+                        contentDescription = stringResource(R.string.avatar),
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(CircleShape),
@@ -346,7 +330,7 @@ fun UserAvatarSection(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Thay đổi avatar",
+                            contentDescription = stringResource(R.string.change_avatar),
                             tint = Color.White,
                             modifier = Modifier.size(32.dp)
                         )
@@ -367,12 +351,12 @@ fun UserAvatarSection(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Person,
-                                contentDescription = "Avatar",
+                                contentDescription = stringResource(R.string.avatar),
                                 tint = Color.White,
                                 modifier = Modifier.size(40.dp)
                             )
                             Text(
-                                text = "Thêm ảnh",
+                                text = stringResource(R.string.add_photo),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.White,
                                 modifier = Modifier.padding(top = 4.dp)
@@ -386,7 +370,7 @@ fun UserAvatarSection(
 
             // Tên
             Text(
-                text = user.fullName ?: "Chưa cập nhật",
+                text = user.fullName ?: stringResource(R.string.not_updated),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -394,7 +378,7 @@ fun UserAvatarSection(
 
             // Email
             Text(
-                text = user.email ?: "Chưa có email",
+                text = user.email ?: stringResource(R.string.no_email),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 4.dp)
@@ -402,7 +386,7 @@ fun UserAvatarSection(
 
             // Hướng dẫn nhấn để thay đổi ảnh
             Text(
-                text = "Nhấn vào ảnh để thay đổi",
+                text = stringResource(R.string.click_to_change_photo),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp)
@@ -427,7 +411,7 @@ fun PersonalInfoCard(user: Client) {
                 .padding(16.dp)
         ) {
             Text(
-                text = "Thông tin cá nhân",
+                text = stringResource(R.string.personal_info),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -436,20 +420,20 @@ fun PersonalInfoCard(user: Client) {
 
             // Tên đầy đủ
             InfoRow(
-                label = "Họ và tên",
-                value = user.fullName ?: "Chưa cập nhật"
+                label = stringResource(R.string.full_name),
+                value = user.fullName ?: stringResource(R.string.not_updated)
             )
 
             // Số điện thoại
             InfoRow(
-                label = "Số điện thoại",
-                value = user.phone ?: "Chưa cập nhật"
+                label = stringResource(R.string.phone_number),
+                value = user.phone ?: stringResource(R.string.not_updated)
             )
 
             // Email
             InfoRow(
-                label = "Email",
-                value = user.email ?: "Chưa có email"
+                label = stringResource(R.string.email),
+                value = user.email ?: stringResource(R.string.no_email)
             )
         }
     }
@@ -471,7 +455,7 @@ fun AccountStatusCard(user: Client) {
                 .padding(16.dp)
         ) {
             Text(
-                text = "Trạng thái tài khoản",
+                text = stringResource(R.string.account_status),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -484,7 +468,7 @@ fun AccountStatusCard(user: Client) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Xác minh tài khoản",
+                    text = stringResource(R.string.account_verification),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -502,7 +486,7 @@ fun AccountStatusCard(user: Client) {
                     }
                 ) {
                     Text(
-                        text = if (user.isVerify) "Đã xác minh" else "Chưa xác minh",
+                        text = if (user.isVerify) stringResource(R.string.verified) else stringResource(R.string.not_verified),
                         style = MaterialTheme.typography.labelSmall,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
@@ -531,7 +515,7 @@ fun AccountInfoCard(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Thông tin tài khoản",
+                text = stringResource(R.string.account_info),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
@@ -540,14 +524,14 @@ fun AccountInfoCard(
 
             // Vai trò
             InfoRow(
-                label = "Vai trò",
+                label = stringResource(R.string.role),
                 value = role
             )
 
-            // Chỉ còn trạng thái xác minh
+            // Trạng thái xác minh
             InfoRow(
-                label = "Trạng thái",
-                value = if (isVerified) "Đã xác minh" else "Chưa xác minh"
+                label = stringResource(R.string.status),
+                value = if (isVerified) stringResource(R.string.verified) else stringResource(R.string.not_verified)
             )
         }
     }
@@ -602,7 +586,7 @@ fun ErrorScreen(
             onClick = onRetryClick,
             modifier = Modifier.padding(top = 16.dp)
         ) {
-            Text("Thử lại")
+            Text(stringResource(R.string.retry))
         }
     }
 }

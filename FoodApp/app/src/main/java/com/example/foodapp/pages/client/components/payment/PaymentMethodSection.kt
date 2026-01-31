@@ -14,9 +14,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.ui.theme.*
 
 @Composable
@@ -51,14 +53,14 @@ fun PaymentMethodSection(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Payment,
-                        contentDescription = null,
+                        contentDescription = stringResource(R.string.payment_icon_description),
                         tint = AccentPurple,
                         modifier = Modifier.size(22.dp)
                     )
                 }
                 Spacer(modifier = Modifier.width(12.dp))
                 Text(
-                    text = "Phương thức thanh toán",
+                    text = stringResource(R.string.payment_method_title),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary
@@ -69,18 +71,20 @@ fun PaymentMethodSection(
             // Lựa chọn phương thức thanh toán
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 PaymentMethodItem(
-                    title = "Thanh toán khi nhận hàng",
-                    description = "Trả tiền mặt cho shipper",
+                    title = stringResource(R.string.payment_cod_title),
+                    description = stringResource(R.string.payment_cod_description),
                     icon = Icons.Filled.Money,
+                    iconDescription = stringResource(R.string.payment_cod_icon_description),
                     iconColor = AccentGreen,
                     isSelected = selectedMethod == 0,
                     onClick = { onMethodSelected(0) }
                 )
 
                 PaymentMethodItem(
-                    title = "Thanh toán bằng tài khoản ngân hàng",
-                    description = "Chuyển khoản qua ngân hàng/Ví điện tử",
+                    title = stringResource(R.string.payment_bank_title),
+                    description = stringResource(R.string.payment_bank_description),
                     icon = Icons.Filled.AccountBalance,
+                    iconDescription = stringResource(R.string.payment_bank_icon_description),
                     iconColor = Color(0xFF2196F3), // Màu xanh ngân hàng
                     isSelected = selectedMethod == 1,
                     onClick = { onMethodSelected(1) }
@@ -95,6 +99,7 @@ fun PaymentMethodItem(
     title: String,
     description: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+    iconDescription: String,
     iconColor: Color,
     isSelected: Boolean,
     onClick: () -> Unit
@@ -117,7 +122,7 @@ fun PaymentMethodItem(
         ) {
             Icon(
                 imageVector = icon,
-                contentDescription = null,
+                contentDescription = iconDescription,
                 tint = iconColor,
                 modifier = Modifier.size(26.dp)
             )

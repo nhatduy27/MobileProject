@@ -13,7 +13,7 @@ fun UserHomeScreen(
     onProductClick: (String) -> Unit,
     onProfileClick: () -> Unit,
     onShopViewClick: () -> Unit,
-    onChatBotClick: () -> Unit // THÊM: Callback cho button chatbot
+    onChatBotClick: () -> Unit
 ) {
     val context = LocalContext.current
     val viewModel: HomeViewModel = viewModel(factory = HomeViewModel.factory(context))

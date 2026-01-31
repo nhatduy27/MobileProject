@@ -14,10 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.data.remote.client.response.order.OrderPreviewApiModel
 
 @Composable
@@ -67,7 +69,7 @@ fun OrderCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Store,
-                                contentDescription = "Cửa hàng",
+                                contentDescription = stringResource(R.string.shop),
                                 tint = Color(0xFF4CAF50),
                                 modifier = Modifier
                                     .padding(8.dp)
@@ -86,7 +88,7 @@ fun OrderCard(
                                 color = Color(0xFF212121)
                             )
                             Text(
-                                text = "#${order.orderNumber}",
+                                text = stringResource(R.string.order_number, order.orderNumber),
                                 fontSize = 12.sp,
                                 color = Color(0xFF757575)
                             )
@@ -108,7 +110,7 @@ fun OrderCard(
                             } else {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
-                                    contentDescription = "Xóa đơn hàng",
+                                    contentDescription = stringResource(R.string.delete_order),
                                     tint = Color(0xFFF44336)
                                 )
                             }
@@ -132,12 +134,12 @@ fun OrderCard(
                 ) {
                     StatusChip(
                         text = when (order.status) {
-                            "PENDING" -> "Đang chờ"
-                            "CONFIRMED" -> "Đã xác nhận"
-                            "PREPARING" -> "Đang chuẩn bị"
-                            "SHIPPING" -> "Đang giao"
-                            "DELIVERED" -> "Đã giao"
-                            "CANCELLED" -> "Đã hủy"
+                            "PENDING" -> stringResource(R.string.status_pending)
+                            "CONFIRMED" -> stringResource(R.string.status_confirmed)
+                            "PREPARING" -> stringResource(R.string.status_preparing)
+                            "SHIPPING" -> stringResource(R.string.status_shipping)
+                            "DELIVERED" -> stringResource(R.string.status_delivered)
+                            "CANCELLED" -> stringResource(R.string.cancel)
                             else -> order.status
                         },
                         color = when (order.status) {
@@ -153,10 +155,10 @@ fun OrderCard(
 
                     StatusChip(
                         text = when (order.paymentStatus) {
-                            "UNPAID" -> "Chưa thanh toán"
-                            "PAID" -> "Đã thanh toán"
-                            "FAILED" -> "Thất bại"
-                            "REFUNDED" -> "Đã hoàn tiền"
+                            "UNPAID" -> stringResource(R.string.payment_unpaid)
+                            "PAID" -> stringResource(R.string.payment_paid)
+                            "FAILED" -> stringResource(R.string.payment_failed)
+                            "REFUNDED" -> stringResource(R.string.payment_refunded)
                             else -> order.paymentStatus
                         },
                         color = when (order.paymentStatus) {
@@ -196,7 +198,7 @@ fun OrderCard(
                                         modifier = Modifier.wrapContentSize()
                                     ) {
                                         Text(
-                                            text = "${item.quantity}x",
+                                            text = stringResource(R.string.quantity_x, item.quantity),
                                             fontSize = 12.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFF4CAF50),
@@ -222,7 +224,10 @@ fun OrderCard(
 
                         if (order.itemsPreviewCount > order.itemsPreview.size) {
                             Text(
-                                text = "+ ${order.itemsPreviewCount - order.itemsPreview.size} món khác",
+                                text = stringResource(
+                                    R.string.more_items_count,
+                                    order.itemsPreviewCount - order.itemsPreview.size
+                                ),
                                 fontSize = 12.sp,
                                 color = Color(0xFF757575),
                                 fontWeight = FontWeight.Medium
@@ -246,7 +251,7 @@ fun OrderCard(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "Tổng cộng",
+                            text = stringResource(R.string.total),
                             fontSize = 13.sp,
                             color = Color(0xFF757575),
                             fontWeight = FontWeight.Medium
@@ -265,7 +270,7 @@ fun OrderCard(
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.AccessTime,
-                            contentDescription = "Thời gian",
+                            contentDescription = stringResource(R.string.time),
                             tint = Color(0xFF757575),
                             modifier = Modifier.size(16.dp)
                         )
@@ -292,7 +297,7 @@ fun OrderCard(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.LocationOn,
-                                contentDescription = "Địa chỉ",
+                                contentDescription = stringResource(R.string.address),
                                 tint = Color(0xFFFF5722),
                                 modifier = Modifier.size(18.dp)
                             )

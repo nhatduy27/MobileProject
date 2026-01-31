@@ -13,6 +13,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -20,6 +21,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
+import com.example.foodapp.utils.LocaleHelper
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,7 +31,8 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onLogout: () -> Unit,
     onChangePassword: () -> Unit,
-    onDeleteAccount: () -> Unit
+    onDeleteAccount: () -> Unit,
+    onLanguageChanged: () -> Unit  // THÊM: callback khi ngôn ngữ thay đổi
 ) {
     val context = LocalContext.current
     val viewModel: SettingsViewModel = viewModel(
@@ -45,6 +49,9 @@ fun SettingsScreen(
     var showCurrentPassword by remember { mutableStateOf(false) }
     var showNewPassword by remember { mutableStateOf(false) }
     var showConfirmPassword by remember { mutableStateOf(false) }
+
+    // THÊM: State cho ngôn ngữ
+    val isVietnamese = remember { mutableStateOf(LocaleHelper.isVietnamese(context)) }
 
     // State cho Confirm Delete Dialog
     var agreeToTerms by remember { mutableStateOf(false) }
@@ -76,6 +83,11 @@ fun SettingsScreen(
             informationalEnabled = prefs.informational
             marketingEnabled = prefs.marketing
         }
+    }
+
+    // THÊM: Cập nhật state ngôn ngữ khi context thay đổi
+    LaunchedEffect(context) {
+        isVietnamese.value = LocaleHelper.isVietnamese(context)
     }
 
     // Xử lý khi logout thành công
@@ -163,10 +175,13 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Cài đặt") },
+                title = { Text(stringResource(R.string.settings_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Quay lại")
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.go_back)
+                        )
                     }
                 }
             )
@@ -195,7 +210,7 @@ fun SettingsScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Cài đặt thông báo",
+                            text = stringResource(R.string.notification_settings_title),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold
@@ -212,7 +227,7 @@ fun SettingsScreen(
                             is NotificationPreferencesState.Error -> {
                                 Icon(
                                     imageVector = Icons.Default.Error,
-                                    contentDescription = "Error",
+                                    contentDescription = stringResource(R.string.error),
                                     tint = MaterialTheme.colorScheme.error,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -224,8 +239,8 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     NotificationSettingItem(
-                        title = "Thông báo thông tin",
-                        description = "Cập nhật, thông báo từ hệ thống",
+                        title = stringResource(R.string.info_notification_title),
+                        description = stringResource(R.string.info_notification_desc),
                         checked = informationalEnabled,
                         onCheckedChange = {
                             informationalEnabled = it
@@ -235,8 +250,8 @@ fun SettingsScreen(
                     )
 
                     NotificationSettingItem(
-                        title = "Thông báo khuyến mãi",
-                        description = "Khuyến mãi, ưu đãi đặc biệt",
+                        title = stringResource(R.string.marketing_notification_title),
+                        description = stringResource(R.string.marketing_notification_desc),
                         checked = marketingEnabled,
                         onCheckedChange = {
                             marketingEnabled = it
@@ -261,7 +276,7 @@ fun SettingsScreen(
                                 onClick = { viewModel.loadNotificationPreferences() },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Thử lại")
+                                Text(stringResource(R.string.retry))
                             }
                         }
                         else -> {}
@@ -271,12 +286,26 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // THÊM: Language Setting Section
+            SettingsSection(title = stringResource(R.string.language_settings)) {
+                LanguageSettingItem(
+                    isVietnamese = isVietnamese.value,
+                    onLanguageChange = {
+                        LocaleHelper.toggleLanguage(context)
+                        isVietnamese.value = !isVietnamese.value
+                        onLanguageChanged()  // Gọi callback để restart activity
+                    }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
             // Tài khoản
-            SettingsSection(title = "Tài khoản") {
+            SettingsSection(title = stringResource(R.string.account_section_title)) {
                 SettingsItem(
                     icon = Icons.Default.Lock,
-                    title = "Đổi mật khẩu",
-                    description = "Thay đổi mật khẩu đăng nhập",
+                    title = stringResource(R.string.change_password_title),
+                    description = stringResource(R.string.change_password_desc),
                     onClick = {
                         println("DEBUG [SettingsScreen] Change password clicked")
                         showChangePasswordDialog = true
@@ -285,8 +314,8 @@ fun SettingsScreen(
 
                 SettingsItem(
                     icon = Icons.Default.Delete,
-                    title = "Xóa tài khoản",
-                    description = "Xóa vĩnh viễn tài khoản của bạn",
+                    title = stringResource(R.string.delete_account_title),
+                    description = stringResource(R.string.delete_account_desc),
                     onClick = {
                         println("DEBUG [SettingsScreen] Delete account clicked")
                         showConfirmDeleteDialog = true
@@ -299,11 +328,11 @@ fun SettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Hệ thống
-            SettingsSection(title = "Hệ thống") {
+            SettingsSection(title = stringResource(R.string.system_section_title)) {
                 SettingsItem(
                     icon = Icons.Default.Logout,
-                    title = "Đăng xuất",
-                    description = "Đăng xuất khỏi tài khoản hiện tại",
+                    title = stringResource(R.string.logout_title),
+                    description = stringResource(R.string.logout_desc),
                     onClick = {
                         println("DEBUG [SettingsScreen] Logout clicked")
                         showLogoutConfirmDialog = true
@@ -324,14 +353,14 @@ fun SettingsScreen(
             onDismissRequest = { showLogoutConfirmDialog = false },
             title = {
                 Text(
-                    text = "Xác nhận đăng xuất",
+                    text = stringResource(R.string.logout_confirm_title),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
             },
             text = {
                 Text(
-                    text = "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này không?",
+                    text = stringResource(R.string.logout_confirm_message),
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -346,7 +375,7 @@ fun SettingsScreen(
                         contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
-                    Text("Đăng xuất")
+                    Text(stringResource(R.string.logout))
                 }
             },
             dismissButton = {
@@ -356,7 +385,7 @@ fun SettingsScreen(
                         showLogoutConfirmDialog = false
                     }
                 ) {
-                    Text("Hủy")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )
@@ -382,7 +411,7 @@ fun SettingsScreen(
                     modifier = Modifier.padding(24.dp)
                 ) {
                     Text(
-                        text = "Đổi mật khẩu",
+                        text = stringResource(R.string.change_password_dialog_title),
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 16.dp)
@@ -446,14 +475,14 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = currentPassword,
                             onValueChange = { currentPassword = it },
-                            label = { Text("Mật khẩu hiện tại") },
+                            label = { Text(stringResource(R.string.current_password)) },
                             modifier = Modifier.fillMaxWidth(),
                             visualTransformation = if (showCurrentPassword) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
                                 IconButton(onClick = { showCurrentPassword = !showCurrentPassword }) {
                                     Icon(
                                         if (showCurrentPassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = "Hiện mật khẩu"
+                                        contentDescription = stringResource(R.string.show_password)
                                     )
                                 }
                             }
@@ -465,14 +494,14 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = newPassword,
                             onValueChange = { newPassword = it },
-                            label = { Text("Mật khẩu mới") },
+                            label = { Text(stringResource(R.string.new_password)) },
                             modifier = Modifier.fillMaxWidth(),
                             visualTransformation = if (showNewPassword) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
                                 IconButton(onClick = { showNewPassword = !showNewPassword }) {
                                     Icon(
                                         if (showNewPassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = "Hiện mật khẩu"
+                                        contentDescription = stringResource(R.string.show_password)
                                     )
                                 }
                             }
@@ -484,14 +513,14 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = confirmPassword,
                             onValueChange = { confirmPassword = it },
-                            label = { Text("Xác nhận mật khẩu mới") },
+                            label = { Text(stringResource(R.string.confirm_new_password)) },
                             modifier = Modifier.fillMaxWidth(),
                             visualTransformation = if (showConfirmPassword) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
                                 IconButton(onClick = { showConfirmPassword = !showConfirmPassword }) {
                                     Icon(
                                         if (showConfirmPassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = "Hiện mật khẩu"
+                                        contentDescription = stringResource(R.string.show_password)
                                     )
                                 }
                             }
@@ -500,7 +529,7 @@ fun SettingsScreen(
                         // Kiểm tra mật khẩu
                         if (newPassword.isNotEmpty() && confirmPassword.isNotEmpty() && newPassword != confirmPassword) {
                             Text(
-                                text = "Mật khẩu không khớp",
+                                text = stringResource(R.string.password_mismatch),
                                 color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.labelSmall,
                                 modifier = Modifier.padding(top = 4.dp)
@@ -526,7 +555,7 @@ fun SettingsScreen(
                                     viewModel.resetDeleteAccountState()
                                 }
                             ) {
-                                Text("Đóng")
+                                Text(stringResource(R.string.close))
                             }
                         } else {
                             // Trạng thái bình thường
@@ -536,7 +565,7 @@ fun SettingsScreen(
                                     viewModel.resetDeleteAccountState()
                                 }
                             ) {
-                                Text("Hủy")
+                                Text(stringResource(R.string.cancel))
                             }
 
                             Spacer(modifier = Modifier.width(8.dp))
@@ -558,7 +587,7 @@ fun SettingsScreen(
                                         strokeWidth = 2.dp
                                     )
                                 } else {
-                                    Text("Xác nhận")
+                                    Text(stringResource(R.string.confirm))
                                 }
                             }
                         }
@@ -589,7 +618,7 @@ fun SettingsScreen(
                     modifier = Modifier.padding(24.dp)
                 ) {
                     Text(
-                        text = "⚠️ Cảnh báo",
+                        text = "⚠️ ${stringResource(R.string.warning)}",
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Bold,
@@ -597,7 +626,7 @@ fun SettingsScreen(
                     )
 
                     Text(
-                        text = "Xóa tài khoản",
+                        text = stringResource(R.string.delete_account_dialog_title),
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 16.dp)
@@ -658,16 +687,16 @@ fun SettingsScreen(
                         deleteAccountState !is DeleteAccountState.Error
                     ) {
                         Text(
-                            text = "Bạn có chắc chắn muốn xóa tài khoản này? Hành động này sẽ:",
+                            text = stringResource(R.string.delete_account_warning_message),
                             modifier = Modifier.padding(bottom = 12.dp)
                         )
 
                         Column(
                             modifier = Modifier.padding(start = 8.dp, bottom = 16.dp)
                         ) {
-                            Text("• Xóa vĩnh viễn tài khoản của bạn")
-                            Text("• Xóa tất cả dữ liệu liên quan")
-                            Text("• Không thể khôi phục lại")
+                            Text(stringResource(R.string.delete_account_point_1))
+                            Text(stringResource(R.string.delete_account_point_2))
+                            Text(stringResource(R.string.delete_account_point_3))
                         }
 
                         Row(
@@ -682,7 +711,7 @@ fun SettingsScreen(
                             Spacer(modifier = Modifier.width(8.dp))
 
                             Text(
-                                text = "Tôi hiểu hậu quả và muốn xóa tài khoản",
+                                text = stringResource(R.string.delete_account_terms_confirmation),
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
@@ -704,7 +733,7 @@ fun SettingsScreen(
                                     viewModel.resetDeleteAccountState()
                                 }
                             ) {
-                                Text("Đóng")
+                                Text(stringResource(R.string.close))
                             }
                         } else {
                             // Trạng thái bình thường
@@ -715,7 +744,7 @@ fun SettingsScreen(
                                     viewModel.resetDeleteAccountState()
                                 }
                             ) {
-                                Text("Hủy")
+                                Text(stringResource(R.string.cancel))
                             }
 
                             Spacer(modifier = Modifier.width(8.dp))
@@ -732,12 +761,77 @@ fun SettingsScreen(
                                     contentColor = MaterialTheme.colorScheme.onError
                                 )
                             ) {
-                                Text("Xóa tài khoản")
+                                Text(stringResource(R.string.delete_account_button))
                             }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+// THÊM: LanguageSettingItem Composable
+@Composable
+fun LanguageSettingItem(
+    isVietnamese: Boolean,
+    onLanguageChange: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onLanguageChange)
+            .padding(vertical = 8.dp, horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Language,
+                contentDescription = stringResource(R.string.language),
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column {
+                Text(
+                    text = stringResource(R.string.language),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Text(
+                    text = if (isVietnamese) {
+                        stringResource(R.string.language_vietnamese)
+                    } else {
+                        stringResource(R.string.language_english)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (isVietnamese) "VI" else "EN",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Switch(
+                checked = isVietnamese,
+                onCheckedChange = { onLanguageChange() }
+            )
         }
     }
 }

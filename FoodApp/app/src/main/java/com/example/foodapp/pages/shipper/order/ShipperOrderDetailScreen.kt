@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -30,6 +31,7 @@ import com.example.foodapp.pages.shipper.home.StatusBadge
 import com.example.foodapp.pages.shipper.home.PaymentMethodBadge
 import com.example.foodapp.pages.shipper.home.PaymentStatusBadge
 import com.example.foodapp.pages.shipper.theme.ShipperColors
+import com.example.foodapp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +67,7 @@ fun ShipperOrderDetailScreen(
                 title = { 
                     Column {
                         Text(
-                            "Chi tiết đơn hàng", 
+                            stringResource(R.string.shipper_order_detail_title), 
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 18.sp
                         )
@@ -189,22 +191,22 @@ private fun OrderStatusCard(order: ShipperOrder) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 TimelineItem(
-                    label = "Tạo đơn",
+                    label = stringResource(R.string.shipper_order_timeline_created),
                     time = formatOrderTime(order.createdAt),
                     isCompleted = true
                 )
                 TimelineItem(
-                    label = "Sẵn sàng",
+                    label = stringResource(R.string.shipper_order_timeline_ready),
                     time = formatOrderTime(order.readyAt),
                     isCompleted = order.readyAt != null
                 )
                 TimelineItem(
-                    label = "Đang giao",
+                    label = stringResource(R.string.shipper_order_timeline_shipping),
                     time = formatOrderTime(order.shippingAt),
                     isCompleted = order.shippingAt != null
                 )
                 TimelineItem(
-                    label = "Giao xong",
+                    label = stringResource(R.string.shipper_order_timeline_delivered),
                     time = formatOrderTime(order.deliveredAt),
                     isCompleted = order.deliveredAt != null
                 )
@@ -270,7 +272,7 @@ private fun CustomerDeliveryCard(
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            SectionTitle(title = "Thông tin giao hàng")
+            SectionTitle(title = stringResource(R.string.shipper_order_delivery_info))
             
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -282,7 +284,7 @@ private fun CustomerDeliveryCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = order.customerName ?: "Khách hàng",
+                        text = order.customerName ?: stringResource(R.string.shipper_order_customer_default),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Medium,
                         color = ShipperColors.TextPrimary
@@ -307,7 +309,7 @@ private fun CustomerDeliveryCard(
                     ) {
                         Icon(
                             Icons.Outlined.Phone,
-                            contentDescription = "Gọi khách",
+                            contentDescription = stringResource(R.string.shipper_order_call_customer),
                             tint = ShipperColors.Surface,
                             modifier = Modifier.size(20.dp)
                         )
@@ -330,14 +332,14 @@ private fun CustomerDeliveryCard(
                 Spacer(modifier = Modifier.width(10.dp))
                 Column {
                     Text(
-                        text = order.shippingAddress ?: "Chưa có địa chỉ",
+                        text = order.shippingAddress ?: stringResource(R.string.shipper_order_no_address),
                         style = MaterialTheme.typography.bodyMedium,
                         color = ShipperColors.TextPrimary
                     )
                     order.deliveryAddress?.let { addr ->
                         val details = listOfNotNull(
-                            addr.building?.let { "Tòa $it" },
-                            addr.room?.let { "Phòng $it" },
+                            addr.building?.let { stringResource(R.string.shipper_order_building, it) },
+                            addr.room?.let { stringResource(R.string.shipper_order_room, it) },
                             addr.label
                         )
                         if (details.isNotEmpty()) {
@@ -373,7 +375,7 @@ private fun CustomerDeliveryCard(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Ghi chú giao hàng",
+                                text = stringResource(R.string.shipper_order_delivery_note),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Medium,
                                 color = ShipperColors.Warning
@@ -400,12 +402,12 @@ private fun ShopInfoCard(order: ShipperOrder) {
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            SectionTitle(title = "Cửa hàng")
+            SectionTitle(title = stringResource(R.string.shipper_order_shop))
             
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                text = order.shopName ?: "Cửa hàng",
+                text = order.shopName ?: stringResource(R.string.shipper_order_shop_default),
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
                 color = ShipperColors.TextPrimary
@@ -423,7 +425,7 @@ private fun OrderItemsCard(order: ShipperOrder) {
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            SectionTitle(title = "Đơn hàng (${order.displayItemCount} món)")
+            SectionTitle(title = stringResource(R.string.shipper_order_items, order.displayItemCount))
             
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -492,7 +494,7 @@ private fun PaymentSummaryCard(order: ShipperOrder) {
         elevation = CardDefaults.cardElevation(2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            SectionTitle(title = "Thanh toán")
+            SectionTitle(title = stringResource(R.string.shipper_order_payment))
             
             Spacer(modifier = Modifier.height(12.dp))
             
@@ -501,7 +503,7 @@ private fun PaymentSummaryCard(order: ShipperOrder) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Phương thức", color = ShipperColors.TextSecondary)
+                Text(stringResource(R.string.shipper_order_payment_method), color = ShipperColors.TextSecondary)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     PaymentMethodBadge(paymentMethod = order.paymentMethod)
                     PaymentStatusBadge(paymentStatus = order.paymentStatus)
@@ -514,16 +516,16 @@ private fun PaymentSummaryCard(order: ShipperOrder) {
             
             // Subtotal
             if (order.subtotal > 0) {
-                SummaryRow(label = "Tạm tính", value = formatCurrency(order.subtotal))
+                SummaryRow(label = stringResource(R.string.shipper_order_subtotal), value = formatCurrency(order.subtotal))
             }
             
             // Shipping Fee
-            SummaryRow(label = "Phí giao hàng", value = formatCurrency(order.shipFee))
+            SummaryRow(label = stringResource(R.string.shipper_order_shipping_fee), value = formatCurrency(order.shipFee))
             
             // Discount
             if (order.discount > 0) {
                 SummaryRow(
-                    label = "Giảm giá" + (order.voucherCode?.let { " ($it)" } ?: ""),
+                    label = stringResource(R.string.shipper_order_discount) + (order.voucherCode?.let { " ($it)" } ?: ""),
                     value = "-${formatCurrency(order.discount)}",
                     valueColor = ShipperColors.Success
                 )
@@ -539,7 +541,7 @@ private fun PaymentSummaryCard(order: ShipperOrder) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "TỔNG CỘNG",
+                    text = stringResource(R.string.shipper_order_total),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = ShipperColors.TextPrimary
@@ -572,7 +574,7 @@ private fun PaymentSummaryCard(order: ShipperOrder) {
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Thu tiền mặt khi giao hàng",
+                            text = stringResource(R.string.shipper_order_cod_note),
                             style = MaterialTheme.typography.bodyMedium,
                             color = ShipperColors.Warning
                         )
@@ -619,14 +621,14 @@ private fun ActionButtonsCard(
                 "READY" -> {
                     if (order.isAvailableForPickup) {
                         ActionButton(
-                            text = "NHẬN ĐƠN HÀNG",
+                            text = stringResource(R.string.shipper_order_accept_btn),
                             color = ShipperColors.Primary,
                             isLoading = isLoading,
                             onClick = onAccept
                         )
                     } else {
                         ActionButton(
-                            text = "BẮT ĐẦU GIAO HÀNG",
+                            text = stringResource(R.string.shipper_order_start_delivery_btn),
                             color = ShipperColors.Info,
                             isLoading = isLoading,
                             onClick = onShipping
@@ -635,7 +637,7 @@ private fun ActionButtonsCard(
                 }
                 "SHIPPING" -> {
                     ActionButton(
-                        text = "XÁC NHẬN ĐÃ GIAO",
+                        text = stringResource(R.string.shipper_order_confirm_delivered_btn),
                         color = ShipperColors.Success,
                         isLoading = isLoading,
                         onClick = onDelivered
@@ -659,7 +661,7 @@ private fun ActionButtonsCard(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                "Đơn hàng đã hoàn thành",
+                                stringResource(R.string.shipper_order_completed),
                                 fontWeight = FontWeight.Medium,
                                 color = ShipperColors.Success
                             )
@@ -684,7 +686,7 @@ private fun ActionButtonsCard(
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
-                                    "Đơn hàng đã hủy",
+                                    stringResource(R.string.shipper_order_cancelled_title),
                                     fontWeight = FontWeight.Medium,
                                     color = ShipperColors.Error
                                 )
@@ -692,7 +694,7 @@ private fun ActionButtonsCard(
                             order.cancelReason?.let { reason ->
                                 Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = "Lý do: $reason",
+                                    text = stringResource(R.string.shipper_order_cancel_reason, reason),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = ShipperColors.Error
                                 )
@@ -702,7 +704,7 @@ private fun ActionButtonsCard(
                 }
                 else -> {
                     Text(
-                        text = "Đơn hàng đang được xử lý",
+                        text = stringResource(R.string.shipper_order_processing),
                         style = MaterialTheme.typography.bodyMedium,
                         color = ShipperColors.TextSecondary,
                         modifier = Modifier.fillMaxWidth(),

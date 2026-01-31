@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.res.stringResource
+import com.example.foodapp.R
 import com.example.foodapp.data.di.RepositoryProvider
 import com.example.foodapp.data.model.shipper.removal.*
 import com.example.foodapp.data.repository.shipper.base.RemovalRequestRepository
@@ -258,13 +260,13 @@ fun RemovalRequestScreen(
             TopAppBar(
                 title = { 
                     Text(
-                        "Yêu cầu rời shop",
+                        stringResource(R.string.shipper_removal_title),
                         fontWeight = FontWeight.SemiBold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Outlined.ArrowBack, contentDescription = "Quay lại")
+                        Icon(Icons.Outlined.ArrowBack, contentDescription = stringResource(R.string.shipper_removal_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -283,13 +285,13 @@ fun RemovalRequestScreen(
         ) {
             Column {
                 Text(
-                    "Danh sách yêu cầu",
+                    stringResource(R.string.shipper_removal_list),
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = ShipperColors.TextPrimary
                 )
                 Text(
-                    "${uiState.requests.size} yêu cầu",
+                    stringResource(R.string.shipper_removal_count, uiState.requests.size),
                     fontSize = 13.sp,
                     color = ShipperColors.TextSecondary
                 )
@@ -304,7 +306,7 @@ fun RemovalRequestScreen(
                 ) {
                     Icon(Icons.Outlined.Add, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Tạo yêu cầu")
+                    Text(stringResource(R.string.shipper_removal_create))
                 }
             }
         }
@@ -330,7 +332,7 @@ fun RemovalRequestScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        "Bạn chưa được duyệt làm việc tại shop nào. Không thể tạo yêu cầu rời shop.",
+                        stringResource(R.string.shipper_removal_no_shop),
                         fontSize = 13.sp,
                         color = ShipperColors.Info
                     )
@@ -379,10 +381,10 @@ private fun FilterTabs(
     onStatusChange: (RemovalRequestStatus?) -> Unit
 ) {
     val tabs = listOf(
-        null to "Tất cả",
-        RemovalRequestStatus.PENDING to "Đang chờ",
-        RemovalRequestStatus.APPROVED to "Đã duyệt",
-        RemovalRequestStatus.REJECTED to "Từ chối"
+        null to stringResource(R.string.shipper_removal_filter_all),
+        RemovalRequestStatus.PENDING to stringResource(R.string.shipper_removal_filter_pending),
+        RemovalRequestStatus.APPROVED to stringResource(R.string.shipper_removal_filter_approved),
+        RemovalRequestStatus.REJECTED to stringResource(R.string.shipper_removal_filter_rejected)
     )
     
     ScrollableTabRow(
@@ -426,7 +428,7 @@ private fun CreateRemovalRequestDialog(
         onDismissRequest = { if (!isCreating) onDismiss() },
         title = { 
             Text(
-                "Tạo yêu cầu rời shop",
+                stringResource(R.string.shipper_removal_dialog_title),
                 fontWeight = FontWeight.Bold
             ) 
         },
@@ -437,7 +439,7 @@ private fun CreateRemovalRequestDialog(
                 // Shop selection (if multiple shops)
                 if (approvedShops.size > 1) {
                     Text(
-                        "Chọn shop",
+                        stringResource(R.string.shipper_removal_select_shop_label),
                         fontWeight = FontWeight.Medium,
                         color = ShipperColors.TextPrimary
                     )
@@ -447,7 +449,7 @@ private fun CreateRemovalRequestDialog(
                         onExpandedChange = { showShopDropdown = it }
                     ) {
                         OutlinedTextField(
-                            value = selectedShop?.shopName ?: "Chọn shop",
+                            value = selectedShop?.shopName ?: stringResource(R.string.shipper_removal_select_shop),
                             onValueChange = {},
                             readOnly = true,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = showShopDropdown) },
@@ -500,7 +502,7 @@ private fun CreateRemovalRequestDialog(
                 
                 // Type selection
                 Text(
-                    "Loại yêu cầu",
+                    stringResource(R.string.shipper_removal_type_label),
                     fontWeight = FontWeight.Medium,
                     color = ShipperColors.TextPrimary
                 )
@@ -515,8 +517,8 @@ private fun CreateRemovalRequestDialog(
                             label = {
                                 Text(
                                     when (type) {
-                                        RemovalRequestType.QUIT -> "Nghỉ việc"
-                                        RemovalRequestType.TRANSFER -> "Chuyển shop"
+                                        RemovalRequestType.QUIT -> stringResource(R.string.shipper_removal_type_quit)
+                                        RemovalRequestType.TRANSFER -> stringResource(R.string.shipper_removal_type_transfer)
                                     }
                                 )
                             },
@@ -540,8 +542,8 @@ private fun CreateRemovalRequestDialog(
                 ) {
                     Text(
                         text = when (selectedType) {
-                            RemovalRequestType.QUIT -> "Bạn sẽ ngừng làm shipper và trở thành khách hàng thông thường"
-                            RemovalRequestType.TRANSFER -> "Bạn sẽ rời shop này nhưng vẫn giữ vai trò shipper để ứng tuyển shop khác"
+                            RemovalRequestType.QUIT -> stringResource(R.string.shipper_removal_quit_desc)
+                            RemovalRequestType.TRANSFER -> stringResource(R.string.shipper_removal_transfer_desc)
                         },
                         modifier = Modifier.padding(12.dp),
                         fontSize = 13.sp,
@@ -553,8 +555,8 @@ private fun CreateRemovalRequestDialog(
                 OutlinedTextField(
                     value = reason,
                     onValueChange = onReasonChange,
-                    label = { Text("Lý do (tùy chọn)") },
-                    placeholder = { Text("Nhập lý do bạn muốn rời shop...") },
+                    label = { Text(stringResource(R.string.shipper_removal_reason_label)) },
+                    placeholder = { Text(stringResource(R.string.shipper_removal_reason_hint)) },
                     modifier = Modifier.fillMaxWidth(),
                     maxLines = 3,
                     enabled = !isCreating
@@ -577,7 +579,7 @@ private fun CreateRemovalRequestDialog(
                         strokeWidth = 2.dp
                     )
                 } else {
-                    Text("Gửi yêu cầu")
+                    Text(stringResource(R.string.shipper_removal_submit))
                 }
             }
         },
@@ -586,7 +588,7 @@ private fun CreateRemovalRequestDialog(
                 onClick = onDismiss,
                 enabled = !isCreating
             ) {
-                Text("Hủy")
+                Text(stringResource(R.string.shipper_cancel))
             }
         }
     )
@@ -709,9 +711,9 @@ private fun RemovalRequestCard(request: RemovalRequest) {
 @Composable
 private fun StatusBadge(status: RemovalRequestStatus) {
     val (backgroundColor, textColor, text) = when (status) {
-        RemovalRequestStatus.PENDING -> Triple(ShipperColors.WarningLight, ShipperColors.Warning, "Đang chờ")
-        RemovalRequestStatus.APPROVED -> Triple(ShipperColors.SuccessLight, ShipperColors.Success, "Đã duyệt")
-        RemovalRequestStatus.REJECTED -> Triple(ShipperColors.ErrorLight, ShipperColors.Error, "Từ chối")
+        RemovalRequestStatus.PENDING -> Triple(ShipperColors.WarningLight, ShipperColors.Warning, stringResource(R.string.shipper_removal_status_pending))
+        RemovalRequestStatus.APPROVED -> Triple(ShipperColors.SuccessLight, ShipperColors.Success, stringResource(R.string.shipper_removal_status_approved))
+        RemovalRequestStatus.REJECTED -> Triple(ShipperColors.ErrorLight, ShipperColors.Error, stringResource(R.string.shipper_removal_status_rejected))
     }
     
     Surface(
@@ -747,14 +749,14 @@ private fun EmptyRequestsView(onRefresh: () -> Unit) {
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            "Chưa có yêu cầu nào",
+            stringResource(R.string.shipper_removal_empty),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
             color = ShipperColors.TextSecondary
         )
         
         Text(
-            "Bạn chưa tạo yêu cầu rời shop nào",
+            stringResource(R.string.shipper_removal_empty_desc),
             fontSize = 14.sp,
             color = ShipperColors.TextTertiary,
             textAlign = TextAlign.Center
@@ -768,7 +770,7 @@ private fun EmptyRequestsView(onRefresh: () -> Unit) {
         ) {
             Icon(Icons.Outlined.Refresh, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Làm mới")
+            Text(stringResource(R.string.shipper_removal_refresh))
         }
     }
 }

@@ -13,10 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
 import com.example.foodapp.ui.theme.PrimaryOrange
 import com.google.firebase.auth.FirebaseAuth
@@ -50,14 +52,14 @@ fun RoleSelectionScreen(
     ) {
         // Tiêu đề
         Text(
-            text = "Chọn vai trò của bạn",
+            text = stringResource(R.string.role_selection_subtitle),
             fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(top = 40.dp, bottom = 8.dp)
         )
 
         Text(
-            text = "Lựa chọn này sẽ xác định trải nghiệm của bạn trong ứng dụng",
+            text = stringResource(R.string.role_selection_subtitle),
             fontSize = 16.sp,
             color = Color.Gray,
             textAlign = TextAlign.Center,
@@ -75,11 +77,22 @@ fun RoleSelectionScreen(
 
         // Role values phải khớp với backend UserRole enum: CUSTOMER, OWNER, SHIPPER
         val roles = listOf(
-            Triple("CUSTOMER", "Người dùng", "Đặt món và đánh giá nhà hàng"),
-            Triple("OWNER", "Nhà bán hàng", "Quản lý cửa hàng và thực đơn"),
-            Triple("SHIPPER", "Người giao hàng", "Nhận đơn và giao hàng tận nơi")
+            Triple(
+                "CUSTOMER",
+                stringResource(R.string.role_customer),
+                stringResource(R.string.role_customer_desc)
+            ),
+            Triple(
+                "OWNER",
+                stringResource(R.string.role_owner),
+                stringResource(R.string.role_owner_desc)
+            ),
+            Triple(
+                "SHIPPER",
+                stringResource(R.string.role_shipper),
+                stringResource(R.string.role_shipper_desc)
+            )
         )
-
 
         roles.forEach { role ->
             RoleItem(
@@ -117,9 +130,17 @@ fun RoleSelectionScreen(
             enabled = selectedRole != null && !isLoading
         ) {
             if (isLoading) {
-                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                CircularProgressIndicator(
+                    color = Color.White,
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp
+                )
             } else {
-                Text("Xác nhận", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    stringResource(R.string.confirm_button),
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

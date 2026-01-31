@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -31,6 +32,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
+import com.example.foodapp.R
 import com.example.foodapp.data.repository.client.chat.ChatRepository
 import com.example.foodapp.data.remote.client.response.review.*
 import com.example.foodapp.data.remote.client.response.shop.ShopDetailApiModel
@@ -97,7 +99,7 @@ fun ShopDetailScreen(
     if (chatLoading) {
         AlertDialog(
             onDismissRequest = {},
-            title = { Text("Đang tạo cuộc trò chuyện...") },
+            title = { Text(stringResource(R.string.creating_conversation)) },
             text = {
                 Box(
                     modifier = Modifier.fillMaxWidth(),
@@ -114,13 +116,13 @@ fun ShopDetailScreen(
     chatError?.let { error ->
         AlertDialog(
             onDismissRequest = { viewModel.clearChatError() },
-            title = { Text("Lỗi") },
+            title = { Text(stringResource(R.string.error)) },
             text = { Text(error) },
             confirmButton = {
                 Button(
                     onClick = { viewModel.clearChatError() }
                 ) {
-                    Text("OK")
+                    Text(stringResource(R.string.ok))
                 }
             }
         )
@@ -140,13 +142,13 @@ fun ShopDetailScreen(
                     ) { state ->
                         when (state) {
                             is ShopDetailState.Loading -> {
-                                Text("Đang tải...")
+                                Text(stringResource(R.string.loading))
                             }
                             is ShopDetailState.Error -> {
-                                Text("Chi tiết cửa hàng")
+                                Text(stringResource(R.string.shop_details))
                             }
                             else -> {
-                                Text(shop?.name ?: "Chi tiết cửa hàng")
+                                Text(shop?.name ?: stringResource(R.string.shop_details))
                             }
                         }
                     }
@@ -160,7 +162,7 @@ fun ShopDetailScreen(
                     ) {
                         Icon(
                             Icons.Default.ArrowBack,
-                            contentDescription = "Quay lại",
+                            contentDescription = stringResource(R.string.go_back),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -186,7 +188,7 @@ fun ShopDetailScreen(
                             ) {
                                 Icon(
                                     Icons.Default.Star,
-                                    contentDescription = "Xem đánh giá",
+                                    contentDescription = stringResource(R.string.view_reviews),
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                             }
@@ -232,7 +234,7 @@ fun ShopDetailScreen(
                                         .crossfade(true)
                                         .build()
                                 ),
-                                contentDescription = "Logo cửa hàng",
+                                contentDescription = stringResource(R.string.shop_logo),
                                 modifier = Modifier
                                     .size(36.dp)
                                     .clip(CircleShape),
@@ -241,13 +243,13 @@ fun ShopDetailScreen(
 
                             Column {
                                 Text(
-                                    text = "Chat với",
+                                    text = stringResource(R.string.chat_with),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = Color.White.copy(alpha = 0.9f),
                                     fontSize = 10.sp
                                 )
                                 Text(
-                                    text = shop?.name ?: "Cửa hàng",
+                                    text = shop?.name ?: stringResource(R.string.shop),
                                     style = MaterialTheme.typography.titleSmall,
                                     color = Color.White,
                                     fontWeight = FontWeight.Bold,
@@ -262,7 +264,7 @@ fun ShopDetailScreen(
                             onClick = {
                                 viewModel.startChatWithShop(
                                     shopId = shopId,
-                                    shopName = shop?.name ?: "Cửa hàng",
+                                    shopName = shop?.name ?: (R.string.shop).toString(),
                                     onChatCreated = onChatCreated
                                 )
                             },
@@ -286,18 +288,18 @@ fun ShopDetailScreen(
                                     )
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(
-                                        "Đang tạo...",
+                                        stringResource(R.string.creating),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp
                                     )
                                 } else {
                                     Icon(
                                         Icons.Default.Chat,
-                                        contentDescription = "Nhắn tin",
+                                        contentDescription = stringResource(R.string.message),
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Text(
-                                        "Nhắn tin",
+                                        stringResource(R.string.message_button),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 14.sp
                                     )
@@ -395,7 +397,7 @@ fun ReviewsDialog(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "Đánh giá ($shopName)",
+                        text = stringResource(R.string.reviews_for_shop, shopName),
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                         fontSize = 20.sp
                     )
@@ -404,7 +406,7 @@ fun ReviewsDialog(
                         onClick = onClose,
                         modifier = Modifier.size(40.dp)
                     ) {
-                        Icon(Icons.Default.Close, contentDescription = "Đóng")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
                     }
                 }
 
@@ -441,7 +443,7 @@ fun ReviewsDialog(
                                     color = Color(0xFFFFA726)
                                 )
                                 Text(
-                                    text = "${reviewsMetadata.totalReviews} đánh giá",
+                                    text = stringResource(R.string.reviews_count, reviewsMetadata.totalReviews),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
                                 )
@@ -478,7 +480,7 @@ fun ReviewsDialog(
                                         tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                                     )
                                     Text(
-                                        text = "Chưa có đánh giá nào",
+                                        text = stringResource(R.string.no_reviews_yet),
                                         style = MaterialTheme.typography.bodyLarge,
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                                     )
@@ -508,12 +510,12 @@ fun ReviewsDialog(
                                 verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 Text(
-                                    text = "Không thể tải đánh giá",
+                                    text = stringResource(R.string.cannot_load_reviews),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.error
                                 )
                                 Button(onClick = onRetry) {
-                                    Text("Thử lại")
+                                    Text(stringResource(R.string.retry))
                                 }
                             }
                         }
@@ -535,7 +537,7 @@ fun ReviewsDialog(
                                     tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
                                 )
                                 Text(
-                                    text = "Chưa có đánh giá nào",
+                                    text = stringResource(R.string.no_reviews_yet),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                                 )
@@ -620,7 +622,7 @@ private fun ReviewItem(review: ShopOrderReviewApiModel) {
                 // Shop comment
                 if (review.comment.isNotEmpty()) {
                     Text(
-                        text = "Shop: ${review.comment}",
+                        text = stringResource(R.string.shop_comment, review.comment),
                         style = MaterialTheme.typography.bodyMedium,
                         lineHeight = 20.sp
                     )
@@ -640,7 +642,7 @@ private fun ReviewItem(review: ShopOrderReviewApiModel) {
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             Text(
-                                text = "💬 Phản hồi từ cửa hàng",
+                                text = stringResource(R.string.shop_response),
                                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -686,7 +688,7 @@ private fun ShopDetailContent(
                             .crossfade(true)
                             .build()
                     ),
-                    contentDescription = "Ảnh bìa cửa hàng",
+                    contentDescription = stringResource(R.string.shop_cover_image),
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
@@ -743,7 +745,7 @@ private fun ShopDetailContent(
                                             .crossfade(true)
                                             .build()
                                     ),
-                                    contentDescription = "Logo cửa hàng",
+                                    contentDescription = stringResource(R.string.shop_logo),
                                     modifier = Modifier
                                         .size(90.dp)
                                         .clip(CircleShape),
@@ -788,7 +790,7 @@ private fun ShopDetailContent(
                                                 fontWeight = FontWeight.Bold
                                             )
                                             Text(
-                                                text = "(${shop.totalRatings})",
+                                                text = stringResource(R.string.rating_count, shop.totalRatings),
                                                 style = MaterialTheme.typography.labelSmall,
                                                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
                                             )
@@ -807,7 +809,7 @@ private fun ShopDetailContent(
                                         tint = MaterialTheme.colorScheme.primary
                                     )
                                     Text(
-                                        text = "${shop.openTime} - ${shop.closeTime}",
+                                        text = stringResource(R.string.shop_hours, shop.openTime, shop.closeTime),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                                     )
@@ -847,15 +849,15 @@ private fun ShopDetailContent(
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Đang tạo...")
+                                Text(stringResource(R.string.creating))
                             } else {
                                 Icon(
                                     Icons.Default.Chat,
-                                    contentDescription = "Nhắn tin",
+                                    contentDescription = stringResource(R.string.message),
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Nhắn tin với cửa hàng")
+                                Text(stringResource(R.string.message_shop))
                             }
                         }
                     }
@@ -884,8 +886,8 @@ private fun ShopDetailContent(
                 ) {
                     MetricItem(
                         icon = "🚚",
-                        label = "Phí ship",
-                        value = "${shop.shipFeePerOrder}đ",
+                        label = stringResource(R.string.delivery_fee),
+                        value = stringResource(R.string.price_value, shop.shipFeePerOrder),
                         color = MaterialTheme.colorScheme.primary
                     )
 
@@ -896,8 +898,8 @@ private fun ShopDetailContent(
 
                     MetricItem(
                         icon = "💰",
-                        label = "Tối thiểu",
-                        value = "${shop.minOrderAmount}đ",
+                        label = stringResource(R.string.min_order),
+                        value = stringResource(R.string.price_value, shop.minOrderAmount),
                         color = MaterialTheme.colorScheme.primary
                     )
 
@@ -908,7 +910,7 @@ private fun ShopDetailContent(
 
                     MetricItem(
                         icon = "📦",
-                        label = "Đơn hàng",
+                        label = stringResource(R.string.orders),
                         value = "${shop.totalOrders}",
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -919,7 +921,7 @@ private fun ShopDetailContent(
         // Contact Info Card
         item {
             InfoCard(
-                title = "Thông tin liên hệ",
+                title = stringResource(R.string.contact_info),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
@@ -930,7 +932,7 @@ private fun ShopDetailContent(
                 ) {
                     ModernInfoRow(
                         icon = Icons.Default.LocationOn,
-                        title = "Địa chỉ",
+                        title = stringResource(R.string.address),
                         value = shop.address,
                         iconColor = Color(0xFFE53935)
                     )
@@ -939,7 +941,7 @@ private fun ShopDetailContent(
 
                     ModernInfoRow(
                         icon = Icons.Default.Phone,
-                        title = "Điện thoại",
+                        title = stringResource(R.string.phone),
                         value = shop.phone,
                         iconColor = Color(0xFF43A047)
                     )
@@ -950,7 +952,7 @@ private fun ShopDetailContent(
         // Statistics Card
         item {
             InfoCard(
-                title = "Thống kê",
+                title = stringResource(R.string.statistics),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
@@ -962,21 +964,21 @@ private fun ShopDetailContent(
                 ) {
                     StatisticItem(
                         value = "${shop.rating}",
-                        label = "Đánh giá",
+                        label = stringResource(R.string.rating),
                         icon = "⭐",
                         color = Color(0xFFFFA726)
                     )
 
                     StatisticItem(
                         value = "${shop.totalRatings}",
-                        label = "Lượt đánh giá",
+                        label = stringResource(R.string.reviews),
                         icon = "👥",
                         color = Color(0xFF42A5F5)
                     )
 
                     StatisticItem(
                         value = "${shop.totalOrders}",
-                        label = "Đơn hàng",
+                        label = stringResource(R.string.orders),
                         icon = "📊",
                         color = Color(0xFF66BB6A)
                     )
@@ -1008,7 +1010,7 @@ private fun ShopDetailContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Đánh giá",
+                            text = stringResource(R.string.reviews_title),
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                             fontSize = 18.sp
                         )
@@ -1026,7 +1028,7 @@ private fun ShopDetailContent(
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                             )
                             Text(
-                                text = "(${reviewsMetadata?.totalReviews ?: 0})",
+                                text = stringResource(R.string.reviews_count, reviewsMetadata?.totalReviews ?: 0),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
@@ -1049,7 +1051,10 @@ private fun ShopDetailContent(
                                 horizontalArrangement = Arrangement.Center
                             ) {
                                 Text(
-                                    text = "Xem thêm ${(reviewsMetadata?.totalReviews ?: 0) - 2} đánh giá khác",
+                                    text = stringResource(
+                                        R.string.view_more_reviews,
+                                        (reviewsMetadata?.totalReviews ?: 0) - 2
+                                    ),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.padding(vertical = 8.dp)
@@ -1064,7 +1069,7 @@ private fun ShopDetailContent(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Chưa có đánh giá nào",
+                                text = stringResource(R.string.no_reviews_yet),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                             )
@@ -1078,7 +1083,7 @@ private fun ShopDetailContent(
                     ) {
                         Icon(Icons.Default.Star, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Xem tất cả đánh giá")
+                        Text(stringResource(R.string.view_all_reviews))
                     }
                 }
             }
@@ -1172,7 +1177,7 @@ private fun LoadingState() {
             }
 
             Text(
-                "Đang tải thông tin cửa hàng...",
+                stringResource(R.string.loading_shop_info),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
             )
@@ -1198,7 +1203,7 @@ private fun StatusBadge(isOpen: Boolean) {
                     .background(Color.White, CircleShape)
             )
             Text(
-                text = if (isOpen) "Đang mở" else "Đã đóng",
+                text = if (isOpen) stringResource(R.string.open_status) else stringResource(R.string.closed_status),
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
@@ -1382,7 +1387,7 @@ private fun EmptyState() {
             }
 
             Text(
-                text = "Không tìm thấy thông tin cửa hàng",
+                text = stringResource(R.string.shop_not_found),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
                 textAlign = TextAlign.Center
@@ -1431,7 +1436,7 @@ private fun ErrorState(
                 }
 
                 Text(
-                    text = "Đã xảy ra lỗi",
+                    text = stringResource(R.string.error_occurred),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.error
@@ -1458,7 +1463,7 @@ private fun ErrorState(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        "Thử lại",
+                        stringResource(R.string.retry),
                         style = MaterialTheme.typography.titleMedium
                     )
                 }

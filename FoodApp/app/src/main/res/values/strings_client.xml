@@ -1,0 +1,905 @@
+<resources>
+    <string name="app_name">Food Ordering</string>
+    <string name="intro_title">Trải nghiệm <font color="#FF9966">Đặt Món Dễ Dàng</font>\n<font color="#FF9966">Giao Hàng Nhanh Chóng</font></string>
+    <string name="default_web_client_id">884959847866-uspb993ug023ife0s7dhhp7o384rj6db.apps.googleusercontent.com</string>
+
+
+    <!-- IntroScreen strings -->
+    <string name="banner_description">Food App Banner</string>
+    <string name="get_started">Bắt đầu ngay</string>
+    <string name="already_have_account">Bạn đã có tài khoản?</string>
+    <string name="intro_login">Đăng nhập</string>
+
+
+    <!-- LOGIN -->
+    <string name="login_welcome_back">Chào mừng trở lại!</string>
+    <string name="login_subtitle">Đăng nhập để tiếp tục</string>
+    <string name="login_success_email">Đăng nhập thành công!</string>
+    <string name="login_success_google">Đăng nhập Google thành công!</string>
+    <string name="email_hint">Email</string>
+    <string name="password_hint">Mật khẩu</string>
+    <string name="forgot_password">Quên mật khẩu?</string>
+    <string name="error_email_required">Vui lòng nhập email</string>
+    <string name="error_invalid_email">Email không hợp lệ</string>
+    <string name="error_password_required">Vui lòng nhập mật khẩu</string>
+    <string name="error_password_length">Mật khẩu phải có ít nhất 6 ký tự</string>
+    <string name="logging_in">Đang đăng nhập...</string>
+    <string name="success">Thành công!</string>
+    <string name="login_button">Đăng nhập</string>
+    <string name="connecting">Đang kết nối...</string>
+    <string name="connected">Đã kết nối!</string>
+    <string name="continue_with_google">Tiếp tục với Google</string>
+    <string name="no_account">Chưa có tài khoản? </string>
+    <string name="sign_up_now">Đăng ký ngay</string>
+    <string name="hide_password">Ẩn mật khẩu</string>
+    <string name="show_password">Hiện mật khẩu</string>
+
+    <!-- OTP Verification Screen Strings -->
+    <string name="loading_email">Đang tải email...</string>
+    <string name="otp_verification_title">Xác thực OTP</string>
+    <string name="otp_sent_message">Mã OTP 6 số đã được gửi đến:</string>
+    <string name="resend_in">Gửi lại sau: </string>
+    <string name="did_not_receive_code">Không nhận được mã? </string>
+    <string name="resend">Gửi lại</string>
+    <string name="verifying">Đang xác thực...</string>
+    <string name="verify">Xác thực</string>
+    <string name="enter_6_digit_otp">Nhập mã OTP 6 số</string>
+    <string name="otp_info_message">Nếu không nhận được mã, vui lòng kiểm tra hộp thư spam hoặc thử lại sau ít phút.</string>
+
+
+
+    <!-- Role Selection Screen Strings -->
+    <string name="role_selection_title">Chọn vai trò của bạn</string>
+    <string name="role_selection_subtitle">Lựa chọn này sẽ xác định trải nghiệm của bạn trong ứng dụng</string>
+    <string name="role_customer">Người dùng</string>
+    <string name="role_owner">Nhà bán hàng</string>
+    <string name="role_shipper">Người giao hàng</string>
+    <string name="role_customer_desc">Đặt món và đánh giá nhà hàng</string>
+    <string name="role_owner_desc">Quản lý cửa hàng và thực đơn</string>
+    <string name="role_shipper_desc">Nhận đơn và giao hàng tận nơi</string>
+    <string name="confirm_button">Xác nhận</string>
+
+
+    <!-- Sign Up Screen Strings -->
+    <string name="signup_title">Tạo tài khoản mới</string>
+    <string name="signup_subtitle">Điền thông tin để bắt đầu</string>
+    <string name="full_name_hint">Họ và tên</string>
+    <string name="password_signup_hint">Mật khẩu (ít nhất 6 ký tự)</string>
+    <string name="confirm_password_hint">Xác nhận mật khẩu</string>
+    <string name="password_requirements_title">Yêu cầu mật khẩu:</string>
+    <string name="password_length_requirement">Ít nhất 6 ký tự</string>
+    <string name="password_match_requirement">Mật khẩu khớp nhau</string>
+    <string name="processing">Đang xử lý...</string>
+    <string name="signup_button">Đăng ký</string>
+    <string name="or_divider">hoặc</string>
+    <string name="login_now">Đăng nhập ngay</string>
+    <string name="error_full_name_required">Vui lòng nhập họ và tên</string>
+    <string name="error_full_name_length">Tên phải có ít nhất 2 ký tự</string>
+    <string name="error_password_mismatch">Mật khẩu xác nhận không khớp</string>
+
+
+    <!-- Cart Screen Strings -->
+    <string name="cart_title">Giỏ hàng</string>
+    <string name="cart_filter_info_selected">Đang xem: %1$s • %2$d sản phẩm</string>
+    <string name="cart_filter_info_all">%1$d shop • %2$d sản phẩm</string>
+    <string name="used_vouchers_description">Voucher đã dùng</string>
+    <string name="filter_shops_description">Lọc cửa hàng</string>
+    <string name="filter_by_shop_title">Lọc theo cửa hàng</string>
+    <string name="shop_item_count">%1$d sản phẩm • %2$d cái</string>
+    <string name="selected_description">Đã chọn</string>
+    <string name="clear_all_cart_description">Xóa toàn bộ giỏ hàng</string>
+    <string name="save_changes_description">Lưu thay đổi</string>
+    <string name="used_vouchers_title">Voucher đã sử dụng</string>
+    <string name="used_vouchers_subtitle">Xem lại các voucher bạn đã sử dụng</string>
+    <string name="all_shops">Tất cả cửa hàng</string>
+    <string name="shop_total_label">Tổng shop:</string>
+    <string name="checkout_this_shop">Thanh toán shop này</string>
+    <string name="shop_icon_description">Shop</string>
+    <string name="shop_status_open">🟢 Mở cửa</string>
+    <string name="shop_status_closed">🔴 Đóng cửa</string>
+    <string name="delete_shop_description">Xóa shop</string>
+    <string name="delete_item_description">Xóa sản phẩm</string>
+    <string name="deleting_in_progress">Đang xóa...</string>
+    <string name="delete_shop_title">Xóa sản phẩm của shop</string>
+    <string name="delete_shop_confirmation">Bạn có chắc chắn muốn xóa %1$d sản phẩm của shop này?</string>
+    <string name="number_of_products_label">Số sản phẩm:</string>
+    <string name="products_count">%1$d sản phẩm</string>
+    <string name="total_quantity_label">Tổng số lượng:</string>
+    <string name="items_count">%1$d cái</string>
+    <string name="total_amount_label">Tổng tiền:</string>
+    <string name="cancel">Hủy</string>
+    <string name="delete_shop_button">Xóa shop</string>
+    <string name="viewing_filter_info">Đang xem: %1$s</string>
+    <string name="filter_product_count">%1$d sản phẩm • %2$d cái</string>
+    <string name="clear_filter_button">Xóa lọc</string>
+    <string name="clear_all_cart_title">Xóa toàn bộ giỏ hàng</string>
+    <string name="clear_all_cart_confirmation">Bạn có chắc chắn muốn xóa toàn bộ sản phẩm trong giỏ hàng?</string>
+    <string name="delete_button">Xóa</string>
+    <string name="subtotal_label">Tạm tính:</string>
+    <string name="total_label">Tổng cộng:</string>
+    <string name="checkout_all_button">Thanh toán tất cả</string>
+    <string name="empty_cart_title">Giỏ hàng trống</string>
+    <string name="empty_cart_message">Hãy thêm sản phẩm để tiếp tục mua sắm</string>
+    <string name="retry">Thử lại</string>
+
+
+    <!--- CHAT SCREEN -->
+
+    <string name="chat_screen_title">Trò chuyện</string>
+    <string name="chat_screen_support">Hỗ trợ khách hàng</string>
+    <string name="loading_messages">Đang tải</string>
+    <string name="message_status_sent">Đã gửi</string>
+    <string name="message_status_failed">Gửi thất bại</string>
+    <string name="message_input_placeholder">Nhập tin nhắn…</string>
+    <string name="send_message_button">Gửi tin nhắn</string>
+    <string name="loading_messages_view">Đang tải tin nhắn…</string>
+    <string name="error_messages_title">Đã xảy ra lỗi</string>
+
+
+    <!--- CHAT SCREEN -->
+
+    <string name="chatbot_screen_title">Chat với Bot Hỗ trợ</string>
+    <string name="clear_chat_button">Xóa cuộc trò chuyện</string>
+    <string name="bot_responding">Bot đang trả lời...</string>
+    <string name="rate_limit_message">Vui lòng đợi %d giây trước khi gửi tiếp</string>
+    <string name="chatbot_input_placeholder">Nhập câu hỏi của bạn...</string>
+    <string name="chatbot_welcome_title">Chào bạn! Tôi là bot hỗ trợ của FoodApp</string>
+    <string name="chatbot_welcome_subtitle">Hãy hỏi tôi bất cứ điều gì về đơn hàng, \nsản phẩm hoặc cửa hàng</string>
+    <string name="loading_quick_replies">Đang tải câu hỏi gợi ý...</string>
+    <string name="common_questions_title">Câu hỏi thường gặp:</string>
+    <string name="load_quick_replies_error">Tải câu hỏi gợi ý thất bại</string>
+    <string name="suggested_questions_title">Câu hỏi gợi ý:</string>
+    <string name="quick_questions_title">Câu hỏi nhanh:</string>
+
+    <!--- FAVOURITE SCREEN -->
+
+    <string name="favorites_title">Yêu thích</string>
+    <string name="product_count">%d sản phẩm</string>
+    <string name="refresh_button">Refresh</string>
+    <string name="removing_favorite">Đang xóa...</string>
+    <string name="removed_from_favorites">Đã xóa khỏi yêu thích</string>
+    <string name="default_shop_name">Cửa hàng</string>
+    <string name="remove_from_favorites_button">Remove from favorites</string>
+    <string name="loading_favorites">Đang tải danh sách yêu thích...</string>
+    <string name="load_favorites_error_title">Không thể tải dữ liệu</string>
+    <string name="empty_favorites_title">Chưa có sản phẩm yêu thích</string>
+    <string name="empty_favorites_subtitle">Hãy khám phá và thêm những món ăn\nbạn yêu thích vào danh sách</string>
+
+
+    <!--- LIST CHAT SCREEN -->
+
+    <string name="conversations_title">Đoạn chat</string>
+    <string name="avatar_content_description">Avatar</string>
+    <string name="no_messages">Chưa có tin nhắn</string>
+    <string name="role_display">• %s</string>
+    <string name="loading_conversations">Đang tải đoạn chat...</string>
+    <string name="error_content_description">Lỗi</string>
+    <string name="empty_conversations_content_description">Không có chat</string>
+    <string name="empty_conversations_title">Chưa có đoạn chat nào</string>
+    <string name="empty_conversations_subtitle">Bắt đầu trò chuyện với người bán hoặc hỗ trợ viên</string>
+    <string name="just_now">Vừa xong</string>
+    <string name="minutes_ago">%d phút trước</string>
+    <string name="hours_ago">%d giờ trước</string>
+    <string name="days_ago">%d ngày trước</string>
+
+
+    <!--- notification CHAT SCREEN -->
+
+    <string name="notifications_title">Thông báo</string>
+    <string name="filter_notifications_button">Lọc thông báo</string>
+    <string name="filter_notifications_dialog_title">Lọc thông báo</string>
+    <string name="filter_all">Tất cả</string>
+    <string name="filter_unread">Chưa đọc</string>
+    <string name="filter_order">Đơn hàng</string>
+    <string name="filter_system">Hệ thống</string>
+    <string name="loading_notifications">Đang tải thông báo...</string>
+    <string name="load_notifications_error_title">Không thể tải thông báo</string>
+    <string name="marked_as_read_success">Đã đánh dấu đã đọc</string>
+    <string name="mark_as_read_error">Lỗi: %s</string>
+    <string name="notification_default_title">Thông báo</string>
+    <string name="notification_status_new">Mới</string>
+    <string name="notification_status_read">Đã đọc</string>
+    <string name="empty_notifications_content_description">Không có thông báo</string>
+    <string name="empty_notifications_all">Không có thông báo nào</string>
+    <string name="empty_notifications_unread">Không có thông báo chưa đọc</string>
+    <string name="empty_notifications_order">Không có thông báo đơn hàng</string>
+    <string name="empty_notifications_system">Không có thông báo hệ thống</string>
+    <string name="empty_notifications_subtitle">Chúng tôi sẽ thông báo cho bạn khi có tin mới</string>
+    <string name="unknown_time">Thời gian không xác định</string>
+
+
+    <!-- Order Screen Strings -->
+    <string name="my_orders_title">Đơn hàng của tôi</string>
+    <string name="filter_orders_button">Lọc đơn hàng</string>
+    <string name="filter_shipping">Đang giao</string>
+    <string name="filter_pending">Đang chờ</string>
+    <string name="filter_delivered">Đã giao</string>
+    <string name="filter_cancelled">Đã hủy</string>
+    <string name="loading_orders">Đang tải đơn hàng...</string>
+    <string name="no_orders_content_description">Không có đơn hàng</string>
+    <string name="no_orders_title">Chưa có đơn hàng nào</string>
+    <string name="no_orders_subtitle">Hãy đặt món ngay để trải nghiệm\ndịch vụ giao hàng nhanh chóng!</string>
+    <string name="error_loading_orders_title">Đã xảy ra lỗi</string>
+
+    <!-- Delete Order Strings -->
+    <string name="delete_reason_wrong_order">Đặt nhầm đơn hàng</string>
+    <string name="delete_reason_change_mind">Thay đổi ý định mua hàng</string>
+    <string name="delete_reason_incorrect_info">Thông tin đơn hàng không chính xác</string>
+    <string name="delete_reason_better_product">Tìm thấy sản phẩm tốt hơn</string>
+    <string name="delete_reason_other">Lý do khác</string>
+    <string name="delete_order_success">Đã xóa đơn hàng thành công</string>
+    <string name="delete_order_reason_title">Lý do xóa đơn hàng</string>
+    <string name="total_price_label">Tổng tiền: %s</string>
+    <string name="choose_delete_reason_hint">Vui lòng chọn lý do bạn muốn xóa đơn hàng này:</string>
+    <string name="enter_other_reason_label">Nhập lý do khác</string>
+    <string name="enter_other_reason_placeholder">Vui lòng nhập lý do cụ thể...</string>
+    <string name="please_choose_delete_reason">Vui lòng chọn hoặc nhập lý do xóa</string>
+    <string name="continue_button">Tiếp tục</string>
+    <string name="confirm_delete_order_title">Xác nhận xóa đơn hàng</string>
+    <string name="warning_content_description">Cảnh báo</string>
+    <string name="about_to_delete_order">Bạn sắp xóa đơn hàng sau:</string>
+    <string name="order_code_display">📦 Mã đơn: #%s</string>
+    <string name="shop_name_display">🏪 Cửa hàng: %s</string>
+    <string name="total_price_display">💰 Tổng tiền: %s</string>
+    <string name="order_date_display">📅 Ngày đặt: %s</string>
+    <string name="delete_reason_display">Lý do xóa:</string>
+    <string name="irreversible_warning">Hành động này KHÔNG THỂ hoàn tác!</string>
+    <string name="delete_order_button">XÓA ĐƠN HÀNG</string>
+    <string name="ok">OK</string>
+
+
+
+    <!-- Order Detail Screen Strings -->
+    <string name="order_detail_title">Chi tiết đơn hàng</string>
+    <string name="cancel_order_title">Hủy đơn hàng</string>
+    <string name="cancel_order_confirmation">Bạn có chắc chắn muốn hủy đơn hàng này không?</string>
+    <string name="cancel_order_button">Hủy đơn</string>
+    <string name="success_title">Thành công!</string>
+    <string name="review_submitted_success">Đánh giá của bạn đã được gửi thành công.</string>
+    <string name="sepay_payment_title">Thanh toán SEPAY</string>
+    <string name="qr_code_content_description">Mã QR thanh toán</string>
+    <string name="scan_qr_to_pay">Quét mã QR để thanh toán</string>
+    <string name="transaction_code">Mã giao dịch</string>
+    <string name="amount_label">Số tiền</string>
+    <string name="account_number_label">Số tài khoản</string>
+    <string name="account_name_label">Tên tài khoản</string>
+    <string name="bank_name_label">Ngân hàng</string>
+    <string name="order_review_title">Đánh giá đơn hàng</string>
+    <string name="shop_review_title">Đánh giá cửa hàng</string>
+    <string name="shop_review_subtitle">Bạn hài lòng với cửa hàng này không?</string>
+    <string name="shipper_review_title">Đánh giá người giao hàng</string>
+    <string name="shipper_review_subtitle">Người giao hàng thế nào?</string>
+    <string name="optional_label">(Tùy chọn)</string>
+    <string name="product_review_title">Đánh giá từng món</string>
+    <string name="star_rating_description">%d sao</string>
+    <string name="product_comment_placeholder">Nhận xét về món ăn...</string>
+    <string name="review_validation_error">Vui lòng đánh giá shop và tất cả sản phẩm</string>
+    <string name="submit_review_button">Gửi đánh giá</string>
+    <string name="optional_comment_placeholder">Nhận xét (tùy chọn)...</string>
+    <string name="shop_comment_placeholder">Nhận xét về cửa hàng...</string>
+    <string name="qr_code_payment_button">Mã QR thanh toán</string>
+    <string name="review_order_button">Đánh giá đơn hàng</string>
+    <string name="already_reviewed_button">Đã đánh giá</string>
+    <string name="order_status_title">Trạng thái đơn hàng</string>
+    <string name="order_status_pending">Đơn hàng đã đặt</string>
+    <string name="order_status_confirmed">Đã xác nhận</string>
+    <string name="order_status_preparing">Đang chuẩn bị</string>
+    <string name="order_status_shipping">Đang giao hàng</string>
+    <string name="order_status_delivered">Đã giao hàng</string>
+    <string name="order_items_title">Món đã đặt</string>
+    <string name="quantity_label">%dx</string>
+    <string name="delivery_info_title">Thông tin giao hàng</string>
+    <string name="building_label">Tòa: %s</string>
+    <string name="room_label">Phòng: %s</string>
+    <string name="note_label">Ghi chú: %s</string>
+    <string name="payment_method_title">Phương thức thanh toán</string>
+    <string name="payment_method_cod">Thanh toán khi nhận hàng</string>
+    <string name="payment_method_momo">Ví MoMo</string>
+    <string name="payment_method_banking">Chuyển khoản ngân hàng</string>
+    <string name="payment_status_paid">Đã thanh toán</string>
+    <string name="payment_status_unpaid">Chưa thanh toán</string>
+    <string name="payment_status_failed">Thất bại</string>
+    <string name="payment_status_refunded">Đã hoàn tiền</string>
+    <string name="order_summary_title">Tổng kết đơn hàng</string>
+    <string name="shipping_fee_label">Phí vận chuyển</string>
+    <string name="discount_label">Giảm giá</string>
+    <string name="discount_value">-%s</string>
+    <string name="no_order_content_description">Không có đơn hàng</string>
+    <string name="no_order_found">Không tìm thấy đơn hàng</string>
+
+
+    <!-- Order Success Screen Strings -->
+    <string name="order_success_title">Đơn hàng thành công</string>
+    <string name="loading_order_info">Đang tải thông tin đơn hàng...</string>
+    <string name="success_content_description">Thành công</string>
+    <string name="order_success_header">🎉 Đặt hàng thành công!</string>
+    <string name="order_success_message">Cảm ơn bạn đã đặt hàng. Đơn hàng của bạn đã được xác nhận và đang được xử lý.</string>
+    <string name="info_content_description">Thông tin</string>
+    <string name="shop_info_title">Thông tin từ cửa hàng</string>
+    <string name="shop_info_message">Cửa hàng sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận đơn hàng và thời gian giao hàng.</string>
+    <string name="next_steps_title">Bạn có thể:</string>
+    <string name="continue_shopping_title">Tiếp tục mua sắm</string>
+    <string name="continue_shopping_desc">Quay lại trang chủ để xem thêm sản phẩm</string>
+    <string name="view_order_details_title">Xem chi tiết đơn hàng</string>
+    <string name="view_order_details_desc">Theo dõi trạng thái và chi tiết đơn hàng</string>
+    <string name="check_order_history_title">Kiểm tra lịch sử đơn hàng</string>
+    <string name="check_order_history_desc">Xem tất cả đơn hàng của bạn</string>
+    <string name="ordered_products_title">📦 Sản phẩm đã đặt</string>
+    <string name="quantity_display">x%d</string>
+    <string name="order_information_title">📋 Thông tin đơn hàng</string>
+    <string name="order_code_label">Mã đơn hàng:</string>
+    <string name="shop_name_label">Cửa hàng:</string>
+    <string name="product_count_label">Số lượng sản phẩm:</string>
+    <string name="product_count_value">%d sản phẩm</string>
+    <string name="payment_method_label">Phương thức thanh toán:</string>
+    <string name="payment_method_sepay">Chuyển khoản ngân hàng</string>
+    <string name="order_status_label">Trạng thái:</string>
+    <string name="order_status_ready">Sẵn sàng giao</string>
+    <string name="delivery_address_label">Địa chỉ giao hàng:</string>
+    <string name="delivery_address_value">%s%s</string>
+    <string name="details_content_description">Chi tiết</string>
+    <string name="view_order_details_button">Xem chi tiết đơn hàng</string>
+    <string name="home_content_description">Trang chủ</string>
+    <string name="continue_shopping_button">Tiếp tục mua sắm</string>
+
+
+    <!-- Payment Screen Strings -->
+    <string name="select_delivery_address_warning">Vui lòng chọn địa chỉ giao hàng để tiếp tục</string>
+    <string name="notification_title">Thông báo</string>
+    <string name="creating_order">Đang tạo đơn hàng...</string>
+    <string name="total_payment_label">Tổng thanh toán</string>
+    <string name="place_order_button">ĐẶT HÀNG</string>
+    <string name="scan_qr_to_pay_title">Quét QR Code để thanh toán</string>
+    <string name="manual_transfer_option">Hoặc chuyển khoản thủ công:</string>
+    <string name="bank_display">MB (%s)</string>
+    <string name="transaction_content_label">Nội dung:</string>
+    <string name="payment_note">⚠️ Lưu ý: Vui lòng chuyển khoản đúng nội dung và số tiền trên để hệ thống tự động xác nhận thanh toán.</string>
+    <string name="close">Đóng</string>
+
+
+    <!-- Product Detail Screen Strings -->
+    <string name="loading_product_info">Đang tải thông tin sản phẩm...</string>
+    <string name="error_occurred_title">Đã xảy ra lỗi</string>
+    <string name="back_button">Quay lại</string>
+
+
+
+    <!-- Profile Screen -->
+    <string name="profile_orders">Đơn mua</string>
+    <string name="profile_chats">Đoạn chat</string>
+    <string name="profile_reviews">Đánh giá của tôi</string>
+    <string name="profile_user_info">Thông tin cá nhân</string>
+
+    <!-- Common Strings -->
+    <string name="delete">Xóa</string>
+    <string name="agree">Đồng ý</string>
+    <string name="view_details">Xem chi tiết</string>
+    <string name="delete_confirmation_title">Xác nhận xóa</string>
+    <string name="set_default_address_title">Đặt địa chỉ mặc định</string>
+    <string name="delete_address_confirmation">Bạn có chắc chắn muốn xóa địa chỉ này?</string>
+    <string name="set_default_address_confirmation">Bạn có muốn đặt địa chỉ này làm mặc định?</string>
+    <string name="address_section_title">Địa chỉ</string>
+    <string name="add_address">Thêm địa chỉ</string>
+    <string name="no_address_message">Bạn chưa có địa chỉ nào. Hãy thêm địa chỉ mới!</string>
+    <string name="default_address">Mặc định</string>
+    <string name="settings_section_title">Cài đặt</string>
+    <string name="change_password">Đổi mật khẩu</string>
+    <string name="profile_title">Trang cá nhân</string>
+    <string name="refresh">Làm mới</string>
+    <string name="error_loading_profile">Không thể tải thông tin người dùng. Vui lòng thử lại!</string>
+    <string name="loading">Đang tải...</string>
+    <string name="user_info_title">Thông tin cá nhân</string>
+    <string name="edit_profile">Chỉnh sửa thông tin</string>
+    <string name="action_orders">Đơn hàng</string>
+    <string name="action_chats">Tin nhắn</string>
+    <string name="action_reviews">Đánh giá</string>
+
+    <!-- Reviews Screen -->
+    <string name="my_reviews_title">Đánh giá của tôi</string>
+    <string name="go_back">Quay lại</string>
+    <string name="delete_review_title">Xác nhận xóa</string>
+    <string name="delete_review_confirmation">Bạn có chắc chắn muốn xóa đánh giá này? Hành động này không thể hoàn tác.</string>
+    <string name="edit">Sửa</string>
+    <string name="order_code">Mã đơn: %s</string>
+    <string name="shop">Shop</string>
+    <string name="shipper">Shipper</string>
+    <string name="product_reviews_title">Đánh giá sản phẩm:</string>
+    <string name="product">Sản phẩm</string>
+    <string name="shop_response_title">Phản hồi từ quán</string>
+    <string name="rating_value">%d.0</string>
+
+    <!-- No Reviews State -->
+    <string name="no_reviews_icon_desc">Chưa có đánh giá</string>
+    <string name="no_reviews_title">Chưa có đánh giá nào</string>
+    <string name="no_reviews_message">Hãy đánh giá các đơn hàng đã mua để chia sẻ trải nghiệm của bạn với mọi người</string>
+
+    <!-- Loading & Error States -->
+    <string name="error_icon_desc">Lỗi</string>
+    <string name="error_title">Đã có lỗi xảy ra</string>
+
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Cài đặt</string>
+
+    <!-- Notification Settings -->
+    <string name="notification_settings_title">Cài đặt thông báo</string>
+    <string name="info_notification_title">Thông báo thông tin</string>
+    <string name="info_notification_desc">Cập nhật, thông báo từ hệ thống</string>
+    <string name="marketing_notification_title">Thông báo khuyến mãi</string>
+    <string name="marketing_notification_desc">Khuyến mãi, ưu đãi đặc biệt</string>
+
+    <!-- Account Section -->
+    <string name="account_section_title">Tài khoản</string>
+    <string name="change_password_title">Đổi mật khẩu</string>
+    <string name="change_password_desc">Thay đổi mật khẩu đăng nhập</string>
+    <string name="delete_account_title">Xóa tài khoản</string>
+    <string name="delete_account_desc">Xóa vĩnh viễn tài khoản của bạn</string>
+
+    <!-- System Section -->
+    <string name="system_section_title">Hệ thống</string>
+    <string name="logout_title">Đăng xuất</string>
+    <string name="logout_desc">Đăng xuất khỏi tài khoản hiện tại</string>
+
+    <!-- Dialog Titles and Messages -->
+    <string name="logout_confirm_title">Xác nhận đăng xuất</string>
+    <string name="logout_confirm_message">Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này không?</string>
+    <string name="change_password_dialog_title">Đổi mật khẩu</string>
+    <string name="delete_account_dialog_title">Xóa tài khoản</string>
+
+    <!-- Password Fields -->
+    <string name="current_password">Mật khẩu hiện tại</string>
+    <string name="new_password">Mật khẩu mới</string>
+    <string name="confirm_new_password">Xác nhận mật khẩu mới</string>
+    <string name="password_mismatch">Mật khẩu không khớp</string>
+
+    <!-- Delete Account Dialog -->
+    <string name="warning">Cảnh báo</string>
+    <string name="delete_account_warning_message">Bạn có chắc chắn muốn xóa tài khoản này? Hành động này sẽ:</string>
+    <string name="delete_account_point_1">• Xóa vĩnh viễn tài khoản của bạn</string>
+    <string name="delete_account_point_2">• Xóa tất cả dữ liệu liên quan</string>
+    <string name="delete_account_point_3">• Không thể khôi phục lại</string>
+    <string name="delete_account_terms_confirmation">Tôi hiểu hậu quả và muốn xóa tài khoản</string>
+
+    <!-- Buttons -->
+    <string name="logout">Đăng xuất</string>
+    <string name="confirm">Xác nhận</string>
+    <string name="delete_account_button">Xóa tài khoản</string>
+
+    <!-- Error Messages -->
+    <string name="error">Lỗi</string>
+
+
+    <!-- Shop List Screen -->
+    <string name="shop_list_title">Danh sách cửa hàng</string>
+    <string name="search_shop_placeholder">Tìm kiếm cửa hàng...</string>
+    <string name="search">Tìm kiếm</string>
+    <string name="clear">Xóa</string>
+
+    <!-- Filter Chips -->
+    <string name="open_shops">Đang mở</string>
+    <string name="closed_shops">Đã đóng</string>
+
+    <!-- Results Header -->
+    <string name="search_results_count">%d kết quả tìm kiếm</string>
+    <string name="shops_count">%s • %d cửa hàng</string>
+    <string name="clear_filters">Xóa</string>
+
+    <!-- Shop Item -->
+    <string name="rating_count">(%d)</string>
+    <string name="shop_hours">%s - %s</string>
+    <string name="delivery_fee">%sđ</string>
+    <string name="min_order">Min %sđ</string>
+    <string name="open_status">Mở</string>
+    <string name="closed_status">Đóng</string>
+
+    <!-- Loading States -->
+    <string name="loading_shops">Đang tải danh sách...</string>
+    <string name="loading_more">Đang tải thêm...</string>
+    <string name="load_more">Tải thêm</string>
+
+    <!-- Empty State -->
+    <string name="no_shops_found">Không tìm thấy cửa hàng</string>
+    <string name="no_shops_message">Thử điều chỉnh bộ lọc hoặc tìm kiếm khác</string>
+
+
+    <!-- Pagination -->
+    <string name="pagination_info">Trang %d/%d • Tổng %d cửa hàng</string>
+
+    <!-- Shop Detail Screen -->
+    <string name="shop_details">Chi tiết cửa hàng</string>
+    <string name="view_reviews">Xem đánh giá</string>
+    <string name="shop_logo">Logo cửa hàng</string>
+    <string name="shop_cover_image">Ảnh bìa cửa hàng</string>
+    <string name="chat_with">Chat với</string>
+    <string name="message">Nhắn tin</string>
+    <string name="message_button">Nhắn tin</string>
+    <string name="message_shop">Nhắn tin với cửa hàng</string>
+    <string name="creating_conversation">Đang tạo cuộc trò chuyện...</string>
+    <string name="creating">Đang tạo...</string>
+
+    <!-- Reviews Dialog -->
+    <string name="reviews_for_shop">Đánh giá (%s)</string>
+    <string name="reviews_title">Đánh giá</string>
+    <string name="shop_comment">Shop: %s</string>
+    <string name="shop_response">💬 Phản hồi từ cửa hàng</string>
+    <string name="cannot_load_reviews">Không thể tải đánh giá</string>
+    <string name="view_all_reviews">Xem tất cả đánh giá</string>
+    <string name="view_more_reviews">Xem thêm %d đánh giá khác</string>
+
+    <!-- Shop Information -->
+    <string name="contact_info">Thông tin liên hệ</string>
+    <string name="address">Địa chỉ</string>
+    <string name="phone">Điện thoại</string>
+    <string name="statistics">Thống kê</string>
+    <string name="rating">Đánh giá</string>
+    <string name="reviews">Lượt đánh giá</string>
+    <string name="orders">Đơn hàng</string>
+
+    <!-- Order Info -->
+    <string name="price_value">%sđ</string>
+
+    <!-- Status -->
+
+
+    <!-- Loading & Error States -->
+    <string name="loading_shop_info">Đang tải thông tin cửa hàng...</string>
+    <string name="shop_not_found">Không tìm thấy thông tin cửa hàng</string>
+    <string name="error_occurred">Đã xảy ra lỗi</string>
+
+    <!-- Common Strings -->
+    <string name="no_reviews_yet">Chưa có đánh giá nào</string>
+    <string name="reviews_count">%d đánh giá</string>
+
+
+    <!-- User Info Screen -->
+    <string name="avatar">Avatar</string>
+    <string name="change_avatar">Thay đổi avatar</string>
+    <string name="add_photo">Thêm ảnh</string>
+    <string name="not_updated">Chưa cập nhật</string>
+    <string name="no_email">Chưa có email</string>
+    <string name="click_to_change_photo">Nhấn vào ảnh để thay đổi</string>
+
+    <!-- Personal Information -->
+    <string name="personal_info">Thông tin cá nhân</string>
+    <string name="full_name">Họ và tên</string>
+    <string name="phone_number">Số điện thoại</string>
+
+    <!-- Account Information -->
+    <string name="account_status">Trạng thái tài khoản</string>
+    <string name="account_verification">Xác minh tài khoản</string>
+    <string name="verified">Đã xác minh</string>
+    <string name="not_verified">Chưa xác minh</string>
+    <string name="account_info">Thông tin tài khoản</string>
+    <string name="role">Vai trò</string>
+    <string name="email">Email</string>
+    <string name="status">Trạng thái</string>
+
+    <!-- Roles -->
+    <string name="role_client">Khách hàng</string>
+    <string name="role_admin">Quản trị viên</string>
+
+    <!-- Success Messages -->
+    <string name="avatar_upload_success">Cập nhật ảnh đại diện thành công</string>
+    <string name="update_profile_success">Cập nhật thông tin thành công</string>
+    <string name="refreshing_info">Đang tải lại thông tin...</string>
+
+    <!-- Error Messages -->
+    <string name="cannot_read_image">Không thể đọc file ảnh</string>
+    <string name="error_with_message">Lỗi: %s</string>
+
+
+    <!-- Voucher History Screen -->
+    <string name="voucher_history_title">Lịch sử Voucher</string>
+    <string name="loading_history">Đang tải lịch sử…</string>
+    <string name="no_history">Không có lịch sử</string>
+    <string name="no_history_title">Chưa có lịch sử sử dụng</string>
+    <string name="no_history_message">Các voucher bạn đã sử dụng sẽ xuất hiện tại đây</string>
+    <string name="total_usage">TỔNG SỐ LẦN SỬ DỤNG</string>
+    <string name="page_info">Trang %d/%d</string>
+    <string name="no_data">Không có dữ liệu</string>
+    <string name="pull_to_load_more">Kéo xuống để tải thêm…</string>
+    <string name="all_items_displayed">Đã hiển thị tất cả</string>
+
+    <!-- Voucher History Item -->
+    <string name="order_label">Đơn hàng</string>
+    <string name="shop_label">Cửa hàng</string>
+    <string name="time_label">Thời gian</string>
+
+
+    <!-- Results Header -->
+    <string name="search_results_for">Kết quả cho \'%s\'</string>
+    <string name="filtered_by">Lọc theo: %s</string>
+    <string name="results_count">%d kết quả</string>
+    <string name="popular_dishes">Món ăn phổ biến</string>
+    <string name="category">Danh mục</string>
+    <string name="clear_search">Xóa tìm kiếm</string>
+    <string name="clear_filter">Xóa bộ lọc</string>
+
+    <!-- Error View -->
+    <string name="empty">Trống</string>
+
+    <!-- Empty View -->
+    <string name="no_products_yet">Chưa có sản phẩm nào.</string>
+    <string name="reload">Tải lại</string>
+
+    <!-- No Results View -->
+    <string name="no_results">Không có kết quả</string>
+    <string name="no_results_found">Không tìm thấy kết quả phù hợp.</string>
+
+    <!-- Load More Section -->
+    <string name="end_of_products">Bạn đã xem hết sản phẩm</string>
+
+    <!-- Bottom Navigation -->
+    <string name="home">Trang chủ</string>
+    <string name="cart">Giỏ hàng</string>
+    <string name="favorites">Yêu thích</string>
+    <string name="notifications">Thông báo</string>
+    <string name="me">Tôi</string>
+
+    <!-- Home Content -->
+    <string name="all_categories">Tất cả</string>
+    <string name="chat_with_bot">Chat với bot hỗ trợ</string>
+    <string name="view_all_shops">Xem tất cả cửa hàng</string>
+    <string name="searching_for">Đang tìm kiếm \"%s\"…</string>
+    <string name="found_results_count">Tìm thấy %d kết quả</string>
+    <string name="products_found_count">%d sản phẩm tìm thấy</string>
+    <string name="category_and_products_count">%s • %d sản phẩm</string>
+    <string name="pagination_summary">%d sản phẩm • Trang %d/%d</string>
+    <string name="previous_page">Trang trước</string>
+    <string name="next_page">Trang sau</string>
+
+
+    <!-- Home Header Section -->
+    <string name="guest">Khách</string>
+    <string name="welcome">Xin chào,</string>
+    <string name="search_favorite_foods">Tìm món ăn yêu thích…</string>
+    <string name="filter">Lọc</string>
+
+    <!-- Product Card -->
+    <string name="out_of_stock">HẾT HÀNG</string>
+    <string name="no_image">Không có ảnh</string>
+    <string name="rating_count_parentheses"> (%d)</string>
+    <string name="no_ratings_yet">Chưa có đánh giá</string>
+    <string name="sold_count">Đã bán %s</string>
+    <string name="preparation_time">Thời gian chuẩn bị</string>
+    <string name="preparation_time_minutes">%d phút</string>
+
+
+    <!-- Order Card -->
+    <string name="order_number">#%s</string>
+    <string name="delete_order">Xóa đơn hàng</string>
+
+    <!-- Order Statuses -->
+    <string name="status_pending">Đang chờ</string>
+    <string name="status_confirmed">Đã xác nhận</string>
+    <string name="status_preparing">Đang chuẩn bị</string>
+    <string name="status_shipping">Đang giao</string>
+    <string name="status_delivered">Đã giao</string>
+
+    <!-- Payment Statuses -->
+    <string name="payment_unpaid">Chưa thanh toán</string>
+    <string name="payment_paid">Đã thanh toán</string>
+    <string name="payment_failed">Thất bại</string>
+    <string name="payment_refunded">Đã hoàn tiền</string>
+
+    <!-- Order Items -->
+    <string name="quantity_x">%dx</string>
+    <string name="more_items_count">+ %d món khác</string>
+    <string name="total">Tổng cộng</string>
+    <string name="time">Thời gian</string>
+
+    <!-- Address Selection Dialog -->
+    <string name="select_delivery_address">Chọn địa chỉ giao hàng</string>
+    <string name="no_addresses">Không có địa chỉ</string>
+    <string name="no_addresses_message">Chưa có địa chỉ nào</string>
+    <string name="default_address_badge">Mặc định</string>
+    <string name="selected">Đã chọn</string>
+    <string name="room_prefix">Phòng %s</string>
+
+
+    <!-- Delivery Info Section -->
+    <string name="delivery_address_title">Địa chỉ giao hàng</string>
+    <string name="change_address">Thay đổi</string>
+    <string name="please_select_address">Vui lòng chọn địa chỉ giao hàng</string>
+
+
+    <string name="product_price_label">Tiền hàng</string>
+    <string name="currency_format">%,.0fđ</string>
+
+
+    <string name="payment_total_label">Tổng cộng</string>
+    <string name="currency_vnd_format">%,.0fđ</string>
+    <string name="shipping_fee">Phí vận chuyển</string>
+
+    <string name="payment_cod_title">Thanh toán khi nhận hàng</string>
+    <string name="payment_cod_description">Trả tiền mặt cho shipper</string>
+    <string name="payment_bank_title">Thanh toán bằng tài khoản ngân hàng</string>
+    <string name="payment_bank_description">Chuyển khoản qua ngân hàng/Ví điện tử</string>
+    <string name="payment_icon_description">Biểu tượng phương thức thanh toán</string>
+    <string name="payment_cod_icon_description">Biểu tượng tiền mặt</string>
+    <string name="payment_bank_icon_description">Biểu tượng ngân hàng</string>
+
+    <string name="payment_screen_title">Thanh toán</string>
+
+
+    <string name="selected_products_title">Sản phẩm đã chọn</string>
+    <string name="product_quantity_label">Số lượng: %d</string>
+    <string name="product_shopping_bag_icon">Giỏ hàng</string>
+
+    <string name="decrease_quantity">Giảm số lượng</string>
+    <string name="increase_quantity">Tăng số lượng</string>
+
+
+    <string name="voucher_title">Voucher ưu đãi</string>
+    <string name="voucher_placeholder">Chọn voucher để nhận ưu đãi</string>
+    <string name="voucher_no_selected_option">Không sử dụng voucher</string>
+    <string name="voucher_no_available">Không có voucher khả dụng</string>
+    <string name="voucher_arrow_down_icon">Mở danh sách voucher</string>
+    <string name="voucher_discount_percentage">-%d%%</string>
+    <string name="voucher_discount_fixed">-%s</string>
+    <string name="voucher_close_icon">Đóng</string>
+    <string name="voucher_info_icon">Thông tin voucher</string>
+    <string name="voucher_discount_label">Giảm giá</string>
+    <string name="voucher_min_order">Đơn từ %s</string>
+    <string name="voucher_remaining_uses">Còn %d lượt</string>
+    <string name="voucher_deselect">Bỏ chọn</string>
+    <string name="voucher_warning_icon">Cảnh báo</string>
+    <string name="voucher_check_icon">Kiểm tra</string>
+    <string name="voucher_error_icon">Lỗi</string>
+    <string name="voucher_loading">Đang tải voucher</string>
+    <string name="voucher_validation_loading">Đang kiểm tra voucher</string>
+    <string name="voucher_expires">Hết hạn: %s</string>
+    <string name="voucher_apply_success">Áp dụng voucher thành công</string>
+
+
+    <string name="remove_from_favorites">Bỏ yêu thích</string>
+    <string name="add_to_favorites">Thêm vào yêu thích</string>
+
+
+    <string name="add_to_cart_button">Thêm vào giỏ</string>
+    <string name="loading_cart">Đang thêm vào giỏ...</string>
+    <string name="product_unavailable">Sản phẩm không khả dụng</string>
+
+
+    <string name="product_no_image">Không có ảnh</string>
+    <string name="product_out_of_stock">HẾT HÀNG</string>
+    <string name="product_rating">Đánh giá</string>
+    <string name="product_sold">Đã bán</string>
+    <string name="product_description_label">Mô tả sản phẩm</string>
+    <string name="product_no_description">Không có mô tả</string>
+    <string name="product_store_label">Cửa hàng</string>
+    <string name="product_store_unknown">Không có thông tin</string>
+    <string name="product_preparation_time_label">Chuẩn bị</string>
+    <string name="product_status_label">Trạng thái</string>
+    <string name="product_status_in_stock">Còn hàng</string>
+    <string name="product_status_out_of_stock">Hết hàng</string>
+    <string name="product_rating_icon">Đánh giá</string>
+    <string name="product_sold_icon">Số lượng đã bán</string>
+    <string name="product_price_icon">Giá sản phẩm</string>
+    <string name="product_store_icon">Cửa hàng</string>
+    <string name="product_preparation_time_icon">Thời gian chuẩn bị</string>
+    <string name="product_availability_icon">Tình trạng sản phẩm</string>
+    <string name="product_close_icon">Đóng</string>
+    <string name="product_check_icon">Có sẵn</string>
+    <string name="product_time_format">%d phút</string>
+    <string name="product_sold_format">%d</string>
+    <string name="product_rating_format">%.1f</string>
+    <string name="product_ratings_count_format">%d đánh giá</string>
+
+    <string name="product_detail_title">Chi tiết sản phẩm</string>
+
+
+    <string name="account_info_title">Thông tin tài khoản</string>
+    <string name="role_label">Vai trò</string>
+    <string name="join_date_label">Ngày tham gia</string>
+    <string name="verification_label">Xác thực</string>
+    <string name="verified_status">Đã xác thực</string>
+    <string name="unverified_status">Chưa xác thực</string>
+    <string name="role_icon">Biểu tượng vai trò</string>
+    <string name="calendar_icon">Biểu tượng lịch</string>
+    <string name="verified_icon">Biểu tượng xác thực</string>
+
+    <string name="account_status_title">Trạng thái tài khoản</string>
+    <string name="verification_chip_label">Xác thực</string>
+    <string name="status_chip_label">Trạng thái</string>
+    <string name="verified_true">Đã xác thực</string>
+    <string name="verified_false">Chưa xác thực</string>
+    <string name="account_active">Hoạt động</string>
+    <string name="account_inactive">Không hoạt động</string>
+    <string name="verification_icon_description">Biểu tượng xác thực</string>
+    <string name="status_icon_description">Biểu tượng trạng thái</string>
+
+
+    <!-- Add Address Dialog -->
+    <string name="add_address_title">Thêm địa chỉ mới</string>
+    <string name="address_label_field">Tên địa chỉ</string>
+    <string name="address_label_placeholder">VD: Nhà riêng, Công ty, ...</string>
+    <string name="address_label_required">Vui lòng nhập tên địa chỉ</string>
+    <string name="building_field_label">Tòa nhà *</string>
+    <string name="loading_buildings">Đang tải danh sách tòa nhà...</string>
+    <string name="select_building_placeholder">Chọn tòa nhà</string>
+    <string name="building_required">Vui lòng chọn tòa nhà</string>
+    <string name="no_buildings_available">Không có tòa nhà nào</string>
+    <string name="building_info_title">Thông tin tòa nhà:</string>
+    <string name="building_code_label">Mã: %s</string>
+    <string name="building_name_label">Tên: %s</string>
+    <string name="building_note_label">Ghi chú: %s</string>
+    <string name="room_field_label">Phòng/Số căn hộ *</string>
+    <string name="room_placeholder">VD: Phòng 101, Căn hộ 302</string>
+    <string name="room_required">Vui lòng nhập số phòng</string>
+    <string name="note_field_label">Ghi chú</string>
+    <string name="note_placeholder">VD: Giao hàng ban ngày, gọi trước 30 phút</string>
+    <string name="set_default_address">Đặt làm địa chỉ mặc định</string>
+    <string name="add_address_button">Thêm địa chỉ</string>
+    <string name="adding_address">Đang thêm...</string>
+    <string name="error_generic">Đã xảy ra lỗi: %s</string>
+    <string name="label_icon">Biểu tượng nhãn</string>
+    <string name="apartment_icon">Biểu tượng tòa nhà</string>
+    <string name="door_icon">Biểu tượng phòng</string>
+    <string name="note_icon">Biểu tượng ghi chú</string>
+    <string name="dropdown_arrow">Mở danh sách</string>
+
+
+    <string name="shipping_address_title">Địa chỉ giao hàng</string>
+    <string name="no_shipping_address">Chưa có địa chỉ giao hàng</string>
+    <string name="add_new_address_button">Thêm địa chỉ mới</string>
+    <string name="add_address_icon">Thêm địa chỉ</string>
+    <string name="location_icon">Biểu tượng địa chỉ</string>
+    <string name="address_default_badge">Mặc định</string>
+    <string name="address_options_icon">Tùy chọn địa chỉ</string>
+    <string name="set_as_default_option">Đặt làm mặc định</string>
+    <string name="edit_option">Chỉnh sửa</string>
+    <string name="delete_option">Xóa</string>
+    <string name="address_note_label">📝 %s</string>
+
+
+    <!-- Edit Address Dialog -->
+    <string name="edit_address_title">Chỉnh sửa địa chỉ</string>
+    <string name="building_not_exist">Tòa nhà không còn tồn tại, vui lòng chọn lại</string>
+    <string name="full_address_preview">Địa chỉ đầy đủ sẽ là:</string>
+    <string name="address_preview">%s, %s</string>
+    <string name="preview_note_label">Ghi chú: %s</string>
+    <string name="save_changes_button">Lưu thay đổi</string>
+    <string name="saving_changes">Đang lưu...</string>
+
+
+
+    <string name="empty_address_title">Chưa có địa chỉ nào</string>
+    <string name="empty_address_icon">Không có địa chỉ</string>
+    <string name="add_first_address_button">Thêm địa chỉ đầu tiên</string>
+    <string name="add_first_address_icon">Thêm địa chỉ</string>
+
+    <string name="error_icon">Lỗi</string>
+    <string name="loading_info">Đang tải thông tin...</string>
+    <string name="settings_option">Cài đặt</string>
+    <string name="settings_icon">Biểu tượng cài đặt</string>
+    <string name="next_icon">Tiếp theo</string>
+
+
+    <string name="user_info_button_title">Thông tin người dùng</string>
+    <string name="user_info_button_description">Xem và quản lý thông tin cá nhân</string>
+    <string name="user_info_icon">Biểu tượng người dùng</string>
+    <string name="go_to_icon">Đi đến</string>
+
+
+    <!-- Edit User Info Dialog -->
+    <string name="edit_user_info_title">Chỉnh sửa thông tin</string>
+    <string name="close_icon">Đóng</string>
+    <string name="full_name_label">Họ và tên</string>
+    <string name="full_name_placeholder">Nhập họ và tên</string>
+    <string name="phone_label">Số điện thoại</string>
+    <string name="phone_placeholder">Nhập số điện thoại</string>
+    <string name="email_label">Email</string>
+    <!-- Order Status -->
+    <string name="order_status_cancelled">Đã hủy</string>
+
+    <string name="language_settings">Ngôn ngữ</string>
+    <string name="language">Ngôn ngữ</string>
+    <string name="language_vietnamese">Tiếng Việt</string>
+    <string name="language_english">Tiếng Anh</string>
+    <string name="change_language">Đổi ngôn ngữ</string>
+
+
+
+
+</resources>

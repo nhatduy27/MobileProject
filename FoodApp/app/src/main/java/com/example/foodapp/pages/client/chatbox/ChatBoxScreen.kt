@@ -18,12 +18,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import com.example.foodapp.R
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,7 +65,7 @@ fun ChatBotScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Chat với Bot Hỗ trợ",
+                        text = stringResource(R.string.chatbot_screen_title),
                         fontWeight = FontWeight.SemiBold
                     )
                 },
@@ -71,7 +73,7 @@ fun ChatBotScreen(
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Quay lại"
+                            contentDescription = stringResource(R.string.back_button)
                         )
                     }
                 },
@@ -82,7 +84,7 @@ fun ChatBotScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Refresh,
-                            contentDescription = "Xóa cuộc trò chuyện"
+                            contentDescription = stringResource(R.string.clear_chat_button)
                         )
                     }
                 }
@@ -148,7 +150,7 @@ fun ChatBotScreen(
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             Text(
-                                                text = "Bot đang trả lời...",
+                                                text = stringResource(R.string.bot_responding),
                                                 style = MaterialTheme.typography.bodyMedium
                                             )
                                         }
@@ -182,7 +184,7 @@ fun ChatBotScreen(
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "Vui lòng đợi $waitTime giây trước khi gửi tiếp",
+                                text = stringResource(R.string.rate_limit_message, waitTime),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onErrorContainer,
                                 fontWeight = FontWeight.Medium
@@ -235,7 +237,7 @@ fun ChatBotScreen(
                             modifier = Modifier.weight(1f),
                             placeholder = {
                                 Text(
-                                    text = "Nhập câu hỏi của bạn...",
+                                    text = stringResource(R.string.chatbot_input_placeholder),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             },
@@ -271,7 +273,7 @@ fun ChatBotScreen(
                             } else {
                                 Icon(
                                     imageVector = Icons.Default.Send,
-                                    contentDescription = "Gửi tin nhắn"
+                                    contentDescription = stringResource(R.string.send_message_button)
                                 )
                             }
                         }
@@ -308,14 +310,14 @@ fun EmptyChatState(
         }
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Chào bạn! Tôi là bot hỗ trợ của FoodApp",
+            text = stringResource(R.string.chatbot_welcome_title),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Hãy hỏi tôi bất cứ điều gì về đơn hàng, \nsản phẩm hoặc cửa hàng",
+            text = stringResource(R.string.chatbot_welcome_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
@@ -330,7 +332,7 @@ fun EmptyChatState(
                     modifier = Modifier.size(24.dp)
                 )
                 Text(
-                    text = "Đang tải câu hỏi gợi ý...",
+                    text = stringResource(R.string.loading_quick_replies),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(top = 8.dp)
@@ -339,7 +341,7 @@ fun EmptyChatState(
             is QuickRepliesState.Success -> {
                 if (quickReplies.isNotEmpty()) {
                     Text(
-                        text = "Câu hỏi thường gặp:",
+                        text = stringResource(R.string.common_questions_title),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -363,7 +365,7 @@ fun EmptyChatState(
             is QuickRepliesState.Error -> {
                 // Hiển thị lỗi và gợi ý dùng default replies
                 Text(
-                    text = "Tải câu hỏi gợi ý thất bại",
+                    text = stringResource(R.string.load_quick_replies_error),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(bottom = 8.dp)
@@ -371,7 +373,7 @@ fun EmptyChatState(
 
                 if (quickReplies.isNotEmpty()) {
                     Text(
-                        text = "Câu hỏi gợi ý:",
+                        text = stringResource(R.string.suggested_questions_title),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -409,7 +411,7 @@ fun QuickRepliesSection(
         modifier = modifier
     ) {
         Text(
-            text = "Câu hỏi nhanh:",
+            text = stringResource(R.string.quick_questions_title),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 8.dp)

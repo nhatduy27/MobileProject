@@ -26,6 +26,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.foodapp.data.model.owner.review.Review
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.ui.res.stringResource
+import com.example.foodapp.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -166,13 +168,13 @@ private fun ReviewsHeader(
                     
                     Column {
                         Text(
-                            "Đánh giá của khách",
+                            stringResource(R.string.reviews_from_customers),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Text(
-                            "$totalReviews đánh giá",
+                            stringResource(R.string.owner_reviews_count, totalReviews),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -224,7 +226,7 @@ private fun ReviewsHeader(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            "$unrepliedCount đánh giá chưa phản hồi",
+                            stringResource(R.string.reviews_unreplied_count, unrepliedCount),
                             style = MaterialTheme.typography.bodySmall,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.error
@@ -354,7 +356,7 @@ private fun ReviewCard(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                "Phản hồi của bạn",
+                                stringResource(R.string.reviews_your_reply),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.primary
@@ -382,7 +384,7 @@ private fun ReviewCard(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Phản hồi", fontSize = 13.sp)
+                    Text(stringResource(R.string.reviews_reply_btn), fontSize = 13.sp)
                 }
             }
         }
@@ -423,15 +425,15 @@ private fun EmptyReviewsState(
                 modifier = Modifier.size(64.dp)
             )
             Text(
-                if (filter == ReviewUiState.FILTER_ALL) "Chưa có đánh giá nào" else "Không có đánh giá phù hợp",
+                if (filter == ReviewUiState.FILTER_ALL) stringResource(R.string.reviews_empty_no_reviews) else stringResource(R.string.reviews_empty_no_match),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 if (filter == ReviewUiState.FILTER_ALL) 
-                    "Đánh giá của khách sẽ xuất hiện ở đây" 
+                    stringResource(R.string.reviews_empty_message) 
                 else 
-                    "Thử chọn bộ lọc khác",
+                    stringResource(R.string.reviews_try_other_filter),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
@@ -470,7 +472,7 @@ private fun ReplyDialog(
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        "Phản hồi đánh giá",
+                        stringResource(R.string.reviews_reply_dialog_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -516,8 +518,8 @@ private fun ReplyDialog(
                 OutlinedTextField(
                     value = replyText,
                     onValueChange = { replyText = it },
-                    label = { Text("Nội dung phản hồi") },
-                    placeholder = { Text("Cảm ơn bạn đã đánh giá...") },
+                    label = { Text(stringResource(R.string.reviews_reply_content)) },
+                    placeholder = { Text(stringResource(R.string.reviews_reply_placeholder)) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(120.dp),
@@ -538,7 +540,7 @@ private fun ReplyDialog(
                         enabled = !isLoading,
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Hủy")
+                        Text(stringResource(R.string.general_cancel))
                     }
                     
                     Button(
@@ -554,7 +556,7 @@ private fun ReplyDialog(
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                         } else {
-                            Text("Gửi phản hồi")
+                            Text(stringResource(R.string.reviews_send_reply))
                         }
                     }
                 }

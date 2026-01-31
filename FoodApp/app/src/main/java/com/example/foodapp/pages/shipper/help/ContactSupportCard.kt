@@ -8,9 +8,11 @@ import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.pages.shipper.theme.ShipperColors
 
 @Composable
@@ -29,13 +31,13 @@ fun ContactSupportCard() {
                 .padding(20.dp)
         ) {
             Text(
-                text = "Cần hỗ trợ ngay?",
+                text = stringResource(R.string.shipper_help_need_support),
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = ShipperColors.Surface
             )
             Text(
-                text = "Liên hệ với chúng tôi qua các kênh sau",
+                text = stringResource(R.string.shipper_help_contact_channels),
                 fontSize = 13.sp,
                 color = ShipperColors.Surface.copy(alpha = 0.8f),
                 modifier = Modifier.padding(top = 4.dp)
@@ -63,7 +65,7 @@ fun ContactSupportCard() {
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Gọi ngay",
+                        text = stringResource(R.string.shipper_help_call_now),
                         color = ShipperColors.Primary,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp

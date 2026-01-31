@@ -2,6 +2,7 @@ package com.example.foodapp.pages.client.orderdetail
 
 import android.content.Context
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -17,14 +18,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.foodapp.data.remote.client.response.review.ProductReviewRequest
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
+import com.example.foodapp.R
 import com.example.foodapp.data.remote.client.response.order.OrderApiModel
+import com.example.foodapp.data.remote.client.response.payment.GetPaymentData
+import com.example.foodapp.data.remote.client.response.payment.*
+import com.example.foodapp.data.remote.client.response.review.ProductReviewRequest
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -50,6 +56,7 @@ fun OrderDetailScreen(
     val viewModel: OrderDetailViewModel = viewModel(factory = OrderDetailViewModel.factory(context))
     val orderDetailState by viewModel.orderDetailState.observeAsState(OrderDetailState.Idle)
     val cancelOrderState by viewModel.cancelOrderState.observeAsState(CancelOrderState.Idle)
+    val paymentInfoState by viewModel.paymentInfoState.observeAsState(PaymentInfoState.Idle)
     val reviewState by viewModel.reviewState.observeAsState(ReviewState.Idle)
     val currentOrder by viewModel.currentOrder.observeAsState()
     val hasReviewed by viewModel.hasReviewed.observeAsState(false)
@@ -57,6 +64,7 @@ fun OrderDetailScreen(
     var showCancelDialog by remember { mutableStateOf(false) }
     var showReviewDialog by remember { mutableStateOf(false) }
     var showReviewSuccessDialog by remember { mutableStateOf(false) }
+    var showPaymentInfoDialog by remember { mutableStateOf(false) }
 
     // Review dialog state
     var shopRating by remember { mutableIntStateOf(0) }
@@ -98,12 +106,19 @@ fun OrderDetailScreen(
         }
     }
 
+    // Check if should show SEPAY button
+    val showSepayButton = remember(currentOrder) {
+        currentOrder?.let { order ->
+            order.paymentMethod == "SEPAY" && order.paymentStatus != "PAID"
+        } ?: false
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Text(
-                        text = "Chi tiết đơn hàng",
+                        text = stringResource(R.string.order_detail_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
@@ -111,7 +126,7 @@ fun OrderDetailScreen(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Quay lại"
+                            contentDescription = stringResource(R.string.back_button)
                         )
                     }
                 },
@@ -137,6 +152,7 @@ fun OrderDetailScreen(
                         OrderDetailContent(
                             order = order,
                             hasReviewed = hasReviewed,
+                            showSepayButton = showSepayButton,
                             onCancelOrder = { showCancelDialog = true },
                             onReviewOrder = {
                                 shopRating = 0
@@ -153,6 +169,10 @@ fun OrderDetailScreen(
                                     )
                                 }
                                 showReviewDialog = true
+                            },
+                            onShowPaymentInfo = {
+                                viewModel.fetchPaymentInfo(orderId)
+                                showPaymentInfoDialog = true
                             }
                         )
                     }
@@ -192,12 +212,12 @@ fun OrderDetailScreen(
                 },
                 title = {
                     Text(
-                        text = "Hủy đơn hàng",
+                        text = stringResource(R.string.cancel_order_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
                 text = {
-                    Text("Bạn có chắc chắn muốn hủy đơn hàng này không?")
+                    Text(stringResource(R.string.cancel_order_confirmation))
                 },
                 confirmButton = {
                     TextButton(
@@ -213,7 +233,7 @@ fun OrderDetailScreen(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Text("Hủy đơn", color = Color(0xFFF44336))
+                            Text(stringResource(R.string.cancel_order_button), color = Color(0xFFF44336))
                         }
                     }
                 },
@@ -226,8 +246,22 @@ fun OrderDetailScreen(
                         },
                         enabled = cancelOrderState !is CancelOrderState.Loading
                     ) {
-                        Text("Đóng")
+                        Text(stringResource(R.string.cancel))
                     }
+                }
+            )
+        }
+
+        if (showPaymentInfoDialog) {
+            PaymentInfoDialog(
+                paymentInfoState = paymentInfoState,
+                onDismiss = {
+                    showPaymentInfoDialog = false
+                    viewModel.resetPaymentInfoState()
+                },
+                onExit = {
+                    showPaymentInfoDialog = false
+                    viewModel.resetPaymentInfoState()
                 }
             )
         }
@@ -312,13 +346,13 @@ fun OrderDetailScreen(
                 },
                 title = {
                     Text(
-                        text = "Thành công!",
+                        text = stringResource(R.string.success_title),
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF4CAF50)
                     )
                 },
                 text = {
-                    Text("Đánh giá của bạn đã được gửi thành công.")
+                    Text(stringResource(R.string.review_submitted_success))
                 },
                 confirmButton = {
                     Button(
@@ -332,11 +366,214 @@ fun OrderDetailScreen(
                             containerColor = Color(0xFF4CAF50)
                         )
                     ) {
-                        Text("Đóng")
+                        Text(stringResource(R.string.cancel))
                     }
                 }
             )
         }
+    }
+}
+
+@Composable
+fun PaymentInfoDialog(
+    paymentInfoState: PaymentInfoState,
+    onDismiss: () -> Unit,
+    onExit: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = {
+            if (paymentInfoState !is PaymentInfoState.Loading) {
+                onDismiss()
+            }
+        }
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            when (paymentInfoState) {
+                is PaymentInfoState.Loading -> {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = Color(0xFF4CAF50)
+                        )
+                    }
+                }
+
+                is PaymentInfoState.Success -> {
+                    PaymentInfoContent(
+                        paymentData = paymentInfoState.paymentData,
+                        onDismiss = onDismiss,
+                        onExit = onExit
+                    )
+                }
+
+                is PaymentInfoState.Error -> {
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Error,
+                            contentDescription = null,
+                            tint = Color(0xFFF44336),
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Text(
+                            text = paymentInfoState.message,
+                            fontSize = 16.sp,
+                            color = Color(0xFF757575),
+                            textAlign = TextAlign.Center
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // CHỈ CÒN 1 NÚT "ĐÓNG"
+                            Button(
+                                onClick = onDismiss,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF4CAF50)
+                                )
+                            ) {
+                                Text(stringResource(R.string.cancel))
+                            }
+                        }
+                    }
+                }
+
+                is PaymentInfoState.Idle -> {
+                    // Nothing to show
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PaymentInfoContent(
+    paymentData: GetPaymentData,
+    onDismiss: () -> Unit,
+    onExit: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        // Header
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = stringResource(R.string.sepay_payment_title),
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.Black
+            )
+
+            IconButton(onClick = onDismiss) {
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
+            }
+        }
+
+        // QR Code
+        paymentData.payment?.providerData?.qrCodeUrl?.let { qrCodeUrl ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.White
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = rememberAsyncImagePainter(model = qrCodeUrl),
+                        contentDescription = stringResource(R.string.qr_code_content_description),
+                        modifier = Modifier
+                            .fillMaxSize(0.8f)
+                            .padding(16.dp)
+                    )
+                }
+            }
+
+            Text(
+                text = stringResource(R.string.scan_qr_to_pay),
+                fontSize = 14.sp,
+                color = Color(0xFF757575),
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        // Payment Details
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            PaymentInfoRow(stringResource(R.string.transaction_code), paymentData.payment?.providerData?.sepayContent ?: "")
+            PaymentInfoRow(stringResource(R.string.amount_label), formatPrice(paymentData.payment?.amount?.toDouble() ?: 0.0 ))
+            PaymentInfoRow(stringResource(R.string.account_number_label), paymentData.payment?.providerData?.accountNumber ?: "")
+            PaymentInfoRow(stringResource(R.string.account_name_label), paymentData.payment?.providerData?.accountName ?: "")
+            PaymentInfoRow(stringResource(R.string.bank_name_label), paymentData.payment?.providerData?.bankCode ?: "")
+
+        }
+
+        Divider(color = Color(0xFFE0E0E0))
+
+        Button(
+            onClick = onExit,
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF4CAF50)
+            )
+        ) {
+            Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(stringResource(R.string.cancel))
+        }
+    }
+}
+
+@Composable
+fun PaymentInfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Top
+    ) {
+        Text(
+            text = label,
+            fontSize = 14.sp,
+            color = Color(0xFF757575),
+            modifier = Modifier.weight(1f)
+        )
+        Text(
+            text = value,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color.Black,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1.5f)
+        )
     }
 }
 
@@ -393,7 +630,7 @@ fun EnhancedReviewDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Đánh giá đơn hàng",
+                        text = stringResource(R.string.order_review_title),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
@@ -407,7 +644,7 @@ fun EnhancedReviewDialog(
                         },
                         enabled = !isLoading
                     ) {
-                        Icon(Icons.Default.Close, contentDescription = "Đóng")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
                     }
                 }
 
@@ -441,8 +678,8 @@ fun EnhancedReviewDialog(
 
                 // Shop Rating Section
                 ReviewSection(
-                    title = "Đánh giá cửa hàng",
-                    subtitle = "Bạn hài lòng với cửa hàng này không?",
+                    title = stringResource(R.string.shop_review_title),
+                    subtitle = stringResource(R.string.shop_review_subtitle),
                     currentRating = shopRating,
                     currentComment = shopComment,
                     onRatingChange = onShopRatingChange,
@@ -452,8 +689,8 @@ fun EnhancedReviewDialog(
 
                 // Shipper Rating Section
                 ReviewSection(
-                    title = "Đánh giá người giao hàng",
-                    subtitle = "Người giao hàng thế nào?",
+                    title = stringResource(R.string.shipper_review_title),
+                    subtitle = stringResource(R.string.shipper_review_subtitle),
                     currentRating = shipperRating,
                     currentComment = shipperComment,
                     onRatingChange = onShipperRatingChange,
@@ -465,7 +702,7 @@ fun EnhancedReviewDialog(
                 // Product Reviews Section
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "Đánh giá từng món",
+                        text = stringResource(R.string.product_review_title),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black
@@ -507,7 +744,7 @@ fun EnhancedReviewDialog(
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Star,
-                                                contentDescription = "$i sao",
+                                                contentDescription = stringResource(R.string.star_rating_description, i),
                                                 modifier = Modifier.size(32.dp),
                                                 tint = if (i <= productReview.rating) Color(0xFFFFD700) else Color.LightGray
                                             )
@@ -525,7 +762,7 @@ fun EnhancedReviewDialog(
                                     },
                                     modifier = Modifier.fillMaxWidth(),
                                     placeholder = {
-                                        Text("Nhận xét về món ăn...")
+                                        Text(stringResource(R.string.product_comment_placeholder))
                                     },
                                     colors = TextFieldDefaults.colors(
                                         focusedContainerColor = Color.White,
@@ -545,7 +782,7 @@ fun EnhancedReviewDialog(
                 // Validation error
                 if (showValidationError) {
                     Text(
-                        text = "Vui lòng đánh giá shop và tất cả sản phẩm",
+                        text = stringResource(R.string.review_validation_error),
                         fontSize = 14.sp,
                         color = Color.Red
                     )
@@ -570,7 +807,7 @@ fun EnhancedReviewDialog(
                         ),
                         border = BorderStroke(1.dp, Color.LightGray)
                     ) {
-                        Text("Hủy")
+                        Text(stringResource(R.string.cancel))
                     }
 
                     // Submit button
@@ -600,7 +837,7 @@ fun EnhancedReviewDialog(
                                 strokeWidth = 2.dp
                             )
                         } else {
-                            Text("Gửi đánh giá")
+                            Text(stringResource(R.string.submit_review_button))
                         }
                     }
                 }
@@ -642,7 +879,7 @@ fun ReviewSection(
 
             if (showOptional) {
                 Text(
-                    text = "(Tùy chọn)",
+                    text = stringResource(R.string.optional_label),
                     fontSize = 12.sp,
                     color = Color.Gray,
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
@@ -667,7 +904,7 @@ fun ReviewSection(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Star,
-                        contentDescription = "$i sao",
+                        contentDescription = stringResource(R.string.star_rating_description, i),
                         modifier = Modifier.size(40.dp),
                         tint = if (i <= currentRating) Color(0xFFFFD700) else Color.LightGray
                     )
@@ -686,9 +923,9 @@ fun ReviewSection(
             modifier = Modifier.fillMaxWidth(),
             placeholder = {
                 if (showOptional) {
-                    Text("Nhận xét (tùy chọn)...")
+                    Text(stringResource(R.string.optional_comment_placeholder))
                 } else {
-                    Text("Nhận xét về cửa hàng...")
+                    Text(stringResource(R.string.shop_comment_placeholder))
                 }
             },
             colors = TextFieldDefaults.colors(
@@ -708,8 +945,10 @@ fun ReviewSection(
 fun OrderDetailContent(
     order: OrderApiModel,
     hasReviewed: Boolean,
+    showSepayButton: Boolean,
     onCancelOrder: () -> Unit,
-    onReviewOrder: () -> Unit
+    onReviewOrder: () -> Unit,
+    onShowPaymentInfo: () -> Unit
 ) {
     val canReview = order.status == "DELIVERED" && !hasReviewed
 
@@ -749,6 +988,39 @@ fun OrderDetailContent(
 
         Spacer(modifier = Modifier.height(12.dp))
 
+        // THÊM: SEPAY Button (chỉ hiện khi phương thức SEPAY và chưa thanh toán)
+        if (showSepayButton) {
+            Column(
+                modifier = Modifier.padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Button(
+                    onClick = onShowPaymentInfo,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF2196F3)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.QrCodeScanner,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = stringResource(R.string.qr_code_payment_button),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+        }
+
         // Action Buttons
         Column(
             modifier = Modifier.padding(horizontal = 16.dp),
@@ -773,7 +1045,7 @@ fun OrderDetailContent(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Đánh giá đơn hàng",
+                        text = stringResource(R.string.review_order_button),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -802,7 +1074,7 @@ fun OrderDetailContent(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Đã đánh giá",
+                        text = stringResource(R.string.already_reviewed_button),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF4CAF50)
@@ -829,7 +1101,7 @@ fun OrderDetailContent(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Hủy đơn hàng",
+                        text = stringResource(R.string.cancel_order_button),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -851,7 +1123,7 @@ fun OrderStatusTimeline(order: OrderApiModel) {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Trạng thái đơn hàng",
+                text = stringResource(R.string.order_status_title),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF212121)
@@ -860,11 +1132,11 @@ fun OrderStatusTimeline(order: OrderApiModel) {
             Spacer(modifier = Modifier.height(16.dp))
 
             val steps = listOf(
-                TimelineStep("PENDING", "Đơn hàng đã đặt", Icons.Default.ShoppingCart, order.createdAt),
-                TimelineStep("CONFIRMED", "Đã xác nhận", Icons.Default.CheckCircle, order.confirmedAt),
-                TimelineStep("PREPARING", "Đang chuẩn bị", Icons.Default.Restaurant, order.preparingAt),
-                TimelineStep("SHIPPING", "Đang giao hàng", Icons.Default.LocalShipping, order.shippingAt),
-                TimelineStep("DELIVERED", "Đã giao hàng", Icons.Default.Done, order.deliveredAt)
+                TimelineStep("PENDING", stringResource(R.string.order_status_pending), Icons.Default.ShoppingCart, order.createdAt),
+                TimelineStep("CONFIRMED", stringResource(R.string.order_status_confirmed), Icons.Default.CheckCircle, order.confirmedAt),
+                TimelineStep("PREPARING", stringResource(R.string.order_status_preparing), Icons.Default.Restaurant, order.preparingAt),
+                TimelineStep("SHIPPING", stringResource(R.string.order_status_shipping), Icons.Default.LocalShipping, order.shippingAt),
+                TimelineStep("DELIVERED", stringResource(R.string.order_status_delivered), Icons.Default.Done, order.deliveredAt)
             )
 
             val currentStatusIndex = steps.indexOfFirst { it.status == order.status }
@@ -991,7 +1263,7 @@ fun ShopInfoSection(order: OrderApiModel) {
                     color = Color(0xFF212121)
                 )
                 Text(
-                    text = "Mã đơn: #${order.orderNumber}",
+                    text = stringResource(R.string.order_code_display, order.orderNumber),
                     fontSize = 13.sp,
                     color = Color(0xFF757575)
                 )
@@ -1010,7 +1282,7 @@ fun OrderItemsSection(order: OrderApiModel) {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Món đã đặt",
+                text = stringResource(R.string.order_items_title),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF212121)
@@ -1034,7 +1306,7 @@ fun OrderItemsSection(order: OrderApiModel) {
                             color = Color(0xFF4CAF50).copy(alpha = 0.1f)
                         ) {
                             Text(
-                                text = "${item.quantity}x",
+                                text = stringResource(R.string.quantity_label, item.quantity),
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF4CAF50),
@@ -1070,7 +1342,7 @@ fun DeliveryInfoSection(order: OrderApiModel) {
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "Thông tin giao hàng",
+                    text = stringResource(R.string.delivery_info_title),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF212121)
@@ -1102,14 +1374,14 @@ fun DeliveryInfoSection(order: OrderApiModel) {
                         )
                         address.building?.let {
                             Text(
-                                text = "Tòa: $it",
+                                text = stringResource(R.string.building_label, it),
                                 fontSize = 13.sp,
                                 color = Color(0xFF757575)
                             )
                         }
                         address.room?.let {
                             Text(
-                                text = "Phòng: $it",
+                                text = stringResource(R.string.room_label, it),
                                 fontSize = 13.sp,
                                 color = Color(0xFF757575)
                             )
@@ -1117,7 +1389,7 @@ fun DeliveryInfoSection(order: OrderApiModel) {
                         address.note?.let {
                             if (it.isNotEmpty()) {
                                 Text(
-                                    text = "Ghi chú: $it",
+                                    text = stringResource(R.string.note_label, it),
                                     fontSize = 13.sp,
                                     color = Color(0xFF757575),
                                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
@@ -1141,7 +1413,7 @@ fun PaymentInfoSection(order: OrderApiModel) {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Phương thức thanh toán",
+                text = stringResource(R.string.payment_method_title),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF212121)
@@ -1168,9 +1440,9 @@ fun PaymentInfoSection(order: OrderApiModel) {
                     )
                     Text(
                         text = when (order.paymentMethod) {
-                            "COD" -> "Thanh toán khi nhận hàng"
-                            "MOMO" -> "Ví MoMo"
-                            "BANKING" -> "Chuyển khoản ngân hàng"
+                            "COD" -> stringResource(R.string.payment_method_cod)
+                            "MOMO" -> stringResource(R.string.payment_method_momo)
+                            "BANKING" -> stringResource(R.string.payment_method_banking)
                             else -> order.paymentMethod
                         },
                         fontSize = 14.sp,
@@ -1183,15 +1455,17 @@ fun PaymentInfoSection(order: OrderApiModel) {
                     color = when (order.paymentStatus) {
                         "PAID" -> Color(0xFF4CAF50).copy(alpha = 0.12f)
                         "UNPAID" -> Color(0xFFFF5722).copy(alpha = 0.12f)
+                        "FAILED" -> Color(0xFFF44336).copy(alpha = 0.12f)
+                        "REFUNDED" -> Color(0xFF9E9E9E).copy(alpha = 0.12f)
                         else -> Color.Gray.copy(alpha = 0.12f)
                     }
                 ) {
                     Text(
                         text = when (order.paymentStatus) {
-                            "PAID" -> "Đã thanh toán"
-                            "UNPAID" -> "Chưa thanh toán"
-                            "FAILED" -> "Thất bại"
-                            "REFUNDED" -> "Đã hoàn tiền"
+                            "PAID" -> stringResource(R.string.payment_status_paid)
+                            "UNPAID" -> stringResource(R.string.payment_status_unpaid)
+                            "FAILED" -> stringResource(R.string.payment_status_failed)
+                            "REFUNDED" -> stringResource(R.string.payment_status_refunded)
                             else -> order.paymentStatus
                         },
                         fontSize = 12.sp,
@@ -1199,6 +1473,8 @@ fun PaymentInfoSection(order: OrderApiModel) {
                         color = when (order.paymentStatus) {
                             "PAID" -> Color(0xFF4CAF50)
                             "UNPAID" -> Color(0xFFFF5722)
+                            "FAILED" -> Color(0xFFF44336)
+                            "REFUNDED" -> Color(0xFF9E9E9E)
                             else -> Color.Gray
                         },
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
@@ -1219,7 +1495,7 @@ fun OrderSummarySection(order: OrderApiModel) {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Tổng kết đơn hàng",
+                text = stringResource(R.string.order_summary_title),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF212121)
@@ -1227,12 +1503,12 @@ fun OrderSummarySection(order: OrderApiModel) {
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            SummaryRow("Tạm tính", formatPrice(order.subtotal))
-            SummaryRow("Phí vận chuyển", formatPrice(order.shipFee))
+            SummaryRow(stringResource(R.string.subtotal_label), formatPrice(order.subtotal))
+            SummaryRow(stringResource(R.string.shipping_fee_label), formatPrice(order.shipFee))
             if (order.discount > 0) {
                 SummaryRow(
-                    "Giảm giá",
-                    "-${formatPrice(order.discount)}",
+                    stringResource(R.string.discount_label),
+                    stringResource(R.string.discount_value, formatPrice(order.discount)),
                     valueColor = Color(0xFFF44336)
                 )
             }
@@ -1247,7 +1523,7 @@ fun OrderSummarySection(order: OrderApiModel) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Tổng cộng",
+                    text = stringResource(R.string.total_label),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF212121)
@@ -1316,7 +1592,7 @@ fun ErrorView(
         ) {
             Icon(
                 imageVector = Icons.Default.Error,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.error_content_description),
                 tint = Color(0xFFF44336),
                 modifier = Modifier.size(64.dp)
             )
@@ -1333,7 +1609,7 @@ fun ErrorView(
                     containerColor = Color(0xFF4CAF50)
                 )
             ) {
-                Text("Thử lại")
+                Text(stringResource(R.string.retry))
             }
         }
     }
@@ -1351,12 +1627,12 @@ fun EmptyView() {
         ) {
             Icon(
                 imageVector = Icons.Default.Receipt,
-                contentDescription = null,
+                contentDescription = stringResource(R.string.no_order_content_description),
                 tint = Color(0xFF9E9E9E),
                 modifier = Modifier.size(64.dp)
             )
             Text(
-                text = "Không tìm thấy đơn hàng",
+                text = stringResource(R.string.no_order_found),
                 fontSize = 16.sp,
                 color = Color(0xFF757575),
                 textAlign = TextAlign.Center

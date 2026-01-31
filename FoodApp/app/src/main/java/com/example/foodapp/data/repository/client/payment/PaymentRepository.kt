@@ -110,4 +110,55 @@ class PaymentRepository() {
             ApiResult.Failure(e)
         }
     }
+
+
+
+    /**
+     * Lấy thông tin thanh toán theo order ID
+     * GET /api/orders/:orderId/payment
+     *
+     * @param accessToken Access token của khách hàng
+     * @param orderId ID của đơn hàng
+     * @return ApiResult<GetPaymentData> chứa thông tin thanh toán
+     */
+    suspend fun getPaymentByOrder(
+        accessToken: String,
+        orderId: String
+    ): ApiResult<GetPaymentData> {
+        return try {
+            withContext(Dispatchers.IO) {
+                val authHeader = "Bearer $accessToken"
+
+                val response = paymentApiService.getPaymentByOrder(
+                    authHeader = authHeader,
+                    orderId = orderId
+                )
+
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    if (body != null && body.success && body.data != null) {
+                        ApiResult.Success(body.data)
+                    } else {
+                        val errorMsg = when {
+                            body == null -> "Get payment response body is null"
+                            !body.success -> "Get payment API returned success=false"
+                            body.data == null -> "Get payment data is null"
+                            else -> "Unknown error"
+                        }
+                        ApiResult.Failure(Exception(errorMsg))
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    val errorMessage = if (errorBody.isNullOrEmpty()) {
+                        "HTTP ${response.code()}: ${response.message()}"
+                    } else {
+                        "HTTP ${response.code()}: $errorBody"
+                    }
+                    ApiResult.Failure(Exception(errorMessage))
+                }
+            }
+        } catch (e: Exception) {
+            ApiResult.Failure(e)
+        }
+    }
 }

@@ -44,9 +44,12 @@ import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.util.*
+import androidx.compose.ui.res.stringResource
+import com.example.foodapp.R
 import com.example.foodapp.pages.owner.notifications.NotificationBell
 import com.example.foodapp.pages.owner.theme.OwnerColors
 import com.example.foodapp.pages.owner.theme.OwnerDimens
+
 
 // Colors - Now using OwnerColors
 private val GreenActive = OwnerColors.Success
@@ -265,7 +268,7 @@ fun VouchersSearchHeader(
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Quản lý Voucher",
+                        text = stringResource(R.string.vouchers_title),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = OwnerColors.TextPrimary
@@ -306,7 +309,7 @@ fun VouchersSearchHeader(
                             .weight(1f)
                             .height(50.dp)
                             .focusRequester(focusRequester),
-                        placeholder = { Text("Tìm mã voucher, tên...", color = OwnerColors.TextTertiary, fontSize = 14.sp) },
+                        placeholder = { Text(stringResource(R.string.vouchers_search_hint), color = OwnerColors.TextTertiary, fontSize = 14.sp) },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFFF5F5F5),
@@ -345,15 +348,27 @@ fun VouchersFilterRow(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        filters.forEach { filter ->
+        filters.forEach { filterKey ->
             VoucherFilterChip(
-                text = filter,
-                isSelected = filter == selectedFilter,
-                onClick = { onFilterSelected(filter) }
+                text = getVoucherFilterDisplayName(filterKey),
+                isSelected = filterKey == selectedFilter,
+                onClick = { onFilterSelected(filterKey) }
             )
         }
     }
 }
+
+@Composable
+fun getVoucherFilterDisplayName(filterKey: String): String {
+    return when (filterKey) {
+        VoucherUiState.FILTER_ALL -> stringResource(R.string.vouchers_filter_all)
+        VoucherUiState.FILTER_ACTIVE -> stringResource(R.string.vouchers_filter_active)
+        VoucherUiState.FILTER_INACTIVE -> stringResource(R.string.vouchers_filter_inactive)
+        VoucherUiState.FILTER_EXPIRED -> stringResource(R.string.vouchers_filter_expired)
+        else -> filterKey
+    }
+}
+
 
 @Composable
 fun VoucherFilterChip(
@@ -382,25 +397,26 @@ fun VouchersStatsRow(total: Int, active: Int, expired: Int) {
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         VoucherStatCard(
-            title = "Tổng voucher",
+            title = stringResource(R.string.vouchers_stat_total),
             value = total.toString(),
             color = BlueInfo,
             modifier = Modifier.weight(1f)
         )
         VoucherStatCard(
-            title = "Đang hoạt động",
+            title = stringResource(R.string.vouchers_stat_active),
             value = active.toString(),
             color = GreenActive,
             modifier = Modifier.weight(1f)
         )
         VoucherStatCard(
-            title = "Hết hạn",
+            title = stringResource(R.string.vouchers_stat_expired),
             value = expired.toString(),
             color = RedInactive,
             modifier = Modifier.weight(1f)
         )
     }
 }
+
 
 @Composable
 fun VoucherStatCard(
@@ -458,9 +474,9 @@ fun VoucherCard(
     }
 
     val statusText = when {
-        isExpired -> "Hết hạn"
-        voucher.isActive -> "Đang hoạt động"
-        else -> "Đã tắt"
+        isExpired -> stringResource(R.string.vouchers_filter_expired)
+        voucher.isActive -> stringResource(R.string.vouchers_filter_active)
+        else -> stringResource(R.string.vouchers_filter_inactive)
     }
 
     Card(
@@ -607,7 +623,7 @@ fun VoucherCard(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(if (voucher.isActive) "Tắt" else "Bật", fontSize = 13.sp)
+                    Text(if (voucher.isActive) stringResource(R.string.vouchers_btn_off) else stringResource(R.string.vouchers_btn_on), fontSize = 13.sp)
                 }
 
                 // Edit button
@@ -619,7 +635,7 @@ fun VoucherCard(
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Sửa", fontSize = 13.sp)
+                    Text(stringResource(R.string.vouchers_btn_edit), fontSize = 13.sp)
                 }
 
                 // Delete button
@@ -631,7 +647,7 @@ fun VoucherCard(
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Xóa", fontSize = 13.sp)
+                    Text(stringResource(R.string.vouchers_btn_delete), fontSize = 13.sp)
                 }
             }
         }
@@ -689,14 +705,14 @@ fun EmptyVouchersView(
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Chưa có voucher nào",
+            text = stringResource(R.string.vouchers_empty_title),
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium,
             color = OwnerColors.TextSecondary
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Tạo voucher để thu hút khách hàng",
+            text = stringResource(R.string.vouchers_empty_subtitle),
             fontSize = 14.sp,
             color = OwnerColors.TextTertiary,
             textAlign = TextAlign.Center
@@ -709,7 +725,7 @@ fun EmptyVouchersView(
         ) {
             Icon(Icons.Default.Add, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Tạo voucher mới")
+            Text(stringResource(R.string.vouchers_create_new))
         }
         Spacer(modifier = Modifier.height(12.dp))
         OutlinedButton(
@@ -718,7 +734,7 @@ fun EmptyVouchersView(
         ) {
             Icon(Icons.Default.Refresh, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Tải lại")
+            Text(stringResource(R.string.vouchers_reload))
         }
     }
 }

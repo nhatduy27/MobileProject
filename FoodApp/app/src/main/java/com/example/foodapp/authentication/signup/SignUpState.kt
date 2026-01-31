@@ -1,5 +1,8 @@
 package com.example.foodapp.authentication.signup
 
+
+// TRẠNG THÁI CỦA ĐĂNG KÝ TÀI KHOẢN BẰNG EMAIL
+
 sealed class SignUpState {
     object Idle : SignUpState()
     object Loading : SignUpState()

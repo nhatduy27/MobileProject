@@ -12,10 +12,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.livedata.observeAsState
+import com.example.foodapp.R
 import com.example.foodapp.data.remote.client.response.profile.AddressResponse
 import com.example.foodapp.pages.client.profile.ProfileViewModel
 import com.example.foodapp.pages.client.profile.*
@@ -68,7 +70,7 @@ fun EditAddressDialog(
         },
         title = {
             Text(
-                text = "Chỉnh sửa địa chỉ",
+                text = stringResource(R.string.edit_address_title),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -94,10 +96,13 @@ fun EditAddressDialog(
                 OutlinedTextField(
                     value = label,
                     onValueChange = { label = it },
-                    label = { Text("Tên địa chỉ") },
-                    placeholder = { Text("VD: Nhà riêng, Công ty, ...") },
+                    label = { Text(stringResource(R.string.address_label_field)) },
+                    placeholder = { Text(stringResource(R.string.address_label_placeholder)) },
                     leadingIcon = {
-                        Icon(Icons.Filled.Label, contentDescription = null)
+                        Icon(
+                            Icons.Filled.Label,
+                            contentDescription = stringResource(R.string.label_icon)
+                        )
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading,
@@ -106,7 +111,7 @@ fun EditAddressDialog(
                     supportingText = {
                         if (label.isBlank()) {
                             Text(
-                                text = "Vui lòng nhập tên địa chỉ",
+                                text = stringResource(R.string.address_label_required),
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
@@ -119,7 +124,7 @@ fun EditAddressDialog(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Tòa nhà *",
+                        text = stringResource(R.string.building_field_label),
                         fontSize = 14.sp,
                         color = if (selectedBuilding == null && !isLoading) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                     )
@@ -144,7 +149,7 @@ fun EditAddressDialog(
                                     modifier = Modifier.size(20.dp),
                                     strokeWidth = 2.dp
                                 )
-                                Text("Đang tải danh sách tòa nhà...")
+                                Text(stringResource(R.string.loading_buildings))
                             }
                         }
                     }
@@ -164,7 +169,10 @@ fun EditAddressDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Lỗi: ${(pickupPointsState as PickupPointsState.Error).message}",
+                                text = stringResource(
+                                    R.string.error_generic,
+                                    (pickupPointsState as PickupPointsState.Error).message
+                                ),
                                 color = MaterialTheme.colorScheme.error,
                                 fontSize = 14.sp
                             )
@@ -182,12 +190,17 @@ fun EditAddressDialog(
                             OutlinedTextField(
                                 value = selectedPickupPoint?.name ?: selectedBuilding ?: "",
                                 onValueChange = { },
-                                label = { Text("Chọn tòa nhà") },
+                                label = { Text(stringResource(R.string.select_building_placeholder)) },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.Apartment, contentDescription = null)
+                                    Icon(
+                                        Icons.Filled.Apartment,
+                                        contentDescription = stringResource(R.string.apartment_icon)
+                                    )
                                 },
                                 trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                                    ExposedDropdownMenuDefaults.TrailingIcon(
+                                        expanded = expanded
+                                    )
                                 },
                                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                                 modifier = Modifier
@@ -199,12 +212,12 @@ fun EditAddressDialog(
                                 supportingText = {
                                     if (selectedBuilding == null && !isLoading) {
                                         Text(
-                                            text = "Vui lòng chọn tòa nhà",
+                                            text = stringResource(R.string.building_required),
                                             color = MaterialTheme.colorScheme.error
                                         )
                                     } else if (selectedBuilding != null && selectedPickupPoint == null) {
                                         Text(
-                                            text = "Tòa nhà không còn tồn tại, vui lòng chọn lại",
+                                            text = stringResource(R.string.building_not_exist),
                                             color = MaterialTheme.colorScheme.error
                                         )
                                     }
@@ -255,7 +268,7 @@ fun EditAddressDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Không có tòa nhà nào",
+                                text = stringResource(R.string.no_buildings_available),
                                 color = Color.Gray,
                                 fontSize = 14.sp
                             )
@@ -276,24 +289,24 @@ fun EditAddressDialog(
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
-                                    text = "Thông tin tòa nhà:",
+                                    text = stringResource(R.string.building_info_title),
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                                     fontWeight = FontWeight.Medium
                                 )
                                 Text(
-                                    text = "Mã: ${point.buildingCode}",
+                                    text = stringResource(R.string.building_code_label, point.buildingCode),
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
                                 Text(
-                                    text = "Tên: ${point.name}",
+                                    text = stringResource(R.string.building_name_label, point.name),
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
                                 point.note?.let { noteText ->
                                     Text(
-                                        text = "Ghi chú: $noteText",
+                                        text = stringResource(R.string.building_note_label, noteText),
                                         fontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
@@ -307,10 +320,13 @@ fun EditAddressDialog(
                 OutlinedTextField(
                     value = room,
                     onValueChange = { room = it },
-                    label = { Text("Phòng/Số căn hộ *") },
-                    placeholder = { Text("VD: Phòng 101, Căn hộ 302") },
+                    label = { Text(stringResource(R.string.room_field_label)) },
+                    placeholder = { Text(stringResource(R.string.room_placeholder)) },
                     leadingIcon = {
-                        Icon(Icons.Filled.DoorFront, contentDescription = null)
+                        Icon(
+                            Icons.Filled.DoorFront,
+                            contentDescription = stringResource(R.string.door_icon)
+                        )
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading && selectedBuilding != null,
@@ -319,7 +335,7 @@ fun EditAddressDialog(
                     supportingText = {
                         if (room.isBlank()) {
                             Text(
-                                text = "Vui lòng nhập số phòng",
+                                text = stringResource(R.string.room_required),
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
@@ -330,10 +346,13 @@ fun EditAddressDialog(
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
-                    label = { Text("Ghi chú") },
-                    placeholder = { Text("VD: Giao hàng ban ngày, gọi trước 30 phút") },
+                    label = { Text(stringResource(R.string.note_field_label)) },
+                    placeholder = { Text(stringResource(R.string.note_placeholder)) },
                     leadingIcon = {
-                        Icon(Icons.Filled.Note, contentDescription = null)
+                        Icon(
+                            Icons.Filled.Note,
+                            contentDescription = stringResource(R.string.note_icon)
+                        )
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading,
@@ -357,20 +376,20 @@ fun EditAddressDialog(
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
-                                    text = "Địa chỉ đầy đủ sẽ là:",
+                                    text = stringResource(R.string.full_address_preview),
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onTertiaryContainer,
                                     fontWeight = FontWeight.Medium
                                 )
                                 Text(
-                                    text = "${point.name}, $room",
+                                    text = stringResource(R.string.address_preview, point.name, room),
                                     fontSize = 14.sp,
                                     color = MaterialTheme.colorScheme.onTertiaryContainer,
                                     fontWeight = FontWeight.Medium
                                 )
                                 note.takeIf { it.isNotEmpty() }?.let { noteText ->
                                     Text(
-                                        text = "Ghi chú: $noteText",
+                                        text = stringResource(R.string.preview_note_label, noteText),
                                         fontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.onTertiaryContainer
                                     )
@@ -392,7 +411,7 @@ fun EditAddressDialog(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Đặt làm địa chỉ mặc định",
+                        text = stringResource(R.string.set_default_address),
                         fontSize = 14.sp
                     )
                 }
@@ -412,17 +431,17 @@ fun EditAddressDialog(
                 onClick = {
                     // Validate
                     if (label.isBlank()) {
-                        errorMessage = "Vui lòng nhập tên địa chỉ"
+                        errorMessage = R.string.address_label_required.toString()
                         return@TextButton
                     }
 
                     if (selectedBuilding == null) {
-                        errorMessage = "Vui lòng chọn tòa nhà"
+                        errorMessage = R.string.building_required.toString()
                         return@TextButton
                     }
 
                     if (room.isBlank()) {
-                        errorMessage = "Vui lòng nhập số phòng"
+                        errorMessage = R.string.room_required.toString()
                         return@TextButton
                     }
 
@@ -451,9 +470,9 @@ fun EditAddressDialog(
                         strokeWidth = 2.dp
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Đang lưu...")
+                    Text(stringResource(R.string.saving_changes))
                 } else {
-                    Text("Lưu thay đổi")
+                    Text(stringResource(R.string.save_changes_button))
                 }
             }
         },
@@ -462,7 +481,7 @@ fun EditAddressDialog(
                 onClick = onDismiss,
                 enabled = !isLoading
             ) {
-                Text("Hủy")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

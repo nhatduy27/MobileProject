@@ -80,6 +80,15 @@
     <string name="orders_cancel_order">Cancel Order</string>
     <string name="orders_cancel_confirm">Are you sure you want to cancel this order?</string>
     <string name="orders_cancel_reason">Cancel reason (optional)</string>
+    <!-- Orders Filters -->
+    <string name="orders_filter_all">All</string>
+    <string name="orders_filter_pending">Pending</string>
+    <string name="orders_filter_confirmed">Confirmed</string>
+    <string name="orders_filter_preparing">Preparing</string>
+    <string name="orders_filter_ready">Ready</string>
+    <string name="orders_filter_shipping">Shipping</string>
+    <string name="orders_filter_delivered">Delivered</string>
+    <string name="orders_filter_cancelled">Cancelled</string>
     
     <!-- ==================== FOODS ==================== -->
     <string name="foods_title">Food Management</string>
@@ -114,6 +123,38 @@
     <string name="shippers_total_deliveries">Total Deliveries</string>
     <string name="shippers_rating">Rating</string>
     <string name="shippers_removal_requests">Removal Requests</string>
+    <!-- Shippers tabs -->
+    <string name="shippers_tab_applications">Applications</string>
+    <string name="shippers_tab_shippers">Shippers</string>
+    <string name="shippers_tab_removal">Removal Requests</string>
+    <!-- Shippers stats -->
+    <string name="shippers_stat_total_applications">Total Applications</string>
+    <string name="shippers_stat_pending">Pending</string>
+    <string name="shippers_stat_total_shippers">Total Shippers</string>
+    <string name="shippers_stat_available">Available</string>
+    <string name="shippers_stat_delivery">Delivering</string>
+    <string name="shippers_stat_total_requests">Total Requests</string>
+    <string name="shippers_stat_pending_requests">Pending</string>
+    <!-- Shippers filters -->
+    <string name="shippers_filter_all">All</string>
+    <string name="shippers_filter_pending">Pending</string>
+    <string name="shippers_filter_approved">Approved</string>
+    <string name="shippers_filter_rejected">Rejected</string>
+    <string name="shippers_filter_pending_process">Pending</string>
+    <!-- Shippers empty states -->
+    <string name="shippers_empty_no_applications">No shipper applications yet</string>
+    <string name="shippers_empty_no_applications_search">No applications found</string>
+    <string name="shippers_empty_no_shippers">No shippers yet</string>
+    <string name="shippers_empty_no_shippers_search">No shippers found</string>
+    <string name="shippers_empty_no_requests">No removal requests yet</string>
+    <string name="shippers_empty_no_requests_search">No requests found</string>
+    <!-- Shippers buttons -->
+    <string name="shippers_btn_reject">Reject</string>
+    <string name="shippers_btn_accept">Accept</string>
+    <!-- Shippers status -->
+    <string name="shippers_status_pending">Pending</string>
+    <string name="shippers_status_approved">Approved</string>
+    <string name="shippers_status_rejected">Rejected</string>
     
     <!-- ==================== VOUCHERS ==================== -->
     <string name="vouchers_title">Voucher Management</string>
@@ -142,6 +183,32 @@
     <string name="vouchers_delete_success">Voucher deleted successfully</string>
     <string name="vouchers_status_on">Voucher activated</string>
     <string name="vouchers_status_off">Voucher deactivated</string>
+    <!-- Vouchers Filters -->
+    <string name="vouchers_filter_all">All</string>
+    <string name="vouchers_filter_active">Active</string>
+    <string name="vouchers_filter_inactive">Inactive</string>
+    <string name="vouchers_filter_expired">Expired</string>
+    <!-- Vouchers Stats -->
+    <string name="vouchers_stat_total">Total Vouchers</string>
+    <string name="vouchers_stat_active">Active</string>
+    <string name="vouchers_stat_expired">Expired</string>
+    <!-- Vouchers Search -->
+    <string name="vouchers_search_hint">Search voucher code, name...</string>
+    <!-- Vouchers Card -->
+    <string name="vouchers_discount">Discount</string>
+    <string name="vouchers_usage">Used</string>
+    <string name="vouchers_validity">Validity</string>
+    <string name="vouchers_btn_on">On</string>
+    <string name="vouchers_btn_off">Off</string>
+    <string name="vouchers_btn_edit">Edit</string>
+    <string name="vouchers_btn_delete">Delete</string>
+    <!-- Vouchers Empty -->
+    <string name="vouchers_empty_title">No vouchers yet</string>
+    <string name="vouchers_empty_subtitle">Create vouchers to attract customers</string>
+    <string name="vouchers_create_new">Create new voucher</string>
+    <string name="vouchers_reload">Reload</string>
+    <string name="vouchers_max_discount_fmt">max %1$s</string>
+    <string name="vouchers_free_ship_fmt">Free shipping %1$d%%</string>
     
     <!-- ==================== CUSTOMERS/BUYERS ==================== -->
     <string name="customers_title">Customers</string>
@@ -213,10 +280,48 @@
     <string name="revenue_chart">Chart</string>
     <string name="revenue_time_slots">Time Slots</string>
     <string name="revenue_top_products">Top Products</string>
-    <string name="revenue_no_data">No data available</string>
+    <string name="revenue_no_data">No revenue data yet</string>
+    <string name="revenue_time_slots_detail">Revenue details by time slot</string>
+    <string name="revenue_top_products_period">Best sellers %1$s</string>
+    <string name="revenue_subtitle">Financial statistics and analysis</string>
+    <string name="revenue_chart_7_days">7-day revenue chart</string>
+    <string name="revenue_time_slot_info">%1$d orders • %2$d%% of total revenue</string>
+    <string name="revenue_product_info">%1$d servings • %2$s₫/serving</string>
+    <string name="revenue_day_mon">Mon</string>
+    <string name="revenue_day_tue">Tue</string>
+    <string name="revenue_day_wed">Wed</string>
+    <string name="revenue_day_thu">Thu</string>
+    <string name="revenue_day_fri">Fri</string>
+    <string name="revenue_day_sat">Sat</string>
+    <string name="revenue_day_sun">Sun</string>
+    <!-- Revenue Stat Titles (for mapping API responses) -->
+    <string name="revenue_stat_total_revenue">Total Revenue</string>
+    <string name="revenue_stat_order_count">Number of Orders</string>
+    <string name="revenue_stat_avg_order">Average/Order</string>
+    <string name="revenue_stat_pending">Pending</string>
+    <string name="revenue_stat_completed">Completed</string>
+    <string name="revenue_stat_cancelled">Cancelled</string>
+    <string name="revenue_stat_growth">Growth</string>
+    <!-- Revenue Stat Subtitles -->
+    <string name="revenue_stat_vs_yesterday">vs yesterday</string>
+    <string name="revenue_stat_vs_last_week">vs last week</string>
+    <string name="revenue_stat_vs_last_month">vs last month</string>
+    <string name="revenue_stat_vs_last_year">vs last year</string>
+    <string name="revenue_stat_up">↑ %1$s%% %2$s</string>
+    <string name="revenue_stat_down">↓ %1$s%% %2$s</string>
+    <string name="revenue_stat_no_revenue">No revenue</string>
+    <string name="revenue_stat_no_orders">No orders</string>
+    <string name="revenue_stat_no_data">No data yet</string>
+    <string name="revenue_stat_first_days">First %1$d days of month</string>
+    <string name="revenue_stat_first_weeks">First %1$d weeks of year</string>
+    <string name="revenue_stat_first_month">First month</string>
+    <string name="revenue_stat_first_time">First time</string>
+    <string name="revenue_stat_today_only">Today only</string>
+    <string name="revenue_stat_this_week">This week</string>
+    <string name="revenue_stat_this_month">This month</string>
+    <string name="revenue_stat_this_year">This year</string>
     
     <!-- ==================== REVIEWS ==================== -->
-    <string name="reviews_title">Reviews</string>
     <string name="reviews_no_reviews">No reviews yet</string>
     <string name="reviews_average_rating">Average Rating</string>
     <string name="reviews_total_reviews">Total Reviews</string>
@@ -236,7 +341,6 @@
     <string name="chatbot_type_message">Enter your question...</string>
     
     <!-- ==================== SETTINGS ==================== -->
-    <string name="settings_title">Settings</string>
     <string name="settings_shop_info">Shop Information</string>
     <string name="settings_shop_name">Shop Name</string>
     <string name="settings_shop_address">Address</string>
@@ -254,9 +358,49 @@
     <string name="settings_logout">Logout</string>
     <string name="settings_logout_confirm">Confirm Logout</string>
     <string name="settings_logout_message">Are you sure you want to logout?</string>
+    <string name="settings_subtitle">Account and app settings</string>
+    <!-- Settings Account Items -->
+    <string name="settings_personal_info">Personal Information</string>
+    <string name="settings_personal_info_desc">Edit account information</string>
+    <string name="settings_change_password">Change Password</string>
+    <string name="settings_change_password_desc">Update your login password</string>
+    <!-- Settings Store Items -->
+    <string name="settings_section_account">ACCOUNT</string>
+    <string name="settings_section_store">STORE</string>
+    <string name="settings_section_notification">NOTIFICATIONS</string>
+    <string name="settings_section_language">LANGUAGE</string>
+    <string name="settings_section_security">SECURITY</string>
+    <string name="settings_section_about">ABOUT APP</string>
+    <string name="settings_store_info">Store Information</string>
+    <string name="settings_store_info_desc">Name, address, opening hours</string>
+    <string name="settings_payment_method">Payment Method</string>
+    <string name="settings_payment_method_desc">Manage bank accounts</string>
+    <!-- Settings Notification Items -->
+    <string name="settings_notif_orders">Orders \u0026 Payments</string>
+    <string name="settings_notif_orders_desc">Important notifications, cannot be disabled</string>
+    <string name="settings_notif_updates">Updates \u0026 Summary</string>
+    <string name="settings_notif_updates_desc">Revenue summary, system updates</string>
+    <string name="settings_notif_promo">Promotions</string>
+    <string name="settings_notif_promo_desc">New vouchers, promotional programs</string>
+    <!-- Settings Security Items -->
+    <string name="settings_2fa">Two-Factor Authentication</string>
+    <string name="settings_2fa_desc">Enhance account security</string>
+    <string name="settings_login_history">Login History</string>
+    <string name="settings_login_history_desc">View recent login sessions</string>
+    <!-- Settings About Items -->
+    <string name="settings_terms">Terms of Service</string>
+    <string name="settings_terms_desc">Rules and policies</string>
+    <string name="settings_privacy">Privacy Policy</string>
+    <string name="settings_privacy_desc">How we protect your data</string>
+    <string name="settings_support">Help \u0026 Support</string>
+    <string name="settings_support_desc">Contact us</string>
+    <!-- Settings Language Dialog -->
+    <string name="settings_language_title">Language</string>
+    <string name="settings_select_language">Select Language</string>
+    <string name="settings_close">Close</string>
+    <string name="settings_version">KTX Food Store v1.0.0</string>
     
     <!-- ==================== NOTIFICATIONS ==================== -->
-    <string name="notifications_title">Notifications</string>
     <string name="notifications_no_notifications">No new notifications</string>
     <string name="notifications_mark_read">Mark as Read</string>
     <string name="notifications_mark_all_read">Mark All as Read</string>
@@ -272,4 +416,40 @@
     <string name="success_saved">Saved successfully</string>
     <string name="success_deleted">Deleted successfully</string>
     <string name="success_updated">Updated successfully</string>
+    
+    <!-- ==================== NOTIFICATIONS ==================== -->
+    <string name="notifications_filter_all">All</string>
+    <string name="notifications_filter_unread">Unread</string>
+    <string name="notifications_filter_unread_count">Unread (%1$d)</string>
+    <string name="notifications_filter_read">Read</string>
+    <string name="notifications_filter_order">Orders</string>
+    <string name="notifications_filter_system">System</string>
+    <string name="notifications_filter_promotion">Promotions</string>
+    <string name="notifications_loading">Loading notifications...</string>
+    <string name="notifications_settings">Notification Settings</string>
+    
+    <!-- ==================== REVIEWS ==================== -->
+    <string name="owner_reviews_title">Reviews</string>
+    <string name="reviews_from_customers">Customer Reviews</string>
+    <string name="reviews_empty_message">Customer reviews will appear here</string>
+    <string name="owner_reviews_count">%1$d reviews</string>
+    <string name="reviews_unreplied_count">%1$d reviews without reply</string>
+    <string name="reviews_empty_no_reviews">No reviews yet</string>
+    <string name="reviews_empty_no_match">No matching reviews</string>
+    <string name="reviews_try_other_filter">Try a different filter</string>
+    <string name="reviews_your_reply">Your reply</string>
+    <string name="reviews_reply_btn">Reply</string>
+    <string name="reviews_reply_dialog_title">Reply to Review</string>
+    <string name="reviews_reply_content">Reply content</string>
+    <string name="reviews_reply_placeholder">Thank you for your review...</string>
+    
+    <!-- ==================== FOODS FILTERS ==================== -->
+    <string name="foods_filter_all">All</string>
+    
+    <!-- ==================== CUSTOMERS FILTERS ==================== -->
+    <string name="customers_filter_all">All</string>
+    
+    <!-- ==================== GENERAL UI ==================== -->
+    <string name="general_loading">Loading...</string>
+    <string name="general_cancel">Cancel</string>
 </resources>

@@ -326,10 +326,10 @@ fun DashBoardRootScreen(navController: NavHostController) {
 
                         Text(
                             text = when (currentScreen) {
-                                "revenue" -> "Báo cáo doanh thu"
-                                "reviews" -> "Đánh giá"
-                                "settings" -> "Cài đặt"
-                                "chat" -> "Tin nhắn"
+                                "revenue" -> stringResource(R.string.revenue_title)
+                                "reviews" -> stringResource(R.string.owner_reviews_title)
+                                "settings" -> stringResource(R.string.nav_settings)
+                                "chat" -> stringResource(R.string.chat_title)
                                 else -> shopState.shopName.ifEmpty { "KTX Food" }
                             },
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),

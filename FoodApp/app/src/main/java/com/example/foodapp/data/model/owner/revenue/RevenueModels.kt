@@ -6,22 +6,23 @@ import androidx.compose.ui.graphics.Color
 /**
  * Revenue period enum (maps to backend)
  */
-enum class RevenuePeriod(val apiValue: String, val displayName: String) {
-    TODAY("today", "Hôm nay"),
-    WEEK("week", "Tuần này"),
-    MONTH("month", "Tháng này"),
-    YEAR("year", "Năm nay");
+enum class RevenuePeriod(val apiValue: String, val displayKey: String) {
+    TODAY("today", "today"),
+    WEEK("week", "week"),
+    MONTH("month", "month"),
+    YEAR("year", "year");
     
     companion object {
         fun fromApiValue(value: String): RevenuePeriod {
             return values().find { it.apiValue == value } ?: TODAY
         }
         
-        fun fromDisplayName(name: String): RevenuePeriod {
-            return values().find { it.displayName == name } ?: TODAY
+        fun fromDisplayKey(key: String): RevenuePeriod {
+            return values().find { it.displayKey == key } ?: TODAY
         }
     }
 }
+
 
 /**
  * KPI Stat Card - từ API response

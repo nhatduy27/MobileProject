@@ -1,6 +1,5 @@
 package com.example.foodapp.pages.client.components.productdetail
 
-
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -15,10 +14,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.foodapp.R
 import com.example.foodapp.data.model.shared.product.Product
 
 @Composable
@@ -90,7 +91,7 @@ fun ProductDetailContent(
                             }
                         }
                         Text(
-                            text = "Không có ảnh",
+                            text = stringResource(id = R.string.product_no_image),
                             color = Color(0xFF757575),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
@@ -117,13 +118,13 @@ fun ProductDetailContent(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Cancel,
-                                contentDescription = null,
+                                contentDescription = stringResource(id = R.string.product_close_icon),
                                 tint = Color.White,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "HẾT HÀNG",
+                                text = stringResource(id = R.string.product_out_of_stock),
                                 color = Color.White,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
@@ -190,20 +191,20 @@ fun ProductDetailContent(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Star,
-                                contentDescription = "Rating",
+                                contentDescription = stringResource(id = R.string.product_rating_icon),
                                 tint = Color(0xFFFFA000),
                                 modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    text = String.format("%.1f", product.rating),
+                                    text = stringResource(id = R.string.product_rating_format, product.rating),
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF212121)
                                 )
                                 Text(
-                                    text = "${product.totalRatings} đánh giá",
+                                    text = stringResource(id = R.string.product_ratings_count_format, product.totalRatings),
                                     fontSize = 12.sp,
                                     color = Color(0xFF757575)
                                 )
@@ -222,20 +223,20 @@ fun ProductDetailContent(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.ShoppingBag,
-                                contentDescription = "Đã bán",
+                                contentDescription = stringResource(id = R.string.product_sold_icon),
                                 tint = Color(0xFF4CAF50),
                                 modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    text = "${product.soldCount}",
+                                    text = stringResource(id = R.string.product_sold_format, product.soldCount),
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF212121)
                                 )
                                 Text(
-                                    text = "Đã bán",
+                                    text = stringResource(id = R.string.product_sold),
                                     fontSize = 12.sp,
                                     color = Color(0xFF757575)
                                 )
@@ -260,7 +261,7 @@ fun ProductDetailContent(
                     ) {
                         Column {
                             Text(
-                                text = "Giá bán",
+                                text = stringResource(id = R.string.product_price_label),
                                 fontSize = 14.sp,
                                 color = Color.White.copy(alpha = 0.9f),
                                 fontWeight = FontWeight.Medium
@@ -282,7 +283,7 @@ fun ProductDetailContent(
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Filled.LocalOffer,
-                                    contentDescription = null,
+                                    contentDescription = stringResource(id = R.string.product_price_icon),
                                     tint = Color.White,
                                     modifier = Modifier.size(28.dp)
                                 )
@@ -293,7 +294,7 @@ fun ProductDetailContent(
 
                 // Description
                 Text(
-                    text = "Mô tả sản phẩm",
+                    text = stringResource(id = R.string.product_description_label),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF212121),
@@ -308,7 +309,7 @@ fun ProductDetailContent(
                     color = Color(0xFFF5F5F5)
                 ) {
                     Text(
-                        text = product.description ?: "Không có mô tả",
+                        text = product.description ?: stringResource(id = R.string.product_no_description),
                         fontSize = 15.sp,
                         lineHeight = 24.sp,
                         color = Color(0xFF616161),
@@ -337,7 +338,7 @@ fun ProductDetailContent(
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Filled.Store,
-                                    contentDescription = "Cửa hàng",
+                                    contentDescription = stringResource(id = R.string.product_store_icon),
                                     tint = Color.White,
                                     modifier = Modifier.size(28.dp)
                                 )
@@ -346,13 +347,13 @@ fun ProductDetailContent(
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
                             Text(
-                                text = "Cửa hàng",
+                                text = stringResource(id = R.string.product_store_label),
                                 fontSize = 13.sp,
                                 color = Color(0xFF757575),
                                 fontWeight = FontWeight.Medium
                             )
                             Text(
-                                text = product.shopName ?: "Không có thông tin",
+                                text = product.shopName ?: stringResource(id = R.string.product_store_unknown),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF212121)
@@ -377,19 +378,19 @@ fun ProductDetailContent(
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.Timer,
-                                contentDescription = "Thời gian",
+                                contentDescription = stringResource(id = R.string.product_preparation_time_icon),
                                 tint = Color(0xFF2196F3),
                                 modifier = Modifier.size(32.dp)
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = "${product.preparationTime ?: 0} phút",
+                                text = stringResource(id = R.string.product_time_format, product.preparationTime ?: 0),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF212121)
                             )
                             Text(
-                                text = "Chuẩn bị",
+                                text = stringResource(id = R.string.product_preparation_time_label),
                                 fontSize = 12.sp,
                                 color = Color(0xFF757575)
                             )
@@ -413,7 +414,7 @@ fun ProductDetailContent(
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
                                         imageVector = if (product.isAvailable) Icons.Filled.Check else Icons.Filled.Close,
-                                        contentDescription = null,
+                                        contentDescription = stringResource(id = R.string.product_availability_icon),
                                         tint = Color.White,
                                         modifier = Modifier.size(20.dp)
                                     )
@@ -421,13 +422,16 @@ fun ProductDetailContent(
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(
-                                text = if (product.isAvailable) "Còn hàng" else "Hết hàng",
+                                text = if (product.isAvailable)
+                                    stringResource(id = R.string.product_status_in_stock)
+                                else
+                                    stringResource(id = R.string.product_status_out_of_stock),
                                 fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (product.isAvailable) Color(0xFF2E7D32) else Color(0xFFC62828)
                             )
                             Text(
-                                text = "Trạng thái",
+                                text = stringResource(id = R.string.product_status_label),
                                 fontSize = 12.sp,
                                 color = Color(0xFF757575)
                             )

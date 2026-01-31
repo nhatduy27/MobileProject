@@ -1,20 +1,24 @@
-// OrderSummarySection.kt (sửa lại)
 package com.example.foodapp.pages.client.components.payment
 
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.foodapp.R
 import com.example.foodapp.ui.theme.*
+
 
 @Composable
 fun OrderSummarySection(
     productPrice: Double,
     discount: Double = 0.0,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    context: Context
 ) {
     val total = productPrice - discount
 
@@ -31,7 +35,7 @@ fun OrderSummarySection(
                 .padding(16.dp)
         ) {
             Text(
-                text = "Tổng thanh toán",
+                text = stringResource(id = R.string.order_summary_title),
                 style = MaterialTheme.typography.titleMedium,
                 color = TextPrimary
             )
@@ -44,12 +48,12 @@ fun OrderSummarySection(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Tiền hàng",
+                    text = context.getString(R.string.product_price_label),
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondary
                 )
                 Text(
-                    text = formatCurrency(productPrice),
+                    text = formatCurrency(productPrice, context),
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextPrimary
                 )
@@ -65,12 +69,12 @@ fun OrderSummarySection(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Giảm giá",
+                        text = stringResource(id = R.string.discount_label),
                         style = MaterialTheme.typography.bodyMedium,
                         color = SuccessColor
                     )
                     Text(
-                        text = "-${formatCurrency(discount)}",
+                        text = "-${formatCurrency(discount, context)}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = SuccessColor
                     )
@@ -90,12 +94,12 @@ fun OrderSummarySection(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    text = "Tổng cộng",
+                    text = stringResource(id = R.string.total_label),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = TextPrimary
                 )
                 Text(
-                    text = formatCurrency(total),
+                    text = formatCurrency(total, context),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = PrimaryColor
                 )
@@ -104,6 +108,6 @@ fun OrderSummarySection(
     }
 }
 
-private fun formatCurrency(amount: Double): String {
-    return String.format("%,.0f", amount) + "đ"
+private fun formatCurrency(amount: Double, context: Context): String {
+    return String.format(context.getString(R.string.currency_format), amount)
 }
