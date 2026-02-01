@@ -61,6 +61,8 @@ fun LedgerEntryCard(entry: LedgerEntry) {
                             LedgerType.WITHDRAWAL -> Icons.Outlined.AccountBalanceWallet
                             LedgerType.PAYOUT -> Icons.Outlined.AccountBalanceWallet
                             LedgerType.ADJUSTMENT -> Icons.Outlined.Tune
+                            LedgerType.PAYOUT -> Icons.Outlined.AccountBalanceWallet
+                            null -> Icons.Outlined.ReceiptLong
                         },
                         contentDescription = null,
                         tint = if (entry.isIncome()) ShipperColors.Success else ShipperColors.Error,
@@ -121,20 +123,31 @@ fun LedgerEntryCard(entry: LedgerEntry) {
 }
 
 /**
- * Format datetime from ISO string
+ * Format datetime from ISO date string
  */
-private fun formatDateTime(isoString: String?): String {
-    if (isoString.isNullOrBlank()) return ""
+private fun formatDateTime(isoDateTime: String?): String {
+    if (isoDateTime.isNullOrEmpty()) return ""
     
     return try {
         val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.getDefault())
         inputFormat.timeZone = java.util.TimeZone.getTimeZone("UTC")
-        val date = inputFormat.parse(isoString) ?: return ""
+        val date = inputFormat.parse(isoDateTime)
         
         val outputFormat = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
         outputFormat.timeZone = java.util.TimeZone.getDefault()
-        outputFormat.format(date)
+        date?.let { outputFormat.format(it) } ?: ""
     } catch (e: Exception) {
-        ""
+        // Try alternative format without milliseconds
+        try {
+            val inputFormat = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.getDefault())
+            inputFormat.timeZone = java.util.TimeZone.getTimeZone("UTC")
+            val date = inputFormat.parse(isoDateTime)
+            
+            val outputFormat = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+            outputFormat.timeZone = java.util.TimeZone.getDefault()
+            date?.let { outputFormat.format(it) } ?: ""
+        } catch (e2: Exception) {
+            isoDateTime.take(10) // Fallback: just show date part
+        }
     }
 }
