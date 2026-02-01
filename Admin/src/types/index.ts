@@ -79,6 +79,7 @@ export interface Payout {
   userId: string;
   userName?: string;
   userEmail?: string;
+  userRole?: 'CUSTOMER' | 'OWNER' | 'SHIPPER' | 'ADMIN' | string;
   amount: number;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'TRANSFERRED';
   // Backend field names

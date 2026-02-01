@@ -171,24 +171,75 @@ export class AdminService {
   /**
    * List payout requests
    * ADMIN-008: List Payout Requests
+   *
+   * Enriched with user info (name, email, role)
    */
-  async listPayouts(query: ListPayoutsQueryDto): Promise<PaginatedResult<AdminPayoutEntity>> {
+  async listPayouts(
+    query: ListPayoutsQueryDto,
+  ): Promise<PaginatedResult<AdminPayoutEntity & { userName?: string; userEmail?: string; userRole?: string }>> {
     this.logger.log(`Listing payouts with query: ${JSON.stringify(query)}`);
 
     const { page = 1, limit = 20, status } = query;
 
-    return this.payoutsRepository.findWithFilters(
+    const result = await this.payoutsRepository.findWithFilters(
       { status: status as PayoutStatus },
       { pagination: { page, limit } },
     );
+
+    // Enrich with user info
+    const enrichedData = await Promise.all(
+      result.data.map(async (payout) => {
+        try {
+          const user = await this.usersRepository.findById(payout.userId);
+          return {
+            ...payout,
+            userName: user?.displayName || user?.email || '-',
+            userEmail: user?.email || '-',
+            userRole: user?.roles?.[0] || (user as any)?.role || 'UNKNOWN',
+          };
+        } catch {
+          return {
+            ...payout,
+            userName: '-',
+            userEmail: '-',
+            userRole: 'UNKNOWN',
+          };
+        }
+      }),
+    );
+
+    return {
+      ...result,
+      data: enrichedData,
+    };
   }
 
   /**
-   * Get payout by ID
+   * Get payout by ID (enriched with user info)
    */
-  async getPayoutById(payoutId: string): Promise<AdminPayoutEntity> {
+  async getPayoutById(
+    payoutId: string,
+  ): Promise<AdminPayoutEntity & { userName?: string; userEmail?: string; userRole?: string }> {
     this.logger.log(`Getting payout: ${payoutId}`);
-    return this.payoutsRepository.findByIdOrThrow(payoutId);
+    const payout = await this.payoutsRepository.findByIdOrThrow(payoutId);
+
+    // Enrich with user info
+    try {
+      const user = await this.usersRepository.findById(payout.userId);
+      return {
+        ...payout,
+        userName: user?.displayName || user?.email || '-',
+        userEmail: user?.email || '-',
+        userRole: user?.roles?.[0] || (user as any)?.role || 'UNKNOWN',
+      };
+    } catch {
+      return {
+        ...payout,
+        userName: '-',
+        userEmail: '-',
+        userRole: 'UNKNOWN',
+      };
+    }
   }
 
   /**

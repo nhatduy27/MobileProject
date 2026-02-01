@@ -353,6 +353,17 @@ export default function Payouts() {
     return colors[status] || 'default';
   };
 
+  // Helper to get role tag color
+  const getRoleColor = (role?: string) => {
+    switch (role?.toUpperCase()) {
+      case 'OWNER': return 'blue';
+      case 'SHIPPER': return 'green';
+      case 'CUSTOMER': return 'orange';
+      case 'ADMIN': return 'red';
+      default: return 'default';
+    }
+  };
+
   const columns: ColumnsType<Payout> = [
     {
       title: 'User',
@@ -361,6 +372,11 @@ export default function Payouts() {
         <div>
           <div style={{ fontWeight: 500 }}>{record.userName || '-'}</div>
           <div style={{ fontSize: 12, color: '#999' }}>{record.userEmail}</div>
+          {record.userRole && (
+            <Tag color={getRoleColor(record.userRole)} style={{ marginTop: 4 }}>
+              {record.userRole}
+            </Tag>
+          )}
         </div>
       ),
     },
@@ -502,6 +518,11 @@ export default function Payouts() {
           <Descriptions column={1} bordered>
             <Descriptions.Item label="User">{selectedPayout.userName}</Descriptions.Item>
             <Descriptions.Item label="Email">{selectedPayout.userEmail}</Descriptions.Item>
+            <Descriptions.Item label="Role">
+              <Tag color={getRoleColor(selectedPayout.userRole)}>
+                {selectedPayout.userRole || 'UNKNOWN'}
+              </Tag>
+            </Descriptions.Item>
             <Descriptions.Item label="Amount">
               <Text strong style={{ color: '#cf1322' }}>
                 {formatCurrency(selectedPayout.amount)}
