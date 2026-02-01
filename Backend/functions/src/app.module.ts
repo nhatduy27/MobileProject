@@ -108,6 +108,8 @@ export class AppModule implements NestModule {
       { path: 'me/avatar', method: RequestMethod.POST },
       // Shipper driver license upload
       { path: 'me/vehicle/driver-license', method: RequestMethod.POST },
+      // Shipper application (multipart)
+      { path: 'shipper-applications', method: RequestMethod.POST },
     );
   }
 }

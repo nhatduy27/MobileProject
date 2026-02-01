@@ -26,9 +26,9 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
     // Production URL
-    //private const val BASE_URL = "https://asia-southeast1-foodappproject-7c136.cloudfunctions.net/api/"
     private const val BASE_URL = "https://asia-southeast1-foodappproject-7c136.cloudfunctions.net/api/"
     // Local development URL (10.0.2.2 for Android Emulator, or your PC's IP for real device)
+    
 
     private var appContext: Context? = null
 
@@ -77,8 +77,8 @@ object ApiClient {
             .addInterceptor { chain ->
                 val originalRequest = chain.request()
                 val requestBuilder = originalRequest.newBuilder()
-                    .addHeader("Content-Type", "application/json")
                     .addHeader("Accept", "application/json")
+
 
                 // Lấy token
                 val token = getToken()
@@ -128,3 +128,4 @@ object ApiClient {
     val chatBoxApiService: ChatBoxApiService by lazy { retrofit.create(ChatBoxApiService::class.java) }
     val chatApiService : ChatApiService by lazy { retrofit.create(ChatApiService::class.java) }
 }
+
