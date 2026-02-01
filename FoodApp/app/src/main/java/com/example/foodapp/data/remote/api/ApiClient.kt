@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
     // Production URL
-    private const val BASE_URL = "http://10.0.2.2:3000/api/"
+    private const val BASE_URL = "https://asia-southeast1-foodappproject-7c136.cloudfunctions.net/api/"
     // Local development URL (10.0.2.2 for Android Emulator, or your PC's IP for real device)
     
 
