@@ -120,7 +120,6 @@ export default function Vouchers() {
     setEditingVoucher(null);
     form.resetFields();
     form.setFieldsValue({
-      isActive: true,
       type: 'PERCENTAGE',
       usageLimit: 100,
       usageLimitPerUser: 1,
@@ -152,7 +151,8 @@ export default function Vouchers() {
 
   const handleSubmit = async (values: any) => {
     try {
-      const payload: VoucherFormData = {
+      // Base payload for create (without isActive - backend sets default)
+      const basePayload = {
         code: values.code,
         name: values.name,
         description: values.description,
@@ -164,14 +164,19 @@ export default function Vouchers() {
         usageLimitPerUser: values.usageLimitPerUser,
         validFrom: values.validFrom.toISOString(),
         validTo: values.validTo.toISOString(),
-        isActive: values.isActive,
       };
 
       if (editingVoucher) {
-        await api.put(`/admin/vouchers/${editingVoucher.id}`, payload);
+        // Update payload includes isActive
+        const updatePayload: VoucherFormData = {
+          ...basePayload,
+          isActive: values.isActive,
+        };
+        await api.put(`/admin/vouchers/${editingVoucher.id}`, updatePayload);
         message.success('Voucher updated successfully');
       } else {
-        await api.post('/admin/vouchers', payload);
+        // Create payload does NOT include isActive (backend CreateVoucherDto doesn't accept it)
+        await api.post('/admin/vouchers', basePayload);
         message.success('Voucher created successfully');
       }
       setModalVisible(false);
@@ -439,9 +444,11 @@ export default function Vouchers() {
             <DatePicker style={{ width: '100%' }} showTime />
           </Form.Item>
 
-          <Form.Item label="Active" name="isActive" valuePropName="checked">
-            <Switch />
-          </Form.Item>
+          {editingVoucher && (
+            <Form.Item label="Active" name="isActive" valuePropName="checked">
+              <Switch />
+            </Form.Item>
+          )}
         </Form>
       </Modal>
     </div>
