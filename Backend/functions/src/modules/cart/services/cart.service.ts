@@ -101,7 +101,7 @@ export class CartService {
       productId: dto.productId,
       shopId: product.shopId,
       productName: product.name,
-      productImage: product.imageUrl || '',
+      productImage: product.imageUrls?.[0] || '',
       quantity: newQuantity, // ✅ INCREMENT: adds to existing quantity if item already in cart
       priceAtAdd: product.price,
       addedAt: existingItemIndex >= 0 ? cart.items[existingItemIndex].addedAt : Timestamp.now(),

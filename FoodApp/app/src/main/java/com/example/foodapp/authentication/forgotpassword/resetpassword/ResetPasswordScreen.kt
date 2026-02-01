@@ -16,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -24,6 +25,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.ui.theme.PrimaryOrange
 
 @Composable
@@ -60,7 +62,6 @@ fun ResetPasswordScreen(
     // Xử lý khi thành công
     LaunchedEffect(state) {
         if (state is ResetPasswordState.Success) {
-
             clearEmailFromPrefs(context)
             onSuccess()
         }
@@ -94,7 +95,7 @@ fun ResetPasswordScreen(
                 enabled = state !is ResetPasswordState.Loading
             ) {
                 Text(
-                    "←",
+                    text = stringResource(id = R.string.back_arrow),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -103,7 +104,7 @@ fun ResetPasswordScreen(
 
         // Title
         Text(
-            text = "Đặt lại mật khẩu",
+            text = stringResource(id = R.string.reset_password_title),
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontWeight = FontWeight.Bold
             ),
@@ -114,7 +115,7 @@ fun ResetPasswordScreen(
         if (email.isNotEmpty()) {
             val maskedEmail = maskEmail(email)
             Text(
-                text = "Nhập mật khẩu mới cho tài khoản\n$maskedEmail",
+                text = stringResource(id = R.string.reset_password_description) + "\n$maskedEmail",
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                 ),
@@ -126,7 +127,7 @@ fun ResetPasswordScreen(
         } else {
             // Nếu không có email, hiển thị thông báo lỗi
             Text(
-                text = "Không tìm thấy thông tin email",
+                text = stringResource(id = R.string.reset_password_email_missing),
                 style = MaterialTheme.typography.bodyMedium.copy(
                     color = MaterialTheme.colorScheme.error
                 ),
@@ -165,8 +166,8 @@ fun ResetPasswordScreen(
                 viewModel.setNewPassword(newText)
             },
             enabled = !isFormDisabled,
-            label = { Text("Mật khẩu mới") },
-            placeholder = { Text("Ít nhất 6 ký tự") },
+            label = { Text(stringResource(id = R.string.new_password_label)) },
+            placeholder = { Text(stringResource(id = R.string.new_password_placeholder)) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             keyboardOptions = KeyboardOptions(
@@ -187,7 +188,10 @@ fun ResetPasswordScreen(
                             } else {
                                 Icons.Filled.Visibility
                             },
-                            contentDescription = if (newPasswordVisible) "Ẩn mật khẩu" else "Hiện mật khẩu"
+                            contentDescription = if (newPasswordVisible)
+                                stringResource(id = R.string.hide_password)
+                            else
+                                stringResource(id = R.string.show_password)
                         )
                     }
                 }
@@ -215,8 +219,8 @@ fun ResetPasswordScreen(
                 viewModel.setConfirmPassword(newText)
             },
             enabled = !isFormDisabled,
-            label = { Text("Xác nhận mật khẩu") },
-            placeholder = { Text("Nhập lại mật khẩu") },
+            label = { Text(stringResource(id = R.string.confirm_password_label)) },
+            placeholder = { Text(stringResource(id = R.string.confirm_password_placeholder)) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             keyboardOptions = KeyboardOptions(
@@ -237,7 +241,10 @@ fun ResetPasswordScreen(
                             } else {
                                 Icons.Filled.Visibility
                             },
-                            contentDescription = if (confirmPasswordVisible) "Ẩn mật khẩu" else "Hiện mật khẩu"
+                            contentDescription = if (confirmPasswordVisible)
+                                stringResource(id = R.string.hide_password)
+                            else
+                                stringResource(id = R.string.show_password)
                         )
                     }
                 }
@@ -281,10 +288,10 @@ fun ResetPasswordScreen(
                     color = Color.White
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Đang xử lý...")
+                Text(stringResource(id = R.string.processing))
             } else {
                 Text(
-                    "Đặt lại mật khẩu",
+                    text = stringResource(id = R.string.reset_password_button),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -305,7 +312,7 @@ fun ResetPasswordScreen(
                 modifier = Modifier.padding(16.dp)
             ) {
                 Text(
-                    text = "Yêu cầu mật khẩu:",
+                    text = stringResource(id = R.string.password_requirements_title),
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontWeight = FontWeight.Bold
                     ),
@@ -328,7 +335,7 @@ fun ResetPasswordScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Ít nhất 6 ký tự",
+                        text = stringResource(id = R.string.password_requirement_min_length),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (newPassword.length >= 6) Color(0xFF4CAF50) else Color.Gray
                     )
@@ -350,7 +357,7 @@ fun ResetPasswordScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Mật khẩu khớp",
+                        text = stringResource(id = R.string.password_requirement_match),
                         style = MaterialTheme.typography.bodySmall,
                         color = if (newPassword == confirmPassword && confirmPassword.isNotEmpty()) Color(0xFF4CAF50) else Color.Gray
                     )
@@ -362,7 +369,7 @@ fun ResetPasswordScreen(
         if (email.isEmpty()) {
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "⚠ Không tìm thấy email. Vui lòng quay lại và thử lại.",
+                text = stringResource(id = R.string.email_missing_warning),
                 color = MaterialTheme.colorScheme.error,
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier

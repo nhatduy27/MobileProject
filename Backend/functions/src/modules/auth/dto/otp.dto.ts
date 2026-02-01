@@ -14,6 +14,15 @@ export class SendOTPDto {
   })
   @IsEmail({}, { message: 'Email không hợp lệ' })
   email: string;
+
+  @ApiProperty({
+    example: 'PASSWORD_RESET',
+    description: 'Type of OTP verification',
+    enum: OTPType,
+    enumName: 'OTPType',
+  })
+  @IsEnum(OTPType, { message: 'Loại OTP không hợp lệ' })
+  type: OTPType; 
 }
 
 /**

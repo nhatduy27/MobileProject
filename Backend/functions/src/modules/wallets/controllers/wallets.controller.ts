@@ -45,8 +45,8 @@ export class WalletsController {
         balance: wallet.balance,
         totalEarned: wallet.totalEarned,
         totalWithdrawn: wallet.totalWithdrawn,
-        createdAt: wallet.createdAt,
-        updatedAt: wallet.updatedAt,
+        createdAt: wallet.createdAt?.toDate?.()?.toISOString?.() ?? wallet.createdAt,
+        updatedAt: wallet.updatedAt?.toDate?.()?.toISOString?.() ?? wallet.updatedAt,
       },
     };
   }
@@ -85,7 +85,7 @@ export class WalletsController {
         orderId: entry.orderId,
         orderNumber: entry.orderNumber,
         description: entry.description,
-        createdAt: entry.createdAt,
+        createdAt: entry.createdAt?.toDate?.()?.toISOString?.() ?? entry.createdAt,
       })),
       page: result.page,
       limit: result.limit,

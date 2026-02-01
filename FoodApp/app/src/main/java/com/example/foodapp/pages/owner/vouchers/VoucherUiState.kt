@@ -29,11 +29,12 @@ data class VoucherUiState(
     val successMessage: String? = null
 ) {
     companion object {
-        const val FILTER_ALL = "Tất cả"
-        const val FILTER_ACTIVE = "Đang hoạt động"
-        const val FILTER_INACTIVE = "Đã tắt"
-        const val FILTER_EXPIRED = "Hết hạn"
+        const val FILTER_ALL = "all"
+        const val FILTER_ACTIVE = "active"
+        const val FILTER_INACTIVE = "inactive"
+        const val FILTER_EXPIRED = "expired"
         
         val FILTER_OPTIONS = listOf(FILTER_ALL, FILTER_ACTIVE, FILTER_INACTIVE, FILTER_EXPIRED)
     }
 }
+

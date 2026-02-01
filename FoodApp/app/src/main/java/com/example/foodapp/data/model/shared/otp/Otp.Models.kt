@@ -72,7 +72,10 @@ enum class OTPType {
 
 data class SendOtpRequest(
     @SerializedName("email")
-    val email: String
+    val email: String,
+
+    @SerializedName("type")
+    val type: OTPType,
 )
 
 data class VerifyOtpRequest(

@@ -1,16 +1,8 @@
 package com.example.foodapp.data.model.shipper.wallet
 
 import com.google.gson.annotations.SerializedName
-
-/**
- * Firebase Timestamp wrapper để parse timestamp từ backend
- */
-data class FirebaseTimestamp(
-    @SerializedName("_seconds") val seconds: Long = 0,
-    @SerializedName("_nanoseconds") val nanoseconds: Long = 0
-) {
-    fun toMillis(): Long = seconds * 1000 + nanoseconds / 1_000_000
-}
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 /**
  * Wallet Model - ví của shipper
@@ -21,8 +13,8 @@ data class Wallet(
     val balance: Long = 0,
     val totalEarned: Long = 0,
     val totalWithdrawn: Long = 0,
-    val createdAt: FirebaseTimestamp? = null,
-    val updatedAt: FirebaseTimestamp? = null
+    val createdAt: String? = null,
+    val updatedAt: String? = null
 ) {
     fun getFormattedBalance(): String {
         return String.format("%,d", balance) + "đ"
@@ -54,7 +46,7 @@ data class LedgerEntry(
     val orderId: String? = null,
     val orderNumber: String? = null,
     val description: String? = null,
-    val createdAt: FirebaseTimestamp? = null
+    val createdAt: String? = null
 ) {
     fun getFormattedAmount(): String {
         val prefix = if (amount >= 0) "+" else ""
@@ -67,17 +59,26 @@ data class LedgerEntry(
         return when (type) {
             LedgerType.ORDER_PAYOUT -> orderNumber?.let { "Đơn hàng #$it" } ?: "Thu nhập từ đơn hàng"
             LedgerType.WITHDRAWAL -> "Rút tiền"
+            LedgerType.PAYOUT -> "Rút tiền"
             LedgerType.ADJUSTMENT -> description ?: "Điều chỉnh"
         }
     }
     
-    fun getCreatedAtMillis(): Long = createdAt?.toMillis() ?: 0
+    fun getCreatedAtMillis(): Long {
+        return try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
+            sdf.parse(createdAt ?: "")?.time ?: 0
+        } catch (e: Exception) {
+            0
+        }
+    }
 }
 
 enum class LedgerType {
     @SerializedName("ORDER_PAYOUT") ORDER_PAYOUT,
     @SerializedName("WITHDRAWAL") WITHDRAWAL,
-    @SerializedName("ADJUSTMENT") ADJUSTMENT
+    @SerializedName("ADJUSTMENT") ADJUSTMENT,
+    @SerializedName("PAYOUT") PAYOUT
 }
 
 /**
@@ -131,7 +132,7 @@ data class PayoutRequest(
     val bankCode: String = "",
     val accountNumber: String = "",
     val accountName: String = "",
-    val createdAt: FirebaseTimestamp? = null
+    val createdAt: String? = null
 )
 
 enum class PayoutStatus {

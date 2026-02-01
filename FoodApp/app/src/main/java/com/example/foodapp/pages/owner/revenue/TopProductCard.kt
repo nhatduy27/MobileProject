@@ -10,10 +10,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.data.model.owner.revenue.TopProductData
 import com.example.foodapp.pages.owner.theme.OwnerColors
 import com.example.foodapp.pages.owner.theme.OwnerDimens
@@ -69,7 +71,7 @@ fun TopProductCard(product: TopProductData) {
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "${product.quantity} phần • ${product.unitPriceFormatted}đ/phần",
+                    text = stringResource(R.string.revenue_product_info, product.quantity, product.unitPriceFormatted),
                     fontSize = 12.sp,
                     color = OwnerColors.TextSecondary
                 )
@@ -84,3 +86,4 @@ fun TopProductCard(product: TopProductData) {
         }
     }
 }
+

@@ -1,14 +1,15 @@
 package com.example.foodapp.pages.shipper.settings
 
+import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,12 +17,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.pages.shipper.theme.ShipperColors
+import com.example.foodapp.utils.LanguageManager
 
 @Composable
 fun ShipperSettingsScreen(
@@ -32,6 +36,10 @@ fun ShipperSettingsScreen(
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
     
+    // Language state
+    var showLanguageDialog by remember { mutableStateOf(false) }
+    var currentLanguage by remember { mutableStateOf(LanguageManager.getCurrentLanguage(context)) }
+    
     LaunchedEffect(uiState.message) {
         uiState.message?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
@@ -41,7 +49,7 @@ fun ShipperSettingsScreen(
     
     LaunchedEffect(uiState.error) {
         uiState.error?.let {
-            Toast.makeText(context, "Lỗi: $it", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "${context.getString(R.string.shipper_error)}: $it", Toast.LENGTH_SHORT).show()
             viewModel.clearError()
         }
     }
@@ -56,17 +64,17 @@ fun ShipperSettingsScreen(
     ) {
         // Account Section
         SettingSection(
-            title = "Tài khoản",
+            title = stringResource(R.string.shipper_settings_account),
             items = listOf(
                 SettingItemData(
-                    title = "Thông tin cá nhân",
-                    subtitle = "Chỉnh sửa thông tin tài khoản",
+                    title = stringResource(R.string.shipper_settings_personal_info),
+                    subtitle = stringResource(R.string.shipper_settings_personal_info_desc),
                     icon = Icons.Outlined.Person,
                     onClick = { onNavigate("edit_profile") }
                 ),
                 SettingItemData(
-                    title = "Đổi mật khẩu",
-                    subtitle = "Thay đổi mật khẩu đăng nhập",
+                    title = stringResource(R.string.shipper_settings_change_password),
+                    subtitle = stringResource(R.string.shipper_settings_change_password_desc),
                     icon = Icons.Outlined.Lock,
                     onClick = { onNavigate("change_password") }
                 )
@@ -75,17 +83,17 @@ fun ShipperSettingsScreen(
         
         // Shipper Info Section
         SettingSection(
-            title = "Thông tin shipper",
+            title = stringResource(R.string.shipper_settings_shipper_info),
             items = listOf(
                 SettingItemData(
-                    title = "Phương tiện",
-                    subtitle = "Thông tin xe và biển số",
+                    title = stringResource(R.string.shipper_settings_vehicle),
+                    subtitle = stringResource(R.string.shipper_settings_vehicle_desc),
                     icon = Icons.Outlined.DirectionsBike,
                     onClick = { onNavigate("vehicle_info") }
                 ),
                 SettingItemData(
-                    title = "Phương thức thanh toán",
-                    subtitle = "Tài khoản nhận tiền",
+                    title = stringResource(R.string.shipper_settings_payment),
+                    subtitle = stringResource(R.string.shipper_settings_payment_desc),
                     icon = Icons.Outlined.AccountBalanceWallet,
                     onClick = { onNavigate("payment_method") }
                 )
@@ -94,36 +102,49 @@ fun ShipperSettingsScreen(
         
         // Notification Section
         SettingSection(
-            title = "Thông báo",
+            title = stringResource(R.string.shipper_settings_notifications),
             items = listOf(
                 SettingItemData(
-                    title = "Cài đặt thông báo",
-                    subtitle = "Quản lý thông báo đẩy",
+                    title = stringResource(R.string.shipper_settings_notifications_title),
+                    subtitle = stringResource(R.string.shipper_settings_notifications_desc),
                     icon = Icons.Outlined.Notifications,
                     onClick = { onNavigate("notification_settings") }
                 )
             )
         )
         
-        // About Section
+        // Language Section
         SettingSection(
-            title = "Về ứng dụng",
+            title = stringResource(R.string.shipper_settings_language),
             items = listOf(
                 SettingItemData(
-                    title = "Điều khoản sử dụng",
-                    subtitle = "Quy định và chính sách",
+                    title = stringResource(R.string.shipper_settings_language_title),
+                    subtitle = currentLanguage.displayName,
+                    icon = Icons.Outlined.Language,
+                    onClick = { showLanguageDialog = true }
+                )
+            )
+        )
+        
+        // About Section
+        SettingSection(
+            title = stringResource(R.string.shipper_settings_about),
+            items = listOf(
+                SettingItemData(
+                    title = stringResource(R.string.shipper_settings_terms),
+                    subtitle = stringResource(R.string.shipper_settings_terms_desc),
                     icon = Icons.Outlined.Description,
                     onClick = { onNavigate("terms") }
                 ),
                 SettingItemData(
-                    title = "Chính sách bảo mật",
-                    subtitle = "Cách chúng tôi bảo vệ dữ liệu",
+                    title = stringResource(R.string.shipper_settings_privacy),
+                    subtitle = stringResource(R.string.shipper_settings_privacy_desc),
                     icon = Icons.Outlined.PrivacyTip,
                     onClick = { onNavigate("privacy") }
                 ),
                 SettingItemData(
-                    title = "Trợ giúp & Hỗ trợ",
-                    subtitle = "Liên hệ với chúng tôi",
+                    title = stringResource(R.string.shipper_settings_help),
+                    subtitle = stringResource(R.string.shipper_settings_help_desc),
                     icon = Icons.Outlined.HelpOutline,
                     onClick = { onNavigate("help_screen") }
                 )
@@ -147,7 +168,7 @@ fun ShipperSettingsScreen(
             shape = RoundedCornerShape(10.dp)
         ) {
             Text(
-                "Đăng xuất", 
+                stringResource(R.string.shipper_settings_logout), 
                 color = ShipperColors.Error, 
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 15.sp
@@ -156,7 +177,7 @@ fun ShipperSettingsScreen(
         
         // Version Info
         Text(
-            text = "FoodApp Shipper v1.0.0",
+            text = stringResource(R.string.shipper_version),
             fontSize = 12.sp,
             color = ShipperColors.TextTertiary,
             textAlign = TextAlign.Center,
@@ -165,6 +186,68 @@ fun ShipperSettingsScreen(
                 .padding(vertical = 16.dp)
         )
     }
+    
+    // Language Selection Dialog
+    if (showLanguageDialog) {
+        LanguageSelectionDialog(
+            currentLanguage = currentLanguage,
+            onLanguageSelected = { language ->
+                LanguageManager.saveLanguage(context, language)
+                currentLanguage = language
+                showLanguageDialog = false
+                // Restart activity to apply language
+                (context as? Activity)?.recreate()
+            },
+            onDismiss = { showLanguageDialog = false }
+        )
+    }
+}
+
+@Composable
+private fun LanguageSelectionDialog(
+    currentLanguage: LanguageManager.Language,
+    onLanguageSelected: (LanguageManager.Language) -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.shipper_language_select)) },
+        text = {
+            Column {
+                LanguageManager.Language.values().forEach { language ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onLanguageSelected(language) }
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(
+                                selected = language == currentLanguage,
+                                onClick = { onLanguageSelected(language) }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(language.displayName, style = MaterialTheme.typography.bodyLarge)
+                        }
+                        if (language == currentLanguage) {
+                            Icon(
+                                Icons.Default.Check,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.shipper_close))
+            }
+        }
+    )
 }
 
 @Composable

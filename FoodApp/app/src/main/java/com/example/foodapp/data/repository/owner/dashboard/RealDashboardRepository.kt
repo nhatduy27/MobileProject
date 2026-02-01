@@ -26,8 +26,8 @@ class RealDashboardRepository(private val apiService: ShopApiService) : OwnerDas
                 if (response.isSuccessful && response.body() != null) {
                     val body = response.body()!!
                     Log.d(TAG, "Response success: ${body.success}")
-                    Log.d(TAG, "Today revenue: ${body.data.today.revenue}")
-                    Log.d(TAG, "Today orderCount: ${body.data.today.orderCount}")
+                    Log.d(TAG, "All-time revenue: ${body.data.allTime.revenue}")
+                    Log.d(TAG, "All-time orderCount: ${body.data.allTime.orderCount}")
                     Log.d(TAG, "Recent orders count: ${body.data.recentOrders.size}")
                     if (body.data.recentOrders.isNotEmpty()) {
                         Log.d(TAG, "First order total: ${body.data.recentOrders[0].total}")
@@ -50,3 +50,4 @@ class RealDashboardRepository(private val apiService: ShopApiService) : OwnerDas
         }
     }
 }
+

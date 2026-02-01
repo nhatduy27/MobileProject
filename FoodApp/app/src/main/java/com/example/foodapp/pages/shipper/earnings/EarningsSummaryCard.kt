@@ -15,9 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.data.model.shipper.wallet.RevenueStats
 import com.example.foodapp.data.model.shipper.wallet.Wallet
 import com.example.foodapp.pages.shipper.theme.ShipperColors
@@ -87,7 +89,7 @@ fun WalletSummaryCard(
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(
-                                text = "Số dư ví",
+                                text = stringResource(R.string.shipper_wallet_balance),
                                 fontSize = 15.sp,
                                 color = Color.White.copy(alpha = 0.9f)
                             )
@@ -104,7 +106,7 @@ fun WalletSummaryCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "Rút tiền",
+                                    text = stringResource(R.string.shipper_wallet_withdraw),
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = Color.White
@@ -137,11 +139,11 @@ fun WalletSummaryCard(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         WalletStatItem(
-                            label = "Tổng đã kiếm",
+                            label = stringResource(R.string.shipper_wallet_total_earned),
                             value = wallet?.getFormattedTotalEarned() ?: "0đ"
                         )
                         WalletStatItem(
-                            label = "Đã rút",
+                            label = stringResource(R.string.shipper_wallet_total_withdrawn),
                             value = wallet?.getFormattedTotalWithdrawn() ?: "0đ"
                         )
                     }
@@ -157,15 +159,15 @@ fun WalletSummaryCard(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         RevenueStatItem(
-                            label = "Hôm nay",
+                            label = stringResource(R.string.shipper_wallet_today),
                             value = revenueStats?.getFormattedToday() ?: "0đ"
                         )
                         RevenueStatItem(
-                            label = "Tuần này",
+                            label = stringResource(R.string.shipper_wallet_this_week),
                             value = revenueStats?.getFormattedWeek() ?: "0đ"
                         )
                         RevenueStatItem(
-                            label = "Tháng này",
+                            label = stringResource(R.string.shipper_wallet_this_month),
                             value = revenueStats?.getFormattedMonth() ?: "0đ"
                         )
                     }

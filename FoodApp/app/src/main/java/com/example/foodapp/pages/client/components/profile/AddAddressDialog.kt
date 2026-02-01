@@ -13,11 +13,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.runtime.livedata.observeAsState
+import com.example.foodapp.R
 import com.example.foodapp.pages.client.profile.ProfileViewModel
 import com.example.foodapp.pages.client.profile.*
 
@@ -59,7 +61,7 @@ fun AddAddressDialog(
         },
         title = {
             Text(
-                text = "Thêm địa chỉ mới",
+                text = stringResource(id = R.string.add_address_title),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -85,10 +87,13 @@ fun AddAddressDialog(
                 OutlinedTextField(
                     value = label,
                     onValueChange = { label = it },
-                    label = { Text("Tên địa chỉ") },
-                    placeholder = { Text("VD: Nhà riêng, Công ty, ...") },
+                    label = { Text(stringResource(id = R.string.address_label_field)) },
+                    placeholder = { Text(stringResource(id = R.string.address_label_placeholder)) },
                     leadingIcon = {
-                        Icon(Icons.Filled.Label, contentDescription = null)
+                        Icon(
+                            Icons.Filled.Label,
+                            contentDescription = stringResource(id = R.string.label_icon)
+                        )
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading,
@@ -97,7 +102,7 @@ fun AddAddressDialog(
                     supportingText = {
                         if (label.isBlank()) {
                             Text(
-                                text = "Vui lòng nhập tên địa chỉ",
+                                text = stringResource(id = R.string.address_label_required),
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
@@ -110,7 +115,7 @@ fun AddAddressDialog(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = "Tòa nhà *",
+                        text = stringResource(id = R.string.building_field_label),
                         fontSize = 14.sp,
                         color = if (selectedBuilding == null && !isLoading) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface
                     )
@@ -135,7 +140,7 @@ fun AddAddressDialog(
                                     modifier = Modifier.size(20.dp),
                                     strokeWidth = 2.dp
                                 )
-                                Text("Đang tải danh sách tòa nhà...")
+                                Text(stringResource(id = R.string.loading_buildings))
                             }
                         }
                     }
@@ -155,7 +160,10 @@ fun AddAddressDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Lỗi: ${(pickupPointsState as PickupPointsState.Error).message}",
+                                text = stringResource(
+                                    id = R.string.error_generic,
+                                    (pickupPointsState as PickupPointsState.Error).message
+                                ),
                                 color = MaterialTheme.colorScheme.error,
                                 fontSize = 14.sp
                             )
@@ -173,12 +181,17 @@ fun AddAddressDialog(
                             OutlinedTextField(
                                 value = selectedPickupPoint?.name ?: "",
                                 onValueChange = { },
-                                label = { Text("Chọn tòa nhà") },
+                                label = { Text(stringResource(id = R.string.select_building_placeholder)) },
                                 leadingIcon = {
-                                    Icon(Icons.Filled.Apartment, contentDescription = null)
+                                    Icon(
+                                        Icons.Filled.Apartment,
+                                        contentDescription = stringResource(id = R.string.apartment_icon)
+                                    )
                                 },
                                 trailingIcon = {
-                                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                                    ExposedDropdownMenuDefaults.TrailingIcon(
+                                        expanded = expanded
+                                    )
                                 },
                                 colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
                                 modifier = Modifier
@@ -190,7 +203,7 @@ fun AddAddressDialog(
                                 supportingText = {
                                     if (selectedBuilding == null && !isLoading) {
                                         Text(
-                                            text = "Vui lòng chọn tòa nhà",
+                                            text = stringResource(id = R.string.building_required),
                                             color = MaterialTheme.colorScheme.error
                                         )
                                     }
@@ -241,7 +254,7 @@ fun AddAddressDialog(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Không có tòa nhà nào",
+                                text = stringResource(id = R.string.no_buildings_available),
                                 color = Color.Gray,
                                 fontSize = 14.sp
                             )
@@ -262,24 +275,24 @@ fun AddAddressDialog(
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
-                                    text = "Thông tin tòa nhà:",
+                                    text = stringResource(id = R.string.building_info_title),
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                                     fontWeight = FontWeight.Medium
                                 )
                                 Text(
-                                    text = "Mã: ${point.buildingCode}",
+                                    text = stringResource(id = R.string.building_code_label, point.buildingCode),
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
                                 Text(
-                                    text = "Tên: ${point.name}",
+                                    text = stringResource(id = R.string.building_name_label, point.name),
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSecondaryContainer
                                 )
                                 point.note?.let { noteText ->
                                     Text(
-                                        text = "Ghi chú: $noteText",
+                                        text = stringResource(id = R.string.building_note_label, noteText),
                                         fontSize = 12.sp,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
@@ -293,10 +306,13 @@ fun AddAddressDialog(
                 OutlinedTextField(
                     value = room,
                     onValueChange = { room = it },
-                    label = { Text("Phòng/Số căn hộ *") },
-                    placeholder = { Text("VD: Phòng 101, Căn hộ 302") },
+                    label = { Text(stringResource(id = R.string.room_field_label)) },
+                    placeholder = { Text(stringResource(id = R.string.room_placeholder)) },
                     leadingIcon = {
-                        Icon(Icons.Filled.DoorFront, contentDescription = null)
+                        Icon(
+                            Icons.Filled.DoorFront,
+                            contentDescription = stringResource(id = R.string.door_icon)
+                        )
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading && selectedBuilding != null,
@@ -306,7 +322,7 @@ fun AddAddressDialog(
                     supportingText = {
                         if (room.isBlank()) {
                             Text(
-                                text = "Vui lòng nhập số phòng",
+                                text = stringResource(id = R.string.room_required),
                                 color = MaterialTheme.colorScheme.error
                             )
                         }
@@ -317,10 +333,13 @@ fun AddAddressDialog(
                 OutlinedTextField(
                     value = note,
                     onValueChange = { note = it },
-                    label = { Text("Ghi chú") },
-                    placeholder = { Text("VD: Giao hàng ban ngày, gọi trước 30 phút") },
+                    label = { Text(stringResource(id = R.string.note_field_label)) },
+                    placeholder = { Text(stringResource(id = R.string.note_placeholder)) },
                     leadingIcon = {
-                        Icon(Icons.Filled.Note, contentDescription = null)
+                        Icon(
+                            Icons.Filled.Note,
+                            contentDescription = stringResource(id = R.string.note_icon)
+                        )
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isLoading,
@@ -341,7 +360,7 @@ fun AddAddressDialog(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Đặt làm địa chỉ mặc định",
+                        text = stringResource(id = R.string.set_default_address),
                         fontSize = 14.sp
                     )
                 }
@@ -361,17 +380,17 @@ fun AddAddressDialog(
                 onClick = {
                     // Validate
                     if (label.isBlank()) {
-                        errorMessage = "Vui lòng nhập tên địa chỉ"
+                        errorMessage = R.string.address_label_required.toString()
                         return@TextButton
                     }
 
                     if (selectedBuilding == null) {
-                        errorMessage = "Vui lòng chọn tòa nhà"
+                        errorMessage = R.string.building_required.toString()
                         return@TextButton
                     }
 
                     if (room.isBlank()) {
-                        errorMessage = "Vui lòng nhập số phòng"
+                        errorMessage = R.string.room_required.toString()
                         return@TextButton
                     }
 
@@ -397,9 +416,9 @@ fun AddAddressDialog(
                         strokeWidth = 2.dp
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Đang thêm...")
+                    Text(stringResource(id = R.string.adding_address))
                 } else {
-                    Text("Thêm địa chỉ")
+                    Text(stringResource(id = R.string.add_address_button))
                 }
             }
         },
@@ -408,7 +427,7 @@ fun AddAddressDialog(
                 onClick = onDismiss,
                 enabled = !isLoading
             ) {
-                Text("Hủy")
+                Text(stringResource(id = R.string.cancel))
             }
         }
     )

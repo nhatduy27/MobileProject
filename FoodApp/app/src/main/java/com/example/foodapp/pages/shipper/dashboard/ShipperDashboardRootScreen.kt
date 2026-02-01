@@ -18,12 +18,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
+import com.example.foodapp.R
 import com.example.foodapp.data.di.RepositoryProvider
 import com.example.foodapp.data.model.user.UserProfile
 import com.example.foodapp.pages.shipper.earnings.EarningsScreen
@@ -83,6 +86,7 @@ fun DrawerMenuItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShipperDashboardRootScreen(navController: NavHostController) {
+    val context = LocalContext.current
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     var currentScreen by remember { mutableStateOf("home") }
@@ -178,7 +182,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 // Menu Items
                 DrawerMenuItem(
                     icon = Icons.Outlined.Home,
-                    title = "Trang chủ",
+                    title = stringResource(R.string.shipper_nav_home),
                     isSelected = currentScreen == "home",
                     onClick = {
                         currentScreen = "home"
@@ -187,7 +191,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 )
                 DrawerMenuItem(
                     icon = Icons.Outlined.AccountBalanceWallet,
-                    title = "Thu nhập",
+                    title = stringResource(R.string.shipper_nav_earnings),
                     isSelected = currentScreen == "earnings",
                     onClick = {
                         currentScreen = "earnings"
@@ -196,7 +200,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 )
                 DrawerMenuItem(
                     icon = Icons.Outlined.History,
-                    title = "Lịch sử giao hàng",
+                    title = stringResource(R.string.shipper_history_title),
                     isSelected = currentScreen == "history",
                     onClick = {
                         currentScreen = "history"
@@ -205,7 +209,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 )
                 DrawerMenuItem(
                     icon = Icons.Outlined.Notifications,
-                    title = "Thông báo",
+                    title = stringResource(R.string.shipper_nav_notifications),
                     isSelected = currentScreen == "notifications",
                     onClick = {
                         currentScreen = "notifications"
@@ -214,7 +218,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 )
                 DrawerMenuItem(
                     icon = Icons.Outlined.Chat,
-                    title = "Tin nhắn",
+                    title = stringResource(R.string.shipper_nav_chat),
                     isSelected = currentScreen == "chat",
                     onClick = {
                         currentScreen = "chat"
@@ -224,7 +228,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 )
                 DrawerMenuItem(
                     icon = Icons.Outlined.Route,
-                    title = "Lộ trình giao hàng",
+                    title = stringResource(R.string.shipper_gps_title),
                     isSelected = currentScreen == "gps",
                     onClick = {
                         currentScreen = "gps"
@@ -234,7 +238,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 )
                 DrawerMenuItem(
                     icon = Icons.Outlined.Description,
-                    title = "Đơn ứng tuyển",
+                    title = stringResource(R.string.shipper_applications),
                     isSelected = currentScreen == "applications",
                     onClick = {
                         currentScreen = "applications"
@@ -243,7 +247,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 )
                 DrawerMenuItem(
                     icon = Icons.Outlined.ExitToApp,
-                    title = "Yêu cầu rời shop",
+                    title = stringResource(R.string.shipper_removal_requests),
                     isSelected = currentScreen == "removal_requests",
                     onClick = {
                         currentScreen = "removal_requests"
@@ -252,7 +256,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 )
                 DrawerMenuItem(
                     icon = Icons.Outlined.Settings,
-                    title = "Cài đặt",
+                    title = stringResource(R.string.shipper_nav_settings),
                     isSelected = currentScreen == "settings",
                     onClick = {
                         currentScreen = "settings"
@@ -261,7 +265,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 )
                 DrawerMenuItem(
                     icon = Icons.Outlined.HelpOutline,
-                    title = "Trợ giúp",
+                    title = stringResource(R.string.shipper_nav_help),
                     isSelected = currentScreen == "help",
                     onClick = {
                         currentScreen = "help"
@@ -270,7 +274,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 )
                 DrawerMenuItem(
                     icon = Icons.Outlined.SmartToy,
-                    title = "Trợ lý AI",
+                    title = stringResource(R.string.shipper_ai_assistant),
                     isSelected = currentScreen == "chatbot",
                     onClick = {
                         currentScreen = "chatbot"
@@ -285,7 +289,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 // Logout
                 DrawerMenuItem(
                     icon = Icons.Outlined.Logout,
-                    title = "Đăng xuất",
+                    title = stringResource(R.string.shipper_settings_logout),
                     isSelected = false,
                     onClick = {
                         FirebaseAuth.getInstance().signOut()
@@ -296,7 +300,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                 )
 
                 Text(
-                    "Version 1.0.0",
+                    stringResource(R.string.shipper_version),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 16.dp),
@@ -318,40 +322,40 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                                 text = when {
                                     currentScreen == "settings" && currentSettingsRoute != "settings_main" -> {
                                         when (currentSettingsRoute) {
-                                            "edit_profile" -> "Thông tin cá nhân"
-                                            "change_password" -> "Đổi mật khẩu"
-                                            "vehicle_info" -> "Thông tin phương tiện"
-                                            "payment_method" -> "Phương thức thanh toán"
-                                            "notification_settings" -> "Cài đặt thông báo"
-                                            "language" -> "Ngôn ngữ"
-                                            "terms" -> "Điều khoản & Chính sách"
-                                            "privacy" -> "Bảo mật & Quyền riêng tư"
-                                            "help_screen" -> "Trợ giúp & Hỗ trợ"
-                                            else -> "Cài đặt"
+                                            "edit_profile" -> stringResource(R.string.shipper_settings_personal_info)
+                                            "change_password" -> stringResource(R.string.shipper_settings_change_password)
+                                            "vehicle_info" -> stringResource(R.string.shipper_settings_vehicle)
+                                            "payment_method" -> stringResource(R.string.shipper_settings_payment)
+                                            "notification_settings" -> stringResource(R.string.shipper_settings_notifications_title)
+                                            "language" -> stringResource(R.string.shipper_settings_language)
+                                            "terms" -> stringResource(R.string.shipper_settings_terms)
+                                            "privacy" -> stringResource(R.string.shipper_settings_privacy)
+                                            "help_screen" -> stringResource(R.string.shipper_settings_help)
+                                            else -> stringResource(R.string.shipper_nav_settings)
                                         }
                                     }
                                     currentScreen == "gps" && currentGpsRoute != "gps_main" -> {
                                         when (currentGpsRoute) {
-                                            "trip_detail" -> "Chi tiết lộ trình"
-                                            "trip_history" -> "Lịch sử chuyến đi"
-                                            "delivery_map" -> "Bản đồ giao hàng"
-                                            "delivery_map_from_home" -> "Bản đồ giao hàng"
-                                            else -> "Lộ trình giao hàng"
+                                            "trip_detail" -> stringResource(R.string.shipper_trip_title)
+                                            "trip_history" -> stringResource(R.string.shipper_trip_history)
+                                            "delivery_map" -> stringResource(R.string.shipper_gps_title)
+                                            "delivery_map_from_home" -> stringResource(R.string.shipper_gps_title)
+                                            else -> stringResource(R.string.shipper_gps_title)
                                         }
                                     }
-                                    currentScreen == "chat" && currentChatRoute == "chat_detail" -> "Chi tiết tin nhắn"
-                                    currentScreen == "home" -> "Trang chủ"
-                                    currentScreen == "earnings" -> "Thu nhập của tôi"
-                                    currentScreen == "history" -> "Lịch sử giao hàng"
-                                    currentScreen == "applications" -> "Đơn ứng tuyển"
-                                    currentScreen == "removal_requests" -> "Yêu cầu rời shop"
-                                    currentScreen == "gps" -> "Lộ trình giao hàng"
-                                    currentScreen == "settings" -> "Cài đặt"
-                                    currentScreen == "notifications" -> "Thông báo"
-                                    currentScreen == "chat" -> "Tin nhắn"
-                                    currentScreen == "help" -> "Trợ giúp & Hỗ trợ"
-                                    currentScreen == "chatbot" -> "Trợ lý AI"
-                                    else -> "FoodApp Shipper"
+                                    currentScreen == "chat" && currentChatRoute == "chat_detail" -> stringResource(R.string.shipper_chat_detail)
+                                    currentScreen == "home" -> stringResource(R.string.shipper_nav_home)
+                                    currentScreen == "earnings" -> stringResource(R.string.shipper_earnings_title)
+                                    currentScreen == "history" -> stringResource(R.string.shipper_history_title)
+                                    currentScreen == "applications" -> stringResource(R.string.shipper_applications)
+                                    currentScreen == "removal_requests" -> stringResource(R.string.shipper_removal_requests)
+                                    currentScreen == "gps" -> stringResource(R.string.shipper_gps_title)
+                                    currentScreen == "settings" -> stringResource(R.string.shipper_nav_settings)
+                                    currentScreen == "notifications" -> stringResource(R.string.shipper_nav_notifications)
+                                    currentScreen == "chat" -> stringResource(R.string.shipper_nav_chat)
+                                    currentScreen == "help" -> stringResource(R.string.shipper_settings_help)
+                                    currentScreen == "chatbot" -> stringResource(R.string.shipper_ai_assistant)
+                                    else -> stringResource(R.string.shipper_app_name)
                                 },
                                 fontWeight = FontWeight.SemiBold,
                                 fontSize = 18.sp
@@ -362,7 +366,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                                 IconButton(onClick = { settingsNavController.navigateUp() }) {
                                     Icon(
                                         imageVector = Icons.Outlined.ArrowBack,
-                                        contentDescription = "Quay lại",
+                                        contentDescription = stringResource(R.string.shipper_close),
                                         tint = ShipperColors.TextPrimary
                                     )
                                 }
@@ -379,7 +383,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                                 }) {
                                     Icon(
                                         imageVector = Icons.Outlined.ArrowBack,
-                                        contentDescription = "Quay lại",
+                                        contentDescription = stringResource(R.string.shipper_close),
                                         tint = ShipperColors.TextPrimary
                                     )
                                 }
@@ -390,7 +394,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                                 }) {
                                     Icon(
                                         imageVector = Icons.Outlined.ArrowBack,
-                                        contentDescription = "Quay lại",
+                                        contentDescription = stringResource(R.string.shipper_close),
                                         tint = ShipperColors.TextPrimary
                                     )
                                 }
@@ -411,7 +415,7 @@ fun ShipperDashboardRootScreen(navController: NavHostController) {
                                 }) {
                                     Icon(
                                         imageVector = Icons.Outlined.Notifications,
-                                        contentDescription = "Thông báo",
+                                        contentDescription = stringResource(R.string.shipper_nav_notifications),
                                         tint = ShipperColors.TextPrimary
                                     )
                                 }

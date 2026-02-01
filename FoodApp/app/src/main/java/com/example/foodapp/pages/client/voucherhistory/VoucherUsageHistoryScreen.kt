@@ -18,12 +18,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavHostController
+import com.example.foodapp.R
 import com.example.foodapp.data.remote.client.response.voucher.VoucherUsageHistoryApiModel
 import com.example.foodapp.ui.theme.FoodAppTheme
 import java.text.NumberFormat
@@ -67,7 +69,7 @@ fun VoucherHistoryScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            text = "Lịch sử Voucher",
+                            text = stringResource(R.string.voucher_history_title),
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -80,7 +82,7 @@ fun VoucherHistoryScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Quay lại",
+                                contentDescription = stringResource(R.string.go_back),
                                 tint = Color.White
                             )
                         }
@@ -99,7 +101,7 @@ fun VoucherHistoryScreen(
                             } else {
                                 Icon(
                                     Icons.Default.Refresh,
-                                    contentDescription = "Làm mới",
+                                    contentDescription = stringResource(R.string.refresh),
                                     tint = Color.White
                                 )
                             }
@@ -137,7 +139,7 @@ fun VoucherHistoryScreen(
                                     modifier = Modifier.size(48.dp)
                                 )
                                 Text(
-                                    text = "Đang tải lịch sử...",
+                                    text = stringResource(R.string.loading_history),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = OrangeDark,
                                     fontWeight = FontWeight.Medium
@@ -166,7 +168,7 @@ fun VoucherHistoryScreen(
                                 ) {
                                     Icon(
                                         Icons.Default.ErrorOutline,
-                                        contentDescription = "Lỗi",
+                                        contentDescription = stringResource(R.string.error),
                                         modifier = Modifier.size(56.dp),
                                         tint = OrangePrimary
                                     )
@@ -177,7 +179,7 @@ fun VoucherHistoryScreen(
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Text(
-                                        text = "Đã xảy ra lỗi",
+                                        text = stringResource(R.string.error_occurred),
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = OrangeDark
@@ -186,7 +188,7 @@ fun VoucherHistoryScreen(
                                         text = errorMessage,
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = Color.Gray,
-                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                        textAlign = TextAlign.Center
                                     )
                                 }
 
@@ -206,7 +208,11 @@ fun VoucherHistoryScreen(
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Thử lại", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(
+                                        stringResource(R.string.retry),
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
                                 }
                             }
                         }
@@ -235,7 +241,7 @@ fun VoucherHistoryScreen(
                                 ) {
                                     Icon(
                                         Icons.Default.History,
-                                        contentDescription = "Không có lịch sử",
+                                        contentDescription = stringResource(R.string.no_history),
                                         modifier = Modifier.size(72.dp),
                                         tint = OrangeAccent
                                     )
@@ -246,16 +252,16 @@ fun VoucherHistoryScreen(
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Text(
-                                        text = "Chưa có lịch sử sử dụng",
+                                        text = stringResource(R.string.no_history_title),
                                         style = MaterialTheme.typography.titleLarge,
                                         fontWeight = FontWeight.Bold,
                                         color = OrangeDark
                                     )
                                     Text(
-                                        text = "Các voucher bạn đã sử dụng sẽ xuất hiện tại đây",
+                                        text = stringResource(R.string.no_history_message),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = Color.Gray,
-                                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                        textAlign = TextAlign.Center
                                     )
                                 }
 
@@ -276,7 +282,11 @@ fun VoucherHistoryScreen(
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Làm mới", fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
+                                    Text(
+                                        stringResource(R.string.refresh),
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
                                 }
                             }
                         }
@@ -356,7 +366,7 @@ private fun SuccessContent(
                 ) {
                     Column {
                         Text(
-                            text = "TỔNG SỐ LẦN SỬ DỤNG",
+                            text = stringResource(R.string.total_usage),
                             style = MaterialTheme.typography.labelMedium,
                             color = Color.White.copy(alpha = 0.9f),
                             letterSpacing = 0.5.sp
@@ -378,7 +388,7 @@ private fun SuccessContent(
                             modifier = Modifier.padding(4.dp)
                         ) {
                             Text(
-                                text = "Trang $currentPage/$totalPages",
+                                text = stringResource(R.string.page_info, currentPage, totalPages),
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color.White,
@@ -399,7 +409,7 @@ private fun SuccessContent(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Không có dữ liệu",
+                    text = stringResource(R.string.no_data),
                     color = Color.Gray,
                     fontSize = 16.sp
                 )
@@ -437,7 +447,7 @@ private fun SuccessContent(
                                 )
                             } else if (hasMore) {
                                 Text(
-                                    text = "Kéo xuống để tải thêm...",
+                                    text = stringResource(R.string.pull_to_load_more),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = OrangeAccent,
                                     fontWeight = FontWeight.Medium
@@ -466,7 +476,7 @@ private fun SuccessContent(
                                     thickness = 1.dp
                                 )
                                 Text(
-                                    text = " Đã hiển thị tất cả ",
+                                    text = stringResource(R.string.all_items_displayed),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = OrangeAccent,
                                     modifier = Modifier.padding(horizontal = 8.dp)
@@ -592,7 +602,7 @@ private fun VoucherHistoryItem(
                 // Order Info
                 DetailRow(
                     icon = Icons.Default.Receipt,
-                    label = "Đơn hàng",
+                    label = stringResource(R.string.order_label),
                     value = formatId(historyItem.orderId)
                 )
 
@@ -600,7 +610,7 @@ private fun VoucherHistoryItem(
                 if (historyItem.shopId.isNotBlank()) {
                     DetailRow(
                         icon = Icons.Default.Store,
-                        label = "Cửa hàng",
+                        label = stringResource(R.string.shop_label),
                         value = formatId(historyItem.shopId)
                     )
                 }
@@ -608,7 +618,7 @@ private fun VoucherHistoryItem(
                 // Time
                 DetailRow(
                     icon = Icons.Default.AccessTime,
-                    label = "Thời gian",
+                    label = stringResource(R.string.time_label),
                     value = formatFullDate(historyItem.createdAt)
                 )
             }

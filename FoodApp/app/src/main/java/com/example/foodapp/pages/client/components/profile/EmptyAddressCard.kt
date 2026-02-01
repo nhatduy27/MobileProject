@@ -1,6 +1,5 @@
 package com.example.foodapp.pages.client.components.profile
 
-
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -10,8 +9,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 
 @Composable
 fun EmptyAddressCard(onAddClick: () -> Unit) {
@@ -30,13 +31,13 @@ fun EmptyAddressCard(onAddClick: () -> Unit) {
         ) {
             Icon(
                 imageVector = Icons.Filled.LocationOff,
-                contentDescription = "Không có địa chỉ",
+                contentDescription = stringResource(id = R.string.empty_address_icon),
                 tint = Color.Gray,
                 modifier = Modifier.size(48.dp)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Chưa có địa chỉ nào",
+                text = stringResource(id = R.string.empty_address_title),
                 fontSize = 16.sp,
                 color = Color.Gray
             )
@@ -47,11 +48,11 @@ fun EmptyAddressCard(onAddClick: () -> Unit) {
             ) {
                 Icon(
                     imageVector = Icons.Filled.Add,
-                    contentDescription = "Thêm địa chỉ",
+                    contentDescription = stringResource(id = R.string.add_first_address_icon),
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Thêm địa chỉ đầu tiên")
+                Text(stringResource(id = R.string.add_first_address_button))
             }
         }
     }

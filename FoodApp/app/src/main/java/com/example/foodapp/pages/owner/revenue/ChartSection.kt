@@ -10,14 +10,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.pages.owner.theme.OwnerColors
 import com.example.foodapp.pages.owner.theme.OwnerDimens
 
 @Composable
 fun ChartSection() {
+    val dayLabels = listOf(
+        stringResource(R.string.revenue_day_mon),
+        stringResource(R.string.revenue_day_tue),
+        stringResource(R.string.revenue_day_wed),
+        stringResource(R.string.revenue_day_thu),
+        stringResource(R.string.revenue_day_fri),
+        stringResource(R.string.revenue_day_sat),
+        stringResource(R.string.revenue_day_sun)
+    )
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -32,7 +44,7 @@ fun ChartSection() {
                 .padding(OwnerDimens.CardPadding.dp)
         ) {
             Text(
-                text = "Biểu đồ doanh thu 7 ngày",
+                text = stringResource(R.string.revenue_chart_7_days),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = OwnerColors.TextPrimary
@@ -86,7 +98,7 @@ fun ChartSection() {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf("T2", "T3", "T4", "T5", "T6", "T7", "CN").forEach { day ->
+                dayLabels.forEach { day ->
                     Box(
                         modifier = Modifier.weight(1f),
                         contentAlignment = Alignment.Center
@@ -103,3 +115,4 @@ fun ChartSection() {
         }
     }
 }
+

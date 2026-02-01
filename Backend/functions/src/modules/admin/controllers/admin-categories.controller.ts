@@ -14,6 +14,23 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { CategoriesService } from '../../categories/categories.service';
 import { CreateCategoryDto, UpdateCategoryDto } from '../../categories/dto';
 import { AuthGuard, AdminGuard } from '../../../core/guards';
+import { CategoryEntity } from '../../categories/entities/category.entity';
+
+// Helper để serialize Timestamp → ISO string
+const serializeTimestamp = (ts: any): string | null => {
+  if (!ts) return null;
+  if (typeof ts === 'string') return ts;
+  if (ts.toDate) return ts.toDate().toISOString();
+  if (ts._seconds) return new Date(ts._seconds * 1000).toISOString();
+  return null;
+};
+
+// Helper để serialize category
+const serializeCategory = (category: CategoryEntity) => ({
+  ...category,
+  createdAt: serializeTimestamp(category.createdAt),
+  updatedAt: serializeTimestamp(category.updatedAt),
+});
 
 /**
  * Admin Categories Controller
@@ -46,7 +63,8 @@ export class AdminCategoriesController {
   @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   @ApiResponse({ status: 403, description: 'Không có quyền Admin' })
   async create(@Body() dto: CreateCategoryDto) {
-    return this.categoriesService.create(dto);
+    const category = await this.categoriesService.create(dto);
+    return serializeCategory(category);
   }
 
   /**
@@ -62,7 +80,8 @@ export class AdminCategoriesController {
   @ApiResponse({ status: 401, description: 'Chưa xác thực' })
   @ApiResponse({ status: 403, description: 'Không có quyền Admin' })
   async findAll() {
-    return this.categoriesService.findAll();
+    const categories = await this.categoriesService.findAll();
+    return categories.map(serializeCategory);
   }
 
   /**
@@ -79,7 +98,8 @@ export class AdminCategoriesController {
   @ApiResponse({ status: 403, description: 'Không có quyền Admin' })
   @ApiResponse({ status: 404, description: 'Category không tồn tại' })
   async findOne(@Param('id') id: string) {
-    return this.categoriesService.findById(id);
+    const category = await this.categoriesService.findById(id);
+    return serializeCategory(category);
   }
 
   /**
@@ -98,7 +118,8 @@ export class AdminCategoriesController {
   @ApiResponse({ status: 404, description: 'Category không tồn tại' })
   @ApiResponse({ status: 409, description: 'Slug đã tồn tại' })
   async update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
-    return this.categoriesService.update(id, dto);
+    const category = await this.categoriesService.update(id, dto);
+    return serializeCategory(category);
   }
 
   /**

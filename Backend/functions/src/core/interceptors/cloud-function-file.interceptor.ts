@@ -21,9 +21,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
  * Trong Local Development:
  * - Stream còn nguyên, delegate sang Multer FileInterceptor
  */
-export function CloudFunctionFileInterceptor(
-  fieldName: string,
-): Type<NestInterceptor> {
+export function CloudFunctionFileInterceptor(fieldName: string): Type<NestInterceptor> {
   @Injectable()
   class MixinInterceptor implements NestInterceptor {
     private multerInterceptor: NestInterceptor;
@@ -34,10 +32,7 @@ export function CloudFunctionFileInterceptor(
       this.multerInterceptor = new InterceptorClass();
     }
 
-    async intercept(
-      context: ExecutionContext,
-      next: CallHandler,
-    ): Promise<Observable<any>> {
+    async intercept(context: ExecutionContext, next: CallHandler): Promise<Observable<any>> {
       const request = context.switchToHttp().getRequest();
 
       // Check if file was already parsed by RawBodyMiddleware (Cloud Functions)
@@ -57,4 +52,3 @@ export function CloudFunctionFileInterceptor(
 
   return mixin(MixinInterceptor);
 }
-

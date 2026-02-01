@@ -10,28 +10,20 @@ export class AnalyticsService {
    * Get shop analytics for owner dashboard
    *
    * BEHAVIOR:
-   * - When from/to are provided:
-   *   - "today" bucket = [startOfDay(to), endOfDay(to)]
-   *   - "thisWeek" bucket = [to - 6 days, endOfDay(to)]
-   *   - "thisMonth" bucket = [startOfMonth(to), endOfDay(to)]
-   *   - All buckets clamped within [from, to] range
-   * - When from/to are NOT provided:
-   *   - Buckets calculated relative to server's current time
+   * - When from/to are provided: analytics are limited to [from, to] range
+   * - When from/to are NOT provided: analytics are calculated for all time
    *
    * TIMESTAMP RULES:
    * - Revenue/orderCount use deliveredAt (when order was delivered)
    * - Fallback: deliveredAt → updatedAt → createdAt if missing
    * - Only DELIVERED orders count toward revenue/orderCount
-   * - ordersByStatus: counts all orders by createdAt (any status)
+   * - ordersByStatus: counts all orders by createdAt (any status) within range if provided
    * - recentOrders: sorted by createdAt desc (shows order activity)
-   * - pendingOrders: counts orders with status in [PENDING, CONFIRMED, PREPARING, READY, SHIPPING]
-   *   created within "today" bucket
    */
   async getShopAnalytics(shopId: string, from?: string, to?: string): Promise<ShopAnalyticsEntity> {
     // 1. Parse and validate date parameters
     let fromDate: Date | null = null;
     let toDate: Date | null = null;
-    let anchorDate: Date;
 
     if (from && to) {
       fromDate = new Date(from);
@@ -54,54 +46,13 @@ export class AnalyticsService {
       if (toDate.getTime() - fromDate.getTime() > maxRangeMs) {
         throw new BadRequestException('Date range cannot exceed 1 year');
       }
-
-      anchorDate = toDate;
     } else if (from || to) {
-      throw new BadRequestException('Both from and to parameters are required when filtering by date');
-    } else {
-      // No date params: use server's current time
-      anchorDate = new Date();
+      throw new BadRequestException(
+        'Both from and to parameters are required when filtering by date',
+      );
     }
 
-    // 2. Calculate time bucket boundaries
-    const todayStart = new Date(
-      anchorDate.getFullYear(),
-      anchorDate.getMonth(),
-      anchorDate.getDate(),
-      0,
-      0,
-      0,
-      0,
-    );
-    const todayEnd = new Date(
-      anchorDate.getFullYear(),
-      anchorDate.getMonth(),
-      anchorDate.getDate(),
-      23,
-      59,
-      59,
-      999,
-    );
-
-    // thisWeek = 7 days ending on anchor date
-    const weekStart = new Date(todayStart.getTime() - 6 * 24 * 60 * 60 * 1000);
-    const weekEnd = todayEnd;
-
-    // thisMonth = from 1st of anchor's month to anchor date
-    const monthStart = new Date(anchorDate.getFullYear(), anchorDate.getMonth(), 1, 0, 0, 0, 0);
-    const monthEnd = todayEnd;
-
-    // Clamp buckets to [from, to] if provided
-    const clampedTodayStart = fromDate && todayStart < fromDate ? fromDate : todayStart;
-    const clampedTodayEnd = toDate && todayEnd > toDate ? toDate : todayEnd;
-
-    const clampedWeekStart = fromDate && weekStart < fromDate ? fromDate : weekStart;
-    const clampedWeekEnd = toDate && weekEnd > toDate ? toDate : weekEnd;
-
-    const clampedMonthStart = fromDate && monthStart < fromDate ? fromDate : monthStart;
-    const clampedMonthEnd = toDate && monthEnd > toDate ? toDate : monthEnd;
-
-    // 3. Fetch orders by createdAt (for ordersByStatus and recentOrders)
+    // 2. Fetch orders by createdAt (for ordersByStatus and recentOrders)
     let ordersQuery = this.firestore.collection('orders').where('shopId', '==', shopId);
 
     if (fromDate) {
@@ -113,7 +64,7 @@ export class AnalyticsService {
 
     const ordersSnapshot = await ordersQuery.get();
 
-    // 4. Process orders
+    // 3. Process orders
     const allOrders: any[] = [];
     const ordersByStatus: { [status: string]: number } = {};
 
@@ -125,7 +76,7 @@ export class AnalyticsService {
       ordersByStatus[order.status] = (ordersByStatus[order.status] || 0) + 1;
     });
 
-    // 5. Filter DELIVERED orders and extract delivery timestamp
+    // 4. Filter DELIVERED orders and extract delivery timestamp
     const deliveredOrders = allOrders
       .filter((o) => o.status === 'DELIVERED')
       .map((o) => {
@@ -142,40 +93,11 @@ export class AnalyticsService {
       })
       .filter((o) => o.deliveryDate !== null); // Exclude if no timestamp
 
-    // 6. Group delivered orders by time buckets
-    const todayDelivered = deliveredOrders.filter(
-      (o) => o.deliveryDate >= clampedTodayStart && o.deliveryDate <= clampedTodayEnd,
-    );
-    const weekDelivered = deliveredOrders.filter(
-      (o) => o.deliveryDate >= clampedWeekStart && o.deliveryDate <= clampedWeekEnd,
-    );
-    const monthDelivered = deliveredOrders.filter(
-      (o) => o.deliveryDate >= clampedMonthStart && o.deliveryDate <= clampedMonthEnd,
-    );
+    // 5. Calculate all-time revenue and order counts (within range if provided)
+    const allTimeRevenue = deliveredOrders.reduce((sum, o) => sum + (o.total || 0), 0);
+    const allTimeOrderCount = deliveredOrders.length;
 
-    // 7. Calculate revenue and order counts
-    const todayRevenue = todayDelivered.reduce((sum, o) => sum + (o.total || 0), 0);
-    const todayOrderCount = todayDelivered.length;
-
-    const weekRevenue = weekDelivered.reduce((sum, o) => sum + (o.total || 0), 0);
-    const weekOrderCount = weekDelivered.length;
-
-    const monthRevenue = monthDelivered.reduce((sum, o) => sum + (o.total || 0), 0);
-    const monthOrderCount = monthDelivered.length;
-
-    // 8. Calculate pending orders (based on createdAt within today bucket)
-    const pendingStatuses = ['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'SHIPPING'];
-    const todayPendingOrders = allOrders.filter((o) => {
-      const orderDate = o.createdAt?.toDate();
-      return (
-        orderDate &&
-        orderDate >= clampedTodayStart &&
-        orderDate <= clampedTodayEnd &&
-        pendingStatuses.includes(o.status)
-      );
-    }).length;
-
-    // 9. Calculate top products (from all delivered orders)
+    // 6. Calculate top products (from all delivered orders)
     const productSales = new Map<string, { name: string; count: number; revenue: number }>();
     deliveredOrders.forEach((order) => {
       if (order.items) {
@@ -202,7 +124,7 @@ export class AnalyticsService {
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 5);
 
-    // 10. Get recent 10 orders (sorted by createdAt desc)
+    // 7. Get recent 10 orders (sorted by createdAt desc)
     const recentOrders = allOrders
       .sort((a, b) => {
         const dateA = a.createdAt?.toDate?.().getTime() || 0;
@@ -218,22 +140,12 @@ export class AnalyticsService {
         createdAt: o.createdAt?.toDate?.().toISOString() || '',
       }));
 
-    // 11. Return analytics
+    // 8. Return analytics
     return {
-      today: {
-        revenue: todayRevenue,
-        orderCount: todayOrderCount,
-        avgOrderValue: todayOrderCount > 0 ? todayRevenue / todayOrderCount : 0,
-        pendingOrders: todayPendingOrders,
-      },
-      thisWeek: {
-        revenue: weekRevenue,
-        orderCount: weekOrderCount,
-        avgOrderValue: weekOrderCount > 0 ? weekRevenue / weekOrderCount : 0,
-      },
-      thisMonth: {
-        revenue: monthRevenue,
-        orderCount: monthOrderCount,
+      allTime: {
+        revenue: allTimeRevenue,
+        orderCount: allTimeOrderCount,
+        avgOrderValue: allTimeOrderCount > 0 ? allTimeRevenue / allTimeOrderCount : 0,
       },
       ordersByStatus,
       topProducts,

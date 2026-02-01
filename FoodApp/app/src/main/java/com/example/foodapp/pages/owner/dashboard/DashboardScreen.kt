@@ -15,10 +15,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.data.model.owner.*
 import com.example.foodapp.pages.owner.notifications.NotificationBell
 import com.example.foodapp.pages.owner.theme.OwnerColors
@@ -47,7 +49,7 @@ fun DashboardScreen(
             }
         } else if (uiState.error != null) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "Lỗi: ${uiState.error}", color = OwnerColors.Error, modifier = Modifier.padding(16.dp))
+                Text(text = "${stringResource(R.string.owner_error)}: ${uiState.error}", color = OwnerColors.Error, modifier = Modifier.padding(16.dp))
             }
         } else {
             val data = uiState.data
@@ -60,26 +62,24 @@ fun DashboardScreen(
                     verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
                     // 1. Overview Cards (Grid 2x2) - Hiển thị dữ liệu tháng này
-                    Text("Tổng quan tháng này", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = OwnerColors.TextPrimary)
+                    Text(stringResource(R.string.dashboard_all_time), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = OwnerColors.TextPrimary)
                     
                     // Tính tổng đơn từ ordersByStatus
                     val totalOrders = data.ordersByStatus.values.sum()
-                    val pendingOrders = (data.ordersByStatus["PENDING"] ?: 0) + 
-                                       (data.ordersByStatus["CONFIRMED"] ?: 0) + 
-                                       (data.ordersByStatus["PREPARING"] ?: 0)
-                    val completedOrders = data.ordersByStatus["COMPLETED"] ?: 0
+                    val pendingOrders = data.ordersByStatus["PENDING"] ?: 0
+                    val completedOrders = data.ordersByStatus["DELIVERED"] ?: 0
                     
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             ModernStatCard(
-                                title = "Doanh thu tháng",
-                                value = formatCurrency(data.thisMonth.revenue),
+                                title = stringResource(R.string.dashboard_total_revenue),
+                                value = formatCurrency(data.allTime.revenue),
                                 icon = Icons.Default.AttachMoney,
                                 color = OwnerColors.Success,
                                 modifier = Modifier.weight(1f)
                             )
                             ModernStatCard(
-                                title = "Tổng đơn hàng",
+                                title = stringResource(R.string.dashboard_total_orders),
                                 value = "$totalOrders",
                                 icon = Icons.Default.Receipt,
                                 color = OwnerColors.Info,
@@ -88,14 +88,14 @@ fun DashboardScreen(
                         }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             ModernStatCard(
-                                title = "Đang xử lý",
+                                title = stringResource(R.string.dashboard_pending_orders),
                                 value = "$pendingOrders",
                                 icon = Icons.Default.HourglassEmpty,
                                 color = OwnerColors.Warning,
                                 modifier = Modifier.weight(1f)
                             )
                             ModernStatCard(
-                                title = "Hoàn thành",
+                                title = stringResource(R.string.orders_delivered),
                                 value = "$completedOrders",
                                 icon = Icons.Default.CheckCircle,
                                 color = OwnerColors.StatusDelivered,
@@ -105,7 +105,7 @@ fun DashboardScreen(
                     }
                     
                     // 2. Orders Status Distribution (Chart)
-                    Text("Phân bố trạng thái đơn", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = OwnerColors.TextPrimary)
+                    Text(stringResource(R.string.dashboard_order_status_dist), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = OwnerColors.TextPrimary)
                     Card(
                         colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface),
                         shape = RoundedCornerShape(OwnerDimens.CardRadiusLarge.dp),
@@ -126,17 +126,17 @@ fun DashboardScreen(
                             
                             // Legend
                             Column {
-                                LegendItem("Chờ xác nhận", ColorPending, data.ordersByStatus["PENDING"] ?: 0)
-                                LegendItem("Đang nấu", ColorPreparing, data.ordersByStatus["PREPARING"] ?: 0)
-                                LegendItem("Đang giao", ColorDelivering, data.ordersByStatus["DELIVERING"] ?: 0)
-                                LegendItem("Hoàn thành", ColorCompleted, data.ordersByStatus["COMPLETED"] ?: 0)
-                                LegendItem("Đã hủy", ColorCancelled, data.ordersByStatus["CANCELLED"] ?: 0)
+                                LegendItem(stringResource(R.string.orders_pending), ColorPending, data.ordersByStatus["PENDING"] ?: 0)
+                                LegendItem(stringResource(R.string.orders_preparing), ColorPreparing, data.ordersByStatus["PREPARING"] ?: 0)
+                                LegendItem(stringResource(R.string.orders_delivering), ColorDelivering, data.ordersByStatus["DELIVERING"] ?: 0)
+                                LegendItem(stringResource(R.string.orders_delivered), ColorCompleted, data.ordersByStatus["COMPLETED"] ?: 0)
+                                LegendItem(stringResource(R.string.orders_cancelled), ColorCancelled, data.ordersByStatus["CANCELLED"] ?: 0)
                             }
                         }
                     }
 
                     // 3. Top Products (With Bar)
-                    Text("Top món bán chạy", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = OwnerColors.TextPrimary)
+                    Text(stringResource(R.string.revenue_top_products), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = OwnerColors.TextPrimary)
                     Card(
                         colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface),
                         shape = RoundedCornerShape(OwnerDimens.CardRadiusLarge.dp),
@@ -148,7 +148,7 @@ fun DashboardScreen(
                                     modifier = Modifier.fillMaxWidth().padding(32.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text("Chưa có dữ liệu", style = MaterialTheme.typography.bodyMedium, color = OwnerColors.TextSecondary)
+                                    Text(stringResource(R.string.revenue_no_data), style = MaterialTheme.typography.bodyMedium, color = OwnerColors.TextSecondary)
                                 }
                             } else {
                                 val maxRevenue = data.topProducts.maxOfOrNull { it.revenue } ?: 1.0
@@ -167,7 +167,7 @@ fun DashboardScreen(
                                         Spacer(Modifier.height(4.dp))
                                         HorizontalBar(value = progress, color = OwnerColors.Primary)
                                         Spacer(Modifier.height(4.dp))
-                                        Text("${product.soldCount} đã bán", style = MaterialTheme.typography.labelSmall, color = OwnerColors.TextSecondary)
+                                        Text(stringResource(R.string.dashboard_sold_count, product.soldCount), style = MaterialTheme.typography.labelSmall, color = OwnerColors.TextSecondary)
                                     }
                                     if (index < data.topProducts.size - 1 && index < 4) {
                                         Divider(color = OwnerColors.BorderLight, modifier = Modifier.padding(vertical = 4.dp))
@@ -178,7 +178,7 @@ fun DashboardScreen(
                     }
 
                     // 4. Recent Orders
-                    Text("Đơn hàng gần đây", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = OwnerColors.TextPrimary)
+                    Text(stringResource(R.string.dashboard_recent_orders), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold), color = OwnerColors.TextPrimary)
                     Card(
                         colors = CardDefaults.cardColors(containerColor = OwnerColors.Surface),
                         shape = RoundedCornerShape(OwnerDimens.CardRadiusLarge.dp),
@@ -190,7 +190,7 @@ fun DashboardScreen(
                                     modifier = Modifier.fillMaxWidth().padding(32.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text("Chưa có đơn hàng", style = MaterialTheme.typography.bodyMedium, color = OwnerColors.TextSecondary)
+                                    Text(stringResource(R.string.dashboard_no_orders), style = MaterialTheme.typography.bodyMedium, color = OwnerColors.TextSecondary)
                                 }
                             } else {
                                 data.recentOrders.forEachIndexed { index, order ->
@@ -230,7 +230,7 @@ fun DashboardScreen(
                 }
             } else {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Không có dữ liệu", color = OwnerColors.TextSecondary)
+                    Text(stringResource(R.string.revenue_no_data), color = OwnerColors.TextSecondary)
                 }
             }
         }
@@ -251,11 +251,11 @@ fun DashboardHeaderNew(onMenuClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onMenuClick) {
-                Icon(Icons.Default.Menu, contentDescription = "Menu", tint = OwnerColors.TextPrimary)
+                Icon(Icons.Default.Menu, contentDescription = stringResource(R.string.nav_dashboard), tint = OwnerColors.TextPrimary)
             }
             Spacer(Modifier.width(8.dp))
             Text(
-                "Tổng quan", 
+                stringResource(R.string.nav_dashboard), 
                 style = MaterialTheme.typography.titleLarge, 
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.weight(1f)
@@ -280,15 +280,24 @@ fun LegendItem(label: String, color: Color, count: Int) {
 
 @Composable
 fun StatusBadge(status: String) {
-    val (text, color) = when(status) {
-        "PENDING" -> "Chờ xác nhận" to ColorPending
-        "CONFIRMED" -> "Đã xác nhận" to ColorPreparing
-        "PREPARING" -> "Đang nấu" to ColorPreparing
-        "READY" -> "Đã xong" to ColorReady
-        "DELIVERING" -> "Đang giao" to ColorDelivering
-        "COMPLETED" -> "Hoàn thành" to ColorCompleted
-        "CANCELLED" -> "Đã hủy" to ColorCancelled
-        else -> status to Color.Gray
+    val text = when(status) {
+        "PENDING" -> stringResource(R.string.orders_pending)
+        "CONFIRMED" -> stringResource(R.string.orders_confirmed)
+        "PREPARING" -> stringResource(R.string.orders_preparing)
+        "READY" -> stringResource(R.string.orders_ready)
+        "DELIVERING" -> stringResource(R.string.orders_delivering)
+        "COMPLETED" -> stringResource(R.string.orders_delivered)
+        "CANCELLED" -> stringResource(R.string.orders_cancelled)
+        else -> status
+    }
+    val color = when(status) {
+        "PENDING" -> ColorPending
+        "CONFIRMED", "PREPARING" -> ColorPreparing
+        "READY" -> ColorReady
+        "DELIVERING" -> ColorDelivering
+        "COMPLETED" -> ColorCompleted
+        "CANCELLED" -> ColorCancelled
+        else -> Color.Gray
     }
     Surface(
         color = color.copy(alpha = 0.1f),
@@ -323,3 +332,4 @@ fun formatDate(isoString: String): String {
         isoString
     }
 }
+

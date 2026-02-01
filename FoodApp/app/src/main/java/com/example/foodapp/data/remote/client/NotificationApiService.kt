@@ -8,7 +8,7 @@ interface NotificationApiService {
     @POST("notifications/tokens")
     suspend fun registerDeviceToken(
         @Body request: RegisterDeviceTokenRequest
-    ): RegisterDeviceTokenResponse
+    ): BaseResponse<RegisterDeviceTokenResponse>
 
     @DELETE("notifications/tokens/{token}")
     suspend fun unRegisterDeviceToken(
@@ -23,18 +23,18 @@ interface NotificationApiService {
         @Query("page") page: Int? = null,
         @Query("limit") limit: Int? = null,
         @Query("read") read: Boolean? = null
-    ): NotificationListResponse
+    ): BaseResponse<NotificationListResponse>
 
     @PUT("notifications/{id}/read")
     suspend fun markNotificationAsRead(
         @Header("Authorization") authHeader: String,
         @Path("id") notificationId: String
-    ): MarkNotificationReadResponse
+    ): BaseResponse<MarkNotificationReadResponse>
 
     @PUT("notifications/read-all")
     suspend fun markAllNotificationsAsRead(
         @Header("Authorization") authHeader: String
-    ): MarkAllNotificationsReadResponse
+    ): BaseResponse<MarkAllNotificationsReadResponse>
 
     @GET("notifications/preferences")
     suspend fun getNotificationPreferences(

@@ -26,8 +26,8 @@ import com.example.foodapp.ui.theme.PrimaryOrange
 
 @Composable
 fun IntroScreen(
-    onStartClicked: () -> Unit,
-    onLoginClicked: () -> Unit
+    onStartClicked: () -> Unit, //callback khi click vào "Bắt đầu ngay"
+    onLoginClicked: () -> Unit //calback khi click vào "Đã có tài khoản"
 ) {
     Column(
         modifier = Modifier
@@ -35,10 +35,10 @@ fun IntroScreen(
             .systemBarsPadding(),
         verticalArrangement = Arrangement.Top
     ) {
-        // Banner Image
+        // Ảnh banner
         Image(
             painter = painterResource(id = R.drawable.banner),
-            contentDescription = "Food App Banner",
+            contentDescription = stringResource(R.string.banner_description),
             modifier = Modifier
                 .fillMaxWidth()
                 .height(515.dp),
@@ -81,7 +81,7 @@ fun IntroScreen(
                 shape = MaterialTheme.shapes.extraLarge
             ) {
                 Text(
-                    text = "Bắt đầu ngay",
+                    text = stringResource(R.string.get_started),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -89,14 +89,13 @@ fun IntroScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Already have account section
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Bạn đã có tài khoản?",
+                    text = stringResource(R.string.already_have_account),
                     color = Color(0xFF666666),
                     fontSize = 14.sp,
                     modifier = Modifier.padding(end = 4.dp)
@@ -109,7 +108,7 @@ fun IntroScreen(
                     )
                 ) {
                     Text(
-                        text = "Đăng nhập",
+                        text = stringResource(R.string.intro_login),
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )

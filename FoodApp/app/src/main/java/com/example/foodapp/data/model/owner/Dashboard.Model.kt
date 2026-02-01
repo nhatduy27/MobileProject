@@ -11,9 +11,7 @@ data class GetDashboardResponse(
 )
 
 data class DashboardData(
-    @SerializedName("today") val today: PeriodStats = PeriodStats(),
-    @SerializedName("thisWeek") val thisWeek: PeriodStats = PeriodStats(),
-    @SerializedName("thisMonth") val thisMonth: PeriodStats = PeriodStats(),
+    @SerializedName("allTime") val allTime: PeriodStats = PeriodStats(),
     @SerializedName("ordersByStatus") val ordersByStatus: Map<String, Int> = emptyMap(),
     @SerializedName("topProducts") val topProducts: List<TopProductStat> = emptyList(),
     @SerializedName("recentOrders") val recentOrders: List<RecentOrderStat> = emptyList()
@@ -22,8 +20,7 @@ data class DashboardData(
 data class PeriodStats(
     @SerializedName("revenue") val revenue: Double = 0.0,
     @SerializedName("orderCount") val orderCount: Int = 0,
-    @SerializedName("avgOrderValue") val avgOrderValue: Double = 0.0,
-    @SerializedName("pendingOrders") val pendingOrders: Int = 0
+    @SerializedName("avgOrderValue") val avgOrderValue: Double = 0.0
 )
 
 data class TopProductStat(

@@ -39,6 +39,18 @@ fun NotificationSettingsScreen(
     
     var isOnline by remember { mutableStateOf(false) }
     var isTogglingOnline by remember { mutableStateOf(false) }
+    var isLoadingStatus by remember { mutableStateOf(true) }
+    
+    // Load initial online status from server
+    LaunchedEffect(Unit) {
+        repository.getOnlineStatus().onSuccess { status ->
+            isOnline = status
+            Log.d("NotificationSettings", "Loaded online status from server: $status")
+        }.onFailure { e ->
+            Log.e("NotificationSettings", "Failed to load online status", e)
+        }
+        isLoadingStatus = false
+    }
     
     fun toggleOnlineStatus() {
         scope.launch {
@@ -129,7 +141,7 @@ fun NotificationSettingsScreen(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            if (isOnline) "Đang hoạt động" else "Tạm nghỉ",
+                            if (isLoadingStatus) "Đang tải..." else if (isOnline) "Đang hoạt động" else "Tạm nghỉ",
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 16.sp,
                             color = if (isOnline) ShipperColors.Success else ShipperColors.TextSecondary
@@ -148,7 +160,7 @@ fun NotificationSettingsScreen(
                     
                     Spacer(modifier = Modifier.width(16.dp))
                     
-                    if (isTogglingOnline) {
+                    if (isTogglingOnline || isLoadingStatus) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(32.dp),
                             color = ShipperColors.Primary,

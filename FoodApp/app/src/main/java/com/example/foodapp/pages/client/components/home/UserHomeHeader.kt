@@ -2,7 +2,6 @@ package com.example.foodapp.pages.client.components.home
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -17,10 +16,12 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.pages.client.home.CategoryState
 import com.example.foodapp.pages.client.home.UserNameState
 
@@ -80,7 +81,7 @@ private fun EnhancedUserHeader(nameState: UserNameState) {
     val userName = when (nameState) {
         is UserNameState.Success -> nameState.userName
         is UserNameState.Loading -> "..."
-        else -> "Khách"
+        else -> stringResource(R.string.guest)
     }
 
     Row(
@@ -96,14 +97,14 @@ private fun EnhancedUserHeader(nameState: UserNameState) {
         ) {
             Icon(
                 imageVector = Icons.Default.Person,
-                contentDescription = "Avatar",
+                contentDescription = stringResource(R.string.avatar),
                 tint = Color.White,
                 modifier = Modifier.size(26.dp)
             )
         }
         Column {
             Text(
-                text = "Xin chào,",
+                text = stringResource(R.string.welcome),
                 fontSize = 13.sp,
                 color = Color.White.copy(alpha = 0.9f),
                 fontWeight = FontWeight.Normal
@@ -136,7 +137,8 @@ private fun EnhancedSearchBar(
             .padding(horizontal = 20.dp, vertical = 12.dp)
             .shadow(8.dp, RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp),
-        color = Color.White
+        color = Color.White,
+        contentColor = Color.Black
     ) {
         TextField(
             value = searchText,
@@ -144,16 +146,38 @@ private fun EnhancedSearchBar(
                 searchText = newText
                 onSearch(newText)
             },
-            placeholder = { Text("Tìm món ăn yêu thích...", color = Color(0xFF9E9E9E), fontSize = 15.sp) },
+            placeholder = {
+                Text(
+                    text = stringResource(R.string.search_favorite_foods),
+                    color = Color(0xFF9E9E9E),
+                    fontSize = 15.sp
+                )
+            },
             modifier = Modifier.fillMaxWidth(),
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Tìm kiếm", tint = Color(0xFFFF9800), modifier = Modifier.size(24.dp)) },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = stringResource(R.string.search),
+                    tint = Color(0xFFFF9800),
+                    modifier = Modifier.size(24.dp)
+                )
+            },
             trailingIcon = {
                 if (searchText.isNotBlank()) {
-                    IconButton(onClick = {
-                        searchText = ""
-                        onClearSearch()
-                    }) {
-                        Icon(imageVector = Icons.Default.Close, contentDescription = "Xóa", tint = Color(0xFF757575))
+                    IconButton(
+                        onClick = {
+                            searchText = ""
+                            onClearSearch()
+                        },
+                        modifier = Modifier
+                            .size(40.dp)
+                            .padding(4.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = stringResource(R.string.clear_search),
+                            tint = Color(0xFF757575)
+                        )
                     }
                 }
             },
@@ -183,19 +207,81 @@ private fun CategoryFilterSpinner(
     onCategorySelected: (String?) -> Unit
 ) {
     Box {
-        // ... (Nội dung của CategoryFilterSpinner trong file gốc) ...
-        // Phần này bạn có thể copy-paste từ file UserHomeScreen.kt cũ vào đây.
-        // Tôi sẽ để lại toàn bộ code cho bạn tiện theo dõi:
         val buttonContent: @Composable () -> Unit = when (categoryState) {
-            is CategoryState.Loading -> {{ CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp, color = Color.White) }}
-            is CategoryState.Error -> {{ Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.Error, "Lỗi", Modifier.size(20.dp), tint = Color.White); Spacer(Modifier.width(6.dp)); Text("Lỗi", fontSize = 14.sp, color = Color.White, fontWeight = FontWeight.Medium) } }}
-            else -> {{ Row(verticalAlignment = Alignment.CenterVertically) { Icon(Icons.Default.FilterList, "Lọc", Modifier.size(20.dp), tint = Color.White); Spacer(Modifier.width(8.dp)); Text(categoryMap[selectedCategory] ?: "Tất cả", fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, color = Color.White, fontWeight = FontWeight.SemiBold) } }}
+            is CategoryState.Loading -> {
+                {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                            color = Color.White
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = stringResource(R.string.loading),
+                            fontSize = 14.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+            is CategoryState.Error -> {
+                {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            Icons.Default.Error,
+                            contentDescription = stringResource(R.string.error_icon_desc),
+                            modifier = Modifier.size(20.dp),
+                            tint = Color.White
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text(
+                            text = stringResource(R.string.error),
+                            fontSize = 14.sp,
+                            color = Color.White,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+            else -> {
+                {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Icon(
+                            Icons.Default.FilterList,
+                            contentDescription = stringResource(R.string.filter),
+                            modifier = Modifier.size(20.dp),
+                            tint = Color.White
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            text = categoryMap[selectedCategory] ?: stringResource(R.string.all_categories),
+                            fontSize = 14.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = Color.White,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
         }
 
         Button(
             onClick = { if (categoryState !is CategoryState.Loading) onExpandedChange(true) },
             modifier = Modifier.width(130.dp).height(44.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = Color.White.copy(alpha = 0.25f), contentColor = Color.White, disabledContainerColor = Color.White.copy(alpha = 0.15f)),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.White.copy(alpha = 0.25f),
+                contentColor = Color.White,
+                disabledContainerColor = Color.White.copy(alpha = 0.15f)
+            ),
             shape = RoundedCornerShape(12.dp),
             enabled = categoryState !is CategoryState.Loading && categoryMap.isNotEmpty(),
             elevation = ButtonDefaults.buttonElevation(0.dp)
@@ -209,16 +295,50 @@ private fun CategoryFilterSpinner(
             modifier = Modifier.width(200.dp).background(Color.White, RoundedCornerShape(12.dp))
         ) {
             DropdownMenuItem(
-                text = { Text("Tất cả", fontWeight = if (selectedCategory == null) FontWeight.Bold else FontWeight.Normal) },
-                onClick = { onCategorySelected(null) },
-                leadingIcon = { if (selectedCategory == null) Icon(Icons.Default.Check, null, tint = Color(0xFFFF9800)) }
+                text = {
+                    Text(
+                        text = stringResource(R.string.all_categories),
+                        fontWeight = if (selectedCategory == null) FontWeight.Bold else FontWeight.Normal
+                    )
+                },
+                onClick = {
+                    onCategorySelected(null)
+                    onExpandedChange(false)
+                },
+                leadingIcon = {
+                    if (selectedCategory == null) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = stringResource(R.string.selected_description),
+                            tint = Color(0xFFFF9800)
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
             )
             categoryMap.forEach { (id, name) ->
                 if (id != null) {
                     DropdownMenuItem(
-                        text = { Text(name, fontWeight = if (selectedCategory == id) FontWeight.Bold else FontWeight.Normal) },
-                        onClick = { onCategorySelected(id) },
-                        leadingIcon = { if (selectedCategory == id) Icon(Icons.Default.Check, null, tint = Color(0xFFFF9800)) }
+                        text = {
+                            Text(
+                                text = name,
+                                fontWeight = if (selectedCategory == id) FontWeight.Bold else FontWeight.Normal
+                            )
+                        },
+                        onClick = {
+                            onCategorySelected(id)
+                            onExpandedChange(false)
+                        },
+                        leadingIcon = {
+                            if (selectedCategory == id) {
+                                Icon(
+                                    Icons.Default.Check,
+                                    contentDescription = stringResource(R.string.selected_description),
+                                    tint = Color(0xFFFF9800)
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
                     )
                 }
             }

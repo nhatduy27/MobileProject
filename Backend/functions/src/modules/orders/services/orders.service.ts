@@ -421,8 +421,8 @@ export class OrdersService {
         const totalText = total.toLocaleString('vi-VN');
         await this.notificationsService.send({
           userId: shopOwner,
-          title: `New order received`,
-          body: `Order #${order.orderNumber} from ${customerSnapshot?.displayName || 'Guest'} for ${totalText}đ`,
+          title: `Có đơn hàng mới`,
+          body: `Đơn hàng #${order.orderNumber} từ ${customerSnapshot?.displayName || 'Khách'} - ${totalText}đ`,
           type: NotificationType.NEW_ORDER,
           data: {
             orderId: order.id,
@@ -587,8 +587,8 @@ export class OrdersService {
         } else {
           await this.notificationsService.send({
             userId: ownerId,
-            title: `Order Cancelled`,
-            body: `Order #${updatedOrder.orderNumber} has been cancelled by customer: ${reason || 'No reason provided'}`,
+            title: `Đơn hàng bị huỷ`,
+            body: `Đơn hàng #${updatedOrder.orderNumber} đã bị khách hàng huỷ: ${reason || 'Không có lý do'}`,
             type: NotificationType.ORDER_CANCELLED,
             data: { orderId, orderNumber: updatedOrder.orderNumber, cancelReason: reason },
             orderId,
@@ -649,8 +649,8 @@ export class OrdersService {
     const updatedOrder = (await this.ordersRepo.findById(orderId)) as OrderEntity;
     await this.sendOrderNotification(
       order.customerId,
-      'Order confirmed',
-      `Your order #${updatedOrder.orderNumber} has been confirmed and will be prepared shortly`,
+      'Đơn hàng đã được xác nhận',
+      `Đơn hàng #${updatedOrder.orderNumber} đã được xác nhận và sẽ được chuẩn bị ngay`,
       NotificationType.ORDER_CONFIRMED,
       updatedOrder,
     );
@@ -694,8 +694,8 @@ export class OrdersService {
     const updatedOrder = (await this.ordersRepo.findById(orderId)) as OrderEntity;
     await this.sendOrderNotification(
       order.customerId,
-      'Order is being prepared',
-      `Your order #${updatedOrder.orderNumber} is now being prepared by the shop`,
+      'Đơn hàng đang được chuẩn bị',
+      `Đơn hàng #${updatedOrder.orderNumber} đang được cửa hàng chuẩn bị`,
       NotificationType.ORDER_PREPARING,
       updatedOrder,
     );
@@ -741,8 +741,8 @@ export class OrdersService {
       // Notify customer
       await this.sendOrderNotification(
         order.customerId,
-        `Order Ready for Pickup`,
-        `Order #${updatedOrder.orderNumber} is ready for pickup at ${shop.name}`,
+        `Đơn hàng sẵn sàng giao`,
+        `Đơn hàng #${updatedOrder.orderNumber} đã sẵn sàng lấy tại ${shop.name}`,
         NotificationType.ORDER_READY,
         updatedOrder,
       );
@@ -752,8 +752,8 @@ export class OrdersService {
         const topic = `shop_${order.shopId}_shippers_active`;
         await this.notificationsService.sendToTopic({
           topic,
-          title: 'New Order Ready for Delivery',
-          body: `Order #${updatedOrder.orderNumber} is ready for pickup at ${shop.name}`,
+          title: 'Có đơn hàng mới cần giao',
+          body: `Đơn hàng #${updatedOrder.orderNumber} đã sẵn sàng lấy tại ${shop.name}`,
           type: NotificationType.ORDER_READY,
           category: NotificationCategory.TRANSACTIONAL,
           data: {
@@ -1230,8 +1230,8 @@ export class OrdersService {
       }
       await this.notificationsService.send({
         userId: ownerId,
-        title: `Shipper Assigned`,
-        body: `Shipper has accepted order #${order.orderNumber} for delivery`,
+        title: `Đã có shipper nhận đơn`,
+        body: `Shipper đã nhận giao đơn hàng #${order.orderNumber}`,
         type: NotificationType.SHIPPER_ASSIGNED,
         data: { orderId, orderNumber: order.orderNumber, shipperId },
         orderId,
@@ -1495,8 +1495,8 @@ export class OrdersService {
         }
         await this.notificationsService.send({
           userId: shop.ownerId,
-          title: `Order Delivered`,
-          body: `Order #${deliveredOrder.orderNumber} was successfully delivered by ${shipperName}`,
+          title: `Đơn hàng đã giao thành công`,
+          body: `Đơn hàng #${deliveredOrder.orderNumber} đã được giao bởi ${shipperName}`,
           type: NotificationType.ORDER_DELIVERED,
           data: { orderId, orderNumber: deliveredOrder.orderNumber, shipperId },
           orderId,

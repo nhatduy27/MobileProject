@@ -121,7 +121,7 @@ export class AuthService {
           role: user.role,
           status: user.status,
           emailVerified: user.emailVerified,
-          createdAt: user.createdAt,
+          createdAt: user.createdAt?.toDate?.()?.toISOString?.() ?? user.createdAt,
         },
         customToken,
         message: 'Đăng nhập thành công',
@@ -394,12 +394,12 @@ export class AuthService {
    * AUTH-005
    */
   async sendOTP(dto: SendOTPDto) {
-    const { email } = dto;
+    const { email, type } = dto;
 
     // Check rate limiting
     const hasRecent = await this.otpRepository.hasRecentRequest(
       email,
-      OTPType.EMAIL_VERIFICATION,
+      type,
       OTP_CONFIG.RATE_LIMIT_SECONDS,
     );
 
@@ -419,7 +419,7 @@ export class AuthService {
     await this.otpRepository.create({
       email,
       code,
-      type: OTPType.EMAIL_VERIFICATION,
+      type: type,
       expiresAt,
       verified: false,
       attempts: 0,

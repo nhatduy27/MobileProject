@@ -10,12 +10,24 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.data.model.owner.revenue.RevenuePeriod
 import com.example.foodapp.pages.owner.theme.OwnerColors
 import com.example.foodapp.pages.owner.theme.OwnerDimens
+
+@Composable
+fun getPeriodDisplayName(period: RevenuePeriod): String {
+    return when (period) {
+        RevenuePeriod.TODAY -> stringResource(R.string.revenue_period_today)
+        RevenuePeriod.WEEK -> stringResource(R.string.revenue_period_week)
+        RevenuePeriod.MONTH -> stringResource(R.string.revenue_period_month)
+        RevenuePeriod.YEAR -> stringResource(R.string.revenue_period_year)
+    }
+}
 
 @Composable
 fun PeriodFilter(
@@ -34,13 +46,14 @@ fun PeriodFilter(
     ) {
         periods.forEach { period ->
             PeriodChip(
-                text = period.displayName,
+                text = getPeriodDisplayName(period),
                 isSelected = selectedPeriod == period,
                 onClick = { onPeriodSelected(period) }
             )
         }
     }
 }
+
 
 @Composable
 fun PeriodChip(

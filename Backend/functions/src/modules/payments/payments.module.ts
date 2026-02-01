@@ -4,9 +4,13 @@ import { PaymentsController } from './controllers';
 import { PaymentsRepository } from './repositories';
 import { PAYMENTS_REPOSITORY_TOKEN } from './interfaces';
 import { OrdersModule } from '../orders/orders.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
-  imports: [forwardRef(() => OrdersModule)],
+  imports: [
+    forwardRef(() => OrdersModule),
+    NotificationsModule,
+  ],
   controllers: [PaymentsController],
   providers: [
     PaymentsService,

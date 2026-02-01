@@ -89,10 +89,9 @@ class VerifyOTPViewModel(
         viewModelScope.launch {
             _otpState.value = OtpVerificationState.Sending
 
-            when (val result = otpRepository.sendOtpResetPassword(email)) {
+            when (val result = otpRepository.sendOtpResetPassword(email,OTPType.PASSWORD_RESET)) {
                 is ApiResult.Success -> {
-                    // Với model mới, result.data là SimpleMessageData
-                    // Không có expiresAt trong SimpleMessageData, dùng mặc định
+
                     startTimer() // Bắt đầu timer với mặc định
 
                     _otpState.value = OtpVerificationState.Idle

@@ -1,5 +1,6 @@
 package com.example.foodapp.authentication.signup
 
+import android.util.Patterns
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -22,12 +23,14 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.*
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.ui.theme.PrimaryOrange
 
 @Composable
@@ -42,16 +45,13 @@ fun SignUpScreen(
     )
 
     val signUpState by viewModel.signUpState.observeAsState(SignUpState.Idle)
-    val saveUserState by viewModel.saveUserState.observeAsState(null)
+    var hasNavigated by remember { mutableStateOf(false) }
 
-    LaunchedEffect(signUpState) {
+    LaunchedEffect(signUpState, hasNavigated) {
+        if (hasNavigated) return@LaunchedEffect
+        
         if (signUpState is SignUpState.Success) {
-            onSignUpSuccess()
-        }
-    }
-
-    LaunchedEffect(saveUserState) {
-        if (saveUserState == true) {
+            hasNavigated = true
             onSignUpSuccess()
         }
     }
@@ -135,7 +135,7 @@ fun SignUpContent(
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back_button),
                             tint = PrimaryOrange
                         )
                     }
@@ -169,7 +169,7 @@ fun SignUpContent(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "Tạo tài khoản mới",
+                        text = stringResource(R.string.signup_title),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF2D2D2D)
@@ -178,7 +178,7 @@ fun SignUpContent(
                     Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
-                        text = "Điền thông tin để bắt đầu",
+                        text = stringResource(R.string.signup_subtitle),
                         fontSize = 16.sp,
                         color = Color(0xFF666666),
                         textAlign = TextAlign.Center
@@ -225,7 +225,7 @@ fun SignUpContent(
             ModernSignUpTextField(
                 value = fullName,
                 onValueChange = { fullName = it },
-                label = "Họ và tên",
+                label = stringResource(R.string.full_name_hint),
                 leadingIcon = Icons.Default.Person,
                 enabled = !isLoading
             )
@@ -235,7 +235,7 @@ fun SignUpContent(
             ModernSignUpTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = "Email",
+                label = stringResource(R.string.email_hint),
                 leadingIcon = Icons.Default.Email,
                 enabled = !isLoading,
                 keyboardOptions = KeyboardOptions.Default.copy(
@@ -249,7 +249,7 @@ fun SignUpContent(
             ModernSignUpTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = "Mật khẩu (ít nhất 6 ký tự)",
+                label = stringResource(R.string.password_signup_hint),
                 leadingIcon = Icons.Default.Lock,
                 enabled = !isLoading,
                 isPassword = true,
@@ -266,7 +266,7 @@ fun SignUpContent(
             ModernSignUpTextField(
                 value = confirmPassword,
                 onValueChange = { confirmPassword = it },
-                label = "Xác nhận mật khẩu",
+                label = stringResource(R.string.confirm_password_hint),
                 leadingIcon = Icons.Default.LockClock,
                 enabled = !isLoading,
                 isPassword = true,
@@ -293,18 +293,18 @@ fun SignUpContent(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            "Yêu cầu mật khẩu:",
+                            stringResource(R.string.password_requirements_title),
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF666666)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         PasswordRequirement(
-                            text = "Ít nhất 6 ký tự",
+                            text = stringResource(R.string.password_length_requirement),
                             isMet = password.length >= 6
                         )
                         PasswordRequirement(
-                            text = "Mật khẩu khớp nhau",
+                            text = stringResource(R.string.password_match_requirement),
                             isMet = password == confirmPassword && confirmPassword.isNotEmpty()
                         )
                     }
@@ -313,22 +313,30 @@ fun SignUpContent(
                 Spacer(modifier = Modifier.height(24.dp))
             }
 
+
+            val errorFullNameRequired = stringResource(R.string.error_full_name_required)
+            val errorFullNameLength = stringResource(R.string.error_full_name_length)
+            val errorEmailRequired = stringResource(R.string.error_email_required)
+            val errorInvalidEmail = stringResource(R.string.error_invalid_email)
+            val errorPasswordRequired = stringResource(R.string.error_password_required)
+            val errorPasswordLength = stringResource(R.string.error_password_length)
+            val errorPasswordMismatch = stringResource(R.string.error_password_mismatch)
             // Register Button
             Button(
                 onClick = {
-                    when {
-                        fullName.isBlank() -> validationError = "Vui lòng nhập họ và tên"
-                        fullName.length < 2 -> validationError = "Tên phải có ít nhất 2 ký tự"
-                        email.isBlank() -> validationError = "Vui lòng nhập email"
-                        !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() ->
-                            validationError = "Email không hợp lệ"
-                        password.isBlank() -> validationError = "Vui lòng nhập mật khẩu"
-                        password.length < 6 -> validationError = "Mật khẩu phải có ít nhất 6 ký tự"
-                        password != confirmPassword -> validationError = "Mật khẩu xác nhận không khớp"
-                        else -> {
-                            validationError = null
-                            onRegisterClick(fullName, email, password, confirmPassword)
-                        }
+                    validationError = when {
+                        fullName.isBlank() -> errorFullNameRequired
+                        fullName.length < 2 -> errorFullNameLength
+                        email.isBlank() -> errorEmailRequired
+                        !Patterns.EMAIL_ADDRESS.matcher(email).matches() -> errorInvalidEmail
+                        password.isBlank() -> errorPasswordRequired
+                        password.length < 6 -> errorPasswordLength
+                        password != confirmPassword -> errorPasswordMismatch
+                        else -> null
+                    }
+
+                    if (validationError == null) {
+                        onRegisterClick(fullName, email, password, confirmPassword)
                     }
                 },
                 modifier = Modifier
@@ -353,7 +361,7 @@ fun SignUpContent(
                             color = Color.White
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text("Đang xử lý...", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.processing), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
                     isSuccess -> {
                         Icon(
@@ -362,9 +370,9 @@ fun SignUpContent(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Thành công!", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.success), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                     }
-                    else -> Text("Đăng ký", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    else -> Text(stringResource(R.string.signup_button), fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -381,7 +389,7 @@ fun SignUpContent(
                     color = Color(0xFFE0E0E0)
                 )
                 Text(
-                    "hoặc",
+                    stringResource(R.string.or_divider),
                     modifier = Modifier.padding(horizontal = 16.dp),
                     color = Color(0xFF999999),
                     fontSize = 14.sp,
@@ -402,12 +410,12 @@ fun SignUpContent(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "Đã có tài khoản? ",
+                    text = stringResource(R.string.already_have_account),
                     color = Color(0xFF666666),
                     fontSize = 15.sp
                 )
                 Text(
-                    text = "Đăng nhập ngay",
+                    text = stringResource(R.string.login_now),
                     color = PrimaryOrange,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
@@ -468,7 +476,8 @@ fun ModernSignUpTextField(
                         Icon(
                             imageVector = if (isVisible) Icons.Default.VisibilityOff
                             else Icons.Default.Visibility,
-                            contentDescription = if (isVisible) "Ẩn" else "Hiện",
+                            contentDescription = if (isVisible) stringResource(R.string.hide_password)
+                            else stringResource(R.string.show_password),
                             tint = if (enabled) Color(0xFF999999) else Color(0xFFCCCCCC)
                         )
                     }

@@ -345,7 +345,7 @@ export class ChatService {
       // Send notification
       await this.notificationsService.send({
         userId: recipientId,
-        title: `New message from ${senderName}`,
+        title: `Tin nhắn mới từ ${senderName}`,
         body: text.length > 100 ? text.substring(0, 97) + '...' : text,
         type: NotificationType.CHAT,
         category: NotificationCategory.TRANSACTIONAL,

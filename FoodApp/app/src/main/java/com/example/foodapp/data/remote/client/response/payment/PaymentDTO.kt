@@ -195,6 +195,106 @@ data class VerifyPaymentResponse(
     val timestamp: String? = null
 )
 
+
+/**
+ * Response DTO cho API lấy thông tin thanh toán (Get Payment)
+ * Format response CHÍNH XÁC từ ảnh:
+ * {
+ *   "success": true,
+ *   "data": {
+ *     "message": "Payment retrieved successfully",
+ *     "paymentId": "GJ19mI0lAKus2ler56x",
+ *     "orderId": "ycM7Wdf1WlwHSGVAhxD",
+ *     "amount": 30000,
+ *     "method": "SEPAY",
+ *     "status": "PAID",
+ *     "providerData": {
+ *       "sepayContent": "KTXORD1769736133140FEB322",
+ *       "qrCodeUrl": "https://qr.sepay.vn/img?acc=00012112005000&bank=MB&amount=30000&des=KTXORD1769736133140FEB322&template=compact",
+ *       "accountNumber": "00012112005000",
+ *       "accountName": "TONG DUONG THAI HOA",
+ *       "bankCode": "MB",
+ *       "amount": 30000,
+ *       "verifiedAt": "2026-01-30T01:22:26.539Z"
+ *     },
+ *     "paidAt": "2026-01-30T01:22:26.539Z",
+ *     "createdAt": "2026-01-30T01:22:14.172Z"
+ *   }
+ * }
+ */
+data class GetPaymentResponse(
+    @SerializedName("success")
+    val success: Boolean,
+
+    @SerializedName("data")
+    val data: GetPaymentData? = null
+)
+
+/**
+ * Data class cho phần "data" trong response
+ */
+data class GetPaymentData(
+    @SerializedName("message")
+    val message: String = "",
+
+    @SerializedName("payment")  // <- QUAN TRỌNG: Có field "payment" này
+    val payment: PaymentDetail? = null
+)
+
+/**
+ * Data class cho thông tin chi tiết payment
+ * Đây là object nested trong "payment"
+ */
+data class PaymentDetail(
+    @SerializedName("id")
+    val paymentId: String = "",  // Chú ý: JSON là "id" nhưng bạn có thể map thành "paymentId"
+
+    @SerializedName("orderId")
+    val orderId: String = "",
+
+    @SerializedName("amount")
+    val amount: Int = 0,
+
+    @SerializedName("method")
+    val method: String = "",
+
+    @SerializedName("status")
+    val status: String = "",
+
+    @SerializedName("providerData")
+    val providerData: GetPaymentProviderData? = null,
+
+    @SerializedName("paidAt")
+    val paidAt: String? = null,  // Có thể không có trong response nếu chưa thanh toán
+
+    @SerializedName("createdAt")
+    val createdAt: String = ""
+)
+
+/**
+ * Dữ liệu providerData trong GetPaymentResponse
+ * Format theo JSON hiện tại (không có verifiedAt trong response này)
+ */
+data class GetPaymentProviderData(
+    @SerializedName("sepayContent")
+    val sepayContent: String? = null,
+
+    @SerializedName("qrCodeUrl")
+    val qrCodeUrl: String? = null,
+
+    @SerializedName("accountNumber")
+    val accountNumber: String? = null,
+
+    @SerializedName("accountName")
+    val accountName: String? = null,
+
+    @SerializedName("bankCode")
+    val bankCode: String? = null,
+
+    @SerializedName("amount")
+    val amount: Int? = null
+    // verifiedAt không có trong response này
+)
 /**
  * Enum để dễ sử dụng
  */
@@ -219,14 +319,4 @@ enum class PaymentStatus(val value: String) {
             return values().find { it.value == value }
         }
     }
-}
-
-/**
- * Enum cho verification status
- */
-enum class VerificationStatus {
-    PENDING,    // Đang chờ xác nhận
-    VERIFIED,   // Đã xác nhận thành công
-    FAILED,     // Xác nhận thất bại hoặc timeout
-    CANCELLED   // Người dùng hủy
 }

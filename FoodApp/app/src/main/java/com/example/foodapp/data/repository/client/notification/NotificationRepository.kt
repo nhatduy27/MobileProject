@@ -27,8 +27,13 @@ class NotificationRepository() {
                     )
                 )
 
-                val response = notificationApiService.registerDeviceToken(request)
-                ApiResult.Success(response)
+                val baseResponse = notificationApiService.registerDeviceToken(request)
+                // Unwrap BaseResponse để lấy data thực sự
+                if (baseResponse.success) {
+                    ApiResult.Success(baseResponse.data)
+                } else {
+                    ApiResult.Failure(Exception("API returned success=false"))
+                }
             }
         } catch (e: Exception) {
             ApiResult.Failure(e)
@@ -59,13 +64,18 @@ class NotificationRepository() {
         return try {
             withContext(Dispatchers.IO) {
                 val authHeader = "Bearer $accessToken"
-                val response = notificationApiService.getNotifications(
+                val baseResponse = notificationApiService.getNotifications(
                     authHeader = authHeader,
                     page = page,
                     limit = limit,
                     read = read
                 )
-                ApiResult.Success(response)
+                // Unwrap BaseResponse to get the actual data
+                if (baseResponse.success) {
+                    ApiResult.Success(baseResponse.data)
+                } else {
+                    ApiResult.Failure(Exception("API returned success=false"))
+                }
             }
         } catch (e: Exception) {
             ApiResult.Failure(e)
@@ -121,11 +131,16 @@ class NotificationRepository() {
         return try {
             withContext(Dispatchers.IO) {
                 val authHeader = "Bearer $accessToken"
-                val response = notificationApiService.markNotificationAsRead(
+                val baseResponse = notificationApiService.markNotificationAsRead(
                     authHeader = authHeader,
                     notificationId = notificationId
                 )
-                ApiResult.Success(response)
+                // Unwrap BaseResponse để lấy data thực sự
+                if (baseResponse.success) {
+                    ApiResult.Success(baseResponse.data)
+                } else {
+                    ApiResult.Failure(Exception("API returned success=false"))
+                }
             }
         } catch (e: Exception) {
             ApiResult.Failure(e)
@@ -138,10 +153,15 @@ class NotificationRepository() {
         return try {
             withContext(Dispatchers.IO) {
                 val authHeader = "Bearer $accessToken"
-                val response = notificationApiService.markAllNotificationsAsRead(
+                val baseResponse = notificationApiService.markAllNotificationsAsRead(
                     authHeader = authHeader
                 )
-                ApiResult.Success(response)
+                // Unwrap BaseResponse để lấy data thực sự
+                if (baseResponse.success) {
+                    ApiResult.Success(baseResponse.data)
+                } else {
+                    ApiResult.Failure(Exception("API returned success=false"))
+                }
             }
         } catch (e: Exception) {
             ApiResult.Failure(e)

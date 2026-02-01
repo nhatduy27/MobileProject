@@ -13,6 +13,7 @@ interface ShipperOrderRepository {
     suspend fun markDelivered(id: String): Result<ShipperOrder>
     
     // Online status management
+    suspend fun getOnlineStatus(): Result<Boolean>
     suspend fun goOnline(): Result<String>
     suspend fun goOffline(): Result<String>
 }

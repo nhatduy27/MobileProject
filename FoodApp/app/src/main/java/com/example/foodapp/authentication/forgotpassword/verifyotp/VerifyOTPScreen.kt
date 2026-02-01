@@ -19,12 +19,14 @@ import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.ui.theme.PrimaryOrange
 
 @Composable
@@ -33,17 +35,16 @@ fun ForgotPasswordOTPScreen(
     onSuccess: () -> Unit
 ) {
     val context = LocalContext.current
-    val viewModel: VerifyOTPViewModel = viewModel( // ĐÃ SỬA TÊN
-        factory = VerifyOTPViewModel.factory(context) // ĐÃ SỬA TÊN
+    val viewModel: VerifyOTPViewModel = viewModel(
+        factory = VerifyOTPViewModel.factory(context)
     )
 
     // Lấy email từ SharedPreferences
     val email = remember { getEmailFromPrefs(context) }
 
     // State observables
-    val otpState by viewModel.otpState.observeAsState(OtpVerificationState.Idle) // ĐÃ SỬA: Idle thay vì LoadingEmail
+    val otpState by viewModel.otpState.observeAsState(OtpVerificationState.Idle)
     val remainingTime by viewModel.remainingTime.observeAsState(0)
-    val userEmail by viewModel.userEmail.observeAsState(null)
 
     // Khởi tạo email cho ViewModel
     LaunchedEffect(email) {
@@ -79,7 +80,7 @@ fun ForgotPasswordOTPScreen(
                         otpState !is OtpVerificationState.Sending
             ) {
                 Text(
-                    "←",
+                    text = stringResource(id = R.string.back_arrow),
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -88,7 +89,7 @@ fun ForgotPasswordOTPScreen(
 
         // Title
         Text(
-            text = "Xác thực OTP",
+            text = stringResource(id = R.string.verify_otp_title),
             style = MaterialTheme.typography.headlineLarge.copy(
                 fontWeight = FontWeight.Bold
             ),
@@ -97,7 +98,7 @@ fun ForgotPasswordOTPScreen(
 
         // Description với email
         Text(
-            text = "Nhập mã OTP 6 số đã gửi đến",
+            text = stringResource(id = R.string.otp_description),
             style = MaterialTheme.typography.bodyMedium.copy(
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
             ),
@@ -105,7 +106,7 @@ fun ForgotPasswordOTPScreen(
         )
 
         Text(
-            text = email,
+            text = email.ifEmpty { stringResource(id = R.string.email_placeholder) },
             style = MaterialTheme.typography.bodyMedium.copy(
                 fontWeight = FontWeight.Bold,
                 color = PrimaryOrange
@@ -159,13 +160,17 @@ fun ForgotPasswordOTPScreen(
         val minutes = remainingTime / 60
         val seconds = remainingTime % 60
         val timerText = if (remainingTime > 0) {
-            String.format("%02d:%02d", minutes, seconds)
+            stringResource(
+                id = R.string.timer_minutes_seconds,
+                minutes,
+                seconds
+            )
         } else {
-            "00:00"
+            stringResource(id = R.string.otp_expired)
         }
 
         Text(
-            text = "Mã OTP hết hạn sau: $timerText",
+            text = stringResource(id = R.string.otp_timer_prefix) + timerText,
             style = MaterialTheme.typography.bodySmall,
             color = if (remainingTime < 60) Color.Red else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
             modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
@@ -200,11 +205,11 @@ fun ForgotPasswordOTPScreen(
                             color = Color.White
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Đang xác thực...")
+                        Text(stringResource(id = R.string.verifying))
                     }
                     else -> {
                         Text(
-                            "Xác nhận",
+                            text = stringResource(id = R.string.confirm),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -232,10 +237,10 @@ fun ForgotPasswordOTPScreen(
                         strokeWidth = 2.dp
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Đang gửi lại...")
+                    Text(stringResource(id = R.string.resending_otp))
                 }
                 else -> {
-                    Text("Gửi lại mã OTP")
+                    Text(stringResource(id = R.string.resend_otp))
                 }
             }
         }
@@ -277,7 +282,6 @@ fun SixDigitOtpInput(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier
     ) {
-        // Sử dụng Box với weight cho các ô đều nhau
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
@@ -289,7 +293,6 @@ fun SixDigitOtpInput(
                     focusRequester = focusRequesters[index],
                     onValueChange = { newChar ->
                         if (newChar.isNotEmpty()) {
-                            // Nhập số
                             val newOtp = buildString {
                                 append(otpText.take(index))
                                 append(newChar)
@@ -297,16 +300,13 @@ fun SixDigitOtpInput(
                             }.take(6)
                             onOtpTextChange(newOtp)
                         } else {
-                            // Xóa (backspace)
                             if (index > 0) {
-                                // Xóa ký tự tại vị trí index-1
                                 val newOtp = buildString {
                                     append(otpText.take(index - 1))
                                     append(otpText.drop(index))
                                 }
                                 onOtpTextChange(newOtp)
                             } else if (index == 0) {
-                                // Xóa ở ô đầu tiên
                                 onOtpTextChange("")
                             }
                         }
@@ -315,7 +315,6 @@ fun SixDigitOtpInput(
                     isFilled = index < otpText.length,
                     modifier = Modifier.weight(1f)
                 )
-                // Thêm khoảng cách giữa các ô (trừ ô cuối cùng)
                 if (index < 5) {
                     Spacer(modifier = Modifier.width(12.dp))
                 }
@@ -324,7 +323,7 @@ fun SixDigitOtpInput(
 
         // Hướng dẫn
         Text(
-            text = "Nhập mã OTP 6 số",
+            text = stringResource(id = R.string.otp_input_hint),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
             modifier = Modifier.padding(top = 12.dp)
@@ -346,7 +345,7 @@ fun OtpDigitBox(
 
     Box(
         modifier = modifier
-            .aspectRatio(1f) // Đảm bảo ô vuông
+            .aspectRatio(1f)
             .background(
                 color = when {
                     !enabled -> Color(0xFFF5F5F5)
@@ -399,7 +398,7 @@ fun OtpDigitBox(
                 ) {
                     if (value.isEmpty() && !isFocused) {
                         Text(
-                            text = "•",
+                            text = stringResource(id = R.string.otp_dot),
                             fontSize = 24.sp,
                             color = Color(0xFFBDBDBD),
                             fontWeight = FontWeight.Bold

@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.foodapp.R
 import com.example.foodapp.pages.client.components.home.UserBottomNav
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -95,7 +97,7 @@ fun FavoritesScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
                                     Text(
-                                        "Yêu thích",
+                                        stringResource(R.string.favorites_title),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 20.sp,
                                         color = Color.White
@@ -103,7 +105,7 @@ fun FavoritesScreen(
                                     val count = currentFavorites?.size ?: 0
                                     if (count > 0) {
                                         Text(
-                                            "$count sản phẩm",
+                                            stringResource(R.string.product_count, count),
                                             fontSize = 12.sp,
                                             color = Color.White.copy(alpha = 0.9f),
                                             fontWeight = FontWeight.Normal
@@ -123,7 +125,7 @@ fun FavoritesScreen(
                             ) {
                                 Icon(
                                     Icons.Default.ArrowBack,
-                                    contentDescription = "Back",
+                                    contentDescription = stringResource(R.string.back_button),
                                     tint = Color.White
                                 )
                             }
@@ -147,7 +149,7 @@ fun FavoritesScreen(
                                 } else {
                                     Icon(
                                         Icons.Default.Refresh,
-                                        contentDescription = "Refresh",
+                                        contentDescription = stringResource(R.string.refresh_button),
                                         tint = Color.White
                                     )
                                 }
@@ -161,7 +163,9 @@ fun FavoritesScreen(
             }
         },
         bottomBar = {
-            UserBottomNav(navController = navController, onProfileClick = {})
+            UserBottomNav(navController = navController, onProfileClick = { 
+                navController.navigate(com.example.foodapp.navigation.Screen.UserProfile.route)
+            })
         },
         containerColor = Color(0xFFF8F9FA)
     ) { padding ->
@@ -229,7 +233,7 @@ fun FavoritesScreen(
                                 strokeWidth = 3.dp
                             )
                             Text(
-                                "Đang xóa...",
+                                stringResource(R.string.removing_favorite),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = Color.Black
@@ -265,7 +269,7 @@ fun FavoritesScreen(
                             modifier = Modifier.size(20.dp)
                         )
                         Text(
-                            "Đã xóa khỏi yêu thích",
+                            stringResource(R.string.removed_from_favorites),
                             color = Color.White,
                             fontWeight = FontWeight.Medium,
                             fontSize = 14.sp
@@ -339,10 +343,10 @@ private fun FavoriteProductCard(
                     .size(100.dp)
                     .clip(RoundedCornerShape(12.dp))
             ) {
-                if (!product.imageUrl.isNullOrEmpty()) {
+                if (product.imageUrls.isNotEmpty()) {
                     AsyncImage(
                         model = ImageRequest.Builder(LocalContext.current)
-                            .data(product.imageUrl)
+                            .data(product.imageUrls[0])
                             .crossfade(true)
                             .build(),
                         contentDescription = product.name,
@@ -400,7 +404,7 @@ private fun FavoriteProductCard(
                             modifier = Modifier.size(6.dp)
                         ) {}
                         Text(
-                            product.shopName ?: "Cửa hàng",
+                            product.shopName ?: stringResource(R.string.default_shop_name),
                             fontSize = 13.sp,
                             color = Color(0xFF757575),
                             maxLines = 1,
@@ -490,7 +494,7 @@ private fun FavoriteProductCard(
                 ) {
                     Icon(
                         Icons.Default.Favorite,
-                        contentDescription = "Remove from favorites",
+                        contentDescription = stringResource(R.string.remove_from_favorites_button),
                         tint = Color(0xFFE91E63),
                         modifier = Modifier.size(24.dp)
                     )
@@ -533,7 +537,7 @@ private fun LoadingContent() {
             }
 
             Text(
-                "Đang tải danh sách yêu thích...",
+                stringResource(R.string.loading_favorites),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color(0xFF424242)
@@ -578,7 +582,7 @@ private fun ErrorContent(
             }
 
             Text(
-                "Không thể tải dữ liệu",
+                stringResource(R.string.load_favorites_error_title),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color(0xFF212121)
@@ -609,7 +613,7 @@ private fun ErrorContent(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Thử lại",
+                    stringResource(R.string.retry),
                     fontSize = 16.sp,
                     fontWeight = FontWeight.SemiBold
                 )
@@ -658,7 +662,7 @@ private fun EmptyFavoritesContent() {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    "Chưa có sản phẩm yêu thích",
+                    stringResource(R.string.empty_favorites_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                     color = Color(0xFF212121),
@@ -666,7 +670,7 @@ private fun EmptyFavoritesContent() {
                 )
 
                 Text(
-                    "Hãy khám phá và thêm những món ăn\nbạn yêu thích vào danh sách",
+                    stringResource(R.string.empty_favorites_subtitle),
                     fontSize = 14.sp,
                     color = Color(0xFF757575),
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,

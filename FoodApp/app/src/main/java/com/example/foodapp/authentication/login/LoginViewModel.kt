@@ -12,7 +12,6 @@ import com.example.foodapp.data.repository.firebase.UserFirebaseRepository
 import com.example.foodapp.data.repository.shared.AuthRepository
 import com.example.foodapp.data.repository.firebase.AuthManager
 import com.example.foodapp.data.repository.client.notification.NotificationRepository
-import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.common.api.ApiException
@@ -26,6 +25,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.delay
+
 
 class LoginViewModel(
     private val repository: UserFirebaseRepository,
@@ -56,21 +56,6 @@ class LoginViewModel(
 
     fun getGoogleSignInIntent() = googleSignInClient?.signInIntent
 
-    /**
-     * Xử lý khi nhấn nút Google Sign-In
-     */
-    fun onGoogleSignInButtonClicked(): Boolean {
-        return try {
-            _googleLogInState.value = GoogleLogInState.Loading
-            googleSignInClient?.signInIntent != null
-        } catch (e: Exception) {
-            _googleLogInState.value = GoogleLogInState.Error(
-                "Không thể khởi tạo Google Sign-In",
-                "GOOGLE_INIT_ERROR"
-            )
-            false
-        }
-    }
 
     /**
      * Xử lý kết quả từ Google Sign-In Activity
@@ -104,15 +89,13 @@ class LoginViewModel(
             return
         }
 
-        Log.d("LoginViewModel", "📱 Google ID Token: ${googleIdToken.take(20)}...")
-        Log.d("LoginViewModel", "📧 Google Account Email: ${account.email}")
 
         try {
-            // 1. Sign in với Firebase để lấy Firebase ID token
+            // Sign in với Firebase để lấy Firebase ID token
             val credential = GoogleAuthProvider.getCredential(googleIdToken, null)
             val authResult = firebaseAuth.signInWithCredential(credential).await()
 
-            // 2. Lấy Firebase ID token
+            // Lấy Firebase ID token
             val tokenResult = authResult.user?.getIdToken(true)?.await()
             val firebaseIdToken = tokenResult?.token
 
@@ -124,14 +107,10 @@ class LoginViewModel(
                 return
             }
 
-            Log.d("LoginViewModel", "✅ Firebase ID token: ${firebaseIdToken.take(20)}...")
-            Log.d("LoginViewModel", "👤 Firebase User UID: ${authResult.user?.uid}")
-
-            // 3. Gửi Firebase ID token lên backend của bạn
+            // Gửi Firebase ID token lên backend
             signInWithGoogleToken(firebaseIdToken, "CUSTOMER")
 
         } catch (e: Exception) {
-            Log.e("LoginViewModel", "❌ Lỗi xác thực Firebase", e)
             _googleLogInState.value = GoogleLogInState.Error(
                 "Lỗi xác thực Firebase: ${e.message ?: "Không rõ nguyên nhân"}",
                 "FIREBASE_AUTH_ERROR"
@@ -163,7 +142,7 @@ class LoginViewModel(
                     // Cập nhật state thành công
                     updateGoogleSignInSuccess(client, role)
 
-                    Log.d("LoginViewModel", "✅ Google Sign-In thành công: ${client.email}")
+                    Log.d("LoginViewModel", "Google Sign-In thành công: ${client.email}")
                 }
 
                 is ApiResult.Failure -> {
@@ -172,11 +151,9 @@ class LoginViewModel(
                         errorMsg.first,
                         errorMsg.second
                     )
-                    Log.e("LoginViewModel", "❌ Google Sign-In thất bại: ${result.exception.message}")
                 }
             }
         } catch (e: Exception) {
-            Log.e("LoginViewModel", "❌ Lỗi kết nối API", e)
             _googleLogInState.value = GoogleLogInState.Error(
                 "Lỗi kết nối: ${e.message ?: "Vui lòng thử lại sau"}",
                 "NETWORK_ERROR"
@@ -257,29 +234,18 @@ class LoginViewModel(
         }
     }
 
-    /**
-     * Đăng xuất Google
-     */
-    fun signOutGoogle() {
-        googleSignInClient?.signOut()?.addOnCompleteListener {
-            firebaseAuth.signOut()
-            authManager.clearAuthData()
-            _googleLogInState.value = GoogleLogInState.Idle
-            _existAccountState.value = null
-            Log.d("LoginViewModel", "✅ Đã đăng xuất Google")
-        }
-    }
-
     // ============= ĐĂNG NHẬP EMAIL/PASSWORD =============
 
     fun login(email: String, password: String) {
+
+        //Validate đầu vào của email và password
         when (val validation = validateInput(email, password)) {
             is ValidationResult.Error -> {
                 _logInState.value = LogInState.Error(validation.message, "VALIDATION_ERROR")
                 return
             }
             else -> {
-                // Tiếp tục xử lí
+
             }
         }
 
@@ -291,7 +257,6 @@ class LoginViewModel(
                 when (result) {
                     is ApiResult.Success -> {
                         val authData = result.data
-
                         if (authData.isValid) {
                             val userInfo = authData.user
 
@@ -300,7 +265,7 @@ class LoginViewModel(
                                 userInfo.status.equals("BANNED", ignoreCase = true) -> {
                                     _logInState.value = LogInState.Error("Tài khoản đã bị khóa", "ACCOUNT_BANNED")
                                 }
-                                !userInfo.isActive() -> {
+                                !userInfo.isActive() -> { //kiểm tra trạng thái của tài khoản
                                     _logInState.value = LogInState.Error("Tài khoản chưa được kích hoạt", "ACCOUNT_INACTIVE")
                                 }
                                 else -> {
@@ -340,11 +305,11 @@ class LoginViewModel(
     }
 
     private fun handleLoginCustomToken(customToken: String, userInfo: UserInfo) {
+
         authManager.signInWithCustomToken(customToken) { isSuccessful, idToken, error ->
             if (isSuccessful) {
                 if (!idToken.isNullOrEmpty()) {
                     authManager.saveFirebaseToken(idToken)
-                    Log.d("LoginViewModel", "✅ Đã lưu Firebase token: ${idToken.take(10)}...")
                     updateApiClientToken(idToken)
                 }
 
@@ -377,19 +342,18 @@ class LoginViewModel(
         try {
             val sharedPref = context.getSharedPreferences("auth", Context.MODE_PRIVATE)
             sharedPref.edit().putString("firebase_id_token", token).apply()
-            Log.d("LoginViewModel", "💾 Đã cập nhật token cho ApiClient: ${token.take(10)}...")
         } catch (e: Exception) {
-            Log.e("LoginViewModel", "❌ Lỗi khi cập nhật token: ${e.message}")
+            Log.e("LoginViewModel", "Lỗi khi cập nhật token: ${e.message}")
         }
     }
 
     /**
-     * Đợi một chút rồi mới đăng ký device token
+     * Đăng ký device token
      */
     private fun delayAndRegisterDeviceToken() {
         viewModelScope.launch {
-            delay(1000)
-            registerDeviceTokenForUser()
+            delay(500) //thời gian chờ chờ server
+            registerDeviceTokenForUser() //Đăng ký device token
         }
     }
 
@@ -409,19 +373,20 @@ class LoginViewModel(
 
                 when (result) {
                     is com.example.foodapp.data.remote.client.response.notification.ApiResult.Success -> {
-                        Log.d("LoginViewModel", "✅ Đã đăng ký device token")
+                        Log.d("LoginViewModel", ">> Đã đăng ký device token")
                     }
                     is com.example.foodapp.data.remote.client.response.notification.ApiResult.Failure -> {
-                        Log.e("LoginViewModel", "❌ Lỗi đăng ký device token", result.exception)
+                        Log.e("LoginViewModel", ">> Lỗi đăng ký device token", result.exception)
                     }
                     else -> {}
                 }
             } catch (e: Exception) {
-                Log.e("LoginViewModel", "❌ Lỗi khi lấy FCM token", e)
+                Log.e("LoginViewModel", "Lỗi khi lấy FCM token", e)
             }
         }
     }
 
+    //Quản lí thông báo lỗi
     private fun parseErrorMessage(errorMessage: String?): String {
         return when {
             errorMessage == null -> "Đăng nhập thất bại"
@@ -433,10 +398,6 @@ class LoginViewModel(
             errorMessage.contains("no internet", ignoreCase = true) -> "Không có kết nối internet"
             else -> errorMessage
         }
-    }
-
-    fun getUserRole(userId: String, onComplete: (String?) -> Unit) {
-        repository.getUserRole(userId, onComplete)
     }
 
     fun resetStates() {
@@ -471,5 +432,3 @@ class LoginViewModel(
         }
     }
 }
-
-// ============= SEALED CLASSES =============

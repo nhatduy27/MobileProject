@@ -22,6 +22,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.ui.theme.PrimaryOrange
 
 @Composable
@@ -92,7 +94,7 @@ fun ForgotPasswordEmailScreen(
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(id = R.string.back_button_description),
                             tint = PrimaryOrange
                         )
                     }
@@ -116,7 +118,7 @@ fun ForgotPasswordEmailScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.LockReset,
-                                contentDescription = null,
+                                contentDescription = stringResource(id = R.string.lock_reset_icon_description),
                                 tint = PrimaryOrange,
                                 modifier = Modifier.size(50.dp)
                             )
@@ -126,7 +128,7 @@ fun ForgotPasswordEmailScreen(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "Quên mật khẩu?",
+                        text = stringResource(id = R.string.forgot_password_title),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF2D2D2D)
@@ -135,7 +137,7 @@ fun ForgotPasswordEmailScreen(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "Đừng lo lắng! Nhập email của bạn và chúng tôi sẽ gửi mã xác thực để đặt lại mật khẩu",
+                        text = stringResource(id = R.string.forgot_password_description),
                         fontSize = 15.sp,
                         color = Color(0xFF666666),
                         textAlign = TextAlign.Center,
@@ -167,7 +169,7 @@ fun ForgotPasswordEmailScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Error,
-                            contentDescription = null,
+                            contentDescription = stringResource(id = R.string.error_icon_description),
                             tint = Color(0xFFD32F2F),
                             modifier = Modifier.size(24.dp)
                         )
@@ -196,12 +198,22 @@ fun ForgotPasswordEmailScreen(
                         viewModel.setEmail(newEmail)
                     },
                     enabled = state !is ForgotPasswordEmailState.Loading,
-                    label = { Text("Email", color = Color(0xFF999999)) },
-                    placeholder = { Text("example@email.com", color = Color(0xFFCCCCCC)) },
+                    label = {
+                        Text(
+                            stringResource(id = R.string.email_label),
+                            color = Color(0xFF999999)
+                        )
+                    },
+                    placeholder = {
+                        Text(
+                            stringResource(id = R.string.email_placeholder_hint),
+                            color = Color(0xFFCCCCCC)
+                        )
+                    },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Email,
-                            contentDescription = null,
+                            contentDescription = stringResource(id = R.string.email_icon_description),
                             tint = if (email.isNotEmpty()) PrimaryOrange else Color(0xFFCCCCCC)
                         )
                     },
@@ -209,7 +221,7 @@ fun ForgotPasswordEmailScreen(
                         {
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
-                                contentDescription = null,
+                                contentDescription = stringResource(id = R.string.check_circle_description),
                                 tint = Color(0xFF4CAF50),
                                 modifier = Modifier.size(24.dp)
                             )
@@ -266,7 +278,7 @@ fun ForgotPasswordEmailScreen(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            "Đang kiểm tra...",
+                            stringResource(id = R.string.checking_email),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -274,12 +286,12 @@ fun ForgotPasswordEmailScreen(
                     else -> {
                         Icon(
                             imageVector = Icons.Default.Send,
-                            contentDescription = null,
+                            contentDescription = stringResource(id = R.string.send_icon_description),
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Gửi mã xác thực",
+                            stringResource(id = R.string.send_verification_code),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -305,21 +317,21 @@ fun ForgotPasswordEmailScreen(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Info,
-                        contentDescription = null,
+                        contentDescription = stringResource(id = R.string.info_icon_description),
                         tint = Color(0xFF1976D2),
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
-                            text = "Lưu ý",
+                            text = stringResource(id = R.string.note_title),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1976D2)
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Mã xác thực sẽ được gửi đến email của bạn. Vui lòng kiểm tra cả hộp thư spam nếu không thấy email.",
+                            text = stringResource(id = R.string.note_message),
                             fontSize = 13.sp,
                             color = Color(0xFF424242),
                             lineHeight = 18.sp

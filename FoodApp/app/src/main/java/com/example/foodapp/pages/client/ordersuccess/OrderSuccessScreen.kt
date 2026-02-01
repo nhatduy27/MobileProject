@@ -14,13 +14,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import com.example.foodapp.R
 import com.example.foodapp.data.remote.client.response.order.OrderApiModel
 import com.example.foodapp.ui.theme.*
 import com.google.gson.Gson
@@ -62,7 +63,7 @@ fun OrderSuccessScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 CircularProgressIndicator()
-                Text("Đang tải thông tin đơn hàng...")
+                Text(stringResource(R.string.loading_order_info))
             }
         }
         return
@@ -73,13 +74,13 @@ fun OrderSuccessScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Đơn hàng thành công",
+                        text = stringResource(R.string.order_success_title),
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { onBackToHome() }) {
-                        Icon(Icons.Default.Close, contentDescription = "Đóng")
+                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close))
                     }
                 }
             )
@@ -119,7 +120,7 @@ fun OrderSuccessScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
-                            contentDescription = "Thành công",
+                            contentDescription = stringResource(R.string.success_content_description),
                             modifier = Modifier.size(64.dp),
                             tint = Color.Green
                         )
@@ -128,7 +129,7 @@ fun OrderSuccessScreen(
 
                 item {
                     Text(
-                        text = "🎉 Đặt hàng thành công!",
+                        text = stringResource(R.string.order_success_header),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.Black,
@@ -138,7 +139,7 @@ fun OrderSuccessScreen(
 
                 item {
                     Text(
-                        text = "Cảm ơn bạn đã đặt hàng. Đơn hàng của bạn đã được xác nhận và đang được xử lý.",
+                        text = stringResource(R.string.order_success_message),
                         fontSize = 16.sp,
                         color = Color.Gray,
                         textAlign = TextAlign.Center,
@@ -178,17 +179,17 @@ fun OrderSuccessScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Info,
-                                    contentDescription = "Thông tin",
+                                    contentDescription = stringResource(R.string.info_content_description),
                                     tint = PrimaryColor
                                 )
                                 Text(
-                                    text = "Thông tin từ cửa hàng",
+                                    text = stringResource(R.string.shop_info_title),
                                     fontWeight = FontWeight.Bold,
                                     color = PrimaryColor
                                 )
                             }
                             Text(
-                                text = "Cửa hàng sẽ liên hệ với bạn trong thời gian sớm nhất để xác nhận đơn hàng và thời gian giao hàng.",
+                                text = stringResource(R.string.shop_info_message),
                                 color = Color.DarkGray,
                                 fontSize = 14.sp
                             )
@@ -213,31 +214,31 @@ fun OrderSuccessScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Text(
-                                text = "Bạn có thể:",
+                                text = stringResource(R.string.next_steps_title),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
 
                             InfoRow(
                                 icon = Icons.Default.Home,
-                                title = "Tiếp tục mua sắm",
-                                description = "Quay lại trang chủ để xem thêm sản phẩm"
+                                title = stringResource(R.string.continue_shopping_title),
+                                description = stringResource(R.string.continue_shopping_desc)
                             )
 
                             Divider()
 
                             InfoRow(
                                 icon = Icons.Default.Receipt,
-                                title = "Xem chi tiết đơn hàng",
-                                description = "Theo dõi trạng thái và chi tiết đơn hàng"
+                                title = stringResource(R.string.view_order_details_title),
+                                description = stringResource(R.string.view_order_details_desc)
                             )
 
                             Divider()
 
                             InfoRow(
                                 icon = Icons.Default.ShoppingCart,
-                                title = "Kiểm tra lịch sử đơn hàng",
-                                description = "Xem tất cả đơn hàng của bạn"
+                                title = stringResource(R.string.check_order_history_title),
+                                description = stringResource(R.string.check_order_history_desc)
                             )
                         }
                     }
@@ -268,7 +269,7 @@ fun OrderProductsCard(order: OrderApiModel) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "📦 Sản phẩm đã đặt",
+                text = stringResource(R.string.ordered_products_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 16.sp
             )
@@ -302,16 +303,6 @@ fun ProductRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Hình ảnh sản phẩm
-        Box(
-            modifier = Modifier
-                .size(60.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(Color.LightGray)
-        ) {
-            // Placeholder for product image
-        }
-
         Column(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -324,7 +315,7 @@ fun ProductRow(
                 overflow = TextOverflow.Ellipsis
             )
             Text(
-                text = "${price.formatVND()}",
+                text = price.formatVND(),
                 fontSize = 14.sp,
                 color = PrimaryColor
             )
@@ -335,12 +326,12 @@ fun ProductRow(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Text(
-                text = "x$quantity",
+                text = stringResource(R.string.quantity_display, quantity),
                 fontSize = 14.sp,
                 color = Color.Gray
             )
             Text(
-                text = "${subtotal.formatVND()}",
+                text = subtotal.formatVND(),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Medium,
                 color = Color.Black
@@ -366,7 +357,7 @@ fun OrderInfoCard(order: OrderApiModel) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "📋 Thông tin đơn hàng",
+                text = stringResource(R.string.order_information_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
@@ -374,45 +365,45 @@ fun OrderInfoCard(order: OrderApiModel) {
             Divider()
 
             InfoItem(
-                label = "Mã đơn hàng:",
+                label = stringResource(R.string.order_code_label),
                 value = order.orderNumber,
                 isHighlighted = true
             )
 
             InfoItem(
-                label = "Cửa hàng:",
+                label = stringResource(R.string.shop_name_label),
                 value = order.shopName
             )
 
             InfoItem(
-                label = "Số lượng sản phẩm:",
-                value = "${order.items.size} sản phẩm"
+                label = stringResource(R.string.product_count_label),
+                value = stringResource(R.string.product_count_value, order.items.size)
             )
 
             InfoItem(
-                label = "Tổng tiền:",
-                value = "${order.total.formatVND()}"
+                label = stringResource(R.string.total_amount_label),
+                value = order.total.formatVND()
             )
 
             InfoItem(
-                label = "Phương thức thanh toán:",
+                label = stringResource(R.string.payment_method_label),
                 value = when (order.paymentMethod) {
-                    "COD" -> "Thanh toán khi nhận hàng"
-                    "SEPAY" -> "Chuyển khoản ngân hàng"
+                    "COD" -> stringResource(R.string.payment_method_cod)
+                    "SEPAY" -> stringResource(R.string.payment_method_sepay)
                     else -> order.paymentMethod
                 }
             )
 
             InfoItem(
-                label = "Trạng thái:",
+                label = stringResource(R.string.order_status_label),
                 value = when (order.status) {
-                    "PENDING" -> "Đang chờ xác nhận"
-                    "CONFIRMED" -> "Đã xác nhận"
-                    "PREPARING" -> "Đang chuẩn bị"
-                    "READY" -> "Sẵn sàng giao"
-                    "SHIPPING" -> "Đang giao hàng"
-                    "DELIVERED" -> "Đã giao"
-                    "CANCELLED" -> "Đã hủy"
+                    "PENDING" -> stringResource(R.string.order_status_pending)
+                    "CONFIRMED" -> stringResource(R.string.order_status_confirmed)
+                    "PREPARING" -> stringResource(R.string.order_status_preparing)
+                    "READY" -> stringResource(R.string.order_status_ready)
+                    "SHIPPING" -> stringResource(R.string.order_status_shipping)
+                    "DELIVERED" -> stringResource(R.string.order_status_delivered)
+                    "CANCELLED" -> stringResource(R.string.order_status_cancelled)
                     else -> order.status
                 },
                 valueColor = when (order.status) {
@@ -425,8 +416,12 @@ fun OrderInfoCard(order: OrderApiModel) {
             )
             if (order.deliveryAddress != null) {
                 InfoItem(
-                    label = "Địa chỉ giao hàng:",
-                    value = "${order.deliveryAddress.fullAddress}${if (order.deliveryAddress.room != null) " - Phòng ${order.deliveryAddress.room}" else ""}",
+                    label = stringResource(R.string.delivery_address_label),
+                    value = stringResource(
+                        R.string.delivery_address_value,
+                        order.deliveryAddress.fullAddress,
+                        if (order.deliveryAddress.room != null) stringResource(R.string.room_label, order.deliveryAddress.room) else ""
+                    ),
                     isMultiline = true
                 )
             }
@@ -524,12 +519,12 @@ fun OrderSuccessBottomBar(
         ) {
             Icon(
                 imageVector = Icons.Default.Receipt,
-                contentDescription = "Chi tiết",
+                contentDescription = stringResource(R.string.details_content_description),
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Xem chi tiết đơn hàng",
+                text = stringResource(R.string.view_order_details_button),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -549,12 +544,12 @@ fun OrderSuccessBottomBar(
         ) {
             Icon(
                 imageVector = Icons.Default.Home,
-                contentDescription = "Trang chủ",
+                contentDescription = stringResource(R.string.home_content_description),
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Tiếp tục mua sắm",
+                text = stringResource(R.string.continue_shopping_button),
                 fontSize = 16.sp
             )
         }

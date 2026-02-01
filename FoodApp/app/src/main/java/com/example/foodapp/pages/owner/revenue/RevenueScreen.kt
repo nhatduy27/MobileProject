@@ -17,7 +17,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.pages.owner.theme.OwnerColors
 
 @Composable
@@ -58,7 +60,7 @@ fun RevenueScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = uiState.errorMessage ?: "Đã xảy ra lỗi",
+                    text = uiState.errorMessage ?: stringResource(R.string.error_unknown),
                     color = OwnerColors.Error,
                     textAlign = TextAlign.Center
                 )
@@ -99,7 +101,7 @@ fun RevenueScreen(
                 if (uiState.timeSlots.isNotEmpty()) {
                     item {
                         Text(
-                            text = "Chi tiết doanh thu theo khung giờ",
+                            text = stringResource(R.string.revenue_time_slots_detail),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = OwnerColors.TextPrimary,
@@ -118,7 +120,7 @@ fun RevenueScreen(
                 if (uiState.topProducts.isNotEmpty()) {
                     item {
                         Text(
-                            text = "Sản phẩm bán chạy ${uiState.selectedPeriod.displayName.lowercase()}",
+                            text = stringResource(R.string.revenue_top_products_period, getPeriodDisplayName(uiState.selectedPeriod).lowercase()),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = OwnerColors.TextPrimary,
@@ -145,7 +147,7 @@ fun RevenueScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = "Chưa có dữ liệu doanh thu",
+                                text = stringResource(R.string.revenue_no_data),
                                 color = OwnerColors.TextSecondary,
                                 textAlign = TextAlign.Center
                             )

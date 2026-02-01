@@ -40,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -54,6 +55,8 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import com.example.foodapp.pages.owner.chat.OwnerConversationsScreen
 import com.example.foodapp.pages.owner.chat.OwnerChatDetailScreen
+// Import WalletScreen
+import com.example.foodapp.pages.owner.wallet.WalletScreen
 
 @Preview(showBackground = true, backgroundColor = 0xFF00FF00)
 
@@ -146,12 +149,12 @@ fun DashBoardRootScreen(navController: NavHostController) {
                         Spacer(modifier = Modifier.width(16.dp))
                         Column {
                             Text(
-                                text = shopState.shopName.ifEmpty { "Đang tải..." },
+                                text = shopState.shopName.ifEmpty { stringResource(R.string.owner_loading) },
                                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Text(
-                                "Chủ cửa hàng",
+                                stringResource(R.string.owner_shop_owner),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -168,7 +171,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                 ) {
 
                     DrawerItem(
-                        text = "Dashboard", 
+                        text = stringResource(R.string.nav_dashboard), 
                         iconRes = R.drawable.ic_dashboard, 
                         isSelected = currentScreen == "dashboard"
                     ) {
@@ -179,7 +182,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
 
 
                     DrawerItem(
-                        text = "Quản lý đơn hàng", 
+                        text = stringResource(R.string.nav_orders), 
                         iconRes = R.drawable.ic_shopping_cart,
                         isSelected = currentScreen == "orders"
                     ) {
@@ -188,7 +191,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     }
 
                     DrawerItem(
-                        text = "Quản lý món ăn", 
+                        text = stringResource(R.string.nav_foods), 
                         iconRes = R.drawable.ic_restaurant,
                         isSelected = currentScreen == "foods"
                     ) {
@@ -197,7 +200,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     }
 
                     DrawerItem(
-                        text = "Quản lý Shipper", 
+                        text = stringResource(R.string.nav_shippers), 
                         iconRes = R.drawable.ic_delivery,
                         isSelected = currentScreen == "shippers"
                     ) {
@@ -206,7 +209,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     }
 
                     DrawerItem(
-                        text = "Quản lý Voucher", 
+                        text = stringResource(R.string.nav_vouchers), 
                         iconRes = R.drawable.ic_voucher,
                         isSelected = currentScreen == "vouchers"
                     ) {
@@ -215,7 +218,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     }
 
                     DrawerItem(
-                        text = "Khách hàng", 
+                        text = stringResource(R.string.nav_customers), 
                         iconRes = R.drawable.ic_customer,
                         isSelected = currentScreen == "customers"
                     ) {
@@ -224,7 +227,16 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     }
 
                     DrawerItem(
-                        text = "Báo cáo doanh thu", 
+                        text = stringResource(R.string.nav_wallet), 
+                        iconRes = R.drawable.ic_wallet,
+                        isSelected = currentScreen == "wallet"
+                    ) {
+                        currentScreen = "wallet"
+                        scope.launch { drawerState.close() }
+                    }
+
+                    DrawerItem(
+                        text = stringResource(R.string.nav_revenue), 
                         iconRes = R.drawable.ic_bar_chart,
                         isSelected = currentScreen == "revenue"
                     ) {
@@ -233,7 +245,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     }
 
                     DrawerItem(
-                        text = "Đánh giá", 
+                        text = stringResource(R.string.nav_reviews), 
                         iconRes = R.drawable.ic_review,
                         isSelected = currentScreen == "reviews"
                     ) {
@@ -242,7 +254,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     }
 
                     DrawerItem(
-                        text = "Trợ lý AI", 
+                        text = stringResource(R.string.nav_chatbot), 
                         iconRes = R.drawable.ic_chat,
                         isSelected = currentScreen == "chatbot"
                     ) {
@@ -251,7 +263,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     }
 
                     DrawerItem(
-                        text = "Tin nhắn", 
+                        text = stringResource(R.string.nav_chat), 
                         iconRes = R.drawable.ic_chat,
                         isSelected = currentScreen == "chat"
                     ) {
@@ -263,7 +275,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     Divider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant.copy(alpha=0.3f))
 
                     DrawerItem(
-                        text = "Cài đặt", 
+                        text = stringResource(R.string.nav_settings), 
                         iconRes = R.drawable.ic_settings,
                         isSelected = currentScreen == "settings"
                     ) {
@@ -274,7 +286,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
 
                 // ===== Footer Version =====
                 Text(
-                    "Version 1.0.0",
+                    stringResource(R.string.owner_version),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp),
@@ -291,7 +303,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
             topBar = {
                 // Show TopBar for screens that don't have their own TopBar
                 val isInChatDetail = currentScreen == "chat" && currentChatRoute == "chat_detail"
-                if (currentScreen != "dashboard" && currentScreen != "orders" && currentScreen != "foods" && currentScreen != "shippers" && currentScreen != "vouchers" && currentScreen != "customers" && currentScreen != "reviews" && currentScreen != "chatbot" && !isInChatDetail) {
+                if (currentScreen != "dashboard" && currentScreen != "orders" && currentScreen != "foods" && currentScreen != "shippers" && currentScreen != "vouchers" && currentScreen != "customers" && currentScreen != "reviews" && currentScreen != "chatbot" && currentScreen != "wallet" && !isInChatDetail) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -314,10 +326,10 @@ fun DashBoardRootScreen(navController: NavHostController) {
 
                         Text(
                             text = when (currentScreen) {
-                                "revenue" -> "Báo cáo doanh thu"
-                                "reviews" -> "Đánh giá"
-                                "settings" -> "Cài đặt"
-                                "chat" -> "Tin nhắn"
+                                "revenue" -> stringResource(R.string.revenue_title)
+                                "reviews" -> stringResource(R.string.owner_reviews_title)
+                                "settings" -> stringResource(R.string.nav_settings)
+                                "chat" -> stringResource(R.string.chat_title)
                                 else -> shopState.shopName.ifEmpty { "KTX Food" }
                             },
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
@@ -347,6 +359,7 @@ fun DashBoardRootScreen(navController: NavHostController) {
                     )
                     "vouchers" -> VouchersScreen(onMenuClick = { scope.launch { drawerState.open() } })
                     "customers" -> CustomerScreenMain(onMenuClick = { scope.launch { drawerState.open() } }) 
+                    "wallet" -> WalletScreen(onMenuClick = { scope.launch { drawerState.open() } })
                     "revenue" -> RevenueScreen()
                     "reviews" -> ReviewsScreen(
                         shopId = shopState.shopId,

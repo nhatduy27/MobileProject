@@ -19,7 +19,7 @@ import {
   ApiConsumes,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { CloudFunctionFileFieldsInterceptor } from '../../core/interceptors';
 import { ShippersService } from './shippers.service';
 import { ApplyShipperDto } from './dto/apply-shipper.dto';
 import { ShipperApplicationEntity } from './entities/shipper-application.entity';
@@ -74,7 +74,7 @@ export class ShipperApplicationsController {
     },
   })
   @UseInterceptors(
-    FileFieldsInterceptor([
+    CloudFunctionFileFieldsInterceptor([
       { name: 'idCardFront', maxCount: 1 },
       { name: 'idCardBack', maxCount: 1 },
       { name: 'driverLicense', maxCount: 1 },

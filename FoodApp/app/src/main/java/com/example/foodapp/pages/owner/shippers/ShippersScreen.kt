@@ -28,6 +28,8 @@ import com.example.foodapp.pages.owner.theme.OwnerColors
 import com.example.foodapp.pages.owner.theme.OwnerDimens
 import java.text.SimpleDateFormat
 import java.util.*
+import androidx.compose.ui.res.stringResource
+import com.example.foodapp.R
 
 /**
  * Màn hình quản lý Shipper
@@ -109,7 +111,7 @@ fun ShippersScreen(
                     text = {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                "Đơn ứng tuyển",
+                                stringResource(R.string.shippers_tab_applications),
                                 fontWeight = if (uiState.selectedTab == 0) FontWeight.Bold else FontWeight.Normal
                             )
                             if (stats.pendingApplications > 0) {
@@ -129,7 +131,7 @@ fun ShippersScreen(
                     onClick = { viewModel.onTabSelected(1) },
                     text = {
                         Text(
-                            "Shipper",
+                            stringResource(R.string.shippers_tab_shippers),
                             fontWeight = if (uiState.selectedTab == 1) FontWeight.Bold else FontWeight.Normal
                         )
                     }
@@ -140,7 +142,7 @@ fun ShippersScreen(
                     text = {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                "Yêu cầu rời",
+                                stringResource(R.string.shippers_tab_removal),
                                 fontWeight = if (uiState.selectedTab == 2) FontWeight.Bold else FontWeight.Normal
                             )
                             if (stats.pendingRemovalRequests > 0) {
@@ -167,7 +169,7 @@ fun ShippersScreen(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator(color = OwnerColors.Primary)
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text("Đang tải...", color = OwnerColors.TextSecondary)
+                            Text(stringResource(R.string.general_loading), color = OwnerColors.TextSecondary)
                         }
                     }
                 } else {
@@ -222,13 +224,13 @@ private fun ApplicationsTab(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     StatsCard(
-                        title = "Tổng đơn",
+                        title = stringResource(R.string.shippers_stat_total_applications),
                         value = stats.totalApplications.toString(),
                         color = OwnerColors.Primary,
                         modifier = Modifier.weight(1f)
                     )
                     StatsCard(
-                        title = "Chờ duyệt",
+                        title = stringResource(R.string.shippers_stat_pending),
                         value = stats.pendingApplications.toString(),
                         color = OwnerColors.Warning,
                         modifier = Modifier.weight(1f)
@@ -243,22 +245,22 @@ private fun ApplicationsTab(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     FilterChipStatus(
-                        label = "Tất cả",
+                        label = stringResource(R.string.shippers_filter_all),
                         isSelected = uiState.selectedApplicationStatus == null,
                         onClick = { viewModel.onApplicationStatusFilterChanged(null) }
                     )
                     FilterChipStatus(
-                        label = "Chờ duyệt",
+                        label = stringResource(R.string.shippers_filter_pending),
                         isSelected = uiState.selectedApplicationStatus == ApplicationStatus.PENDING,
                         onClick = { viewModel.onApplicationStatusFilterChanged(ApplicationStatus.PENDING) }
                     )
                     FilterChipStatus(
-                        label = "Đã duyệt",
+                        label = stringResource(R.string.shippers_filter_approved),
                         isSelected = uiState.selectedApplicationStatus == ApplicationStatus.APPROVED,
                         onClick = { viewModel.onApplicationStatusFilterChanged(ApplicationStatus.APPROVED) }
                     )
                     FilterChipStatus(
-                        label = "Đã từ chối",
+                        label = stringResource(R.string.shippers_filter_rejected),
                         isSelected = uiState.selectedApplicationStatus == ApplicationStatus.REJECTED,
                         onClick = { viewModel.onApplicationStatusFilterChanged(ApplicationStatus.REJECTED) }
                     )
@@ -284,9 +286,9 @@ private fun ApplicationsTab(
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = if (uiState.searchQuery.isNotEmpty())
-                                    "Không tìm thấy đơn nào"
+                                    stringResource(R.string.shippers_empty_no_applications_search)
                                 else
-                                    "Chưa có đơn xin làm shipper",
+                                    stringResource(R.string.shippers_empty_no_applications),
                                 fontSize = 16.sp,
                                 color = OwnerColors.TextSecondary
                             )
@@ -336,19 +338,19 @@ private fun ShippersTab(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     StatsCard(
-                        title = "Tổng shipper",
+                        title = stringResource(R.string.shippers_stat_total_shippers),
                         value = stats.totalShippers.toString(),
                         color = OwnerColors.Success,
                         modifier = Modifier.weight(1f)
                     )
                     StatsCard(
-                        title = "Sẵn sàng",
+                        title = stringResource(R.string.shippers_stat_available),
                         value = stats.availableShippers.toString(),
                         color = OwnerColors.Info,
                         modifier = Modifier.weight(1f)
                     )
                     StatsCard(
-                        title = "Đang giao",
+                        title = stringResource(R.string.shippers_stat_delivery),
                         value = stats.busyShippers.toString(),
                         color = OwnerColors.Warning,
                         modifier = Modifier.weight(1f)
@@ -375,9 +377,9 @@ private fun ShippersTab(
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = if (uiState.searchQuery.isNotEmpty())
-                                    "Không tìm thấy shipper nào"
+                                    stringResource(R.string.shippers_empty_no_shippers_search)
                                 else
-                                    "Chưa có shipper nào",
+                                    stringResource(R.string.shippers_empty_no_shippers),
                                 fontSize = 16.sp,
                                 color = OwnerColors.TextSecondary
                             )
@@ -487,13 +489,13 @@ private fun RemovalRequestsTab(
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     StatsCard(
-                        title = "Tổng yêu cầu",
+                        title = stringResource(R.string.shippers_stat_total_requests),
                         value = stats.totalRemovalRequests.toString(),
                         color = OwnerColors.Info,
                         modifier = Modifier.weight(1f)
                     )
                     StatsCard(
-                        title = "Chờ xử lý",
+                        title = stringResource(R.string.shippers_stat_pending_requests),
                         value = stats.pendingRemovalRequests.toString(),
                         color = OwnerColors.Warning,
                         modifier = Modifier.weight(1f)
@@ -508,22 +510,22 @@ private fun RemovalRequestsTab(
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     FilterChipStatus(
-                        label = "Tất cả",
+                        label = stringResource(R.string.shippers_filter_all),
                         isSelected = uiState.selectedRemovalStatus == null,
                         onClick = { viewModel.onRemovalStatusFilterChanged(null) }
                     )
                     FilterChipStatus(
-                        label = "Chờ xử lý",
+                        label = stringResource(R.string.shippers_filter_pending_process),
                         isSelected = uiState.selectedRemovalStatus == OwnerRemovalRequestStatus.PENDING,
                         onClick = { viewModel.onRemovalStatusFilterChanged(OwnerRemovalRequestStatus.PENDING) }
                     )
                     FilterChipStatus(
-                        label = "Đã duyệt",
+                        label = stringResource(R.string.shippers_filter_approved),
                         isSelected = uiState.selectedRemovalStatus == OwnerRemovalRequestStatus.APPROVED,
                         onClick = { viewModel.onRemovalStatusFilterChanged(OwnerRemovalRequestStatus.APPROVED) }
                     )
                     FilterChipStatus(
-                        label = "Đã từ chối",
+                        label = stringResource(R.string.shippers_filter_rejected),
                         isSelected = uiState.selectedRemovalStatus == OwnerRemovalRequestStatus.REJECTED,
                         onClick = { viewModel.onRemovalStatusFilterChanged(OwnerRemovalRequestStatus.REJECTED) }
                     )
@@ -549,9 +551,9 @@ private fun RemovalRequestsTab(
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
                                 text = if (uiState.searchQuery.isNotEmpty())
-                                    "Không tìm thấy yêu cầu nào"
+                                    stringResource(R.string.shippers_empty_no_requests_search)
                                 else
-                                    "Chưa có yêu cầu rời shop nào",
+                                    stringResource(R.string.shippers_empty_no_requests),
                                 fontSize = 16.sp,
                                 color = OwnerColors.TextSecondary
                             )
@@ -728,7 +730,7 @@ private fun RemovalRequestCard(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Từ chối")
+                        Text(stringResource(R.string.shippers_btn_reject))
                     }
                     
                     Button(
@@ -752,7 +754,7 @@ private fun RemovalRequestCard(
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Chấp nhận")
+                            Text(stringResource(R.string.shippers_btn_accept))
                         }
                     }
                 }
@@ -763,21 +765,23 @@ private fun RemovalRequestCard(
 
 @Composable
 private fun RemovalStatusBadge(status: OwnerRemovalRequestStatus) {
-    val (backgroundColor, textColor, text) = when (status) {
-        OwnerRemovalRequestStatus.PENDING -> Triple(
+    val text = when (status) {
+        OwnerRemovalRequestStatus.PENDING -> stringResource(R.string.shippers_status_pending)
+        OwnerRemovalRequestStatus.APPROVED -> stringResource(R.string.shippers_status_approved)
+        OwnerRemovalRequestStatus.REJECTED -> stringResource(R.string.shippers_status_rejected)
+    }
+    val (backgroundColor, textColor) = when (status) {
+        OwnerRemovalRequestStatus.PENDING -> Pair(
             OwnerColors.Warning.copy(alpha = 0.15f),
-            OwnerColors.Warning,
-            "Chờ xử lý"
+            OwnerColors.Warning
         )
-        OwnerRemovalRequestStatus.APPROVED -> Triple(
+        OwnerRemovalRequestStatus.APPROVED -> Pair(
             OwnerColors.Success.copy(alpha = 0.15f),
-            OwnerColors.Success,
-            "Đã chấp nhận"
+            OwnerColors.Success
         )
-        OwnerRemovalRequestStatus.REJECTED -> Triple(
+        OwnerRemovalRequestStatus.REJECTED -> Pair(
             OwnerColors.Error.copy(alpha = 0.15f),
-            OwnerColors.Error,
-            "Đã từ chối"
+            OwnerColors.Error
         )
     }
     

@@ -86,14 +86,14 @@ export class RawBodyMiddleware implements NestMiddleware {
     try {
       const busboy = Busboy({ headers: req.headers });
       const fields: Record<string, string> = {};
-      let fileData: {
+      const filesData: Array<{
         fieldname: string;
         originalname: string;
         encoding: string;
         mimetype: string;
         buffer: Buffer;
         size: number;
-      } | null = null;
+      }> = [];
 
       // Handle text fields
       busboy.on('field', (fieldname: string, val: string) => {
@@ -117,14 +117,14 @@ export class RawBodyMiddleware implements NestMiddleware {
 
           file.on('end', () => {
             const buffer = Buffer.concat(chunks);
-            fileData = {
+            filesData.push({
               fieldname,
               originalname: filename,
               encoding,
               mimetype: mimeType,
               buffer,
               size: buffer.length,
-            };
+            });
             this.logger.debug(
               `File received: ${filename}, size: ${buffer.length} bytes, type: ${mimeType}`,
             );
@@ -136,11 +136,10 @@ export class RawBodyMiddleware implements NestMiddleware {
         // IMPORTANT: Replace body entirely - the existing body may be corrupted
         // (e.g., rawBody bytes spread as {0, 1, 2, ...} by Cloud Run)
         (req as any).body = fields;
-        if (fileData) {
-          (req as any).file = fileData;
-          this.logger.log(
-            `File parsed successfully: ${fileData.originalname}, ${fileData.size} bytes, ${fileData.mimetype}`,
-          );
+        if (filesData.length > 0) {
+          (req as any).files = filesData;
+          (req as any).file = filesData[0];
+          this.logger.log(`File(s) parsed successfully: ${filesData.length}`);
           this.logger.log(`Parsed fields: ${Object.keys(fields).join(', ')}`);
         } else {
           this.logger.warn('No file found in multipart request');

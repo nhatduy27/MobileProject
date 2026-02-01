@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -35,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 
 @Composable
 fun OtpVerificationScreen(
@@ -62,7 +64,7 @@ fun OtpVerificationScreen(
     }
 
     OtpVerificationContent(
-        email = userEmail ?: "Đang tải email...",
+        email = userEmail ?: stringResource(R.string.loading_email),
         otpState = otpState,
         remainingTime = remainingTime,
         onVerifyOtp = { otp ->
@@ -142,7 +144,7 @@ fun OtpVerificationContent(
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back_button),
                             tint = Color(0xFFFF6B35)
                         )
                     }
@@ -176,7 +178,7 @@ fun OtpVerificationContent(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     Text(
-                        text = "Xác thực OTP",
+                        text = stringResource(R.string.otp_verification_title),
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF2D2D2D)
@@ -185,7 +187,7 @@ fun OtpVerificationContent(
                     Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = "Mã OTP 6 số đã được gửi đến:",
+                        text = stringResource(R.string.otp_sent_message),
                         fontSize = 15.sp,
                         color = Color(0xFF666666),
                         textAlign = TextAlign.Center
@@ -278,7 +280,7 @@ fun OtpVerificationContent(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Gửi lại sau: ",
+                            stringResource(R.string.resend_in),
                             color = Color(0xFF666666),
                             fontSize = 15.sp
                         )
@@ -299,12 +301,12 @@ fun OtpVerificationContent(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Không nhận được mã? ",
+                            stringResource(R.string.did_not_receive_code),
                             color = Color(0xFF666666),
                             fontSize = 15.sp
                         )
                         Text(
-                            "Gửi lại",
+                            stringResource(R.string.resend),
                             color = if (isLoading) Color.Gray else Color(0xFFFF6B35),
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.sp,
@@ -352,7 +354,7 @@ fun OtpVerificationContent(
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            "Đang xác thực...",
+                            stringResource(R.string.verifying),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -365,7 +367,7 @@ fun OtpVerificationContent(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Thành công!",
+                            stringResource(R.string.success),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -378,7 +380,7 @@ fun OtpVerificationContent(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Xác thực",
+                            stringResource(R.string.verify),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -410,7 +412,7 @@ fun OtpVerificationContent(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Nếu không nhận được mã, vui lòng kiểm tra hộp thư spam hoặc thử lại sau ít phút.",
+                        text = stringResource(R.string.otp_info_message),
                         fontSize = 13.sp,
                         color = Color(0xFF424242),
                         lineHeight = 18.sp
@@ -491,7 +493,7 @@ fun SixDigitOtpInput(
         Spacer(modifier = Modifier.height(12.dp))
 
         Text(
-            text = "Nhập mã OTP 6 số",
+            text = stringResource(R.string.enter_6_digit_otp),
             fontSize = 13.sp,
             color = Color(0xFF999999),
             fontWeight = FontWeight.Medium

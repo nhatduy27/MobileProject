@@ -52,10 +52,10 @@ data class CategoryDto(
     val productCount: Int? = null,
 
     @SerializedName("createdAt")
-    val createdAt: Map<String, Any>? = null,
+    val createdAt: String? = null,
 
     @SerializedName("updatedAt")
-    val updatedAt: Map<String, Any>? = null
+    val updatedAt: String? = null
 )
 
 fun CategoryDto.toCategory(): Category {

@@ -13,8 +13,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.foodapp.R
 import com.example.foodapp.data.remote.client.response.voucher.VoucherApiModel
 import com.example.foodapp.ui.theme.*
 
@@ -24,8 +26,8 @@ fun VoucherDropdown(
     vouchers: List<VoucherApiModel>,
     selectedVoucher: VoucherApiModel?,
     isLoading: Boolean = false,
-    isValidationLoading: Boolean = false, // Thêm trạng thái loading validation
-    validationError: String? = null, // Thêm thông báo lỗi validation
+    isValidationLoading: Boolean = false,
+    validationError: String? = null,
     onVoucherSelected: (VoucherApiModel?) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -61,12 +63,12 @@ fun VoucherDropdown(
                 ) {
                     Icon(
                         imageVector = Icons.Default.LocalOffer,
-                        contentDescription = null,
+                        contentDescription = stringResource(id = R.string.voucher_info_icon),
                         tint = PrimaryColor,
                         modifier = Modifier.size(22.dp)
                     )
                     Text(
-                        text = "Voucher ưu đãi",
+                        text = stringResource(id = R.string.voucher_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = TextPrimary
@@ -127,21 +129,21 @@ fun VoucherDropdown(
                                 } else if (validationError != null) {
                                     Icon(
                                         imageVector = Icons.Default.Error,
-                                        contentDescription = null,
+                                        contentDescription = stringResource(id = R.string.voucher_error_icon),
                                         tint = ErrorColor,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 } else {
                                     Icon(
                                         imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = null,
+                                        contentDescription = stringResource(id = R.string.voucher_check_icon),
                                         tint = SuccessColor,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
                             }
                             Text(
-                                text = selectedVoucher?.code ?: "Chọn voucher để nhận ưu đãi",
+                                text = selectedVoucher?.code ?: stringResource(id = R.string.voucher_placeholder),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = if (selectedVoucher != null) {
                                     if (validationError != null) ErrorColor else TextPrimary
@@ -152,7 +154,7 @@ fun VoucherDropdown(
 
                         Icon(
                             imageVector = Icons.Default.KeyboardArrowDown,
-                            contentDescription = null,
+                            contentDescription = stringResource(id = R.string.voucher_arrow_down_icon),
                             tint = if (expanded) PrimaryColor else TextSecondary,
                             modifier = Modifier
                                 .size(24.dp)
@@ -175,12 +177,12 @@ fun VoucherDropdown(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = null,
+                                    contentDescription = stringResource(id = R.string.voucher_close_icon),
                                     tint = TextSecondary,
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Text(
-                                    "Không sử dụng voucher",
+                                    stringResource(id = R.string.voucher_no_selected_option),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
@@ -212,13 +214,13 @@ fun VoucherDropdown(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Info,
-                                            contentDescription = null,
+                                            contentDescription = stringResource(id = R.string.voucher_info_icon),
                                             tint = TextSecondary,
                                             modifier = Modifier.size(32.dp)
                                         )
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Text(
-                                            "Không có voucher khả dụng",
+                                            stringResource(id = R.string.voucher_no_available),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = TextSecondary
                                         )
@@ -267,7 +269,7 @@ fun VoucherDropdown(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Warning,
-                                contentDescription = null,
+                                contentDescription = stringResource(id = R.string.voucher_warning_icon),
                                 tint = ErrorColor,
                                 modifier = Modifier.size(16.dp)
                             )
@@ -283,7 +285,7 @@ fun VoucherDropdown(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "Bỏ chọn",
+                                    contentDescription = stringResource(id = R.string.voucher_deselect),
                                     tint = ErrorColor,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -310,7 +312,6 @@ fun VoucherDropdown(
     }
 }
 
-// ... giữ nguyên các hàm khác (VoucherDropdownItem, VoucherInfoCard, formatCurrency)
 @Composable
 private fun VoucherDropdownItem(voucher: VoucherApiModel) {
     Row(
@@ -342,8 +343,8 @@ private fun VoucherDropdownItem(voucher: VoucherApiModel) {
         ) {
             Text(
                 text = when (voucher.type.uppercase()) {
-                    "PERCENTAGE" -> "-${voucher.value.toInt()}%"
-                    "FIXED" -> "-${formatCurrency(voucher.value)}"
+                    "PERCENTAGE" -> stringResource(id = R.string.voucher_discount_percentage, voucher.value.toInt())
+                    "FIXED" -> stringResource(id = R.string.voucher_discount_fixed, formatCurrency(voucher.value))
                     else -> ""
                 },
                 style = MaterialTheme.typography.labelLarge,
@@ -390,7 +391,7 @@ fun VoucherInfoCard(
                     ) {
                         Icon(
                             imageVector = Icons.Default.LocalOffer,
-                            contentDescription = null,
+                            contentDescription = stringResource(id = R.string.voucher_info_icon),
                             tint = Color.White,
                             modifier = Modifier
                                 .padding(6.dp)
@@ -421,8 +422,8 @@ fun VoucherInfoCard(
                 ) {
                     Text(
                         text = when (voucher.type.uppercase()) {
-                            "PERCENTAGE" -> "-${voucher.value.toInt()}%"
-                            "FIXED" -> "-${formatCurrency(voucher.value)}"
+                            "PERCENTAGE" -> stringResource(id = R.string.voucher_discount_percentage, voucher.value.toInt())
+                            "FIXED" -> stringResource(id = R.string.voucher_discount_fixed, formatCurrency(voucher.value))
                             else -> ""
                         },
                         style = MaterialTheme.typography.titleMedium,
@@ -467,12 +468,12 @@ fun VoucherInfoCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.ShoppingCart,
-                        contentDescription = null,
+                        contentDescription = stringResource(id = R.string.product_shopping_bag_icon),
                         tint = TextSecondary,
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
-                        text = "Đơn từ ${formatCurrency(voucher.minOrderAmount)}",
+                        text = stringResource(id = R.string.voucher_min_order, formatCurrency(voucher.minOrderAmount)),
                         style = MaterialTheme.typography.bodySmall,
                         color = TextSecondary
                     )
@@ -484,12 +485,12 @@ fun VoucherInfoCard(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Refresh,
-                        contentDescription = null,
+                        contentDescription = stringResource(id = R.string.voucher_remaining_uses),
                         tint = InfoColor,
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
-                        text = "Còn ${voucher.myRemainingUses} lượt",
+                        text = stringResource(id = R.string.voucher_remaining_uses, voucher.myRemainingUses),
                         style = MaterialTheme.typography.bodySmall,
                         fontWeight = FontWeight.Medium,
                         color = InfoColor

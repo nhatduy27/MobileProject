@@ -11,19 +11,21 @@ import retrofit2.http.*
  * Base URL: /api/owner/products
  *
  * Các endpoint:
- * - POST /owner/products - Create product
+ * - POST /owner/products - Create product (với nhiều ảnh)
  * - GET /owner/products - Get my products
  * - GET /owner/products/{id} - Get product detail
  * - PUT /owner/products/{id} - Update product
  * - DELETE /owner/products/{id} - Delete product
  * - PUT /owner/products/{id}/availability - Toggle availability
- * - POST /owner/products/{id}/image - Upload product image
+ * - POST /owner/products/{id}/images - Upload nhiều ảnh sản phẩm
  */
 interface ProductApiService {
 
     /**
      * POST /owner/products
-     * Create a new product with image (multipart/form-data)
+     * Create a new product with multiple images (multipart/form-data)
+     * 
+     * @param images List of product images - backend receives as "images" field
      */
     @Multipart
     @POST("owner/products")
@@ -33,7 +35,7 @@ interface ProductApiService {
         @Part("price") price: RequestBody,
         @Part("categoryId") categoryId: RequestBody,
         @Part("preparationTime") preparationTime: RequestBody,
-        @Part image: MultipartBody.Part
+        @Part images: List<MultipartBody.Part>
     ): Response<ProductResponse>
 
     /**
@@ -59,18 +61,35 @@ interface ProductApiService {
 
     /**
      * PUT /owner/products/{id}
-     * Update product (multipart/form-data, image optional)
+     * Update product WITH new images (multipart/form-data)
+     * Use this when user selects new images
      */
     @Multipart
     @PUT("owner/products/{id}")
-    suspend fun updateProduct(
+    suspend fun updateProductWithImages(
         @Path("id") productId: String,
         @Part("name") name: RequestBody? = null,
         @Part("description") description: RequestBody? = null,
         @Part("price") price: RequestBody? = null,
         @Part("categoryId") categoryId: RequestBody? = null,
         @Part("preparationTime") preparationTime: RequestBody? = null,
-        @Part image: MultipartBody.Part? = null
+        @Part images: List<MultipartBody.Part>
+    ): Response<MessageResponse>
+
+    /**
+     * PUT /owner/products/{id}
+     * Update product WITHOUT new images (multipart/form-data)
+     * Use this when user keeps existing images
+     */
+    @Multipart
+    @PUT("owner/products/{id}")
+    suspend fun updateProductWithoutImages(
+        @Path("id") productId: String,
+        @Part("name") name: RequestBody? = null,
+        @Part("description") description: RequestBody? = null,
+        @Part("price") price: RequestBody? = null,
+        @Part("categoryId") categoryId: RequestBody? = null,
+        @Part("preparationTime") preparationTime: RequestBody? = null
     ): Response<MessageResponse>
 
     /**
@@ -93,13 +112,15 @@ interface ProductApiService {
     ): Response<MessageResponse>
 
     /**
-     * POST /owner/products/{id}/image
-     * Upload product image
+     * POST /owner/products/{id}/images
+     * Upload multiple product images
+     * 
+     * @param images List of images to upload
      */
     @Multipart
-    @POST("owner/products/{id}/image")
-    suspend fun uploadProductImage(
+    @POST("owner/products/{id}/images")
+    suspend fun uploadProductImages(
         @Path("id") productId: String,
-        @Part image: MultipartBody.Part
+        @Part images: List<MultipartBody.Part>
     ): Response<ImageUploadResponse>
 }

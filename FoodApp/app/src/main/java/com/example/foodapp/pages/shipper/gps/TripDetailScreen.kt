@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,6 +26,7 @@ import com.example.foodapp.data.model.shipper.gps.ShipperTrip
 import com.example.foodapp.data.model.shipper.gps.TripStatus
 import com.example.foodapp.data.model.shipper.gps.TripWaypoint
 import com.example.foodapp.pages.shipper.theme.ShipperColors
+import com.example.foodapp.R
 
 /**
  * Trip Detail Screen - View and manage active trip
@@ -71,7 +73,7 @@ fun TripDetailScreen(
     
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { message ->
-            Toast.makeText(context, "Lỗi: $message", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(R.string.shipper_trip_error_prefix, message), Toast.LENGTH_SHORT).show()
             viewModel.clearErrorMessage()
         }
     }
@@ -80,15 +82,15 @@ fun TripDetailScreen(
     if (showCancelDialog) {
         AlertDialog(
             onDismissRequest = { showCancelDialog = false },
-            title = { Text("Hủy chuyến đi?") },
+            title = { Text(stringResource(R.string.shipper_trip_cancel_dialog_title)) },
             text = {
                 Column {
-                    Text("Bạn có chắc muốn hủy chuyến này? Các đơn hàng sẽ quay lại trạng thái sẵn sàng.")
+                    Text(stringResource(R.string.shipper_trip_cancel_dialog_message))
                     Spacer(modifier = Modifier.height(16.dp))
                     OutlinedTextField(
                         value = cancelReason,
                         onValueChange = { cancelReason = it },
-                        label = { Text("Lý do hủy (tùy chọn)") },
+                        label = { Text(stringResource(R.string.shipper_trip_cancel_reason_hint)) },
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -102,12 +104,12 @@ fun TripDetailScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = ShipperColors.Error)
                 ) {
-                    Text("Hủy chuyến")
+                    Text(stringResource(R.string.shipper_trip_cancel))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showCancelDialog = false }) {
-                    Text("Đóng")
+                    Text(stringResource(R.string.shipper_close))
                 }
             }
         )
@@ -140,7 +142,7 @@ fun TripDetailScreen(
             // Route Progress
             item {
                 Text(
-                    "Lộ trình (${trip.waypoints.size} điểm dừng)",
+                    stringResource(R.string.shipper_trip_route, trip.waypoints.size),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp,
                     color = ShipperColors.TextPrimary
@@ -196,7 +198,7 @@ private fun TripSummaryCard(trip: ShipperTrip) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Thông tin chuyến đi",
+                    stringResource(R.string.shipper_trip_info),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = ShipperColors.TextPrimary
@@ -215,22 +217,22 @@ private fun TripSummaryCard(trip: ShipperTrip) {
                 StatItem(
                     icon = Icons.Outlined.LocationOn,
                     value = "${trip.totalBuildings}",
-                    label = "Điểm dừng"
+                    label = stringResource(R.string.shipper_trip_stops)
                 )
                 StatItem(
                     icon = Icons.Outlined.ShoppingBag,
                     value = "${trip.totalOrders}",
-                    label = "Đơn hàng"
+                    label = stringResource(R.string.shipper_trip_orders)
                 )
                 StatItem(
                     icon = Icons.Outlined.Straighten,
                     value = trip.getFormattedDistance(),
-                    label = "Khoảng cách"
+                    label = stringResource(R.string.shipper_trip_distance)
                 )
                 StatItem(
                     icon = Icons.Outlined.Schedule,
                     value = trip.getFormattedDuration(),
-                    label = "Ước tính"
+                    label = stringResource(R.string.shipper_trip_estimated)
                 )
             }
         }
@@ -270,10 +272,10 @@ private fun StatItem(
 @Composable
 private fun TripStatusBadge(status: TripStatus) {
     val (backgroundColor, textColor, text) = when (status) {
-        TripStatus.PENDING -> Triple(ShipperColors.WarningLight, ShipperColors.Warning, "Chờ bắt đầu")
-        TripStatus.STARTED -> Triple(ShipperColors.SuccessLight, ShipperColors.Success, "Đang giao")
-        TripStatus.FINISHED -> Triple(ShipperColors.InfoLight, ShipperColors.Info, "Hoàn thành")
-        TripStatus.CANCELLED -> Triple(ShipperColors.ErrorLight, ShipperColors.Error, "Đã hủy")
+        TripStatus.PENDING -> Triple(ShipperColors.WarningLight, ShipperColors.Warning, stringResource(R.string.shipper_trip_status_pending))
+        TripStatus.STARTED -> Triple(ShipperColors.SuccessLight, ShipperColors.Success, stringResource(R.string.shipper_trip_status_started))
+        TripStatus.FINISHED -> Triple(ShipperColors.InfoLight, ShipperColors.Info, stringResource(R.string.shipper_trip_status_finished))
+        TripStatus.CANCELLED -> Triple(ShipperColors.ErrorLight, ShipperColors.Error, stringResource(R.string.shipper_trip_status_cancelled))
     }
     
     Surface(
@@ -370,13 +372,13 @@ private fun WaypointCard(
             ) {
                 Column {
                     Text(
-                        "Tòa ${waypoint.buildingCode}",
+                        stringResource(R.string.shipper_trip_building, waypoint.buildingCode),
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp,
                         color = ShipperColors.TextPrimary
                     )
                     Text(
-                        waypoint.location.name ?: "Điểm ${index + 1}",
+                        waypoint.location.name ?: stringResource(R.string.shipper_trip_point, index + 1),
                         fontSize = 13.sp,
                         color = ShipperColors.TextSecondary
                     )
@@ -388,7 +390,7 @@ private fun WaypointCard(
                     color = ShipperColors.PrimaryLight
                 ) {
                     Text(
-                        "$ordersCount đơn",
+                        stringResource(R.string.shipper_trip_orders_count, ordersCount),
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                         color = ShipperColors.Primary,
                         fontWeight = FontWeight.Medium,
@@ -435,7 +437,7 @@ private fun TripActionButtons(
                     } else {
                         Icon(Icons.Outlined.PlayArrow, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Bắt đầu giao hàng", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.shipper_trip_start_delivery), fontWeight = FontWeight.SemiBold)
                     }
                 }
                 
@@ -458,7 +460,7 @@ private fun TripActionButtons(
                     } else {
                         Icon(Icons.Outlined.Close, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Hủy chuyến", fontWeight = FontWeight.Medium)
+                        Text(stringResource(R.string.shipper_trip_cancel), fontWeight = FontWeight.Medium)
                     }
                 }
             }
@@ -483,7 +485,7 @@ private fun TripActionButtons(
                     } else {
                         Icon(Icons.Outlined.CheckCircle, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Hoàn thành giao hàng", fontWeight = FontWeight.SemiBold)
+                        Text(stringResource(R.string.shipper_trip_finish), fontWeight = FontWeight.SemiBold)
                     }
                 }
             }
@@ -509,13 +511,13 @@ private fun TripActionButtons(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            "Chuyến đi hoàn thành!",
+                            stringResource(R.string.shipper_trip_completed),
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
                             color = ShipperColors.Success
                         )
                         Text(
-                            "Đã giao ${trip.totalOrders} đơn hàng",
+                            stringResource(R.string.shipper_trip_delivered_count, trip.totalOrders),
                             color = ShipperColors.TextSecondary
                         )
                     }
@@ -543,14 +545,14 @@ private fun TripActionButtons(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            "Chuyến đi đã hủy",
+                            stringResource(R.string.shipper_trip_cancelled_title),
                             fontWeight = FontWeight.Bold,
                             fontSize = 18.sp,
                             color = ShipperColors.Error
                         )
                         trip.cancelReason?.let { reason ->
                             Text(
-                                "Lý do: $reason",
+                                stringResource(R.string.shipper_trip_cancel_reason, reason),
                                 color = ShipperColors.TextSecondary,
                                 textAlign = TextAlign.Center
                             )

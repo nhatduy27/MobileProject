@@ -98,7 +98,8 @@ export class AppModule implements NestModule {
     // This middleware parses rawBody for file uploads since Cloud Run pre-consumes the stream
     consumer.apply(RawBodyMiddleware).forRoutes(
       // Owner product image upload
-      { path: 'owner/products/:id/image', method: RequestMethod.POST },
+      // Owner product images upload (multiple)
+      { path: 'owner/products/:id/images', method: RequestMethod.POST },
       // Owner product create (with optional image)
       { path: 'owner/products', method: RequestMethod.POST },
       // Owner product update (with optional image)
@@ -107,6 +108,8 @@ export class AppModule implements NestModule {
       { path: 'me/avatar', method: RequestMethod.POST },
       // Shipper driver license upload
       { path: 'me/vehicle/driver-license', method: RequestMethod.POST },
+      // Shipper application (multipart)
+      { path: 'shipper-applications', method: RequestMethod.POST },
     );
   }
 }

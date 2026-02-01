@@ -31,6 +31,7 @@ class OtpVerificationViewModel(
     val userEmail: LiveData<String?> = _userEmail
 
     private var timerJob: kotlinx.coroutines.Job? = null
+    private var hasRequestedOtp = false
 
     init {
         getCurrentUserEmail()
@@ -43,8 +44,11 @@ class OtpVerificationViewModel(
             userRepository.getUserEmailByUid { email ->
                 if (email != null) {
                     _userEmail.postValue(email)
-                    // Tự động gửi OTP khi có email
-                    sendOtp(email)
+                    // Tự động gửi OTP khi có email (chỉ 1 lần)
+                    if (!hasRequestedOtp) {
+                        hasRequestedOtp = true
+                        sendOtp(email)
+                    }
                 } else {
                     _userEmail.postValue("")
                     _otpState.postValue(OtpVerificationState.Error("Không tìm thấy email người dùng"))
@@ -99,13 +103,9 @@ class OtpVerificationViewModel(
         viewModelScope.launch {
             _otpState.value = OtpVerificationState.Sending
 
-            when (val result = otpRepository.sendOtp(email)) {
+            when (val result = otpRepository.sendOtp(email, OTPType.EMAIL_VERIFICATION)) {
                 is ApiResult.Success -> {
-                    // Với model mới, result.data là SimpleMessageData
-                    // Nếu API trả về expiresAt, cần điều chỉnh model
-                    // Hiện tại không có expiresAt trong SimpleMessageData
 
-                    // Bắt đầu timer với mặc định
                     startTimer()
 
                     _otpState.value = OtpVerificationState.Idle

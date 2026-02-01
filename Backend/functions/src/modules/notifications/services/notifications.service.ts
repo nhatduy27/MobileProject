@@ -404,14 +404,20 @@ export class NotificationsService {
       for (const userId of userIds) {
         const deviceTokens = await this.deviceTokensRepository.findByUserId(userId);
         for (const dt of deviceTokens) {
-          allTokens.push({ token: dt.token, userId });
+          // Skip invalid/test tokens (FCM tokens are typically 150+ chars)
+          if (dt.token && dt.token.length > 50) {
+            allTokens.push({ token: dt.token, userId });
+          } else {
+            this.logger.warn(`Skipping invalid token for user ${userId}: ${dt.token?.substring(0, 20)}...`);
+          }
         }
       }
     }
 
-    // Add direct tokens
+    // Add direct tokens (also validate)
     if (directTokens && directTokens.length > 0) {
-      allTokens.push(...directTokens.map((token) => ({ token })));
+      const validTokens = directTokens.filter(token => token && token.length > 50);
+      allTokens.push(...validTokens.map((token) => ({ token })));
     }
 
     if (allTokens.length === 0) {
@@ -458,14 +464,20 @@ export class NotificationsService {
       for (const userId of userIds) {
         const deviceTokens = await this.deviceTokensRepository.findByUserId(userId);
         for (const dt of deviceTokens) {
-          allTokens.push({ token: dt.token, userId });
+          // Skip invalid/test tokens (FCM tokens are typically 150+ chars)
+          if (dt.token && dt.token.length > 50) {
+            allTokens.push({ token: dt.token, userId });
+          } else {
+            this.logger.warn(`Skipping invalid token for user ${userId}: ${dt.token?.substring(0, 20)}...`);
+          }
         }
       }
     }
 
-    // Add direct tokens
+    // Add direct tokens (also validate)
     if (directTokens && directTokens.length > 0) {
-      allTokens.push(...directTokens.map((token) => ({ token })));
+      const validTokens = directTokens.filter(token => token && token.length > 50);
+      allTokens.push(...validTokens.map((token) => ({ token })));
     }
 
     if (allTokens.length === 0) {

@@ -9,7 +9,7 @@ import {
   Query,
   UseGuards,
   UseInterceptors,
-  UploadedFile,
+  UploadedFiles,
   BadRequestException,
 } from '@nestjs/common';
 import {
@@ -21,7 +21,7 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
-import { CloudFunctionFileInterceptor, BodyValidationInterceptor } from '../../../core/interceptors';
+import { CloudFunctionFilesInterceptor, BodyValidationInterceptor } from '../../../core/interceptors';
 import { ProductsService } from '../services';
 import {
   CreateProductDto,
@@ -60,7 +60,7 @@ export class OwnerProductsController {
    * PROD-001
    */
   @Post()
-  @UseInterceptors(BodyValidationInterceptor, CloudFunctionFileInterceptor('image'))
+  @UseInterceptors(BodyValidationInterceptor, CloudFunctionFilesInterceptor('images', 10))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Create product',
@@ -68,7 +68,7 @@ export class OwnerProductsController {
 
 **IMPORTANT: Request Format**
 - Content-Type: multipart/form-data (do NOT set manually - let client library set it)
-- All fields are sent as form fields, image as file part
+- All fields are sent as form fields, images as file parts
 
 **Common Mistakes:**
 - ❌ Manually setting Content-Type header with FormData (breaks boundary)
@@ -82,9 +82,29 @@ export class OwnerProductsController {
 suspend fun createProduct(
     @Part("name") name: RequestBody,
     @Part("price") price: RequestBody,
-    @Part image: MultipartBody.Part
+    @Part images: List<MultipartBody.Part>
 ): Response<ProductResponse>
 \`\`\``,
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'Cơm sườn nướng' },
+        description: { type: 'string', example: 'Cơm sườn nướng mật ong + trứng' },
+        price: { type: 'number', example: 35000 },
+        categoryId: { type: 'string', example: 'cat_123' },
+        preparationTime: { type: 'number', example: 15 },
+        images: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+      required: ['name', 'description', 'price', 'categoryId', 'preparationTime', 'images'],
+    },
   })
   @ApiResponse({
     status: 201,
@@ -101,7 +121,7 @@ suspend fun createProduct(
           price: 35000,
           categoryId: 'cat_1',
           categoryName: 'Cơm',
-          imageUrl: 'https://...',
+          imageUrls: ['https://...'],
           isAvailable: true,
           preparationTime: 15,
           rating: 0,
@@ -118,7 +138,7 @@ suspend fun createProduct(
   async createProduct(
     @CurrentUser('uid') ownerId: string,
     @Body() dto: CreateProductDto,
-    @UploadedFile() file?: Express.Multer.File,
+    @UploadedFiles() files?: Express.Multer.File[],
   ) {
     // Debug logging
     console.log('=== CREATE PRODUCT REQUEST ===');
@@ -126,13 +146,18 @@ suspend fun createProduct(
     console.log('dto:', JSON.stringify(dto, null, 2));
     console.log('dto.price:', dto.price, 'type:', typeof dto.price);
     console.log('dto.preparationTime:', dto.preparationTime, 'type:', typeof dto.preparationTime);
-    console.log('file:', file ? { filename: file.originalname, size: file.size } : 'No file');
+    console.log(
+      'files:',
+      files && files.length > 0
+        ? files.map((f) => ({ filename: f.originalname, size: f.size }))
+        : 'No files',
+    );
     console.log('==============================');
-    
-    if (!file) {
+
+    if (!files || files.length === 0) {
       throw new BadRequestException('Vui lòng upload ảnh sản phẩm');
     }
-    return this.productsService.createProduct(ownerId, dto, file);
+    return this.productsService.createProduct(ownerId, dto, files);
   }
 
   /**
@@ -167,7 +192,7 @@ suspend fun createProduct(
               price: 35000,
               categoryId: 'cat_1',
               categoryName: 'Cơm',
-              imageUrl: 'https://...',
+              imageUrls: ['https://...'],
               isAvailable: true,
               preparationTime: 15,
               rating: 0,
@@ -219,7 +244,6 @@ suspend fun createProduct(
           price: 35000,
           categoryId: 'cat_1',
           categoryName: 'Cơm',
-          imageUrl: 'https://...',
           isAvailable: true,
           preparationTime: 15,
           rating: 0,
@@ -244,11 +268,30 @@ suspend fun createProduct(
    * PROD-006 - Price Lock Rule applies
    */
   @Put(':id')
-  @UseInterceptors(BodyValidationInterceptor, CloudFunctionFileInterceptor('image'))
+  @UseInterceptors(BodyValidationInterceptor, CloudFunctionFilesInterceptor('images', 10))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
     summary: 'Update product',
     description: 'Update product information. Cannot change price when shop is open.',
+  })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', example: 'Com su?n nu?ng' },
+        description: { type: 'string', example: 'Com su?n nu?ng m?t ong + tr?ng' },
+        price: { type: 'number', example: 35000 },
+        categoryId: { type: 'string', example: 'cat_123' },
+        preparationTime: { type: 'number', example: 15 },
+        images: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
+        },
+      },
+    },
   })
   @ApiResponse({
     status: 200,
@@ -262,9 +305,9 @@ suspend fun createProduct(
     @CurrentUser('uid') ownerId: string,
     @Param('id') productId: string,
     @Body() dto: UpdateProductDto,
-    @UploadedFile() file?: Express.Multer.File,
+    @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    await this.productsService.updateProduct(ownerId, productId, dto, file);
+    await this.productsService.updateProduct(ownerId, productId, dto, files);
     return { message: 'Cập nhật sản phẩm thành công' };
   }
 
@@ -313,73 +356,59 @@ suspend fun createProduct(
   }
 
   /**
-   * POST /owner/products/:id/image
-   * Upload product image
-   *
-   * PROD-005
+   * POST /owner/products/:id/images
+   * Upload multiple product images
    */
-  @Post(':id/image')
-  @UseInterceptors(CloudFunctionFileInterceptor('image'))
+  @Post(':id/images')
+  @UseInterceptors(CloudFunctionFilesInterceptor('images', 10))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({
-    summary: 'Upload product image',
-    description: 'Upload product image. Accepts JPEG/PNG. Max 5MB.',
+    summary: 'Upload multiple product images',
+    description: 'Upload multiple product images. Accepts JPEG/PNG. Max 5MB each.',
   })
   @ApiBody({
     schema: {
       type: 'object',
       properties: {
-        image: {
-          type: 'string',
-          format: 'binary',
+        images: {
+          type: 'array',
+          items: {
+            type: 'string',
+            format: 'binary',
+          },
         },
       },
     },
   })
   @ApiResponse({
     status: 200,
-    description: 'Image uploaded successfully',
+    description: 'Images uploaded successfully',
     schema: {
       example: {
         success: true,
         data: {
-          imageUrl: 'https://firebasestorage.googleapis.com/...',
+          imageUrls: ['https://firebasestorage.googleapis.com/...'],
         },
       },
     },
   })
   @ApiResponse({
     status: 400,
-    description: 'Invalid file',
+    description: 'Invalid files',
   })
-  async uploadProductImage(
+  async uploadProductImages(
     @CurrentUser('uid') ownerId: string,
     @Param('id') productId: string,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFiles() files: Express.Multer.File[],
   ) {
-    if (!file) {
-      throw new BadRequestException('No file uploaded');
+    if (!files || files.length === 0) {
+      throw new BadRequestException('No files uploaded');
     }
 
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
-    if (!allowedTypes.includes(file.mimetype)) {
-      throw new BadRequestException('Only JPEG and PNG images are allowed');
-    }
+    const imageUrls = await this.productsService.uploadProductImages(ownerId, productId, files);
 
-    // Validate file size (5MB max)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      throw new BadRequestException('File size must not exceed 5MB');
-    }
-
-    const imageUrl = await this.productsService.uploadProductImage(
-      ownerId,
-      productId,
-      file.buffer,
-      file.mimetype,
-    );
-
-    return { imageUrl };
+    return { imageUrls };
   }
 }
+
+

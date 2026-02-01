@@ -1,5 +1,6 @@
 package com.example.foodapp.pages.client.cart
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +17,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -26,6 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.example.foodapp.R
 import com.example.foodapp.data.model.shared.product.FoodCategory
 import com.example.foodapp.data.model.shared.product.Product
 import com.example.foodapp.pages.client.components.home.UserBottomNav
@@ -39,6 +42,8 @@ fun CartScreen(
     onCheckoutShop: (List<Product>, List<Int>, String, String) -> Unit = { _, _, _, _ -> },
     onViewUsedVouchers: () -> Unit = {}
 ) {
+
+    val context = LocalContext.current
 
     val viewModel: CartViewModel = viewModel(
         factory = CartViewModel.factory(LocalContext.current)
@@ -81,7 +86,7 @@ fun CartScreen(
                     title = {
                         Column {
                             Text(
-                                "Giỏ hàng",
+                                stringResource(R.string.cart_title),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 20.sp
                             )
@@ -89,9 +94,9 @@ fun CartScreen(
                             val totalItems = filteredShopGroups.sumOf { it.totalItems }
                             if (totalItems > 0) {
                                 val filterInfo = if (selectedShopFilter.id.isNotEmpty()) {
-                                    "Đang xem: ${selectedShopFilter.name} • $totalItems sản phẩm"
+                                    stringResource(R.string.cart_filter_info_selected, selectedShopFilter.name, totalItems)
                                 } else {
-                                    "${filteredShopGroups.size} shop • $totalItems sản phẩm"
+                                    stringResource(R.string.cart_filter_info_all, filteredShopGroups.size, totalItems)
                                 }
                                 Text(
                                     filterInfo,
@@ -103,7 +108,7 @@ fun CartScreen(
                     },
                     navigationIcon = {
                         IconButton(onClick = onBackClick) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.back_button))
                         }
                     },
                     actions = {
@@ -115,7 +120,7 @@ fun CartScreen(
                             ) {
                                 Icon(
                                     Icons.Default.History,
-                                    contentDescription = "Voucher đã dùng",
+                                    contentDescription = stringResource(R.string.used_vouchers_description),
                                     tint = Color.White
                                 )
                             }
@@ -131,7 +136,7 @@ fun CartScreen(
                                 ) {
                                     Icon(
                                         Icons.Default.FilterList,
-                                        contentDescription = "Lọc cửa hàng",
+                                        contentDescription = stringResource(R.string.filter_shops_description),
                                         tint = if (selectedShopFilter.id.isNotEmpty()) Color(0xFFFFD700) else Color.White
                                     )
                                 }
@@ -153,7 +158,7 @@ fun CartScreen(
                                         ) {
                                             // Header của dropdown
                                             Text(
-                                                text = "Lọc theo cửa hàng",
+                                                text = stringResource(R.string.filter_by_shop_title),
                                                 modifier = Modifier
                                                     .fillMaxWidth()
                                                     .padding(horizontal = 16.dp, vertical = 12.dp),
@@ -181,7 +186,7 @@ fun CartScreen(
                                                             )
                                                             if (shopOption.id.isNotEmpty()) {
                                                                 Text(
-                                                                    text = "${shopOption.itemCount} sản phẩm • ${shopOption.totalItems} cái",
+                                                                    text = stringResource(R.string.shop_item_count, shopOption.itemCount, shopOption.totalItems),
                                                                     fontSize = 12.sp,
                                                                     color = Color.Gray
                                                                 )
@@ -196,7 +201,7 @@ fun CartScreen(
                                                         if (shopOption.id == selectedShopFilter.id) {
                                                             Icon(
                                                                 Icons.Default.Check,
-                                                                contentDescription = "Đã chọn",
+                                                                contentDescription = stringResource(R.string.selected_description),
                                                                 tint = Color(0xFFFF9800),
                                                                 modifier = Modifier.size(20.dp)
                                                             )
@@ -232,7 +237,7 @@ fun CartScreen(
                                 } else {
                                     Icon(
                                         Icons.Default.DeleteSweep,
-                                        contentDescription = "Xóa toàn bộ",
+                                        contentDescription = stringResource(R.string.clear_all_cart_description),
                                         tint = Color.White
                                     )
                                 }
@@ -254,7 +259,7 @@ fun CartScreen(
                                 } else {
                                     Icon(
                                         Icons.Default.Save,
-                                        contentDescription = "Lưu thay đổi",
+                                        contentDescription = stringResource(R.string.save_changes_description),
                                         tint = Color.White
                                     )
                                 }
@@ -277,13 +282,17 @@ fun CartScreen(
                             formattedTotalPrice = filteredFormattedTotalAmount,
                             subtotal = filteredTotalAmount,
                             onCheckout = {
-                                handleCheckoutAll(filteredShopGroups, onCheckoutShop)
+                                handleCheckoutAll(filteredShopGroups, onCheckoutShop, context)
                             }
                         )
-                        UserBottomNav(navController = navController, onProfileClick = { })
+                        UserBottomNav(navController = navController, onProfileClick = { 
+                            navController.navigate(com.example.foodapp.navigation.Screen.UserProfile.route)
+                        })
                     }
                 } else {
-                    UserBottomNav(navController = navController, onProfileClick = { })
+                    UserBottomNav(navController = navController, onProfileClick = { 
+                        navController.navigate(com.example.foodapp.navigation.Screen.UserProfile.route)
+                    })
                 }
             },
             containerColor = Color(0xFFF5F5F5)
@@ -413,7 +422,7 @@ private fun UsedVoucherCard(
             ) {
                 Icon(
                     Icons.Default.Discount,
-                    contentDescription = "Voucher đã dùng",
+                    contentDescription = stringResource(R.string.used_vouchers_description),
                     tint = Color(0xFFFF9800),
                     modifier = Modifier.size(28.dp)
                 )
@@ -426,13 +435,13 @@ private fun UsedVoucherCard(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = "Voucher đã sử dụng",
+                    text = stringResource(R.string.used_vouchers_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
                     color = Color.Black
                 )
                 Text(
-                    text = "Xem lại các voucher bạn đã sử dụng",
+                    text = stringResource(R.string.used_vouchers_subtitle),
                     fontSize = 13.sp,
                     color = Color.Gray
                 )
@@ -441,7 +450,7 @@ private fun UsedVoucherCard(
             // Mũi tên điều hướng
             Icon(
                 Icons.Default.ChevronRight,
-                contentDescription = "Xem chi tiết",
+                contentDescription = stringResource(R.string.view_details),
                 tint = Color(0xFFFF9800),
                 modifier = Modifier.size(24.dp)
             )
@@ -459,14 +468,7 @@ private fun handleCheckoutShop(
     println("🔴 Items count: ${shopGroup.items.size}")
 
     val products = shopGroup.items.map { cartItem ->
-        // DEBUG từng CartItem
-        println("🔴 CartItem: ${cartItem.name}")
-        println("🔴   - id: ${cartItem.id}")
-        println("🔴   - imageUrl: '${cartItem.imageUrl}'")
-        println("🔴   - imageUrl is null? ${cartItem.imageUrl == null}")
-        println("🔴   - imageUrl is empty? ${cartItem.imageUrl.isNullOrEmpty()}")
 
-        // Tạo Product với fallback nếu imageUrl null
         Product(
             id = cartItem.id,
             name = cartItem.name,
@@ -474,19 +476,29 @@ private fun handleCheckoutShop(
             price = cartItem.formattedPrice,
             priceValue = cartItem.price,
             category = FoodCategory.FOOD,
-            imageUrl = cartItem.imageUrl ?: run {
-                println("⚠️ WARNING: imageUrl is null for ${cartItem.name}, using placeholder")
-                "https://via.placeholder.com/150" // Fallback URL
+            imageUrls = if (!cartItem.imageUrl.isNullOrBlank()) {
+                listOf(cartItem.imageUrl)
+            } else {
+                listOf(
+                    "https://firebasestorage.googleapis.com/v0/b/foodappproject-7c136.firebasestorage.app/o/default%2Ffood_default.jpg?alt=media"
+                )
             },
             shopId = shopGroup.shopId,
-            shopName = shopGroup.shopName
+            shopName = shopGroup.shopName,
+            rating = 0.0,
+            totalRatings = 0,
+            soldCount = 0,
+            isAvailable = true,
+            preparationTime = 15,
+            isDeleted = false,
+            isFavorite = false
         )
     }
 
     // Debug Product đã tạo
     products.forEachIndexed { index, product ->
         println("🟢 Product $index: ${product.name}")
-        println("🟢   - imageUrl: '${product.imageUrl}'")
+        println("🟢   - imageUrl: '${product.imageUrls[0]}'")
     }
 
     val quantities = shopGroup.items.map { it.quantity }
@@ -495,7 +507,8 @@ private fun handleCheckoutShop(
 
 private fun handleCheckoutAll(
     shopGroups: List<ShopGroup>,
-    onCheckoutShop: (List<Product>, List<Int>, String, String) -> Unit
+    onCheckoutShop: (List<Product>, List<Int>, String, String) -> Unit,
+    context: Context
 ) {
     if (shopGroups.size == 1) {
         handleCheckoutShop(shopGroups.first(), onCheckoutShop)
@@ -513,7 +526,7 @@ private fun handleCheckoutAll(
                         price = cartItem.formattedPrice,
                         priceValue = cartItem.price,
                         category = FoodCategory.FOOD,
-                        imageUrl = cartItem.imageUrl ?: "",
+                        imageUrls = cartItem.imageUrl?.let { listOf(it) } ?: emptyList(),
                         shopId = shopGroup.shopId,
                         shopName = shopGroup.shopName
                     )
@@ -521,7 +534,11 @@ private fun handleCheckoutAll(
                 allQuantities.add(cartItem.quantity)
             }
         }
-        onCheckoutShop(allProducts, allQuantities, "", "Tất cả cửa hàng")
+
+        // SỬA TẠI ĐÂY: Dùng context.getString thay vì stringResource
+        val allShopsLabel = context.getString(R.string.all_shops)
+
+        onCheckoutShop(allProducts, allQuantities, "", allShopsLabel)
     }
 }
 
@@ -646,7 +663,7 @@ private fun ShopFooterWithCheckout(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Tổng shop:",
+                    text = stringResource(R.string.shop_total_label),
                     fontSize = 14.sp,
                     color = Color.Black,
                     fontWeight = FontWeight.Medium
@@ -672,7 +689,7 @@ private fun ShopFooterWithCheckout(
                 )
             ) {
                 Text(
-                    text = "Thanh toán shop này",
+                    text = stringResource(R.string.checkout_this_shop),
                     fontWeight = FontWeight.Bold,
                     fontSize = 15.sp,
                     color = Color.White
@@ -704,7 +721,7 @@ private fun ShopHeader(
             ) {
                 Icon(
                     Icons.Default.Store,
-                    contentDescription = "Shop",
+                    contentDescription = stringResource(R.string.shop_icon_description),
                     tint = Color(0xFFFF9800),
                     modifier = Modifier.size(24.dp)
                 )
@@ -723,7 +740,7 @@ private fun ShopHeader(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${shopGroup.itemCount} sản phẩm • ${shopGroup.totalItems} cái",
+                        text = stringResource(R.string.shop_item_count, shopGroup.itemCount, shopGroup.totalItems),
                         fontSize = 12.sp,
                         color = Color.Gray
                     )
@@ -740,7 +757,7 @@ private fun ShopHeader(
                             .padding(horizontal = 8.dp, vertical = 2.dp)
                     ) {
                         Text(
-                            text = if (shopGroup.isOpen) "🟢 Mở cửa" else "🔴 Đóng cửa",
+                            text = if (shopGroup.isOpen) stringResource(R.string.shop_status_open) else stringResource(R.string.shop_status_closed),
                             fontSize = 10.sp,
                             color = if (shopGroup.isOpen) Color(0xFF2E7D32) else Color(0xFFC62828),
                             fontWeight = FontWeight.Medium
@@ -756,7 +773,7 @@ private fun ShopHeader(
         ) {
             Icon(
                 Icons.Default.DeleteOutline,
-                contentDescription = "Xóa shop",
+                contentDescription = stringResource(R.string.delete_shop_description),
                 tint = Color(0xFFF44336),
                 modifier = Modifier.size(22.dp)
             )
@@ -892,7 +909,7 @@ private fun ShopItemCard(
                     } else {
                         Icon(
                             Icons.Default.Close,
-                            contentDescription = "Xóa",
+                            contentDescription = stringResource(R.string.delete_item_description),
                             tint = Color(0xFF757575),
                             modifier = Modifier.size(18.dp)
                         )
@@ -1000,7 +1017,7 @@ private fun QuantitySelector(
             ) {
                 Icon(
                     Icons.Default.Check,
-                    contentDescription = "Lưu",
+                    contentDescription = stringResource(R.string.save_changes_description),
                     tint = Color(0xFF4CAF50),
                     modifier = Modifier.size(18.dp)
                 )
@@ -1039,7 +1056,7 @@ private fun DeleteShopConfirmationDialog(
                 } else {
                     Icon(
                         Icons.Default.Delete,
-                        contentDescription = "Xóa shop",
+                        contentDescription = stringResource(R.string.delete_shop_description),
                         modifier = Modifier.size(64.dp),
                         tint = Color(0xFFF44336)
                     )
@@ -1049,9 +1066,9 @@ private fun DeleteShopConfirmationDialog(
 
                 Text(
                     text = if (deleteShopState is DeleteShopState.Loading)
-                        "Đang xóa..."
+                        stringResource(R.string.deleting_in_progress)
                     else
-                        "Xóa sản phẩm của shop",
+                        stringResource(R.string.delete_shop_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = Color.Black,
@@ -1072,7 +1089,7 @@ private fun DeleteShopConfirmationDialog(
 
                 if (deleteShopState !is DeleteShopState.Loading) {
                     Text(
-                        "Bạn có chắc chắn muốn xóa ${shopGroup.itemCount} sản phẩm của shop này?",
+                        stringResource(R.string.delete_shop_confirmation, shopGroup.itemCount),
                         fontSize = 14.sp,
                         color = Color.Gray,
                         textAlign = TextAlign.Center,
@@ -1090,12 +1107,12 @@ private fun DeleteShopConfirmationDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Số sản phẩm:",
+                                text = stringResource(R.string.number_of_products_label),
                                 fontSize = 13.sp,
                                 color = Color.Gray
                             )
                             Text(
-                                text = "${shopGroup.itemCount} sản phẩm",
+                                text = stringResource(R.string.products_count, shopGroup.itemCount),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -1106,12 +1123,12 @@ private fun DeleteShopConfirmationDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Tổng số lượng:",
+                                text = stringResource(R.string.total_quantity_label),
                                 fontSize = 13.sp,
                                 color = Color.Gray
                             )
                             Text(
-                                text = "${shopGroup.totalItems} cái",
+                                text = stringResource(R.string.items_count, shopGroup.totalItems),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium
                             )
@@ -1122,7 +1139,7 @@ private fun DeleteShopConfirmationDialog(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Tổng tiền:",
+                                text = stringResource(R.string.total_amount_label),
                                 fontSize = 13.sp,
                                 color = Color.Gray
                             )
@@ -1151,7 +1168,7 @@ private fun DeleteShopConfirmationDialog(
                                 contentColor = Color.Gray
                             )
                         ) {
-                            Text("Hủy")
+                            Text(stringResource(R.string.cancel))
                         }
 
                         Button(
@@ -1161,7 +1178,7 @@ private fun DeleteShopConfirmationDialog(
                                 containerColor = Color(0xFFF44336)
                             )
                         ) {
-                            Text("Xóa shop")
+                            Text(stringResource(R.string.delete_shop_button))
                         }
                     }
                 }
@@ -1197,13 +1214,13 @@ private fun CurrentFilterInfo(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
-                        text = "Đang xem: ${selectedShopFilter.name}",
+                        text = stringResource(R.string.viewing_filter_info, selectedShopFilter.name),
                         fontWeight = FontWeight.Medium,
                         fontSize = 14.sp,
                         color = Color(0xFF2E7D32)
                     )
                     Text(
-                        text = "${selectedShopFilter.itemCount} sản phẩm • ${selectedShopFilter.totalItems} cái",
+                        text = stringResource(R.string.filter_product_count, selectedShopFilter.itemCount, selectedShopFilter.totalItems),
                         fontSize = 12.sp,
                         color = Color(0xFF4CAF50)
                     )
@@ -1214,7 +1231,7 @@ private fun CurrentFilterInfo(
                     modifier = Modifier.padding(start = 8.dp)
                 ) {
                     Text(
-                        text = "Xóa lọc",
+                        text = stringResource(R.string.clear_filter_button),
                         color = Color(0xFFF44336),
                         fontSize = 12.sp
                     )
@@ -1245,7 +1262,7 @@ private fun ClearCartConfirmationDialog(
             ) {
                 Icon(
                     Icons.Default.DeleteSweep,
-                    contentDescription = "Xóa toàn bộ",
+                    contentDescription = stringResource(R.string.clear_all_cart_description),
                     modifier = Modifier.size(64.dp),
                     tint = Color(0xFFFF9800)
                 )
@@ -1253,7 +1270,7 @@ private fun ClearCartConfirmationDialog(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    "Xóa toàn bộ giỏ hàng",
+                    stringResource(R.string.clear_all_cart_title),
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
                     color = Color.Black
@@ -1262,7 +1279,7 @@ private fun ClearCartConfirmationDialog(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Text(
-                    "Bạn có chắc chắn muốn xóa toàn bộ sản phẩm trong giỏ hàng?",
+                    stringResource(R.string.clear_all_cart_confirmation),
                     fontSize = 14.sp,
                     color = Color.Gray,
                     textAlign = TextAlign.Center,
@@ -1283,7 +1300,7 @@ private fun ClearCartConfirmationDialog(
                             contentColor = Color.Gray
                         )
                     ) {
-                        Text("Hủy")
+                        Text(stringResource(R.string.cancel))
                     }
 
                     Button(
@@ -1293,7 +1310,7 @@ private fun ClearCartConfirmationDialog(
                             containerColor = Color(0xFFFF9800)
                         )
                     ) {
-                        Text("Xóa")
+                        Text(stringResource(R.string.delete_button))
                     }
                 }
             }
@@ -1324,7 +1341,7 @@ private fun CartBottomBar(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    "Tạm tính:",
+                    stringResource(R.string.subtotal_label),
                     fontSize = 14.sp,
                     color = Color.Gray
                 )
@@ -1346,7 +1363,7 @@ private fun CartBottomBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Tổng cộng:",
+                    stringResource(R.string.total_label),
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp
                 )
@@ -1369,7 +1386,7 @@ private fun CartBottomBar(
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Text(
-                    "Thanh toán tất cả",
+                    stringResource(R.string.checkout_all_button),
                     color = Color.White,
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold
@@ -1391,13 +1408,13 @@ private fun EmptyCartContent() {
         Text("🛒", fontSize = 80.sp)
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            "Giỏ hàng trống",
+            stringResource(R.string.empty_cart_title),
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
             color = Color.Gray
         )
         Text(
-            "Hãy thêm sản phẩm để tiếp tục mua sắm",
+            stringResource(R.string.empty_cart_message),
             color = Color.Gray,
             fontSize = 14.sp
         )
@@ -1441,7 +1458,7 @@ private fun ErrorCartContent(
                 containerColor = Color(0xFFFF9800)
             )
         ) {
-            Text("Thử lại")
+            Text(stringResource(R.string.retry))
         }
     }
 }

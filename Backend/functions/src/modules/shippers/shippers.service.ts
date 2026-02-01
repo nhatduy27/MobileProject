@@ -144,8 +144,8 @@ export class ShippersService {
     try {
       await this.notificationsService.send({
         userId: shop.ownerId,
-        title: `New Shipper Application`,
-        body: `${user.displayName} applied to be a shipper for ${shop.name}`,
+        title: `Đơn đăng ký shipper mới`,
+        body: `${user.displayName} muốn làm shipper cho ${shop.name}`,
         type: NotificationType.SHIPPER_APPLIED,
         data: {
           applicationId: application.id,
@@ -325,8 +325,8 @@ export class ShippersService {
     try {
       await this.notificationsService.send({
         userId: app.userId,
-        title: `Application Approved`,
-        body: `Your application to be a shipper for ${app.shopName} has been approved!`,
+        title: `Đơn đăng ký được duyệt`,
+        body: `Đơn đăng ký làm shipper cho ${app.shopName} đã được chấp nhận!`,
         type: NotificationType.SHIPPER_APPLICATION_APPROVED,
         data: {
           applicationId,
@@ -376,8 +376,8 @@ export class ShippersService {
     try {
       await this.notificationsService.send({
         userId: app.userId,
-        title: `Application Rejected`,
-        body: `Your application to be a shipper for ${app.shopName} has been rejected. Reason: ${dto.reason || 'No reason provided'}`,
+        title: `Đơn đăng ký bị từ chối`,
+        body: `Đơn đăng ký làm shipper cho ${app.shopName} bị từ chối. Lý do: ${dto.reason || 'Không có lý do'}`,
         type: NotificationType.SHIPPER_APPLICATION_REJECTED,
         data: {
           applicationId,
@@ -476,5 +476,19 @@ export class ShippersService {
       avatar: shipper.avatar,
       shipperInfo: shipper.shipperInfo,
     });
+  }
+
+  /**
+   * Update shipper online status
+   * Called when shipper goes online/offline via topic subscription
+   */
+  async updateOnlineStatus(shipperId: string, isOnline: boolean): Promise<void> {
+    const userRef = this.firestore.collection('users').doc(shipperId);
+    await userRef.update({
+      'shipperInfo.isOnline': isOnline,
+      'shipperInfo.lastOnlineAt': isOnline ? FieldValue.serverTimestamp() : null,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    this.logger.log(`Shipper ${shipperId} isOnline updated to: ${isOnline}`);
   }
 }

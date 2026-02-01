@@ -3,22 +3,10 @@
  * For owner dashboard
  */
 export class ShopAnalyticsEntity {
-  today: {
+  allTime: {
     revenue: number;
     orderCount: number;
     avgOrderValue: number;
-    pendingOrders: number;
-  };
-
-  thisWeek: {
-    revenue: number;
-    orderCount: number;
-    avgOrderValue: number;
-  };
-
-  thisMonth: {
-    revenue: number;
-    orderCount: number;
   };
 
   ordersByStatus: {

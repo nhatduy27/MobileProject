@@ -1,6 +1,6 @@
 package com.example.foodapp.pages.client.components.payment
 
-
+import android.content.Context
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -8,19 +8,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.ui.theme.*
-import java.text.NumberFormat
-import java.util.Locale
 
 @Composable
 fun PaymentBottomBar(
     totalPrice: Double,
+    shippingFee: Double = 15000.0, // Đưa shipping fee ra parameter để linh hoạt
     isLoading: Boolean,
-    onPlaceOrder: () -> Unit
+    onPlaceOrder: () -> Unit,
+    context: Context
 ) {
+    val finalPrice = totalPrice + shippingFee
+
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shadowElevation = 8.dp,
@@ -35,12 +39,12 @@ fun PaymentBottomBar(
         ) {
             Column {
                 Text(
-                    text = "Tổng cộng",
+                    text = stringResource(id = R.string.payment_total_label),
                     fontSize = 14.sp,
                     color = TextSecondary
                 )
                 Text(
-                    text = formatPrice(totalPrice + 15000.0), // Giả sử phí ship cố định
+                    text = formatPrice(finalPrice, context),
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Bold,
                     color = PrimaryOrange
@@ -64,7 +68,7 @@ fun PaymentBottomBar(
                     )
                 } else {
                     Text(
-                        text = "Đặt hàng",
+                        text = stringResource(id = R.string.place_order_button),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -74,7 +78,6 @@ fun PaymentBottomBar(
     }
 }
 
-private fun formatPrice(price: Double): String {
-    val format = NumberFormat.getCurrencyInstance(Locale("vi", "VN"))
-    return format.format(price).replace(" ₫", "đ")
+private fun formatPrice(price: Double, context: Context): String {
+    return String.format(context.getString(R.string.currency_vnd_format), price)
 }

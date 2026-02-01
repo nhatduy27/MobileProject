@@ -1,5 +1,6 @@
 package com.example.foodapp.navigation
 
+import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -84,15 +85,12 @@ sealed class Screen(val route: String) {
     object Chat : Screen("chat/{conversationId}") {
         fun createRoute(conversationId: String) = "chat/$conversationId"
     }
-
     object UserProductDetail : Screen ("product_detail/{productId}") {
         fun createRoute(productId: String) = "product_detail/$productId"
     }
-
     object ShopDetail : Screen("shop_detail/{shopId}") {
         fun createRoute(shopId: String) = "shop_detail/$shopId"
     }
-
     object UserPayment : Screen("payment/{productsJson}/{quantitiesJson}") {
         fun createRoute(productsJson: String, quantitiesJson: String): String {
             val encodedProductsJson = URLEncoder.encode(productsJson, StandardCharsets.UTF_8.toString())
@@ -100,12 +98,9 @@ sealed class Screen(val route: String) {
             return "payment/$encodedProductsJson/$encodedQuantitiesJson"
         }
     }
-
     object OrderDetail : Screen("order_detail/{orderId}") {
         fun createRoute(orderId: String) = "order_detail/$orderId"
     }
-
-    // SỬA: OrderSuccess route nhận orderJson
     object OrderSuccess : Screen("order_success/{orderJson}") {
         fun createRoute(orderJson: String): String {
             val encodedOrderJson = URLEncoder.encode(orderJson, StandardCharsets.UTF_8.toString())
@@ -267,7 +262,7 @@ fun FoodAppNavHost(
         composable(Screen.OtpResetPassword.route) {
             ForgotPasswordOTPScreen(
                 onBackClicked = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } },
-                onSuccess = { navController.navigate(Screen.Login.route) { popUpTo(0) { inclusive = true } } }
+                onSuccess = { navController.navigate(Screen.ResetPassword.route) { popUpTo(0) { inclusive = true } } }
             )
         }
 
@@ -543,6 +538,10 @@ fun FoodAppNavHost(
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onLanguageChanged = {
+                    // Gọi recreate() để restart activity với ngôn ngữ mới
+                    (context as? ComponentActivity)?.recreate()
                 }
             )
         }

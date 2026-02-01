@@ -1,4 +1,5 @@
 package com.example.foodapp.data.model.shared.product
+
 import android.os.Parcelable
 import com.example.foodapp.data.remote.client.response.product.ProductApiModel
 import kotlinx.parcelize.Parcelize
@@ -12,8 +13,8 @@ enum class FoodCategory {
             return when (name.lowercase()) {
                 "all", "tất cả" -> ALL
                 "food", "món ăn", "com", "cơm" -> FOOD
-                "drink", "đồ uống", "nước" -> DRINK
-                "snack", "ăn vặt" -> SNACK
+                "drink", "đồ uống", "nước", "trà sữa & đồ uống" -> DRINK
+                "snack", "ăn vặt", "đồ ăn vặt" -> SNACK
                 else -> ALL
             }
         }
@@ -39,10 +40,9 @@ data class Product(
     val priceValue: Double,
     val category: FoodCategory,
 
-    val imageRes: Int? = null,          // Local resource ID (nếu có)
-    val imageUrl: String? = null,       // URL ảnh từ API
+    val imageRes: Int? = null,
+    val imageUrls: List<String> = emptyList(),
 
-    // Field mới từ API
     val shopId: String = "",
     val shopName: String = "",
     val rating: Double = 0.0,
@@ -57,9 +57,12 @@ data class Product(
     val isFavorite: Boolean = false
 ) : Parcelable {
 
+    // Lấy ảnh chính (ảnh đầu tiên trong danh sách)
+    val mainImageUrl: String? get() = imageUrls.firstOrNull()
+
     val displayPrice: String get() = price
     val hasLocalImage: Boolean get() = imageRes != null
-    val hasRemoteImage: Boolean get() = !imageUrl.isNullOrBlank()
+    val hasRemoteImage: Boolean get() = imageUrls.isNotEmpty() // ĐỔI: Kiểm tra list không rỗng
     val hasAnyImage: Boolean get() = hasLocalImage || hasRemoteImage
     val isInStock: Boolean get() = isAvailable && !isDeleted
 
@@ -78,6 +81,9 @@ data class Product(
     // Thời gian chuẩn bị
     val preparationTimeText: String get() = "$preparationTime phút"
 
+    // Số lượng ảnh
+    val imageCount: Int get() = imageUrls.size
+
     // Kiểm tra sản phẩm hợp lệ
     val isValid: Boolean get() = id.isNotBlank() && name.isNotBlank() && !isDeleted
 
@@ -91,7 +97,7 @@ data class Product(
                 price = apiModel.formattedPrice,
                 priceValue = apiModel.price,
                 category = FoodCategory.fromName(apiModel.categoryName),
-                imageUrl = apiModel.imageUrl,
+                imageUrls = apiModel.imageUrls, // ĐỔI: Dùng imageUrls thay vì mainImageUrl
                 shopId = apiModel.shopId,
                 shopName = apiModel.shopName,
                 rating = apiModel.rating,
@@ -102,7 +108,7 @@ data class Product(
                 isDeleted = apiModel.isDeleted,
                 createdAt = apiModel.createdAt,
                 updatedAt = apiModel.updatedAt,
-                isFavorite = false  // ← THÊM DÒNG NÀY
+                isFavorite = false
             )
         }
 
@@ -116,7 +122,11 @@ data class Product(
                 priceValue = 50000.0,
                 category = FoodCategory.FOOD,
                 imageRes = null,
-                imageUrl = "https://picsum.photos/200",
+                imageUrls = listOf( // ĐỔI: Tạo list ảnh
+                    "https://picsum.photos/200/300",
+                    "https://picsum.photos/201/300",
+                    "https://picsum.photos/202/300"
+                ),
                 shopId = "shop_dummy",
                 shopName = "Cửa hàng mẫu",
                 rating = 4.5,
@@ -124,14 +134,14 @@ data class Product(
                 soldCount = 500,
                 isAvailable = true,
                 preparationTime = 20,
-                isFavorite = false  // ← THÊM DÒNG NÀY
+                isFavorite = false
             )
         }
     }
 
     // Update methods (immutable)
-    fun copyWithImageUrl(imageUrl: String): Product {
-        return this.copy(imageUrl = imageUrl)
+    fun copyWithImageUrls(imageUrls: List<String>): Product { // ĐỔI: Đổi tên method
+        return this.copy(imageUrls = imageUrls)
     }
 
     fun copyWithAvailability(isAvailable: Boolean): Product {
@@ -145,9 +155,24 @@ data class Product(
         )
     }
 
-    // THÊM: Copy với trạng thái yêu thích mới
     fun copyWithFavorite(isFavorite: Boolean): Product {
         return this.copy(isFavorite = isFavorite)
+    }
+
+    // THÊM: Thêm ảnh vào danh sách
+    fun addImageUrl(imageUrl: String): Product {
+        val newList = imageUrls.toMutableList().apply {
+            add(imageUrl)
+        }
+        return this.copy(imageUrls = newList)
+    }
+
+    // THÊM: Xóa ảnh khỏi danh sách
+    fun removeImageUrl(imageUrl: String): Product {
+        val newList = imageUrls.toMutableList().apply {
+            remove(imageUrl)
+        }
+        return this.copy(imageUrls = newList)
     }
 }
 

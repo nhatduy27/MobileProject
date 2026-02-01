@@ -35,8 +35,8 @@ class DashboardViewModel : ViewModel() {
             
             result.onSuccess { data ->
                 Log.d(TAG, "Data loaded successfully!")
-                Log.d(TAG, "Today revenue: ${data.today.revenue}")
-                Log.d(TAG, "Today orderCount: ${data.today.orderCount}")
+                Log.d(TAG, "All-time revenue: ${data.allTime.revenue}")
+                Log.d(TAG, "All-time orderCount: ${data.allTime.orderCount}")
                 Log.d(TAG, "Recent orders: ${data.recentOrders.size}")
                 data.recentOrders.firstOrNull()?.let {
                     Log.d(TAG, "First order: ${it.orderNumber}, total: ${it.total}")
@@ -60,3 +60,4 @@ class DashboardViewModel : ViewModel() {
         }
     }
 }
+

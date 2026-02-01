@@ -27,9 +27,9 @@ class RevenueViewModel : ViewModel() {
         loadRevenueData(period)
     }
     
-    // Overload để hỗ trợ display name (từ UI cũ)
-    fun onPeriodSelected(displayName: String) {
-        val period = RevenuePeriod.fromDisplayName(displayName)
+    // Overload để hỗ trợ display key (từ UI cũ)
+    fun onPeriodSelected(displayKey: String) {
+        val period = RevenuePeriod.fromDisplayKey(displayKey)
         loadRevenueData(period)
     }
     

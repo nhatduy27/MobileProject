@@ -10,9 +10,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.data.model.shared.product.Product
 
 @Composable
@@ -22,7 +24,7 @@ fun ProductBottomBar(
     onQuantityIncrease: () -> Unit,
     onQuantityDecrease: () -> Unit,
     onAddToCart: () -> Unit,
-    onBuyNow: () -> Unit, // Có thể giữ hoặc xóa tham số này
+    onBuyNow: () -> Unit,
     isAddingToCart: Boolean = false
 ) {
     Surface(
@@ -55,7 +57,7 @@ fun ProductBottomBar(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Remove,
-                            contentDescription = "Giảm",
+                            contentDescription = stringResource(id = R.string.decrease_quantity),
                             tint = if (quantity > 1 && product.isAvailable) Color(0xFF424242) else Color(0xFFBDBDBD),
                             modifier = Modifier.size(22.dp)
                         )
@@ -85,7 +87,7 @@ fun ProductBottomBar(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Add,
-                            contentDescription = "Tăng",
+                            contentDescription = stringResource(id = R.string.increase_quantity),
                             tint = if (product.isAvailable) Color(0xFF424242) else Color(0xFFBDBDBD),
                             modifier = Modifier.size(22.dp)
                         )
@@ -103,11 +105,21 @@ fun ProductBottomBar(
                     color = Color(0xFFF5F5F5)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(24.dp),
-                            strokeWidth = 2.dp,
-                            color = Color(0xFFFF9800)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = Color(0xFFFF9800)
+                            )
+                            Text(
+                                text = stringResource(id = R.string.loading_cart),
+                                fontSize = 14.sp,
+                                color = Color(0xFF616161)
+                            )
+                        }
                     }
                 }
             } else {
@@ -135,12 +147,12 @@ fun ProductBottomBar(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.ShoppingCart,
-                            contentDescription = null,
+                            contentDescription = stringResource(id = R.string.product_shopping_bag_icon),
                             modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Thêm vào giỏ",
+                            text = stringResource(id = R.string.add_to_cart_button),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold
                         )

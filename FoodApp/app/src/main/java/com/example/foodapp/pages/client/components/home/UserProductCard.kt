@@ -11,9 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
+import com.example.foodapp.R
 import com.example.foodapp.data.model.shared.product.Product
 
 // Import cho AsyncImage
@@ -57,10 +59,10 @@ fun ProductImage(product: Product) {
         contentAlignment = Alignment.Center
     ) {
         // Ưu tiên hiển thị ảnh từ URL (API)
-        if (!product.imageUrl.isNullOrBlank()) {
+        if (!product.imageUrls.isEmpty()) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(product.imageUrl)
+                    .data(product.imageUrls[0])
                     .crossfade(true)
                     .build(),
                 contentDescription = product.name,
@@ -89,7 +91,7 @@ fun ProductImage(product: Product) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "HẾT HÀNG",
+                    text = stringResource(R.string.out_of_stock),
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
                     fontSize = 14.sp
@@ -114,7 +116,7 @@ fun NoImagePlaceholder(productName: String) {
             // Dùng Icon từ Material Icons thay vì drawable
             M3Icon(
                 imageVector = Icons.Default.Fastfood,
-                contentDescription = "Không có ảnh",
+                contentDescription = stringResource(R.string.no_image),
                 modifier = Modifier.size(40.dp),
                 tint = Color(0xFF757575)
             )
@@ -185,7 +187,7 @@ fun ProductInfo(product: Product) {
                     // Dùng Icon từ Material Icons
                     M3Icon(
                         imageVector = Icons.Default.Star,
-                        contentDescription = "Rating",
+                        contentDescription = stringResource(R.string.rating),
                         modifier = Modifier.size(14.dp),
                         tint = Color(0xFFFFC107)
                     )
@@ -197,7 +199,7 @@ fun ProductInfo(product: Product) {
                     )
                     if (product.totalRatings > 0) {
                         Text(
-                            text = " (${product.totalRatings})",
+                            text = stringResource(R.string.rating_count_parentheses, product.totalRatings),
                             fontSize = 12.sp,
                             color = Color(0xFFBDBDBD)
                         )
@@ -206,7 +208,7 @@ fun ProductInfo(product: Product) {
             } else {
                 // Hiển thị "Chưa có đánh giá" nếu rating = 0
                 Text(
-                    text = "Chưa có đánh giá",
+                    text = stringResource(R.string.no_ratings_yet),
                     fontSize = 12.sp,
                     color = Color(0xFFBDBDBD)
                 )
@@ -215,7 +217,7 @@ fun ProductInfo(product: Product) {
             // Số lượng bán
             if (product.soldCount > 0) {
                 Text(
-                    text = "Đã bán ${product.soldCountText}",
+                    text = stringResource(R.string.sold_count, product.soldCountText),
                     fontSize = 12.sp,
                     color = Color(0xFF757575)
                 )
@@ -235,13 +237,13 @@ fun ProductInfo(product: Product) {
                 ) {
                     M3Icon(
                         imageVector = Icons.Default.Schedule,
-                        contentDescription = "Thời gian chuẩn bị",
+                        contentDescription = stringResource(R.string.preparation_time),
                         modifier = Modifier.size(12.dp),
                         tint = Color(0xFF757575)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${product.preparationTime} phút",
+                        text = stringResource(R.string.preparation_time_minutes, product.preparationTime),
                         fontSize = 11.sp,
                         color = Color(0xFF757575)
                     )

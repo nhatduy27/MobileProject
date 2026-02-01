@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -29,11 +30,31 @@ fun UserBottomNav(
         verticalAlignment = Alignment.CenterVertically
     ) {
         val items = listOf(
-            Triple("Trang chủ", R.drawable.btn_1, { navController.navigate(Screen.UserHome.route) }),
-            Triple("Giỏ hàng", R.drawable.btn_2, { navController.navigate(Screen.UserCart.route) }),
-            Triple("Yêu thích", R.drawable.btn_3, { navController.navigate(Screen.UserFavorites.route) }),
-            Triple("Thông báo", R.drawable.btn_4, { navController.navigate(Screen.UserNotifications.route) }),
-            Triple("Tôi", R.drawable.btn_5, onProfileClick)
+            Triple(
+                stringResource(R.string.home),
+                R.drawable.btn_1,
+                { navController.navigate(Screen.UserHome.route) }
+            ),
+            Triple(
+                stringResource(R.string.cart),
+                R.drawable.btn_2,
+                { navController.navigate(Screen.UserCart.route) }
+            ),
+            Triple(
+                stringResource(R.string.favorites),
+                R.drawable.btn_3,
+                { navController.navigate(Screen.UserFavorites.route) }
+            ),
+            Triple(
+                stringResource(R.string.notifications),
+                R.drawable.btn_4,
+                { navController.navigate(Screen.UserNotifications.route) }
+            ),
+            Triple(
+                stringResource(R.string.me),
+                R.drawable.btn_5,
+                onProfileClick
+            )
         )
 
         items.forEach { (label, iconRes, onClick) ->

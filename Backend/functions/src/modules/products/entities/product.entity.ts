@@ -14,7 +14,7 @@ export class ProductEntity {
   categoryId: string;
   categoryName: string; // Denormalized
 
-  imageUrl?: string;
+  imageUrls?: string[];
 
   isAvailable: boolean;
   preparationTime: number; // minutes

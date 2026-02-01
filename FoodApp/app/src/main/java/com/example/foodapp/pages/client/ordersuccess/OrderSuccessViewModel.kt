@@ -55,25 +55,6 @@ class OrderSuccessViewModel : ViewModel() {
         }
     }
 
-    fun getOrderDate(): String {
-        return formatDateTime(_order.value?.createdAt ?: "")
-    }
-
-    fun getShopName(): String {
-        return _order.value?.shopName ?: "Không xác định"
-    }
-
-    fun getDeliveryAddress(): String {
-        return _order.value?.deliveryAddress?.fullAddress ?: "Đang cập nhật..."
-    }
-
-    fun getProductCount(): Int {
-        return _order.value?.items?.size ?: 0
-    }
-
-    fun getItems(): List<OrderItemApiModel> {
-        return _order.value?.items ?: emptyList()
-    }
 
     fun clearError() {
         _error.value = null

@@ -21,7 +21,6 @@ class ChatbotRepository(
      */
     suspend fun sendMessage(message: String): Result<ChatResponseData> {
         return try {
-            Log.d(TAG, "🔄 Sending message: $message")
             
             val request = ChatMessageRequest(message)
             val response = apiService.sendMessage(request)
@@ -40,18 +39,15 @@ class ChatbotRepository(
                 }
                 
                 if (answerData != null) {
-                    Log.d(TAG, "✅ Got response: ${answerData.answer.take(50)}...")
                     Result.success(answerData)
                 } else {
                     Result.failure(Exception("Empty response from chatbot"))
                 }
             } else {
                 val errorMessage = parseErrorBody(response)
-                Log.e(TAG, "❌ Error sending message: $errorMessage")
                 Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Exception sending message", e)
             Result.failure(e)
         }
     }
@@ -61,7 +57,6 @@ class ChatbotRepository(
      */
     suspend fun getQuickReplies(): Result<List<String>> {
         return try {
-            Log.d(TAG, "🔄 Fetching quick replies")
             
             val response = apiService.getQuickReplies()
             
@@ -72,16 +67,13 @@ class ChatbotRepository(
                 val replies = body?.data?.quickReplies 
                     ?: body?.quickReplies 
                     ?: emptyList()
-                
-                Log.d(TAG, "✅ Got ${replies.size} quick replies")
+
                 Result.success(replies)
             } else {
                 val errorMessage = parseErrorBody(response)
-                Log.e(TAG, "❌ Error fetching quick replies: $errorMessage")
                 Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Exception fetching quick replies", e)
             Result.failure(e)
         }
     }

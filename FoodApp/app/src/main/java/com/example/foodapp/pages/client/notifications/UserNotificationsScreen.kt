@@ -1,10 +1,11 @@
 // NotificationsScreen.kt
 package com.example.foodapp.pages.client.notifications
 
+import android.content.Context
 import androidx.compose.animation.*
-import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -23,10 +24,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.data.remote.client.response.notification.NotificationResponse
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -36,7 +39,7 @@ import java.util.*
 @Composable
 fun NotificationsScreen(
     onBack: () -> Unit,
-    //onNotificationClick: (notificationId: String) -> Unit = {},
+    onNotificationClick: (notificationId: String, notification: NotificationResponse) -> Unit = { _, _ -> },
 ) {
     val context = LocalContext.current
     val viewModel: NotificationsViewModel = viewModel(
@@ -48,14 +51,12 @@ fun NotificationsScreen(
     val currentNotifications by viewModel.currentNotifications.observeAsState()
     val unreadCount by viewModel.unreadCount.observeAsState(0)
     val markReadState by viewModel.markReadState.observeAsState()
+    val markAllReadState by viewModel.markAllReadState.observeAsState()
 
     // Local state
     var selectedFilter by remember { mutableStateOf(NotificationFilter.ALL) }
     var showFilterDropdown by remember { mutableStateOf(false) }
-
-    // Animation state
-    var refreshRotation by remember { mutableStateOf(0f) }
-    val infiniteTransition = rememberInfiniteTransition(label = "refresh")
+    var showMarkAllDialog by remember { mutableStateOf(false) }
 
     // Xử lý kết quả đánh dấu đã đọc
     LaunchedEffect(markReadState) {
@@ -63,6 +64,25 @@ fun NotificationsScreen(
             is MarkReadState.Success -> {
                 delay(2000)
                 viewModel.resetMarkReadState()
+            }
+            is MarkReadState.Error -> {
+                delay(3000)
+                viewModel.resetMarkReadState()
+            }
+            else -> {}
+        }
+    }
+
+    // Xử lý kết quả đánh dấu tất cả đã đọc
+    LaunchedEffect(markAllReadState) {
+        when (markAllReadState) {
+            is MarkAllReadState.Success -> {
+                delay(2000)
+                viewModel.resetMarkAllReadState()
+            }
+            is MarkAllReadState.Error -> {
+                delay(3000)
+                viewModel.resetMarkAllReadState()
             }
             else -> {}
         }
@@ -95,7 +115,7 @@ fun NotificationsScreen(
                             horizontalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                "Thông báo",
+                                stringResource(R.string.notifications_title),
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
@@ -136,12 +156,34 @@ fun NotificationsScreen(
                         ) {
                             Icon(
                                 Icons.Default.ArrowBack,
-                                contentDescription = "Quay lại",
+                                contentDescription = stringResource(R.string.back_button),
                                 tint = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     },
                     actions = {
+                        // Nút đánh dấu tất cả đã đọc (chỉ hiển thị khi có thông báo chưa đọc)
+                        if (unreadCount > 0) {
+                            IconButton(
+                                onClick = { showMarkAllDialog = true },
+                                enabled = markAllReadState !is MarkAllReadState.Loading
+                            ) {
+                                if (markAllReadState is MarkAllReadState.Loading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        strokeWidth = 2.5.dp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Default.DoneAll,
+                                        contentDescription = stringResource(R.string.mark_all_read_button),
+                                        tint = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+
                         // Filter button with badge
                         Box {
                             BadgedBox(
@@ -157,7 +199,7 @@ fun NotificationsScreen(
                                 IconButton(onClick = { showFilterDropdown = true }) {
                                     Icon(
                                         Icons.Default.FilterList,
-                                        contentDescription = "Lọc thông báo",
+                                        contentDescription = stringResource(R.string.filter_notifications_button),
                                         tint = if (selectedFilter != NotificationFilter.ALL) {
                                             MaterialTheme.colorScheme.primary
                                         } else {
@@ -183,7 +225,7 @@ fun NotificationsScreen(
                                         )
                                 ) {
                                     Text(
-                                        "Lọc thông báo",
+                                        stringResource(R.string.filter_notifications_dialog_title),
                                         style = MaterialTheme.typography.labelMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -209,7 +251,7 @@ fun NotificationsScreen(
                                                     )
                                                     Spacer(modifier = Modifier.width(12.dp))
                                                     Text(
-                                                        filter.displayName,
+                                                        stringResource(filter.displayNameRes),
                                                         fontWeight = if (selectedFilter == filter) {
                                                             FontWeight.SemiBold
                                                         } else {
@@ -257,7 +299,7 @@ fun NotificationsScreen(
                             } else {
                                 Icon(
                                     Icons.Default.Refresh,
-                                    contentDescription = "Làm mới",
+                                    contentDescription = stringResource(R.string.refresh_button),
                                     tint = MaterialTheme.colorScheme.onSurface
                                 )
                             }
@@ -270,6 +312,46 @@ fun NotificationsScreen(
                         actionIconContentColor = MaterialTheme.colorScheme.onSurface
                     )
                 )
+            }
+        },
+        floatingActionButton = {
+            // Floating Action Button để đánh dấu tất cả đã đọc
+            if (unreadCount > 0 && currentNotifications?.isNotEmpty() == true) {
+                AnimatedVisibility(
+                    visible = unreadCount > 0,
+                    enter = fadeIn() + scaleIn(),
+                    exit = fadeOut() + scaleOut()
+                ) {
+                    ExtendedFloatingActionButton(
+                        onClick = { showMarkAllDialog = true },
+                        icon = {
+                            if (markAllReadState is MarkAllReadState.Loading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Default.DoneAll,
+                                    contentDescription = null
+                                )
+                            }
+                        },
+                        text = {
+                            Text(
+                                stringResource(R.string.mark_all_read),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .padding(16.dp)
+                            .shadow(8.dp, RoundedCornerShape(16.dp))
+                    )
+                }
             }
         }
     ) { paddingValues ->
@@ -300,7 +382,7 @@ fun NotificationsScreen(
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
-                                    "Đang tải thông báo...",
+                                    stringResource(R.string.loading_notifications),
                                     style = MaterialTheme.typography.bodyLarge,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -336,14 +418,14 @@ fun NotificationsScreen(
                                 ) {
                                     Icon(
                                         Icons.Default.ErrorOutline,
-                                        contentDescription = "Lỗi",
+                                        contentDescription = stringResource(R.string.error_content_description),
                                         tint = MaterialTheme.colorScheme.error,
                                         modifier = Modifier.size(40.dp)
                                     )
                                 }
 
                                 Text(
-                                    text = "Không thể tải thông báo",
+                                    text = stringResource(R.string.load_notifications_error_title),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.error
@@ -367,7 +449,10 @@ fun NotificationsScreen(
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Thử lại", fontWeight = FontWeight.SemiBold)
+                                    Text(
+                                        stringResource(R.string.retry),
+                                        fontWeight = FontWeight.SemiBold
+                                    )
                                 }
                             }
                         }
@@ -405,8 +490,14 @@ fun NotificationsScreen(
                                     NotificationItem(
                                         notification = notification,
                                         onNotificationClick = {
-                                            // Xử lý khi click vào thông báo
-                                            //viewModel.markAsRead(notification.id ?: "")
+                                            // Đánh dấu thông báo đã đọc khi click
+                                            notification.id?.let { notificationId ->
+                                                if (!notification.read) {
+                                                    viewModel.markNotificationAsRead(notificationId)
+                                                }
+                                            }
+                                            // Gọi callback để xử lý navigation nếu cần
+                                            onNotificationClick(notification.id ?: "", notification)
                                         }
                                     )
                                 }
@@ -425,15 +516,18 @@ fun NotificationsScreen(
 
             // Hiển thị Snackbar khi đánh dấu đã đọc thành công
             AnimatedVisibility(
-                visible = markReadState is MarkReadState.Success || markReadState is MarkReadState.Error,
+                visible = markReadState is MarkReadState.Success ||
+                        markReadState is MarkReadState.Error ||
+                        markAllReadState is MarkAllReadState.Success ||
+                        markAllReadState is MarkAllReadState.Error,
                 enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
                 exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
                     .padding(16.dp)
             ) {
-                when (markReadState) {
-                    is MarkReadState.Success -> {
+                when {
+                    markReadState is MarkReadState.Success -> {
                         Snackbar(
                             containerColor = MaterialTheme.colorScheme.primaryContainer,
                             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -449,11 +543,40 @@ fun NotificationsScreen(
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Đã đánh dấu đã đọc", fontWeight = FontWeight.Medium)
+                                Text(
+                                    stringResource(R.string.marked_as_read_success),
+                                    fontWeight = FontWeight.Medium
+                                )
                             }
                         }
                     }
-                    is MarkReadState.Error -> {
+
+                    markAllReadState is MarkAllReadState.Success -> {
+                        val updatedCount = (markAllReadState as MarkAllReadState.Success).updatedCount
+                        Snackbar(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.shadow(8.dp, RoundedCornerShape(12.dp))
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.CheckCircle,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    stringResource(R.string.mark_all_read_success, updatedCount),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
+
+                    markReadState is MarkReadState.Error -> {
                         val error = (markReadState as MarkReadState.Error).message
                         Snackbar(
                             containerColor = MaterialTheme.colorScheme.errorContainer,
@@ -470,21 +593,94 @@ fun NotificationsScreen(
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text("Lỗi: $error", fontWeight = FontWeight.Medium)
+                                Text(
+                                    stringResource(R.string.mark_as_read_error, error),
+                                    fontWeight = FontWeight.Medium
+                                )
                             }
                         }
                     }
-                    else -> {}
+
+                    markAllReadState is MarkAllReadState.Error -> {
+                        val error = (markAllReadState as MarkAllReadState.Error).message
+                        Snackbar(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.shadow(8.dp, RoundedCornerShape(12.dp))
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Default.Error,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    stringResource(R.string.mark_all_read_error, error),
+                                    fontWeight = FontWeight.Medium
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+
+    // Dialog xác nhận đánh dấu tất cả đã đọc
+    if (showMarkAllDialog) {
+        AlertDialog(
+            onDismissRequest = { showMarkAllDialog = false },
+            title = {
+                Text(
+                    stringResource(R.string.mark_all_read_dialog_title),
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(stringResource(R.string.mark_all_read_dialog_message, unreadCount))
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        viewModel.markAllNotificationsAsRead()
+                        showMarkAllDialog = false
+                    },
+                    enabled = markAllReadState !is MarkAllReadState.Loading,
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    if (markAllReadState is MarkAllReadState.Loading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            strokeWidth = 2.dp,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                    }
+                    Text(stringResource(R.string.confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showMarkAllDialog = false },
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(stringResource(R.string.cancel))
+                }
+            },
+            shape = RoundedCornerShape(24.dp)
+        )
     }
 }
 
 @Composable
 fun NotificationItem(
     notification: NotificationResponse,
-    onNotificationClick: () -> Unit
+    onNotificationClick: () -> Unit,
+    context: Context = LocalContext.current
 ) {
     val isUnread = !notification.read
 
@@ -492,8 +688,9 @@ fun NotificationItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(
+                interactionSource = remember { MutableInteractionSource() },
                 onClick = onNotificationClick,
-                enabled = isUnread
+                indication = null
             )
             .animateContentSize(),
         shape = RoundedCornerShape(16.dp),
@@ -582,7 +779,7 @@ fun NotificationItem(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = notification.title ?: "Thông báo",
+                    text = notification.title ?: stringResource(R.string.notification_default_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = if (isUnread) FontWeight.Bold else FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -627,7 +824,7 @@ fun NotificationItem(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = formatNotificationTime(createdAt),
+                                text = formatNotificationTime(createdAt, context),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.outline
                             )
@@ -653,7 +850,7 @@ fun NotificationItem(
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
-                                    text = "Mới",
+                                    text = stringResource(R.string.notification_status_new),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimary
@@ -672,7 +869,7 @@ fun NotificationItem(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "Đã đọc",
+                                text = stringResource(R.string.notification_status_read),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.outline
                             )
@@ -713,7 +910,7 @@ fun EmptyNotificationsView(selectedFilter: NotificationFilter) {
             ) {
                 Icon(
                     Icons.Default.NotificationsNone,
-                    contentDescription = "Không có thông báo",
+                    contentDescription = stringResource(R.string.empty_notifications_content_description),
                     tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
                     modifier = Modifier.size(64.dp)
                 )
@@ -721,10 +918,10 @@ fun EmptyNotificationsView(selectedFilter: NotificationFilter) {
 
             Text(
                 text = when (selectedFilter) {
-                    NotificationFilter.ALL -> "Không có thông báo nào"
-                    NotificationFilter.UNREAD -> "Không có thông báo chưa đọc"
-                    NotificationFilter.ORDER -> "Không có thông báo đơn hàng"
-                    NotificationFilter.SYSTEM -> "Không có thông báo hệ thống"
+                    NotificationFilter.ALL -> stringResource(R.string.empty_notifications_all)
+                    NotificationFilter.UNREAD -> stringResource(R.string.empty_notifications_unread)
+                    NotificationFilter.ORDER -> stringResource(R.string.empty_notifications_order)
+                    NotificationFilter.SYSTEM -> stringResource(R.string.empty_notifications_system)
                 },
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
@@ -733,7 +930,7 @@ fun EmptyNotificationsView(selectedFilter: NotificationFilter) {
             )
 
             Text(
-                text = "Chúng tôi sẽ thông báo cho bạn khi có tin mới",
+                text = stringResource(R.string.empty_notifications_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -743,7 +940,7 @@ fun EmptyNotificationsView(selectedFilter: NotificationFilter) {
 }
 
 // Helper function để format thời gian
-private fun formatNotificationTime(timestamp: String): String {
+private fun formatNotificationTime(timestamp: String, context: Context): String {
     return try {
         val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.getDefault())
         dateFormat.timeZone = TimeZone.getTimeZone("UTC")
@@ -753,23 +950,23 @@ private fun formatNotificationTime(timestamp: String): String {
         val diff = now.time - (date?.time ?: 0)
 
         when {
-            diff < 60000 -> "Vừa xong"
-            diff < 3600000 -> "${diff / 60000} phút trước"
-            diff < 86400000 -> "${diff / 3600000} giờ trước"
-            diff < 604800000 -> "${diff / 86400000} ngày trước"
+            diff < 60000 -> context.getString(R.string.just_now)
+            diff < 3600000 -> context.getString(R.string.minutes_ago, (diff / 60000).toInt())
+            diff < 86400000 -> context.getString(R.string.hours_ago, (diff / 3600000).toInt())
+            diff < 604800000 -> context.getString(R.string.days_ago, (diff / 86400000).toInt())
             else -> {
                 val displayFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                 displayFormat.format(date ?: Date())
             }
         }
     } catch (e: Exception) {
-        "Thời gian không xác định"
+        context.getString(R.string.unknown_time)
     }
 }
 
-enum class NotificationFilter(val displayName: String, val icon: ImageVector) {
-    ALL("Tất cả", Icons.Default.Notifications),
-    UNREAD("Chưa đọc", Icons.Default.MarkEmailUnread),
-    ORDER("Đơn hàng", Icons.Default.ShoppingBag),
-    SYSTEM("Hệ thống", Icons.Default.Info)
+enum class NotificationFilter(val displayNameRes: Int, val icon: ImageVector) {
+    ALL(R.string.filter_all, Icons.Default.Notifications),
+    UNREAD(R.string.filter_unread, Icons.Default.MarkEmailUnread),
+    ORDER(R.string.filter_order, Icons.Default.ShoppingBag),
+    SYSTEM(R.string.filter_system, Icons.Default.Info)
 }

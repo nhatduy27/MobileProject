@@ -33,11 +33,13 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.text.font.FontWeight
+import com.example.foodapp.R
 import com.example.foodapp.data.model.owner.product.Product
 import com.example.foodapp.pages.owner.notifications.NotificationBell
 import com.example.foodapp.pages.owner.theme.OwnerColors
@@ -45,13 +47,6 @@ import com.example.foodapp.pages.owner.theme.OwnerDimens
 
 /**
  * Màn hình quản lý sản phẩm - FoodsScreen
- *
- * Kết nối với backend API qua RealProductRepository.
- * Hiển thị danh sách sản phẩm với các tính năng:
- * - Lọc theo category
- * - Tìm kiếm theo tên
- * - Thêm/Sửa/Xóa sản phẩm
- * - Toggle trạng thái còn hàng
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -115,7 +110,7 @@ fun FoodsScreen(
                     shape = CircleShape,
                     elevation = FloatingActionButtonDefaults.elevation(4.dp)
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = "Thêm sản phẩm")
+                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.foods_add_food))
                 }
             },
             containerColor = OwnerColors.Background
@@ -135,7 +130,7 @@ fun FoodsScreen(
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             CircularProgressIndicator(color = OwnerColors.Primary)
                             Spacer(modifier = Modifier.height(16.dp))
-                            Text("Đang tải sản phẩm...", color = OwnerColors.TextSecondary)
+                            Text(stringResource(R.string.foods_loading), color = OwnerColors.TextSecondary)
                         }
                     }
                 } else {
@@ -181,17 +176,17 @@ fun FoodsScreen(
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
                                         StatCard(
-                                            title = "Tổng sản phẩm",
+                                            title = stringResource(R.string.foods_total),
                                             value = stats.total.toString(),
                                             color = OwnerColors.Primary
                                         )
                                         StatCard(
-                                            title = "Còn hàng",
+                                            title = stringResource(R.string.foods_available),
                                             value = stats.available.toString(),
                                             color = OwnerColors.Success
                                         )
                                         StatCard(
-                                            title = "Hết hàng",
+                                            title = stringResource(R.string.foods_unavailable),
                                             value = stats.outOfStock.toString(),
                                             color = OwnerColors.Error
                                         )
@@ -210,16 +205,16 @@ fun FoodsScreen(
                                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                                 Text(
                                                     text = if (uiState.searchQuery.isNotEmpty())
-                                                        "Không tìm thấy sản phẩm"
+                                                        stringResource(R.string.foods_not_found)
                                                     else
-                                                        "Chưa có sản phẩm nào",
+                                                        stringResource(R.string.foods_no_foods),
                                                     fontSize = 16.sp,
                                                     color = OwnerColors.TextSecondary
                                                 )
                                                 if (uiState.searchQuery.isEmpty()) {
                                                     Spacer(modifier = Modifier.height(8.dp))
                                                     Text(
-                                                        text = "Nhấn + để thêm sản phẩm mới",
+                                                        text = stringResource(R.string.foods_add_hint),
                                                         fontSize = 14.sp,
                                                         color = OwnerColors.TextSecondary
                                                     )
@@ -261,17 +256,17 @@ fun FoodsScreen(
                 isEditing = false
                 editingProduct = null
             },
-            onSave = { name, description, price, categoryId, prepTime, imageFile ->
+            onSave = { name, description, price, categoryId, prepTime, imageFiles ->
                 if (editingProduct == null) {
-                    // Create new
-                    if (imageFile != null) {
+                    // Create new - must have at least 1 image
+                    if (imageFiles.isNotEmpty()) {
                         viewModel.createProduct(
                             name = name,
                             description = description,
                             price = price,
                             categoryId = categoryId,
                             preparationTime = prepTime,
-                            imageFile = imageFile,
+                            imageFiles = imageFiles,
                             onSuccess = {
                                 isEditing = false
                                 editingProduct = null
@@ -279,7 +274,7 @@ fun FoodsScreen(
                         )
                     }
                 } else {
-                    // Update existing
+                    // Update existing - imageFiles can be empty (keep existing images)
                     viewModel.updateProduct(
                         productId = editingProduct!!.id,
                         name = name,
@@ -287,7 +282,7 @@ fun FoodsScreen(
                         price = price,
                         categoryId = categoryId,
                         preparationTime = prepTime,
-                        imageFile = imageFile,
+                        imageFiles = imageFiles.ifEmpty { null },
                         onSuccess = {
                             isEditing = false
                             editingProduct = null
@@ -340,11 +335,11 @@ fun FoodsSearchHeader(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = OwnerColors.TextPrimary)
+                        Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.nav_dashboard), tint = OwnerColors.TextPrimary)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Sản phẩm",
+                        text = stringResource(R.string.foods_title),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = OwnerColors.TextPrimary
@@ -356,7 +351,7 @@ fun FoodsSearchHeader(
 
                 Row {
                     IconButton(onClick = onRefresh) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = OwnerColors.TextPrimary)
+                        Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.owner_retry), tint = OwnerColors.TextPrimary)
                     }
                     IconButton(
                         onClick = { isSearchActive = true },
@@ -364,7 +359,7 @@ fun FoodsSearchHeader(
                             .background(OwnerColors.SurfaceVariant, CircleShape)
                             .size(40.dp)
                     ) {
-                        Icon(Icons.Default.Search, contentDescription = "Search", tint = OwnerColors.TextPrimary)
+                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.owner_search), tint = OwnerColors.TextPrimary)
                     }
                 }
             }
@@ -382,7 +377,7 @@ fun FoodsSearchHeader(
                         isSearchActive = false
                         onQueryChange("")
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = OwnerColors.TextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.owner_close), tint = OwnerColors.TextPrimary)
                     }
                     TextField(
                         value = query,
@@ -391,7 +386,7 @@ fun FoodsSearchHeader(
                             .weight(1f)
                             .height(50.dp)
                             .focusRequester(focusRequester),
-                        placeholder = { Text("Tìm sản phẩm...", color = OwnerColors.TextTertiary, fontSize = 14.sp) },
+                        placeholder = { Text(stringResource(R.string.foods_search_hint), color = OwnerColors.TextTertiary, fontSize = 14.sp) },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFFF5F5F5),
@@ -401,12 +396,12 @@ fun FoodsSearchHeader(
                             cursorColor = OwnerColors.Primary
                         ),
                         shape = CircleShape,
-                        keyboardOptions = KeyboardOptions(autoCorrect = false, imeAction = ImeAction.Search),
+                        keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Search),
                         keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
                         trailingIcon = {
                             if (query.isNotEmpty()) {
                                 IconButton(onClick = { onQueryChange("") }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Clear", tint = OwnerColors.TextTertiary)
+                                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.owner_close), tint = OwnerColors.TextTertiary)
                                 }
                             }
                         }

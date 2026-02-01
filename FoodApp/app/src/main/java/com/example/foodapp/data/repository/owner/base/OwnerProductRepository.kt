@@ -6,6 +6,8 @@ import java.io.File
 /**
  * Interface cho Owner Products Repository.
  * Định nghĩa các phương thức để quản lý sản phẩm của cửa hàng.
+ * 
+ * Hỗ trợ nhiều ảnh thay vì chỉ 1 ảnh.
  */
 interface OwnerProductRepository {
 
@@ -30,25 +32,25 @@ interface OwnerProductRepository {
     suspend fun getProductDetail(productId: String): Result<Product>
 
     /**
-     * Tạo sản phẩm mới
+     * Tạo sản phẩm mới với nhiều ảnh
      * @param request Thông tin sản phẩm
-     * @param imageFile File ảnh sản phẩm
+     * @param imageFiles List các file ảnh sản phẩm
      */
     suspend fun createProduct(
         request: CreateProductRequest,
-        imageFile: File
+        imageFiles: List<File>
     ): Result<Product>
 
     /**
      * Cập nhật sản phẩm
      * @param productId ID sản phẩm
      * @param request Thông tin cập nhật
-     * @param imageFile File ảnh mới (optional)
+     * @param imageFiles List file ảnh mới (optional) - nếu có sẽ thay thế ảnh cũ
      */
     suspend fun updateProduct(
         productId: String,
         request: UpdateProductRequest,
-        imageFile: File? = null
+        imageFiles: List<File>? = null
     ): Result<String>
 
     /**
@@ -68,12 +70,13 @@ interface OwnerProductRepository {
     suspend fun deleteProduct(productId: String): Result<String>
 
     /**
-     * Upload ảnh sản phẩm
+     * Upload nhiều ảnh sản phẩm
      * @param productId ID sản phẩm
-     * @param imageFile File ảnh
+     * @param imageFiles List các file ảnh
+     * @return List các URL ảnh đã upload
      */
-    suspend fun uploadProductImage(
+    suspend fun uploadProductImages(
         productId: String,
-        imageFile: File
-    ): Result<String>
+        imageFiles: List<File>
+    ): Result<List<String>>
 }

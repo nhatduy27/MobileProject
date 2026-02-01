@@ -22,8 +22,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.example.foodapp.R
 import com.example.foodapp.data.model.chat.Conversation
 import com.example.foodapp.pages.shipper.theme.ShipperColors
 import java.text.SimpleDateFormat
@@ -195,9 +197,9 @@ private fun ConversationItem(
                     // Role badge
                     if (!otherParticipant?.role.isNullOrEmpty()) {
                         val roleText = when (otherParticipant?.role) {
-                            "OWNER" -> otherParticipant.shopName ?: "Chủ shop"
-                            "CUSTOMER" -> "Khách hàng"
-                            "SHIPPER" -> "Shipper"
+                            "OWNER" -> otherParticipant.shopName ?: stringResource(R.string.shipper_conv_shop_owner)
+                            "CUSTOMER" -> stringResource(R.string.shipper_conv_customer)
+                            "SHIPPER" -> stringResource(R.string.shipper_conv_shipper)
                             else -> otherParticipant?.role ?: ""
                         }
                         Surface(
@@ -223,7 +225,7 @@ private fun ConversationItem(
                     }
                     
                     Text(
-                        text = conversation.lastMessage.ifEmpty { "Bắt đầu cuộc trò chuyện" },
+                        text = conversation.lastMessage.ifEmpty { stringResource(R.string.shipper_conv_start_chat) },
                         fontSize = 13.sp,
                         color = ShipperColors.TextSecondary,
                         maxLines = 1,
@@ -268,7 +270,7 @@ private fun EmptyConversationsState() {
         Spacer(modifier = Modifier.height(24.dp))
         
         Text(
-            "Chưa có cuộc trò chuyện nào",
+            stringResource(R.string.shipper_conv_no_conversations),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
             color = ShipperColors.TextPrimary
@@ -277,7 +279,7 @@ private fun EmptyConversationsState() {
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
-            "Các cuộc trò chuyện với khách hàng và chủ shop sẽ xuất hiện ở đây",
+            stringResource(R.string.shipper_conv_empty_desc),
             fontSize = 14.sp,
             color = ShipperColors.TextSecondary,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -298,7 +300,7 @@ private fun formatTime(dateString: String): String {
         val diffDays = diffMs / (1000 * 60 * 60 * 24)
         
         when {
-            diffMinutes < 1 -> "Vừa xong"
+            diffMinutes < 1 -> "Just now"
             diffMinutes < 60 -> "${diffMinutes}p"
             diffHours < 24 -> "${diffHours}h"
             diffDays < 7 -> "${diffDays}d"

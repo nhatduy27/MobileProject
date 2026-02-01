@@ -21,7 +21,7 @@ export class FirestoreProductsRepository implements IProductsRepository {
       description: string;
       price: number;
       categoryId: string;
-      imageUrl: string;
+      imageUrls?: string[];
       preparationTime: number;
     },
   ): Promise<ProductEntity> {
@@ -36,7 +36,7 @@ export class FirestoreProductsRepository implements IProductsRepository {
       description: data.description,
       price: data.price,
       categoryId: data.categoryId,
-      imageUrl: data.imageUrl || null,
+      imageUrls: data.imageUrls ?? [],
       isAvailable: true,
       preparationTime: data.preparationTime,
       rating: 0,
@@ -341,7 +341,7 @@ export class FirestoreProductsRepository implements IProductsRepository {
       price: data.price,
       categoryId: data.categoryId,
       categoryName: data.categoryName,
-      imageUrl: data.imageUrl,
+      imageUrls: data.imageUrls ?? [],
       isAvailable: data.isAvailable,
       preparationTime: data.preparationTime,
       rating: data.rating,

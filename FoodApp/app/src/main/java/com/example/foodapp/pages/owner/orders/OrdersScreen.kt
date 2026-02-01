@@ -33,12 +33,14 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.foodapp.R
 import com.example.foodapp.pages.owner.notifications.NotificationBell
 import com.example.foodapp.pages.owner.theme.OwnerColors
 import com.example.foodapp.pages.owner.theme.OwnerDimens
@@ -201,14 +203,14 @@ fun EmptyOrdersView(onRefresh: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Chưa có đơn hàng nào",
+            text = stringResource(R.string.orders_no_orders),
             fontSize = 18.sp,
             fontWeight = FontWeight.Medium,
             color = OwnerColors.TextSecondary
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Đơn hàng mới sẽ xuất hiện ở đây",
+            text = stringResource(R.string.orders_new_orders_appear),
             fontSize = 14.sp,
             color = OwnerColors.TextTertiary,
             textAlign = TextAlign.Center
@@ -220,7 +222,7 @@ fun EmptyOrdersView(onRefresh: () -> Unit) {
         ) {
             Icon(Icons.Default.Refresh, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Tải lại")
+            Text(stringResource(R.string.owner_retry))
         }
     }
 }
@@ -234,19 +236,19 @@ fun OrdersStatsRow(total: Int, pending: Int, preparing: Int) {
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         OrderStatCard(
-            title = "Tổng đơn",
+            title = stringResource(R.string.orders_total),
             value = total.toString(),
             color = OwnerColors.Info,
             modifier = Modifier.weight(1f)
         )
         OrderStatCard(
-            title = "Chờ xác nhận",
+            title = stringResource(R.string.orders_pending),
             value = pending.toString(),
             color = OwnerColors.Warning,
             modifier = Modifier.weight(1f)
         )
         OrderStatCard(
-            title = "Đang làm",
+            title = stringResource(R.string.orders_preparing),
             value = preparing.toString(),
             color = OwnerColors.StatusPreparing,
             modifier = Modifier.weight(1f)
@@ -267,15 +269,31 @@ fun OrdersFilterRow(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        filters.forEach { filter ->
+        filters.forEach { filterKey ->
             OrderFilterChip(
-                text = filter,
-                isSelected = filter == selectedFilter,
-                onClick = { onFilterSelected(filter) }
+                text = getFilterDisplayName(filterKey),
+                isSelected = filterKey == selectedFilter,
+                onClick = { onFilterSelected(filterKey) }
             )
         }
     }
 }
+
+@Composable
+fun getFilterDisplayName(filterKey: String): String {
+    return when (filterKey) {
+        OrderUiState.FILTER_ALL -> stringResource(R.string.orders_filter_all)
+        OrderUiState.FILTER_PENDING -> stringResource(R.string.orders_filter_pending)
+        OrderUiState.FILTER_CONFIRMED -> stringResource(R.string.orders_filter_confirmed)
+        OrderUiState.FILTER_PREPARING -> stringResource(R.string.orders_filter_preparing)
+        OrderUiState.FILTER_READY -> stringResource(R.string.orders_filter_ready)
+        OrderUiState.FILTER_SHIPPING -> stringResource(R.string.orders_filter_shipping)
+        OrderUiState.FILTER_DELIVERED -> stringResource(R.string.orders_filter_delivered)
+        OrderUiState.FILTER_CANCELLED -> stringResource(R.string.orders_filter_cancelled)
+        else -> filterKey
+    }
+}
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -313,11 +331,11 @@ fun OrdersSearchHeader(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = onMenuClick) {
-                        Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = OwnerColors.TextPrimary)
+                        Icon(Icons.Filled.Menu, contentDescription = stringResource(R.string.nav_dashboard), tint = OwnerColors.TextPrimary)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Quản lý đơn hàng",
+                        text = stringResource(R.string.orders_title),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = OwnerColors.TextPrimary,
@@ -333,7 +351,7 @@ fun OrdersSearchHeader(
                             .background(OwnerColors.SurfaceVariant, CircleShape)
                             .size(40.dp)
                     ) {
-                        Icon(Icons.Default.Search, contentDescription = "Search", tint = OwnerColors.TextPrimary)
+                        Icon(Icons.Default.Search, contentDescription = stringResource(R.string.owner_search), tint = OwnerColors.TextPrimary)
                     }
                 }
             }
@@ -350,7 +368,7 @@ fun OrdersSearchHeader(
                         isSearchActive = false 
                         onQueryChange("")
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = OwnerColors.TextPrimary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.owner_close), tint = OwnerColors.TextPrimary)
                     }
                     TextField(
                         value = query,
@@ -359,7 +377,7 @@ fun OrdersSearchHeader(
                             .weight(1f)
                             .height(50.dp)
                             .focusRequester(focusRequester),
-                        placeholder = { Text("Tìm mã đơn, tên khách...", color = Color.Gray, fontSize = 14.sp) },
+                        placeholder = { Text(stringResource(R.string.orders_search_hint), color = Color.Gray, fontSize = 14.sp) },
                         singleLine = true,
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = Color(0xFFF5F5F5),
@@ -374,7 +392,7 @@ fun OrdersSearchHeader(
                         trailingIcon = {
                             if (query.isNotEmpty()) {
                                 IconButton(onClick = { onQueryChange("") }) {
-                                    Icon(Icons.Default.Close, contentDescription = "Clear", tint = Color.Gray)
+                                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.owner_close), tint = Color.Gray)
                                 }
                             }
                         }
@@ -394,18 +412,18 @@ fun CancelOrderDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Hủy đơn hàng") },
+        title = { Text(stringResource(R.string.orders_cancel_order)) },
         text = {
             Column {
                 Text(
-                    text = "Bạn có chắc chắn muốn hủy đơn hàng này?",
+                    text = stringResource(R.string.orders_cancel_confirm),
                     color = Color(0xFF666666)
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 OutlinedTextField(
                     value = reason,
                     onValueChange = { reason = it },
-                    label = { Text("Lý do hủy (không bắt buộc)") },
+                    label = { Text(stringResource(R.string.orders_cancel_reason)) },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp)
                 )
@@ -416,12 +434,12 @@ fun CancelOrderDialog(
                 onClick = { onConfirm(reason.ifBlank { null }) },
                 colors = ButtonDefaults.buttonColors(containerColor = OwnerColors.Error)
             ) {
-                Text("Hủy đơn")
+                Text(stringResource(R.string.orders_cancel_order))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Đóng")
+                Text(stringResource(R.string.owner_close))
             }
         }
     )

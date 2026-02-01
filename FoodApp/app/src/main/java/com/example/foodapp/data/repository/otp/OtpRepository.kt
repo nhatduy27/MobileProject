@@ -6,14 +6,15 @@ import retrofit2.HttpException
 import java.io.IOException
 import com.example.foodapp.data.remote.api.ApiClient
 import com.example.foodapp.data.model.shared.otp.*
+import retrofit2.Response
 
 class OtpRepository {
     private val apiService = ApiClient.otpApiService
 
-    suspend fun sendOtp(email: String): ApiResult<SimpleMessageData> {
+    suspend fun sendOtp(email: String, type: OTPType): ApiResult<SimpleMessageData> {
         return try {
             withContext(Dispatchers.IO) {
-                val request = SendOtpRequest(email)
+                val request = SendOtpRequest(email, type)
                 val response = apiService.sendOtp(request)
 
                 if (response.isSuccessful) {
@@ -74,10 +75,10 @@ class OtpRepository {
         }
     }
 
-    suspend fun sendOtpResetPassword(email: String): ApiResult<SimpleMessageData> {
+    suspend fun sendOtpResetPassword(email: String,type: OTPType): ApiResult<SimpleMessageData> {
         return try {
             withContext(Dispatchers.IO) {
-                val request = SendOtpRequest(email)
+                val request = SendOtpRequest(email, type)
                 val response = apiService.sendOtp(request)
 
                 if (response.isSuccessful) {
@@ -85,7 +86,7 @@ class OtpRepository {
                     if (apiResponse != null && apiResponse.success) {
                         val data = apiResponse.data
                         if (data != null) {
-                            ApiResult.Success(data) // SimpleMessageData
+                            ApiResult.Success(data)
                         } else {
                             ApiResult.Failure(Exception("Không nhận được dữ liệu từ server"))
                         }
@@ -107,7 +108,7 @@ class OtpRepository {
     }
 
     // Helper function để xử lý HTTP errors
-    private fun handleHttpError(response: retrofit2.Response<*>): ApiResult<Nothing> {
+    private fun handleHttpError(response: Response<*>): ApiResult<Nothing> {
         val errorCode = response.code()
         val errorBody = response.errorBody()?.string()
 

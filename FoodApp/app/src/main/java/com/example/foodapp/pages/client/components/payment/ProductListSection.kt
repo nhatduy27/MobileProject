@@ -9,10 +9,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.foodapp.R
 import com.example.foodapp.data.model.shared.product.Product
 import com.example.foodapp.pages.client.payment.CartItem
 import com.example.foodapp.ui.theme.*
@@ -39,13 +41,13 @@ fun ProductListSection(
             ) {
                 Icon(
                     imageVector = Icons.Default.ShoppingBag,
-                    contentDescription = null,
+                    contentDescription = stringResource(id = R.string.product_shopping_bag_icon),
                     tint = PrimaryOrange,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Sản phẩm đã chọn",
+                    text = stringResource(id = R.string.selected_products_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -95,7 +97,7 @@ fun ProductInfoRow(
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = "Số lượng: $quantity",
+                text = stringResource(id = R.string.product_quantity_label, quantity),
                 fontSize = 13.sp,
                 color = Color.Gray
             )
